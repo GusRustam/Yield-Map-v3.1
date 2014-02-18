@@ -111,13 +111,15 @@ module Answers =
                 | _ -> Failed(Exception(e.ToString()))
 
 
-    type Meta = Answer of obj[,] | Failed of exn
+    type Meta<'T> = Answer of 'T list | Failed of exn
+//    type Meta = Answer of obj[,] | Failed of exn
     type Chain = Answer of string array | Failed of exn
 
 [<RequireQualifiedAccess>]
 module Parser =
     open Requests
-    type Meta<'T> = Answer of 'T | Failed of exn
+    open Answers
+
     let parse<'T when 'T : (new : unit -> 'T)> (data:obj[,])  =
         let fieldsInfo =
             // Array of pairs : order * variable name * variable type
@@ -159,8 +161,8 @@ module Parser =
                     import ([res] @ acc) (n+1)
 
             let res = import [] minRow
-            Answer(res)
-        with e -> Failed(e)
+            Meta.Answer(res)
+        with e -> Meta.Failed(e)
 
 [<RequireQualifiedAccess>]
 module Watchers =
@@ -169,17 +171,19 @@ module Watchers =
         do eikon.add_OnStatusChanged (fun e -> changed.Trigger <| Answers.Connection.parse e)
         member self.StatusChanged = changed.Publish
 
-        /// Event wrapper of async call
+    /// Event wrapper of async call
+    type RawMeta = Data of obj[,] | Failed of string
+
     type Meta<'T when 'T : (new : unit -> 'T)> (loader:RData) =
         let dataEvent = new Event<_>()
         do loader.add_OnUpdate (
             fun (status:DEX2_DataStatus) _ -> 
                 match status with 
                 | DEX2_DataStatus.DE_DS_PARTIAL                           -> () // ??
-                | DEX2_DataStatus.DE_DS_FULL when loader.Data = null      -> dataEvent.Trigger <| Answers.Meta.Failed(Exception("No data"))
-                | DEX2_DataStatus.DE_DS_FULL when (loader.Data :? obj[,]) -> dataEvent.Trigger <| Answers.Meta.Answer(loader.Data :?> obj[,])
-                | DEX2_DataStatus.DE_DS_FULL                              -> dataEvent.Trigger <| Answers.Meta.Failed(Exception("Invalid data format"))
-                | _                                                       -> dataEvent.Trigger <| Answers.Meta.Failed(Exception(status.ToString()))
+                | DEX2_DataStatus.DE_DS_FULL when loader.Data = null      -> dataEvent.Trigger <| Failed("No data")
+                | DEX2_DataStatus.DE_DS_FULL when (loader.Data :? obj[,]) -> dataEvent.Trigger <| Data(loader.Data :?> obj[,])
+                | DEX2_DataStatus.DE_DS_FULL                              -> dataEvent.Trigger <| Failed("Invalid data format")
+                | _                                                       -> dataEvent.Trigger <| Failed(status.ToString())
         )
         member self.Data = dataEvent.Publish
 
@@ -476,12 +480,13 @@ module Loading =
     type MetaLoader = 
         abstract member Connect : unit -> Async<Answers.Connection>
         abstract member LoadChain : ChainRequest -> Async<Answers.Chain>
-        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> Async<Answers.Meta>
+        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> Async<Answers.Meta<'a>>
 //        abstract member LoadHistory : HistorySetup -> Async<DataResult>
 //        abstract member StartRealtime : RealtimeSetup -> Async<DataResult> // todo wut if i'd like to stop loading or change subscription?!!
    
 
     module Loader =
+        open Answers
         let chain (adxRtChain:AdxRtChain) setup = async {
             try
                 adxRtChain.Source <- setup.Feed
@@ -504,8 +509,11 @@ module Loading =
                 let evts = Watchers.Meta<'a> mgr
     
                 mgr.Subscribe(false)
-                return! Async.AwaitEvent evts.Data
-            with :? COMException -> return Answers.Meta.Failed(Exception "Not connected to Eikon")
+                let! data = Async.AwaitEvent evts.Data
+                match data with
+                | Watchers.Data arr -> return Parser.parse<'a> arr
+                | Watchers.Failed e -> return Answers.Meta.Failed <| Exception(e)
+            with :? COMException -> return Answers.Meta.Failed (Exception "Not connected to Eikon")
         }
 
     // todo API
@@ -540,8 +548,8 @@ module Loading =
 
         member private self.MetaPath<'a> () = 
             match self.date with
-            | None -> sprintf "%s/%s.xml" self.metaFileName <| typedefof<'a>.Name
-            | Some dt -> sprintf "%s/%s_%s.xml" self.metaFileName <| typedefof<'a>.Name <| dt.ToString("ddMMyyyy")
+            | None -> sprintf "%s/%s.csv" self.metaFileName <| typedefof<'a>.Name
+            | Some dt -> sprintf "%s/%s_%s.csv" self.metaFileName <| typedefof<'a>.Name <| dt.ToString("ddMMyyyy")
 
 
         interface MetaLoader with
@@ -578,9 +586,11 @@ module Loading =
                     if Array.length items > 0 then
                         let rows = Array.length items
                         let cols = Array.length items.[0]
-                        return Array2D.init rows cols (fun r c -> box items.[r].[c]) |> Answers.Meta.Answer
+                        let data = Array2D.init rows cols (fun r c -> box items.[r].[c])
+                        let x = Parser.parse<'a> data
+                        return x
                     else
-                        return Array2D.zeroCreate 0 0 |> Answers.Meta.Answer
+                        return Answers.Meta.Failed <| Exception ("No data")
                         
                 with e -> return Answers.Meta.Failed e
             }
