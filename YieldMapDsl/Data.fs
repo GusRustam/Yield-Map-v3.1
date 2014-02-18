@@ -612,7 +612,9 @@ module Loading =
             member self.Connect () = async {
                 let watcher = Watchers.Eikon eikon
                 printfn "Status is %A" eikon.Status
-                eikon.Initialize() |> ignore
+                let res = eikon.Initialize()
+                printfn "Res is %A" res
+
                 return! Async.AwaitEvent watcher.StatusChanged
             }
 
