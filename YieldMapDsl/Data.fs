@@ -55,6 +55,12 @@ module Requests =
                     DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
                 if success then date :> obj else x :> obj // чтобы работало и рейтеровскими данными и с моими
 
+    type SomeFloatConverter() = 
+        interface Cnv with
+            member self.Convert x =
+                let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
+                if success then box num else null
+
     (* Request attributes *) 
     type RequestAttribute = 
         inherit Attribute
@@ -139,36 +145,41 @@ module Parser =
                 if n > maxRow then
                     acc
                 else
-                    let row = data.[n..n, *] |> Seq.cast<obj> |> Seq.toArray
+                    try
+                        let row = data.[n..n, *] |> Seq.cast<obj> |> Seq.toArray
                         
-                    let res = new 'T() 
-                    let t = typedefof<'T>
+                        let res = new 'T() 
+                        let t = typedefof<'T>
 
-                    // todo same reflection on every line; memoize it somehow; maybe add PropertyInfo into parsing, and converter too.
-                    for (num, name, conv) in fieldsInfo do
-                        let p = t.GetProperty(name)
+                        // todo same reflection on every line; memoize it somehow; maybe add PropertyInfo into parsing, and converter too.
+                        for (num, name, conv) in fieldsInfo do
+                            let p = t.GetProperty(name)
 
-                        let converted value = 
-                            match conv with
-                            | Some(conv) -> 
-                                let converter = Activator.CreateInstance(conv : Type) :?> Cnv
-                                try converter.Convert <| value.ToString()
-                                with _ -> value
-                            | _ -> value
+                            let converted value = 
+                                match conv with
+                                | Some(conv) -> 
+                                    printfn "Convering value %A to type %s" value p.PropertyType.Name
+                                    let converter = Activator.CreateInstance(conv : Type) :?> Cnv
+                                    try converter.Convert <| value.ToString()
+                                    with _ -> value
+                                | _ -> value
                             
-                        p.SetValue(res, converted row.[num-minCol]) // <- kinda mutability 
-                        
-                    import ([res] @ acc) (n+1)
-
-            let res = import [] minRow
-            Meta.Answer(res)
+                            p.SetValue(res, converted row.[num-minCol]) // <- kinda mutability
+                        import ([res] @ acc) (n+1)
+                    with e -> 
+                        // todo logging
+                        printfn "Failed to import row %d" n
+                        import acc (n+1)
+            Meta.Answer <| import [] minRow
         with e -> Meta.Failed(e)
 
 [<RequireQualifiedAccess>]
 module Watchers =
     type Eikon(eikon : EikonDesktopDataAPI) =
         let changed = new Event<_>()
-        do eikon.add_OnStatusChanged (fun e -> changed.Trigger <| Answers.Connection.parse e)
+        do eikon.add_OnStatusChanged (fun e -> 
+            printfn "Status changed -> %A!" e
+            changed.Trigger <| Answers.Connection.parse e)
         member self.StatusChanged = changed.Publish
 
     /// Event wrapper of async call
@@ -600,6 +611,7 @@ module Loading =
         interface MetaLoader with
             member self.Connect () = async {
                 let watcher = Watchers.Eikon eikon
+                printfn "Status is %A" eikon.Status
                 eikon.Initialize() |> ignore
                 return! Async.AwaitEvent watcher.StatusChanged
             }
@@ -663,7 +675,7 @@ module MetaTables =
         [<Field(3, "EJV.C.Description")>] 
         member val Description = String.Empty with get, set
 
-        [<Field(4, "EJV.C.OriginalAmountIssued")>] 
+        [<Field(4, "EJV.C.OriginalAmountIssued", typeof<SomeFloatConverter>)>] 
         member val OriginalAmountIssued : float Nullable = Nullable() with get, set
 
         [<Field(5, "EJV.C.IssuerName")>] 
@@ -672,13 +684,13 @@ module MetaTables =
         [<Field(6, "EJV.C.BorrowerName")>] 
         member val BorrowerName = String.Empty with get, set
 
-        [<Field(7, "EJV.X.ADF_Coupon")>] 
+        [<Field(7, "EJV.X.ADF_Coupon", typeof<SomeFloatConverter>)>] 
         member val Coupon : float Nullable = Nullable() with get, set
 
-        [<Field(8, "EJV.C.IssueDate")>] 
+        [<Field(8, "EJV.C.IssueDate", typeof<DateConverter>)>] 
         member val IssueDate : DateTime Nullable = Nullable() with get, set
 
-        [<Field(9, "EJV.C.MaturityDate")>] 
+        [<Field(9, "EJV.C.MaturityDate", typeof<DateConverter>)>] 
         member val MaturityDate : DateTime Nullable = Nullable() with get, set
 
         [<Field(10, "EJV.C.Currency")>] 
@@ -732,16 +744,20 @@ module MetaTables =
         [<Field(26, "EJV.C.InstrumentTypeDescription")>]
         member val Instrument = String.Empty with get, set
 
+        override self.ToString() = self.ShortName
+
     [<Request("D:1984;2020", "RH:In;D")>]
     type CouponData() = 
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1)>]
+        [<Field(1, "", typeof<DateConverter>)>]
         member val Date : DateTime Nullable = Nullable() with get, set
 
-        [<Field(2, "EJV.C.CouponRate")>]
+        [<Field(2, "EJV.C.CouponRate", typeof<SomeFloatConverter>)>]
         member val Rate = 0.0 with get, set
+
+        override self.ToString() = sprintf "%s %A %f" self.Ric self.Date self.Rate
 
     [<Request("RTS:FDL;SPI;MIS;MDL;FIS RTSC:FRN", "RH:In")>] 
     type IssueRatingData() =

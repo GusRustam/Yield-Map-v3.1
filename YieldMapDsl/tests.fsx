@@ -9,13 +9,17 @@ open System
 open System.IO
 open System.Xml
 
+open EikonDesktopDataAPI
+
 open YieldMap.Data.Answers
 open YieldMap.Data.Requests
 open YieldMap.Data.Loading
 open YieldMap.Data.MetaTables
 open YieldMap.Data
 
-let q = MockLoader() :> MetaLoader
+let e = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI
+//let q = MockLoader() :> MetaLoader
+let q = OuterLoader(e) :> MetaLoader
 printfn "Connection request sent"
 q.Connect() |> Async.RunSynchronously
 printfn "Connected"
@@ -26,8 +30,12 @@ match chain with
     let meta = q.LoadMetadata<BondDescr> data |> Async.RunSynchronously
     match meta with
     | Meta.Answer metaData -> 
-        printfn "Meta is %A" metaData
-        ()
-    | Meta.Failed e -> 
-        printfn "Failed to load meta: %s" <| e.ToString()
+        printfn "BondDescr is %A" metaData
+    | Meta.Failed e -> printfn "Failed to load meta: %s" <| e.ToString()
+
+    let meta = q.LoadMetadata<CouponData> data |> Async.RunSynchronously
+    match meta with
+    | Meta.Answer metaData -> 
+        printfn "CouponData is %A" metaData
+    | Meta.Failed e -> printfn "Failed to load meta: %s" <| e.ToString()
 | Chain.Failed e -> printfn "Failed to load chain: %s" e.Message
