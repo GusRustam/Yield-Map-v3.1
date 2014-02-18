@@ -17,11 +17,8 @@ open YieldMap.Data.Loading
 open YieldMap.Data.MetaTables
 open YieldMap.Data
 
-let q = MockLoader() :> MetaLoader
-//let e = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI
-//let q = OuterLoader(e) :> MetaLoader
-printfn "Connection request sent"
-let test = async {
+let test (q:MetaLoader) = async {
+    printfn "Connection request sent"
     let! connectRes = q.Connect()
     match connectRes with
     | Connection.Connected -> 
@@ -31,17 +28,21 @@ let test = async {
             printfn "Chain %A" data
             let! meta = q.LoadMetadata<BondDescr> data
             match meta with
-            | Meta.Answer metaData -> 
-                printfn "BondDescr is %A" metaData
+            | Meta.Answer metaData -> printfn "BondDescr is %A" metaData
             | Meta.Failed e -> printfn "Failed to load meta: %s" <| e.ToString()
 
-            let meta = q.LoadMetadata<CouponData> data |> Async.RunSynchronously
+            let! meta = q.LoadMetadata<CouponData> data
             match meta with
-            | Meta.Answer metaData -> 
-                printfn "CouponData is %A" metaData
+            | Meta.Answer metaData -> printfn "CouponData is %A" metaData
             | Meta.Failed e -> printfn "Failed to load meta: %s" <| e.ToString()
         | Chain.Failed e -> printfn "Failed to load chain: %s" e.Message
     | Connection.Failed e -> printfn "Failed to connect %s" <| e.ToString()
 } 
 
-test |> Async.Start
+
+
+let q = MockLoader() :> MetaLoader
+//let e = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI
+//let q = OuterLoader(e) :> MetaLoader
+
+test q |> Async.Start
