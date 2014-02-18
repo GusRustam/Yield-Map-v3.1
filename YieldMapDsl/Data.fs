@@ -512,12 +512,12 @@ module Loading =
     type MockLoader =
         val chainFileName : string
         val metaFileName : string
-        val date : DateTime
+        val date : DateTime option
 
         new () = { 
             chainFileName = "chains" 
             metaFileName = "meta"
-            date = DateTime.Today
+            date = None
         }
 
         new (_date) = {
@@ -532,7 +532,17 @@ module Loading =
             date = _date
         }
 
-        member private self.MetaPath<'a> () = printfn "%s_%s_%s.xml" self.metaFileName <| typedefof<'a>.Name <| self.date.ToString("ddMMyyyy")
+        new (_chainFileName, _metaFileName) = { 
+            chainFileName = _chainFileName 
+            metaFileName = _metaFileName
+            date = None
+        }
+
+        member private self.MetaPath<'a> () = 
+            match self.date with
+            | None -> sprintf "%s/%s.xml" self.metaFileName <| typedefof<'a>.Name
+            | Some dt -> sprintf "%s/%s_%s.xml" self.metaFileName <| typedefof<'a>.Name <| dt.ToString("ddMMyyyy")
+
 
         interface MetaLoader with
             member self.Connect () = async {
@@ -556,7 +566,7 @@ module Loading =
                 do! Async.Sleep(500) 
                 try
                     let setRics = set rics
-                    let path = Path.Combine(Location.path, self.metaFileName + ".xml")
+                    let path = Path.Combine(Location.path, self.MetaPath<'a>())
                     let items = 
                         path 
                         |> File.ReadLines
