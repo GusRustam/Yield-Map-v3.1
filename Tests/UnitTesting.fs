@@ -1,18 +1,18 @@
 ﻿namespace YieldMap.Tests.Common
 
-    module DataTests = 
-        open System
-        open System.IO
-        open System.Xml
+    open System
+    open System.IO
+    open System.Xml
 
+    open NUnit.Framework
+    open FsUnit
+
+    module DataTests = 
+        open YieldMap.Data
         open YieldMap.Data.Answers
         open YieldMap.Data.Requests
         open YieldMap.Data.Loading
         open YieldMap.Data.MetaTables
-        open YieldMap.Data
-
-        open NUnit.Framework
-        open FsUnit
 
         [<Test>]
         let ``connection`` () = 
