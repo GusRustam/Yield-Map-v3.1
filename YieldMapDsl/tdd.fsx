@@ -1,24 +1,24 @@
 ﻿#if INTERACTIVE
 #r "System"
 #r "mscorlib"
+#r @"C:\Users\Rustam Guseynov\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.EikonDesktopDataAPI.dll"
 #r @"C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map\Tools\YieldMapDsl\YieldMapDsl\bin\Debug\YieldMapDsl.dll"
-
-#load "common-testing.fsx"
 #endif
 
-open System
-open System.IO
-open System.Xml
+module ``18-Feb-2014 - testing metaloader`` =
+    open System
+    open System.IO
+    open System.Xml
 
-open YieldMap.Data.Answers
-open YieldMap.Data.Requests
-open YieldMap.Data.Loading
-open YieldMap.Data.MetaTables
-open YieldMap.Data
+    open EikonDesktopDataAPI
 
+    open YieldMap.Data.Answers
+    open YieldMap.Data.Requests
+    open YieldMap.Data.Loading
+    open YieldMap.Data.MetaTables
+    open YieldMap.Data
 
-module Dex2Tests = 
-    let test (q:MetaLoader) = async {
+    let doIt (q:MetaLoader) = async {
         printfn "Connection request sent"
         let! connectRes = q.Connect()
         match connectRes with
@@ -40,4 +40,9 @@ module Dex2Tests =
         | Connection.Failed e -> printfn "Failed to connect %s" <| e.ToString()
     } 
 
+    let test () = 
+        let q = MockLoader() :> MetaLoader
+        //let e = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI
+        //let q = OuterLoader(e) :> MetaLoader
 
+        doIt q |> Async.Start

@@ -48,7 +48,7 @@
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="tests.fsx" />
+    <None Include="tdd.fsx" />
     <Content Include="chains.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
