@@ -609,14 +609,12 @@ module Loading =
 
     type OuterLoader(eikon : EikonDesktopDataAPI) = 
         interface MetaLoader with
-            member self.Connect () = async {
+            member self.Connect () = 
                 let watcher = Watchers.Eikon eikon
                 printfn "Status is %A" eikon.Status
                 let res = eikon.Initialize()
                 printfn "Res is %A" res
-
-                return! Async.AwaitEvent watcher.StatusChanged
-            }
+                Async.AwaitEvent watcher.StatusChanged
 
             member self.LoadChain setup = async {
                 let adxRtChain = eikon.CreateAdxRtChain() :?> AdxRtChain

@@ -63,47 +63,48 @@
 
     open YieldMap.Tools
 
+//    [<EntryPoint>]
     let main argv = 
-        let eikon = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI 
-        let loader = OuterLoader(eikon) :> MetaLoader
-        
-        match loader.Connect() |> Async.RunSynchronously with
-        | Answers.Connected ->
-            // todo split loader
-
-            let main = {
-                Loader = loader
-                Factory = EikonFactory(eikon)
-                Time = CurrentTimeProvider()
-                QuoteQueue = null
-            }
-
-            let chart = { 
-                X = Macauley |> Duration |> Calc
-                Y = Yield |> Calc
-                Currency = Concrete "USD" 
-            }
-
-            let group = {
-                Instruments = []
-                Bootstrapped = Can't
-                Interpolation = LinearInterpolation
-            }
-
-            let party = {
-                Settings = { YieldMode = None }
-                Charts = [chart]
-                Calculators = []
-                Groups = [group]
-            }
-
-
-            // todo some call to get the party started
-
-            Console.WriteLine "Connected"
-        | _ -> Console.WriteLine "Failed to connect"
-        
-        Console.ReadKey() |> ignore
-        Ole32.killComObject <| ref<obj> eikon
-        Ole32.CoUnintialize()
+//        let eikon = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI 
+//        let loader = OuterLoader(eikon) :> MetaLoader
+//        
+//        match loader.Connect() |> Async.RunSynchronously with
+//        | Answers.Connected ->
+//            // todo split loader
+//
+//            let main = {
+//                Loader = loader
+//                Factory = EikonFactory(eikon)
+//                Time = CurrentTimeProvider()
+//                QuoteQueue = null
+//            }
+//
+//            let chart = { 
+//                X = Macauley |> Duration |> Calc
+//                Y = Yield |> Calc
+//                Currency = Concrete "USD" 
+//            }
+//
+//            let group = {
+//                Instruments = []
+//                Bootstrapped = Can't
+//                Interpolation = LinearInterpolation
+//            }
+//
+//            let party = {
+//                Settings = { YieldMode = None }
+//                Charts = [chart]
+//                Calculators = []
+//                Groups = [group]
+//            }
+//
+//
+//            // todo some call to get the party started
+//
+//            Console.WriteLine "Connected"
+//        | _ -> Console.WriteLine "Failed to connect"
+//        
+//        Console.ReadKey() |> ignore
+//        Ole32.killComObject <| ref<obj> eikon
+//        Ole32.CoUnintialize()
         0
