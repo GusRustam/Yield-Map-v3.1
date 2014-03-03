@@ -1,6 +1,7 @@
 ﻿namespace YieldMap.Data
 
 open YieldMap.Tools   
+open YieldMap.Tools.Logging
  
 open Dex2
 open EikonDesktopDataAPI
@@ -118,13 +119,14 @@ module Answers =
 
 
     type Meta<'T> = Answer of 'T list | Failed of exn
-//    type Meta = Answer of obj[,] | Failed of exn
     type Chain = Answer of string array | Failed of exn
 
 [<RequireQualifiedAccess>]
 module Parser =
     open Requests
     open Answers
+
+    let logger = LogFactory.create "Parser"
 
     let parse<'T when 'T : (new : unit -> 'T)> (data:obj[,])  =
         let fieldsInfo =
@@ -158,7 +160,7 @@ module Parser =
                             let converted value = 
                                 match conv with
                                 | Some(conv) -> 
-                                    printfn "Convering value %A to type %s" value p.PropertyType.Name
+                                    logger.Trace <| sprintf "Convering value %A to type %s" value p.PropertyType.Name
                                     let converter = Activator.CreateInstance(conv : Type) :?> Cnv
                                     try converter.Convert <| value.ToString()
                                     with _ -> value
@@ -168,17 +170,18 @@ module Parser =
                         import ([res] @ acc) (n+1)
                     with e -> 
                         // todo logging
-                        printfn "Failed to import row %d" n
+                        logger.Debug <| sprintf "Failed to import row %d" n
                         import acc (n+1)
             Meta.Answer <| import [] minRow
         with e -> Meta.Failed(e)
 
 [<RequireQualifiedAccess>]
 module Watchers =
+    let logger = LogFactory.create "Watchers"
     type Eikon(eikon : EikonDesktopDataAPI) =
         let changed = new Event<_>()
         do eikon.add_OnStatusChanged (fun e -> 
-            printfn "Status changed -> %A!" e
+            logger.Trace <| sprintf "Status changed -> %A!" e
             changed.Trigger <| Answers.Connection.parse e)
         member self.StatusChanged = changed.Publish
 
@@ -221,7 +224,7 @@ module Watchers =
 
         do chain.add_OnUpdate (
             fun status -> 
-                printfn "Status -> %s" <| status.ToString()
+                status.ToString() |>  sprintf "Chain / status -> %s" |> logger.Trace
                 match status with 
                 | RT_DataStatus.RT_DS_FULL -> dataEvent.Trigger <| parseData chain.Data
                 | RT_DataStatus.RT_DS_PARTIAL -> () // todo logging
@@ -230,7 +233,7 @@ module Watchers =
 
         do chain.add_OnStatusChange (
             fun status ->
-                printfn "Status changed -> %s" <| status.ToString()
+                status.ToString() |>  sprintf "Status changed -> %s" |> logger.Trace
                 match status with
                 | RT_SourceStatus.RT_SOURCE_UP -> ()
                 | _ -> dataEvent.Trigger <| Answers.Chain.Failed(Exception(sprintf "Invalid feed %s" chain.Source))
@@ -484,10 +487,10 @@ module Calculations =
    
 module Loading =
     open Requests
+    open YieldMap.Tools.Logging
 
-    type HistoryLoader = class end
-    type LiveLoader = class end
-
+    let logger = LogFactory.create "Loading"
+    
     type MetaLoader = 
         abstract member Connect : unit -> Async<Answers.Connection>
         abstract member LoadChain : ChainRequest -> Async<Answers.Chain>
@@ -495,26 +498,32 @@ module Loading =
 //        abstract member LoadHistory : HistorySetup -> Async<DataResult>
 //        abstract member StartRealtime : RealtimeSetup -> Async<DataResult> // todo wut if i'd like to stop loading or change subscription?!!
    
+    type HistoryLoader = class end
+    type LiveLoader = class end
 
     module Loader =
         open Answers
+
         let chain (adxRtChain:AdxRtChain) setup = async {
+            logger.Trace "Requesting chain"
             try
                 adxRtChain.Source <- setup.Feed
                 adxRtChain.Mode <- setup.Mode
                 adxRtChain.ItemName <- setup.Ric
                 let evts = Watchers.Chain(adxRtChain)
                 adxRtChain.RequestChain()
+                logger.Trace "Requested chain"
                 
+                logger.Trace "Before whait chain"
                 return! Async.AwaitEvent evts.Data
-            with :? COMException -> return Answers.Chain.Failed(Exception "Not connected to Eikon")
+            with :? COMException -> return Chain.Failed <| Exception "Not connected to Eikon"
         }
 
         let meta<'a when 'a : (new : unit -> 'a)> (mgr:RData) setup (rics:string array) = async {
             try
                 mgr.DisplayParam <- setup.Display
                 mgr.RequestParam <- setup.Request
-                mgr.FieldList <-  String.Join (",", setup.Fields)
+                mgr.FieldList <- String.Join (",", setup.Fields)
                 mgr.InstrumentIDList <- String.Join (",", rics)
 
                 let evts = Watchers.Meta<'a> mgr
@@ -523,8 +532,8 @@ module Loading =
                 let! data = Async.AwaitEvent evts.Data
                 match data with
                 | Watchers.Data arr -> return Parser.parse<'a> arr
-                | Watchers.Failed e -> return Answers.Meta.Failed <| Exception(e)
-            with :? COMException -> return Answers.Meta.Failed (Exception "Not connected to Eikon")
+                | Watchers.Failed e -> return Meta.Failed <| Exception(e)
+            with :? COMException -> return Meta.Failed <| Exception "Not connected to Eikon"
         }
 
     // todo API
@@ -573,7 +582,9 @@ module Loading =
                 do! Async.Sleep(500) 
                 try
                     let xDoc = XmlDocument()
-                    xDoc.Load(Path.Combine(Location.path, self.chainFileName + ".xml"))
+                    let path = Path.Combine(Location.path, self.chainFileName + ".xml")
+                    logger.Trace <| sprintf "The path to load chains is %s" path
+                    xDoc.Load(path)
                     let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
                     match node with
                     | null -> return Answers.Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
@@ -586,6 +597,7 @@ module Loading =
                 try
                     let setRics = set rics
                     let path = Path.Combine(Location.path, self.MetaPath<'a>())
+                    logger.Trace <| sprintf "The path to load meta is %s" path
                     let items = 
                         path 
                         |> File.ReadLines
@@ -611,9 +623,9 @@ module Loading =
         interface MetaLoader with
             member self.Connect () = 
                 let watcher = Watchers.Eikon eikon
-                printfn "Status is %A" eikon.Status
+                logger.Trace <| sprintf "Status is %A" eikon.Status
                 let res = eikon.Initialize()
-                printfn "Res is %A" res
+                logger.Trace <| sprintf "Res is %A" res
                 Async.AwaitEvent watcher.StatusChanged
 
             member self.LoadChain setup = async {

@@ -40,6 +40,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <ItemGroup>
+    <Compile Include="Settings.fs" />
     <Compile Include="Portfolio.fs" />
     <Compile Include="Tools.fs" />
     <Compile Include="Data.fs" />
@@ -82,7 +83,8 @@
   <PropertyGroup>
     <PostBuildEvent>mkdir "$(TargetDir)meta" 
 xcopy "$(ProjectDir)meta" "$(TargetDir)meta" /E /I /F /Y
-copy "$(TargetDir)$(TargetFileName)" "$(ProjectDir)../Tests/packages" /Y
+xcopy "$(ProjectDir)meta" "$(TargetDir)../../../Tests/bin/Debug/meta" /E /I /F /Y
+;copy "$(TargetDir)$(TargetFileName)" "$(ProjectDir)../Tests/packages" /Y
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

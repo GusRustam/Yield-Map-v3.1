@@ -152,16 +152,6 @@
             Structure : string 
         }
 
-    module Settings = 
-        // todo ORM mapping
-        type QuoteSettings = {
-            MidIfBoth : bool
-        }
-
-        type Settings = {
-            Quotes : QuoteSettings
-        }
-
     (* === Вычисления === *)
     module Analytics = 
         open Instruments

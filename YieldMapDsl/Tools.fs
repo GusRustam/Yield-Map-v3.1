@@ -169,8 +169,6 @@ module Disposer =
                 Marshal.ReleaseComObject(_object) |> printfn "References left: %d" 
                 _object <- null
 
-[<AutoOpen>]
-[<RequireQualifiedAccess>]
 module Logging = 
     open NLog
     open NLog.Config
@@ -179,6 +177,8 @@ module Logging =
 
     open System
     open System.IO
+    open System.Threading
+    open System.Collections.Generic
 
     (* Basic logging tools: levels and logging interface *)
     type LoggingLevel =
@@ -236,7 +236,7 @@ module Logging =
                 member x.Log (level, name, message) = ()
                 member x.Log (level, name, message, ex) = ()}
 
-        static member nLogSink (t:Type) fileName = 
+        static member nLogSink fileName name = 
             let layoutText = "${date} \t ${level} \t ${callsite:includeSourcePath=false} | ${message} | ${exception:format=Type,Message} | ${stacktrace}"
             let txtTarget = 
                 new FileTarget ( 
@@ -257,32 +257,48 @@ module Logging =
             do loggerConfig.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, udpTarget));
             do LogManager.Configuration <- loggerConfig
 
-            let logga = LogManager.GetLogger(t.Name) 
+            let logga = LogManager.GetLogger name
 
             {new LoggingSink with
                 member x.Log (level, _, message) = logga.Log(AsN level, message)
                 member x.Log (level, _, message, ex) = logga.LogException(AsN level, message, ex)}
 
-    type LogFactory =
-        static member defaultLogger = Sinker.nullSink()
-        static member create (threshold:LoggingLevel) name (sink:LoggingSink) =
-            let create threshold name (sink:LoggingSink) =
-                fun level message -> if level >= threshold then sink.Log (level, name, message)
-            let createEx threshold name (sink:LoggingSink)  =
-                fun level message ex -> if level >= threshold then sink.Log (level, name, message, ex)
-            let crt = create threshold name sink
-            let crtEx = createEx threshold name sink
+    let globalThreshold = ref LoggingLevel.Trace
+    let globalSink = Sinker.nLogSink "yield-map.log"
 
-            {new Logger with
-                member x.TraceEx message ex = crtEx LoggingLevel.Trace message ex
-                member x.Trace message = crt LoggingLevel.Trace message
-                member x.DebugEx message ex = crtEx LoggingLevel.Debug message ex
-                member x.Debug message = crt LoggingLevel.Debug message 
-                member x.InfoEx message ex = crtEx LoggingLevel.Info message ex
-                member x.Info message = crt LoggingLevel.Info message 
-                member x.WarnEx message ex = crtEx LoggingLevel.Warn message ex
-                member x.Warn message = crt LoggingLevel.Warn message 
-                member x.ErrorEx message ex = crtEx LoggingLevel.Error message ex
-                member x.Error message = crt LoggingLevel.Error message 
-                member x.FatalEx message ex = crtEx LoggingLevel.Fatal message ex
-                member x.Fatal message = crt LoggingLevel.Fatal message}
+    type LogFactory() =
+        static let loggers = Dictionary()
+        static let locker = obj()
+        
+        static member create name =
+            try
+                Monitor.Enter locker
+                if not <| loggers.ContainsKey name then
+                    let create threshold name (sink:LoggingSink) =
+                        fun level message -> if level >= !threshold then sink.Log (level, name, message)
+            
+                    let createEx threshold name (sink:LoggingSink)  =
+                        fun level message ex -> if level >= !threshold then sink.Log (level, name, message, ex)
+            
+                    let crt = create globalThreshold name (globalSink name)
+                    let crtEx = createEx globalThreshold name (globalSink name)
+            
+                    let newLogger = {
+                        new Logger with
+                            member x.TraceEx message ex = crtEx LoggingLevel.Trace message ex
+                            member x.Trace message = crt LoggingLevel.Trace message
+                            member x.DebugEx message ex = crtEx LoggingLevel.Debug message ex
+                            member x.Debug message = crt LoggingLevel.Debug message 
+                            member x.InfoEx message ex = crtEx LoggingLevel.Info message ex
+                            member x.Info message = crt LoggingLevel.Info message 
+                            member x.WarnEx message ex = crtEx LoggingLevel.Warn message ex
+                            member x.Warn message = crt LoggingLevel.Warn message 
+                            member x.ErrorEx message ex = crtEx LoggingLevel.Error message ex
+                            member x.Error message = crt LoggingLevel.Error message 
+                            member x.FatalEx message ex = crtEx LoggingLevel.Fatal message ex
+                            member x.Fatal message = crt LoggingLevel.Fatal message}
+
+                    loggers.Add(name, newLogger)
+                    newLogger
+                else loggers.[name]
+            finally Monitor.Exit locker

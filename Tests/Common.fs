@@ -9,17 +9,20 @@ open YieldMap.Data.Requests
 open YieldMap.Data.Loading
 open YieldMap.Data.MetaTables
 open YieldMap.Data
+open YieldMap.Tools.Logging
 
 module Dex2Tests = 
+    let logger = LogFactory.create "Dex2Tests" //(Sinker.nLogSink "Dex2Tests" "unit-testing.log")
+
     let connect (q:MetaLoader) = async {
-        printfn "Connection request sent"
+        logger.Trace "Connection request sent"
         let! connectRes = q.Connect()
         match connectRes with
         | Connection.Connected -> 
-            printfn "Connected"
+            logger.Trace "Connected"
             return true
         | Connection.Failed e -> 
-            printfn "Failed to connect %s" <| e.ToString()        
+            logger.Trace <| sprintf "Failed to connect %s" (e.ToString())
             return false
     }
 
@@ -29,26 +32,32 @@ module Dex2Tests =
         | Chain.Answer data -> 
             return data
         | Chain.Failed e -> 
-            printfn "Failed to load chain: %s" e.Message
+            logger.Trace <| sprintf "Failed to load chain: %s" e.Message
             return [||]
     }
 
     let test (q:MetaLoader) = async {
-        printfn "Connection request sent"
         let! connected = connect q
-        if not connected then return ()
+        logger.Trace "After connection"
+        if connected then
+            logger.Trace "Before chain 0#RUAER=MM"
+            let! data = getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = "0#RUAER=MM" }
+            logger.Trace "After chain"
+            if Array.length data <> 0 then
+                logger.Trace <| sprintf "Chain %A" data
+                let! meta = q.LoadMetadata<BondDescr> data
+                match meta with
+                | Meta.Answer metaData -> logger.Trace <| sprintf "BondDescr is %A" metaData
+                | Meta.Failed e -> logger.Trace <| sprintf "Failed to load meta: %s" (e.ToString())
 
-        let! data = getChain q { Feed = "IDN"; Mode = ""; Ric = "0#RUCORP=MM" }
-        if Array.length data = 0 then return ()
-
-        printfn "Chain %A" data
-        let! meta = q.LoadMetadata<BondDescr> data
-        match meta with
-        | Meta.Answer metaData -> printfn "BondDescr is %A" metaData
-        | Meta.Failed e -> printfn "Failed to load meta: %s" <| e.ToString()
-
-        let! meta = q.LoadMetadata<CouponData> data
-        match meta with
-        | Meta.Answer metaData -> printfn "CouponData is %A" metaData
-        | Meta.Failed e -> printfn "Failed to load meta: %s" <| e.ToString()
+                let! meta = q.LoadMetadata<CouponData> data
+                match meta with
+                | Meta.Answer metaData -> logger.Trace <| sprintf "CouponData is %A" metaData
+                | Meta.Failed e -> logger.Trace <| sprintf "Failed to load meta: %s" (e.ToString())
+        
+                return true
+            else return false
+        else 
+            logger.Trace "Not connected"
+            return false
     } 

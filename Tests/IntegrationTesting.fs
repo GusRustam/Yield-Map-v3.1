@@ -1,5 +1,12 @@
 ﻿namespace YieldMap.Tests.Common
 
+    open System
+    open System.IO
+    open System.Xml
+
+    open NUnit.Framework
+    open FsUnit
+
     module IntegrationTesting = 
         open System
         open System.IO
@@ -16,24 +23,22 @@
         open NUnit.Framework
 
         [<Test>]
-        let ``retrieving-mock-data`` = 
-            let e = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI
-            let q = OuterLoader(e) :> MetaLoader // eikon
-        //
-        //    let tsk = Dex2Tests.connect q |> Async.StartAsTask
-        //    if tsk.Wait(TimeSpan.FromSeconds(float 10)) then
-        //        let res = tsk.Result
-        //        if res then
-        //            printfn "... connected"
-        //        else
-        //            printfn "... not connected"
-        //    else
-        //        printfn " ... timeout"
-
+        let ``connection`` () =
+            let eikon = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI 
+            let q = OuterLoader(eikon) :> MetaLoader
             try
-                let res = Async.RunSynchronously(Dex2Tests.connect q, 10000)
-                if res then
-                    printfn "... connected"
-                else
-                    printfn "... not connected"
-            with :? TimeoutException -> printfn "...timeout"
+                let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
+                ans |> should be True
+            with :? TimeoutException -> 
+                logger.Error "...timeout"
+                Assert.Fail "Timeout"
+
+        [<Test>]
+        let ``retrieve-real-data`` () = 
+            let eikon = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI 
+            let q = OuterLoader(eikon) :> MetaLoader
+            try
+                Async.RunSynchronously (Dex2Tests.test q, 30000) |> should be True
+            with :? TimeoutException -> 
+                logger.Error "...timeout"
+                Assert.Fail "Timeout"

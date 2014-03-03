@@ -23,7 +23,7 @@
         [<Test>]
         let ``retrieve-mock-data`` () = 
             let q = MockLoader() :> MetaLoader
-            async {
-                do! Dex2Tests.test q
-            } |> Async.RunSynchronously
-            true |> should be True
+            let a = async {
+                return! Dex2Tests.test q
+            } 
+            a |> Async.RunSynchronously |> should be True
