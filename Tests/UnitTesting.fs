@@ -13,6 +13,7 @@
         open YieldMap.Data.Requests
         open YieldMap.Data.Loading
         open YieldMap.Data.MetaTables
+        open YieldMap.Tools
 
         [<Test>]
         let ``connection`` () = 
@@ -23,7 +24,7 @@
         [<Test>]
         let ``retrieve-mock-data`` () = 
             let q = MockLoader() :> MetaLoader
-            let a = async {
-                return! Dex2Tests.test q
-            } 
-            a |> Async.RunSynchronously |> should be True
+            logger.Trace "This should be visible"
+            Logging.globalThreshold := Logging.LoggingLevel.Off
+            logger.Trace "This should be invisible"
+            Dex2Tests.test q "0#RUCORP=MM" |> Async.RunSynchronously |> should be True

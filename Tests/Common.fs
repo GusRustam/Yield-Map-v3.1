@@ -36,12 +36,14 @@ module Dex2Tests =
             return [||]
     }
 
-    let test (q:MetaLoader) = async {
+    let test (q:MetaLoader) chainName = async {
         let! connected = connect q
         logger.Trace "After connection"
         if connected then
-            logger.Trace "Before chain 0#RUAER=MM"
-            let! data = getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = "0#RUAER=MM" }
+            logger.Trace <| sprintf "Before chain %s" chainName
+            // todo strange when feed is Q it just hangs, it doesn't report any error...
+            // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
+            let! data = getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName }
             logger.Trace "After chain"
             if Array.length data <> 0 then
                 logger.Trace <| sprintf "Chain %A" data

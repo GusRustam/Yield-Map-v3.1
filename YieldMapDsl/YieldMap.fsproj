@@ -8,9 +8,9 @@
     <ProjectGuid>f19b076c-c552-46fa-88b0-3f33a96dfadc</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>YieldMapDsl</RootNamespace>
-    <AssemblyName>YieldMapDsl</AssemblyName>
+    <AssemblyName>YieldMap</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <Name>YieldMapDsl</Name>
+    <Name>YieldMap</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

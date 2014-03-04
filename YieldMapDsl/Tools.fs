@@ -1,16 +1,6 @@
 ﻿namespace YieldMap.Tools
 open System.Runtime.InteropServices
 
-module Ole32 = 
-    [<DllImport("ole32.dll")>] 
-    extern void CoUnintialize()
-
-    let killComObject (wut : obj ref) =
-        let he = !wut
-        if he <> null && Marshal.IsComObject(he) then
-            Marshal.ReleaseComObject(he) |> printfn "References left: %d" 
-            wut := null
-
 module Workflows =
     module Attempt = 
         type Attempt<'T> = (unit -> 'T option)
@@ -179,6 +169,7 @@ module Logging =
     open System.IO
     open System.Threading
     open System.Collections.Generic
+    open System.Diagnostics
 
     (* Basic logging tools: levels and logging interface *)
     type LoggingLevel =
@@ -200,17 +191,40 @@ module Logging =
         | _ -> LogLevel.Off
 
     type Logger = 
+        [<Conditional("TRACE")>]
         abstract member Trace : string -> unit
+
+        [<Conditional("TRACE")>]
         abstract member TraceEx : string -> exn -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member Debug : string -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member DebugEx : string -> exn -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member Info : string -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member InfoEx : string -> exn -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member Warn : string -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member WarnEx : string -> exn -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member Error : string -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member ErrorEx : string -> exn -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member Fatal : string -> unit
+
+        [<Conditional("DEBUG")>]
         abstract member FatalEx : string -> exn -> unit
 
     (* Logging sinks *)
@@ -227,6 +241,7 @@ module Logging =
             {new LoggingSink with
                 member x.Log (level, name, message) = 
                     printfn "%-25s | %-8A | %15s | %s" (DateTime.Now.ToString("dd-MMM-yy hh:mm:ss,fff")) level name message
+                
                 member x.Log (level, name, message, ex) = 
                     x.Log (level, name, message)
                     printfn "Exception is %s" <| ex.ToString()}
@@ -270,18 +285,18 @@ module Logging =
         static let loggers = Dictionary()
         static let locker = obj()
         
-        static member create name =
+        static member create (name, threshold) =
             try
                 Monitor.Enter locker
                 if not <| loggers.ContainsKey name then
                     let create threshold name (sink:LoggingSink) =
-                        fun level message -> if level >= !threshold then sink.Log (level, name, message)
+                        fun level message -> if level >= !threshold && level >= !globalThreshold then sink.Log (level, name, message)
             
                     let createEx threshold name (sink:LoggingSink)  =
-                        fun level message ex -> if level >= !threshold then sink.Log (level, name, message, ex)
+                        fun level message ex -> if level >= !threshold && level >= !globalThreshold then sink.Log (level, name, message, ex)
             
-                    let crt = create globalThreshold name (globalSink name)
-                    let crtEx = createEx globalThreshold name (globalSink name)
+                    let crt = create threshold name (globalSink name)
+                    let crtEx = createEx threshold name (globalSink name)
             
                     let newLogger = {
                         new Logger with
@@ -302,3 +317,20 @@ module Logging =
                     newLogger
                 else loggers.[name]
             finally Monitor.Exit locker
+
+        static member create name = LogFactory.create (name, globalThreshold)
+
+module Ole32 = 
+    open Logging
+
+    let logger = LogFactory.create "Ole32"
+
+    [<DllImport("ole32.dll")>] 
+    extern void CoUninitialize()
+
+    let killComObject (wut : 'T ref) =
+        let he = !wut
+        if he <> null && Marshal.IsComObject(he) then
+            let refLeft = Marshal.ReleaseComObject(he) 
+            refLeft |> sprintf "References left: %d" |> logger.Trace
+            wut := null

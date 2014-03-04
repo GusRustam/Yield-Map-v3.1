@@ -69,8 +69,8 @@
     <Compile Include="IntegrationTesting.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\YieldMapDsl\YieldMapDsl.fsproj">
-      <Name>YieldMapDsl</Name>
+    <ProjectReference Include="..\YieldMapDsl\YieldMap.fsproj">
+      <Name>YieldMap</Name>
       <Project>{f19b076c-c552-46fa-88b0-3f33a96dfadc}</Project>
       <Private>True</Private>
     </ProjectReference>

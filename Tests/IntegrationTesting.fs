@@ -19,26 +19,35 @@
         open YieldMap.Data.Loading
         open YieldMap.Data.MetaTables
         open YieldMap.Data
+        open YieldMap.Tools
 
         open NUnit.Framework
 
         [<Test>]
         let ``connection`` () =
-            let eikon = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI 
-            let q = OuterLoader(eikon) :> MetaLoader
+            let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
             try
-                let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
-                ans |> should be True
-            with :? TimeoutException -> 
-                logger.Error "...timeout"
-                Assert.Fail "Timeout"
+                let q = OuterLoader(!eikon) :> MetaLoader
+                try
+                    let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
+                    ans |> should be True
+                with :? TimeoutException -> 
+                    logger.Error "...timeout"
+                    Assert.Fail "Timeout"
+            finally
+                Ole32.killComObject eikon
+                Ole32.CoUninitialize()
 
         [<Test>]
         let ``retrieve-real-data`` () = 
-            let eikon = EikonDesktopDataAPIClass() :> EikonDesktopDataAPI 
-            let q = OuterLoader(eikon) :> MetaLoader
+            let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
             try
-                Async.RunSynchronously (Dex2Tests.test q, 30000) |> should be True
-            with :? TimeoutException -> 
-                logger.Error "...timeout"
-                Assert.Fail "Timeout"
+                let q = OuterLoader(!eikon) :> MetaLoader
+                try
+                    Async.RunSynchronously (Dex2Tests.test q "0#RUCORP=MM", 30000) |> should be True
+                with :? TimeoutException -> 
+                    logger.Error "...timeout"
+                    Assert.Fail "Timeout"
+            finally
+                Ole32.killComObject eikon
+                Ole32.CoUninitialize()
