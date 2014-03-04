@@ -23,8 +23,11 @@
 
         [<Test>]
         let ``retrieve-mock-data`` () = 
-            let q = MockLoader() :> MetaLoader
+            let dt = DateTime(2014,3,4)
+            let q = MockLoader(Some dt) :> MetaLoader
+
             logger.Trace "This should be visible"
             Logging.globalThreshold := Logging.LoggingLevel.Off
             logger.Trace "This should be invisible"
+
             Dex2Tests.test q "0#RUCORP=MM" |> Async.RunSynchronously |> should be True

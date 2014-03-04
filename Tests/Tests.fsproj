@@ -37,16 +37,16 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Interop.AdfinXAnalyticsFunctions">
-      <HintPath>..\..\..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.AdfinXAnalyticsFunctions.dll</HintPath>
+      <HintPath>..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.AdfinXAnalyticsFunctions.dll</HintPath>
     </Reference>
     <Reference Include="Interop.Dex2">
-      <HintPath>..\..\..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.Dex2.dll</HintPath>
+      <HintPath>..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.Dex2.dll</HintPath>
     </Reference>
     <Reference Include="Interop.EikonDesktopDataAPI">
-      <HintPath>..\..\..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.EikonDesktopDataAPI.dll</HintPath>
+      <HintPath>..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.EikonDesktopDataAPI.dll</HintPath>
     </Reference>
     <Reference Include="Interop.RTX">
-      <HintPath>..\..\..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.RTX.dll</HintPath>
+      <HintPath>..\..\..\..\..\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.RTX.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

@@ -568,9 +568,13 @@ module Loading =
 
         member private self.MetaPath<'a> () = 
             match self.date with
-            | None -> sprintf "%s/%s.csv" self.metaFileName <| typedefof<'a>.Name
-            | Some dt -> sprintf "%s/%s_%s.csv" self.metaFileName <| typedefof<'a>.Name <| dt.ToString("ddMMyyyy")
+            | None -> sprintf "data/%s/%s.csv" <|| (self.metaFileName, typedefof<'a>.Name)
+            | Some dt -> sprintf "data/%s/%s/%s.csv" <||| (self.metaFileName, dt.ToString("ddMMyyyy"), typedefof<'a>.Name)
 
+        member private self.ChainPath =
+            match self.date with
+            | None -> sprintf "data/%s/%s.xml" self.chainFileName self.chainFileName
+            | Some dt -> sprintf "data/%s/%s/%s.xml" <||| (self.chainFileName, dt.ToString("ddMMyyyy"), self.chainFileName)
 
         interface MetaLoader with
             member self.Connect () = async {
@@ -617,7 +621,6 @@ module Loading =
                         
                 with e -> return Answers.Meta.Failed e
             }
-
 
     type OuterLoader(eikon : EikonDesktopDataAPI) = 
         interface MetaLoader with

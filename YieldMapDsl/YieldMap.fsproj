@@ -50,9 +50,6 @@
     <None Include="App.config" />
     <None Include="packages.config" />
     <None Include="tdd.fsx" />
-    <Content Include="chains.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Interop.AdfinXAnalyticsFunctions">
@@ -81,11 +78,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>mkdir "$(TargetDir)meta" 
-xcopy "$(ProjectDir)meta" "$(TargetDir)meta" /E /I /F /Y
-xcopy "$(ProjectDir)meta" "$(TargetDir)../../../Tests/bin/Debug/meta" /E /I /F /Y
-;copy "$(TargetDir)$(TargetFileName)" "$(ProjectDir)../Tests/packages" /Y
-</PostBuildEvent>
+    <PostBuildEvent>mkdir "$(TargetDir)data" 
+xcopy "$(ProjectDir)data" "$(TargetDir)data" /E /I /F /Y
+xcopy "$(ProjectDir)data" "$(TargetDir)../../../Tests/bin/Debug/data" /E /I /F /Y
+;copy "$(TargetDir)$(TargetFileName)" "$(ProjectDir)../Tests/packages" /Y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
