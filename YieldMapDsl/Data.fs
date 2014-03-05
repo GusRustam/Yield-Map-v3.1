@@ -62,6 +62,11 @@ module Requests =
                 let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
                 if success then box num else null
 
+    type NotNullConverter() = 
+        interface Cnv with
+            member self.Convert x =
+                if x <> String.Empty then box x else null
+
     (* Request attributes *) 
     type RequestAttribute = 
         inherit Attribute
@@ -127,6 +132,7 @@ module Parser =
     open Answers
 
     let logger = LogFactory.create "Parser"
+    let l = obj()
 
     let parse<'T when 'T : (new : unit -> 'T)> (data:obj[,])  =
         let fieldsInfo =
@@ -143,6 +149,7 @@ module Parser =
             let minCol = data.GetLowerBound(1)
             let maxCol = data.GetUpperBound(1)
 
+            let converters = Dictionary()
             let rec import acc n = 
                 if n > maxRow then
                     acc
@@ -153,6 +160,7 @@ module Parser =
                         let res = new 'T() 
                         let t = typedefof<'T>
 
+
                         // todo same reflection on every line; memoize it somehow; maybe add PropertyInfo into parsing, and converter too.
                         for (num, name, conv) in fieldsInfo do
                             let p = t.GetProperty(name)
@@ -160,17 +168,26 @@ module Parser =
                             let converted value = 
                                 match conv with
                                 | Some(conv) -> 
-                                    logger.Trace <| sprintf "Convering value %A to type %s" value p.PropertyType.Name
-                                    let converter = Activator.CreateInstance(conv : Type) :?> Cnv
+                                    logger.Trace <| sprintf "Converting value %A to type %s" value p.PropertyType.Name
+
+                                    let converter = 
+                                        if converters.ContainsKey(conv) then 
+                                            converters.[conv] 
+                                        else 
+                                            let cnv = Activator.CreateInstance(conv : Type) :?> Cnv
+                                            lock l (fun () -> converters.Add(conv, cnv))
+                                            cnv
+
                                     try converter.Convert <| value.ToString()
                                     with _ -> value
-                                | _ -> value
+                                | _ -> 
+                                    logger.Trace <| sprintf "Value is %A" value
+                                    value
                             
                             p.SetValue(res, converted row.[num-minCol]) // <- kinda mutability
                         import ([res] @ acc) (n+1)
                     with e -> 
-                        // todo logging
-                        logger.Debug <| sprintf "Failed to import row %d" n
+                        logger.Debug <| sprintf "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())
                         import acc (n+1)
             Meta.Answer <| import [] minRow
         with e -> Meta.Failed(e)
@@ -586,13 +603,13 @@ module Loading =
                 do! Async.Sleep(500) 
                 try
                     let xDoc = XmlDocument()
-                    let path = Path.Combine(Location.path, self.chainFileName + ".xml")
+                    let path = Path.Combine(Location.path, self.ChainPath)
                     logger.Trace <| sprintf "The path to load chains is %s" path
                     xDoc.Load(path)
                     let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
                     match node with
                     | null -> return Answers.Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
-                    | _ -> return Answers.Chain.Answer <| node.InnerText.Split(' ')
+                    | _ -> return Answers.Chain.Answer <| node.InnerText.Split('\t')
                 with e -> return Answers.Chain.Failed e
             }
 
@@ -779,10 +796,10 @@ module MetaTables =
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1, "EJV.IR.Rating")>]
+        [<Field(1, "EJV.IR.Rating", typeof<NotNullConverter>)>]
         member val Rating = String.Empty with get, set
 
-        [<Field(2, "EJV.IR.RatingDate")>]
+        [<Field(2, "EJV.IR.RatingDate", typeof<DateConverter>)>]
         member val RatingDate : DateTime Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.IR.RatingSourceCode")>]
@@ -793,10 +810,10 @@ module MetaTables =
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1, "EJV.GR.Rating")>]
+        [<Field(1, "EJV.GR.Rating", typeof<NotNullConverter>)>]
         member val Rating = String.Empty with get, set
 
-        [<Field(2, "EJV.GR.RatingDate")>]
+        [<Field(2, "EJV.GR.RatingDate", typeof<DateConverter>)>]
         member val RatingDate : DateTime Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.GR.RatingSourceCode")>]
@@ -807,17 +824,22 @@ module MetaTables =
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1, "EJV.X.FRNFLOOR")>]
+        [<Field(1, "EJV.X.FRNFLOOR", typeof<SomeFloatConverter>)>]
         member val Floor : float Nullable = Nullable() with get, set
 
-        [<Field(2, "EJV.X.FRNCAP")>]
+        [<Field(2, "EJV.X.FRNCAP", typeof<SomeFloatConverter>)>]
         member val Cap : float Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.X.FREQ")>]
         member val Frequency = String.Empty with get, set
 
-        [<Field(4, "EJV.X.ADF_MARGIN")>]
+        [<Field(4, "EJV.X.ADF_MARGIN", typeof<SomeFloatConverter>)>]
         member val Margin : float Nullable = Nullable() with get, set
+
+        [<Field(5, "EJV.X.INDEX", typeof<NotNullConverter>)>]
+        member val IndexRic = String.Empty with get, set
+
+        
 
     [<Request("RH:In;Con")>]
     type RicData() =
@@ -827,5 +849,5 @@ module MetaTables =
         [<Field(1)>]
         member val Contributor = String.Empty with get, set
 
-        [<Field(2, "EJV.C.RICS")>]
+        [<Field(2, "EJV.C.RICS", typeof<NotNullConverter>)>]
         member val ContributedRic = String.Empty with get, set

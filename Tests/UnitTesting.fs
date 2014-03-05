@@ -21,13 +21,15 @@
             let ans =  Dex2Tests.connect q |> Async.RunSynchronously
             ans |> should be True
 
-        [<Test>]
+        [<Test; Timeout(1000000); MaxTime(1000000)>]
         let ``retrieve-mock-data`` () = 
-            let dt = DateTime(2014,3,4)
-            let q = MockLoader(Some dt) :> MetaLoader
+            try
+                let dt = DateTime(2014,3,4)
+                let q = MockLoader(Some dt) :> MetaLoader
 
-            logger.Trace "This should be visible"
-            Logging.globalThreshold := Logging.LoggingLevel.Off
-            logger.Trace "This should be invisible"
+                Logging.globalThreshold := Logging.LoggingLevel.Debug
 
-            Dex2Tests.test q "0#RUCORP=MM" |> Async.RunSynchronously |> should be True
+                Dex2Tests.test q "0#RUCORP=MM" |> Async.RunSynchronously |> should be True
+            with e -> 
+                logger.Error <| sprintf "Failed %s" (e.ToString())
+                Assert.Fail()
