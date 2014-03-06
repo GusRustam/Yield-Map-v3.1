@@ -1,0 +1,106 @@
+﻿namespace YieldMap.Requests
+
+[<AutoOpen>]
+module Requests =
+    open System
+    open System.Globalization
+    open System.Reflection
+
+    open YieldMap.Settings
+    open YieldMap.Tools
+
+    type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : TimeSpan option }
+        with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = None }
+
+    let private (|FirstLetter|) (str:string) = 
+        if String.IsNullOrEmpty(str) then String.Empty 
+        else string(str.[0]).ToUpper()
+
+    (* Converters *)
+    type Cnv = abstract member Convert : string -> obj
+
+    type BoolConverter() = 
+        interface Cnv with
+            member self.Convert x = 
+                match x with
+                | FirstLetter "Y" -> true 
+                | _ -> false
+                :> obj
+
+    type DateConverter() = 
+        interface Cnv with
+            member self.Convert x = 
+                let success, date = 
+                    DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
+                if success then date :> obj else x :> obj // чтобы работало и рейтеровскими данными и с моими
+
+    type SomeFloatConverter() = 
+        interface Cnv with
+            member self.Convert x =
+                let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
+                if success then box num else null
+
+    type NotNullConverter() = 
+        interface Cnv with
+            member self.Convert x =
+                if x <> String.Empty then box x else null
+
+    (* Request attributes *) 
+    type RequestAttribute = 
+        inherit Attribute
+        val Request : string
+        val Display : string
+        new (display) = {Request = String.Empty; Display = display}
+        new (request, display) = {Request = request; Display = display}
+
+    type FieldAttribute = 
+        inherit Attribute
+        val Order : int
+        val Name : string
+        val Converter : Type option 
+    
+        override self.ToString () = 
+            let convName (cnv : Type option) =  
+                match cnv with
+                | Some(tp) -> tp.Name 
+                | None -> "None"
+            sprintf "%d | %s | %s" self.Order self.Name (convName self.Converter)
+
+        new(order) = {Order = order; Name = String.Empty; Converter = None}
+        new(order, name) = {Order = order; Name = name; Converter = None}
+        new(order, name, converter) = {Order = order; Name = name; Converter = Some(converter)}
+
+    (* Tools *)
+    /// Parameters to make a request
+    type MetaRequest = {
+        Fields : string list
+        Display : string
+        Request : string
+    } with 
+        static member empty = { Fields = []; Display = ""; Request = "" }
+        /// Creates MetaSetup object and some structure to parse and store data into T easily 
+        static member extract<'T> () = 
+            let def = typedefof<'T>
+            match def.Attr<RequestAttribute>() with
+            | Some(x) -> 
+                let fields = 
+                    def.GetProperties(BindingFlags.Instance ||| BindingFlags.Public)
+                    |> Array.map (fun p -> p.Attr<FieldAttribute>())
+                    |> Array.choose (function | Some(x) when not <| String.IsNullOrEmpty(x.Name) -> Some(x.Name) | _ -> None)
+                    |> List.ofArray
+                {Request = x.Request; Display = x.Display;  Fields = fields}
+            | None -> failwith "Invalid setup, no RequestAttribute"
+
+module Answers = 
+    open Requests
+    open EikonDesktopDataAPI
+
+    type Connection = Connected | Failed of exn
+        with static member parse (e:EEikonStatus) = 
+                match e with
+                | EEikonStatus.Connected -> Connected
+                | _ -> Failed <| exn (e.ToString())
+
+
+    type Meta<'T> = Answer of 'T list | Failed of exn
+    type Chain = Answer of string array | Failed of exn

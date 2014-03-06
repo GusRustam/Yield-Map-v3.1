@@ -12,12 +12,18 @@ module Settings =
         fileName : string
     }
 
+    type SourceSettings = {
+        defaultFeed : string
+    }
+
     type Settings = {
         logging : LoggingSettings
         quotes : QuoteSettings
+        source : SourceSettings
     }
 
-    let globalSettings = {
+    let globalSettings = ref {
         logging = {fileName = "yield-map.log"}
         quotes = {midIfBoth = true}
+        source = {defaultFeed = "IDN"}
     }

@@ -43,7 +43,10 @@
     <Compile Include="Settings.fs" />
     <Compile Include="Portfolio.fs" />
     <Compile Include="Tools.fs" />
-    <Compile Include="Data.fs" />
+    <Compile Include="Requests.fs" />
+    <Compile Include="Loading.fs" />
+    <Compile Include="Calculations.fs" />
+    <Compile Include="MetaTables.fs" />
     <Compile Include="Visual.fs" />
     <Compile Include="Axis.fs" />
     <Compile Include="Program.fs" />

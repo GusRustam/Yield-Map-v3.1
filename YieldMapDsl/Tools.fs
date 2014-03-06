@@ -1,6 +1,7 @@
 ﻿namespace YieldMap.Tools
 open System.Runtime.InteropServices
 
+[<AutoOpen>]
 module Workflows =
     module Attempt = 
         type Attempt<'T> = (unit -> 'T option)
@@ -25,6 +26,7 @@ module Workflows =
       
         let attempt = AttemptBuilder()
 
+[<RequireQualifiedAccess>]
 module Solver = 
     open Workflows
     open Workflows.Attempt
@@ -51,8 +53,6 @@ module Solver =
 
     let bisect (f:float->float) (a:float) (b:float) = solve f a b 100 1e-4 1e-4
 
-
-[<AutoOpen>]
 [<RequireQualifiedAccess>]
 module ExcelDates = 
     open System
@@ -61,7 +61,6 @@ module ExcelDates =
         let serialDate = if serialDate > 59 then serialDate - 1 else serialDate
         DateTime(1899, 12, 31).AddDays(float serialDate)
     
-[<AutoOpen>]
 [<RequireQualifiedAccess>]
 module Location =
     open System.IO
@@ -72,7 +71,6 @@ module Location =
     let temp = Path.GetTempPath()
 
 [<AutoOpen>]
-[<RequireQualifiedAccess>]
 module Extensions =
     open System
     open System.IO
@@ -122,7 +120,6 @@ module Extensions =
             with _ -> None
 
 [<AutoOpen>]
-[<RequireQualifiedAccess>]
 module Disposer = 
     open System
     open System.Runtime.InteropServices
@@ -320,6 +317,7 @@ module Logging =
 
         static member create name = LogFactory.create (name, globalThreshold)
 
+[<RequireQualifiedAccess>]
 module Ole32 = 
     open Logging
 

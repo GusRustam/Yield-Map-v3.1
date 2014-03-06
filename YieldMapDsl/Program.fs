@@ -56,10 +56,7 @@
     open YieldMap.Axis.Analytics
     open YieldMap.Axis.Ansamble
     
-    open YieldMap.Data
-    open YieldMap.Data.Loading
-    open YieldMap.Data.AdfinCreate
-    open YieldMap.Data.Time
+    open YieldMap.Loading
 
     open YieldMap.Tools
 

@@ -99,7 +99,7 @@
     (* === Инструменты === *)
     module Instruments = 
         open Ratings
-        open YieldMap.Data.Calculations
+        open YieldMap.Calculations
 
         type BondMetadata = {
             Isin : string
@@ -248,16 +248,12 @@
     module Program = 
         open EikonDesktopDataAPI
         open Analytics
-        open YieldMap.Data.AdfinCreate
-        open YieldMap.Data.Loading
-        open YieldMap.Data.Time
+        open YieldMap.Loading
 
         type Main = {
-            Loader : MetaLoader // todo split fundamental data and chains and realtime data
+            Loader : SdkFactory.Loader // todo split fundamental data and chains and realtime data
                                 // realtime can come from API while fundamentals should be separate by DB layer
                                 // this means that chain/fund come via DB
-            Factory : Adfin
-            Time : TimeProvider
             QuoteQueue : Quotes IObservable // http://tomasp.net/blog/async-sequences.aspx/ TODO-DODO
 
             // todo storage provider
@@ -266,9 +262,7 @@
 
     module Ansamble = 
         open Analytics
-        open YieldMap.Data.Calculations
-        open YieldMap.Data.Loading
-        open YieldMap.Data.Time
+        open YieldMap.Calculations
         open Features
         open YieldMap.Tools.Workflows.Attempt
 
@@ -320,8 +314,8 @@
                 member x.Get (key, res) = None // todo!
 
         type StraightBondCalculator (m:Program.Main) = 
-            let straight = Bonds.StraightCalc(m.Factory) 
-            let frn = Bonds.FrnCalc(m.Factory) 
+            let straight = Bonds.StraightCalc(m.Loader) 
+            let frn = Bonds.FrnCalc(m.Loader) 
 
             let calcStraight quoteName price today settle (meta:Instruments.BondMetadata) = attempt {
                 let yr = {
@@ -417,7 +411,7 @@
 
             interface Calculator with
                 member x.Calculate (party, storage) =
-                    let today = m.Time.Today
+                    let today = m.Loader.Today()
                     let s = (storage :?> BondStorage).Storage
                     let res = (s, party.Groups) ||> List.fold (fun s group ->
                         (s, group.Instruments) ||> List.fold (fun s item ->  evaluate s item today))
