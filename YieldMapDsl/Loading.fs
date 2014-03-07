@@ -159,46 +159,60 @@ module SdkFactory =
             | None -> "data/chains/chains.xml" 
             | Some dt -> sprintf "data/chains/%s/chains.xml" <|dt.ToString("ddMMyyyy")
 
-        let chain setup date = async {
-            do! Async.Sleep(500) 
-            try
-                let xDoc = XmlDocument()
-                let path = Path.Combine(Location.path, chainPath date)
-                logger.Trace <| sprintf "The path to load chains is %s" path
-                xDoc.Load(path)
-                let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
-                match node with
-                | null -> return Answers.Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
-                | _ -> return Answers.Chain.Answer <| node.InnerText.Split('\t')
-            with e -> return Answers.Chain.Failed e
-        }
+        let chain setup date = 
+            let workflow = 
+                async {
+                    do! Async.Sleep(500) 
+                    try
+                        let xDoc = XmlDocument()
+                        let path = Path.Combine(Location.path, chainPath date)
+                        logger.Trace <| sprintf "The path to load chains is %s" path
+                        xDoc.Load(path)
+                        let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
+                        match node with
+                        | null -> return Answers.Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
+                        | _ -> return Answers.Chain.Answer <| node.InnerText.Split('\t')
+                    with e -> return Answers.Chain.Failed e
+                } |> Async.WithTimeoutEx setup.Timeout
+            
+            async {
+                try return! workflow
+                with :? TimeoutException as e -> return Answers.Chain.Failed e
+            }
 
-        let meta<'a when 'a : (new : unit -> 'a)> rics date = async {
-            do! Async.Sleep(500) 
-            // TODO delayed rics handling
-            try
-                let setRics = set rics
-                let path = Path.Combine(Location.path, metaPath<'a> date)
-                logger.Trace <| sprintf "The path to load meta is %s" path
-                let items = 
-                    path 
-                    |> File.ReadLines
-                    |> Seq.map (fun line -> line.Split('\t'))
-                    |> Seq.filter (fun arr -> Array.length arr > 0)
-                    |> Seq.choose (fun arr -> if setRics.Contains (arr.[0].Trim()) then Some arr else None)
-                    |> Array.ofSeq
+        let meta<'a when 'a : (new : unit -> 'a)> rics date timeout = 
+            let workflow = 
+                async {
+                    do! Async.Sleep(500) 
+                    // TODO delayed rics handling
+                    try
+                        let setRics = set rics
+                        let path = Path.Combine(Location.path, metaPath<'a> date)
+                        logger.Trace <| sprintf "The path to load meta is %s" path
+                        let items = 
+                            path 
+                            |> File.ReadLines
+                            |> Seq.map (fun line -> line.Split('\t'))
+                            |> Seq.filter (fun arr -> Array.length arr > 0)
+                            |> Seq.choose (fun arr -> if setRics.Contains (arr.[0].Trim()) then Some arr else None)
+                            |> Array.ofSeq
 
-                if Array.length items > 0 then
-                    let rows = Array.length items
-                    let cols = Array.length items.[0]
-                    let data = Array2D.init rows cols (fun r c -> box items.[r].[c])
-                    let x = MetaParser.parse<'a> data
-                    return x
-                else
-                    return Answers.Meta.Failed <| Exception ("No data")
+                        if Array.length items > 0 then
+                            let rows = Array.length items
+                            let cols = Array.length items.[0]
+                            let data = Array2D.init rows cols (fun r c -> box items.[r].[c])
+                            let x = MetaParser.parse<'a> data
+                            return x
+                        else
+                            return Answers.Meta.Failed <| Exception ("No data")
                         
-            with e -> return Answers.Meta.Failed e
-        }
+                    with e -> return Answers.Meta.Failed e
+                } |> Async.WithTimeoutEx timeout
+
+            async {
+                try return! workflow
+                with :? TimeoutException as e -> return Answers.Meta.Failed e
+            }
 
     module private EikonOperations = 
         let connect (eikon : EikonDesktopDataAPI) = 
@@ -206,19 +220,26 @@ module SdkFactory =
             let res = eikon.Initialize()
             Async.AwaitEvent watcher.StatusChanged
 
-        let chain (adxRtChain:AdxRtChain) setup = async {
-            try
-                adxRtChain.Source <- setup.Feed
-                adxRtChain.Mode <- setup.Mode
-                adxRtChain.ItemName <- setup.Ric
-                let evts = Watchers.Chain(adxRtChain)
-                adxRtChain.RequestChain()
+        let chain (adxRtChain:AdxRtChain) setup = 
+            let workflow = 
+                async {
+                    try
+                        adxRtChain.Source <- setup.Feed
+                        adxRtChain.Mode <- setup.Mode
+                        adxRtChain.ItemName <- setup.Ric
+                        let evts = Watchers.Chain(adxRtChain)
+                        adxRtChain.RequestChain()
                 
-                return! Async.AwaitEvent evts.Data
-            with :? COMException -> return Chain.Failed <| Exception "Not connected to Eikon"
-        }     
+                        return! Async.AwaitEvent evts.Data
+                    with :? COMException -> return Chain.Failed <| Exception "Not connected to Eikon"
+                } |> Async.WithTimeoutEx setup.Timeout
+            
+            async {
+                try return! workflow
+                with :? TimeoutException as e -> return Answers.Chain.Failed e
+            }
 
-        let meta<'a when 'a : (new : unit -> 'a)> (dex2 : Dex2Mgr) (rics:string array) = 
+        let meta<'a when 'a : (new : unit -> 'a)> (dex2 : Dex2Mgr) (rics:string array) timeout = 
             let doMeta (mgr:RData) setup = async {
                 try
                     mgr.DisplayParam <- setup.Display
@@ -236,24 +257,32 @@ module SdkFactory =
                 with :? COMException -> return Meta.Failed <| Exception "Not connected to Eikon"
             }
 
+            let workflow = 
+                async {
+                    let cookie = dex2.Initialize()
+                    let mgr = dex2.CreateRData(cookie)
+
+                    let setup = MetaRequest.extract<'a> ()
+
+                    return! doMeta mgr setup
+                } |> Async.WithTimeoutEx timeout
+
             async {
-                let cookie = dex2.Initialize()
-                let mgr = dex2.CreateRData(cookie)
-
-                let setup = MetaRequest.extract<'a> ()
-
-                return! doMeta mgr setup
+                try return! workflow
+                with :? TimeoutException as e -> return Answers.Meta.Failed e
             }
 
     type HistoryLoader = class end
     type LiveLoader = class end
 
+    /// In real case date m
+    /// Connects to Eikon, stores current date
     type Loader = 
         abstract member Today : unit -> DateTime
         abstract member Connect : unit -> Async<Answers.Connection>
 
         abstract member LoadChain : ChainRequest -> Async<Answers.Chain>
-        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> Async<Answers.Meta<'a>>
+        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> TimeSpan option -> Async<Answers.Meta<'a>>
         
         abstract member CreateAdxBondModule : unit -> AdxBondModule
         abstract member CreateAdxRtChain : unit -> AdxRtChain
@@ -271,10 +300,8 @@ module SdkFactory =
         interface Loader with
             member x.Today () = x.today
             member x.Connect () = MockOperations.connect ()
-            
-            member x.LoadChain request = MockOperations.chain request (Some x.today)
-            member x.LoadMetadata rics = MockOperations.meta rics (Some x.today)
-
+            member x.LoadChain request = MockOperations.chain request (Some x.today) 
+            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some x.today) timeout
             member x.CreateAdxBondModule () = null
             member x.CreateAdxRtChain () = null
             member x.CreateDex2Mgr () = null
@@ -292,8 +319,8 @@ module SdkFactory =
         interface Loader with
             member x.Connect () = EikonOperations.connect x.eikon
             member x.Today () = x.today
-            member x.LoadChain request = MockOperations.chain request (Some x.today)
-            member x.LoadMetadata rics = MockOperations.meta rics (Some x.today)
+            member x.LoadChain request = MockOperations.chain request (Some x.today) 
+            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some x.today) timeout
             member x.CreateAdxBondModule () = x.eikon.CreateAdxBondModule() :?> AdxBondModule
             member x.CreateAdxRtChain () = x.eikon.CreateAdxRtChain() :?> AdxRtChain
             member x.CreateDex2Mgr () = x.eikon.CreateDex2Mgr() :?> Dex2Mgr
@@ -306,7 +333,7 @@ module SdkFactory =
             member x.Connect () = EikonOperations.connect eikon
             member x.Today () = DateTime.Today
             member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
-            member x.LoadMetadata rics = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics
+            member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
             member x.CreateAdxBondModule () = eikon.CreateAdxBondModule() :?> AdxBondModule
             member x.CreateAdxRtChain () = eikon.CreateAdxRtChain() :?> AdxRtChain
             member x.CreateDex2Mgr () = eikon.CreateDex2Mgr() :?> Dex2Mgr
@@ -319,64 +346,7 @@ module SdkFactory =
             member x.Connect () = MockOperations.connect ()
             member x.Today () = DateTime.Today
             member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
-            member x.LoadMetadata rics = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics
+            member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
             member x.CreateAdxBondModule () = AdxBondModuleClass() :> AdxBondModule
             member x.CreateAdxRtChain () = new AdxRtChainClass() :> AdxRtChain
             member x.CreateDex2Mgr () =  new Dex2MgrClass() :> Dex2Mgr
-
-//module Loading =
-//
-//    module Loader =
-//        open Dex2
-//        open System.Runtime.InteropServices
-//        open ThomsonReuters.Interop.RTX
-//        open YieldMap.Requests.Answers
-//
-//
-//        // todo API
-//
-//        type OuterLoader(eikon : EikonDesktopDataAPI) = 
-//            interface MetaLoader with
-//                member self.Connect () = 
-//                    let watcher = Watchers.Eikon eikon
-//                    logger.Trace <| sprintf "Status is %A" eikon.Status
-//                    let res = eikon.Initialize()
-//                    logger.Trace <| sprintf "Res is %A" res
-//                    Async.AwaitEvent watcher.StatusChanged
-//
-//                member self.LoadChain setup = async {
-//                    let adxRtChain = eikon.CreateAdxRtChain() :?> AdxRtChain
-//                    return! chain adxRtChain setup
-//                }
-//
-//                member self.LoadMetadata<'a when 'a : (new : unit -> 'a)> rics = async {
-//                    let dex2 = eikon.CreateDex2Mgr() :?> Dex2Mgr
-//                    let cookie = dex2.Initialize()
-//                    let mgr = dex2.CreateRData(cookie)
-//
-//                    let setup = MetaRequest.extract<'a> ()
-//
-//                    return! meta<'a> mgr setup rics
-//                }
-//
-//        type InnerLoader() = 
-//            interface MetaLoader with
-//                member self.Connect () = async {
-//                    do! Async.Sleep(500) 
-//                    return Answers.Connected
-//                }
-//
-//                member self.LoadChain setup = async {
-//                    let adxRtChain = AdxRtChainClass()
-//                    return! chain adxRtChain setup
-//                }
-//
-//                member self.LoadMetadata<'a when 'a : (new : unit -> 'a)> rics = async {
-//                    let dex2 = Dex2MgrClass()
-//                    let cookie = dex2.Initialize()
-//                    let mgr = dex2.CreateRData(cookie)
-//
-//                    let setup = MetaRequest.extract<'a> ()
-//
-//                    return! meta<'a> mgr setup rics
-//                }

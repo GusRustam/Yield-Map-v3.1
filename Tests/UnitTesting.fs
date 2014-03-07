@@ -42,8 +42,9 @@
                 let dt = DateTime(2014,3,4)
                 let q = MockOnlyFactory(dt) :> Loader
                 let chain name = Dex2Tests.getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = None }
+                
                 let tasks = [ chain "0#RUTSY=MM"; chain "0#RUSOVB=MM" ]
-
+                
                 ()
             with e -> 
                 logger.Error <| sprintf "Failed %s" (e.ToString())

@@ -19,13 +19,8 @@ module Requests =
     (* Converters *)
     type Cnv = abstract member Convert : string -> obj
 
-    type BoolConverter() = 
-        interface Cnv with
-            member self.Convert x = 
-                match x with
-                | FirstLetter "Y" -> true 
-                | _ -> false
-                :> obj
+    type BoolConverter() = interface Cnv with member self.Convert x = box (match x with FirstLetter "Y" -> true | _ -> false)
+    type NotNullConverter() = interface Cnv with member self.Convert x = if x <> String.Empty then box x else null
 
     type DateConverter() = 
         interface Cnv with
@@ -40,10 +35,6 @@ module Requests =
                 let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
                 if success then box num else null
 
-    type NotNullConverter() = 
-        interface Cnv with
-            member self.Convert x =
-                if x <> String.Empty then box x else null
 
     (* Request attributes *) 
     type RequestAttribute = 
@@ -59,18 +50,15 @@ module Requests =
         val Name : string
         val Converter : Type option 
     
-        override self.ToString () = 
-            let convName (cnv : Type option) =  
-                match cnv with
-                | Some(tp) -> tp.Name 
-                | None -> "None"
-            sprintf "%d | %s | %s" self.Order self.Name (convName self.Converter)
-
         new(order) = {Order = order; Name = String.Empty; Converter = None}
         new(order, name) = {Order = order; Name = name; Converter = None}
         new(order, name, converter) = {Order = order; Name = name; Converter = Some(converter)}
 
-    (* Tools *)
+        override self.ToString () = 
+            let convName (cnv : Type option) = match cnv with Some(tp) -> tp.Name | None -> "None"
+            sprintf "%d | %s | %s" self.Order self.Name (convName self.Converter)
+
+
     /// Parameters to make a request
     type MetaRequest = {
         Fields : string list
@@ -100,7 +88,6 @@ module Answers =
                 match e with
                 | EEikonStatus.Connected -> Connected
                 | _ -> Failed <| exn (e.ToString())
-
 
     type Meta<'T> = Answer of 'T list | Failed of exn
     type Chain = Answer of string array | Failed of exn

@@ -49,7 +49,7 @@ module Dex2Tests =
                 logger.Trace <| sprintf "Chain %A" data
 
                 logger.Info "Loading BondDescr table"
-                let! meta = q.LoadMetadata<BondDescr> data
+                let! meta = q.LoadMetadata<BondDescr> data None
                 match meta with
                 | Meta.Answer metaData -> logger.Trace <| sprintf "BondDescr is %A" metaData
                 | Meta.Failed e -> 
@@ -57,7 +57,7 @@ module Dex2Tests =
                     success := false
 
                 logger.Info "Loading CouponData table"
-                let! meta = q.LoadMetadata<CouponData> data
+                let! meta = q.LoadMetadata<CouponData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.Trace <| sprintf "CouponData is %A" metaData
                 | Meta.Failed e -> 
@@ -65,7 +65,7 @@ module Dex2Tests =
                     success := false
         
                 logger.Info "Loading IssueRatingData table"
-                let! meta = q.LoadMetadata<IssueRatingData> data
+                let! meta = q.LoadMetadata<IssueRatingData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.Trace <| sprintf "IssueRatingData is %A" metaData
                 | Meta.Failed e -> 
@@ -73,7 +73,7 @@ module Dex2Tests =
                     success := false
         
                 logger.Info "Loading IssuerRatingData table"
-                let! meta = q.LoadMetadata<IssuerRatingData> data
+                let! meta = q.LoadMetadata<IssuerRatingData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.Trace <| sprintf "IssuerRatingData is %A" metaData
                 | Meta.Failed e -> 
@@ -81,7 +81,7 @@ module Dex2Tests =
                     success := false
 
                 logger.Info "Loading FrnData table"
-                let! meta = q.LoadMetadata<FrnData> data
+                let! meta = q.LoadMetadata<FrnData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.Trace <| sprintf "FrnData is %A" metaData
                 | Meta.Failed e -> 
@@ -89,7 +89,7 @@ module Dex2Tests =
                     success := false
         
                 logger.Info "Loading RicData table"
-                let! meta = q.LoadMetadata<RicData> data
+                let! meta = q.LoadMetadata<RicData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.Trace <| sprintf "RicData is %A" metaData
                 | Meta.Failed e -> 
