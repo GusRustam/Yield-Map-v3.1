@@ -35,17 +35,28 @@
             with e -> 
                 logger.Error <| sprintf "Failed %s" (e.ToString())
                 Assert.Fail()
+        
+        [<TestCase(0, 0, 126)>]
+        [<TestCase(1, 0, 87)>]
+        [<TestCase(0, 1, 39)>]
+        [<TestCase(1, 1, 0)>]
+        let ``chains-in-parallel`` (t1 : int, t2 : int, cnt : int) =
+            let toSome t = if t <= 0 then None else Some t
 
-        [<Test>]
-        let ``chains-in-parallel`` () =
-            try
-                let dt = DateTime(2014,3,4)
-                let q = MockOnlyFactory(dt) :> Loader
-                let chain name = Dex2Tests.getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = None }
+            logger.Trace <| sprintf "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
+
+            let dt = DateTime(2014,3,4)
+            let q = MockOnlyFactory(dt) :> Loader
+            let chain name timeout = Dex2Tests.getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
-                let tasks = [ chain "0#RUTSY=MM"; chain "0#RUSOVB=MM" ]
+            let tasks = [ chain "0#RUTSY=MM" (toSome t1); chain "0#RUSOVB=MM" (toSome t2) ]
                 
-                ()
-            with e -> 
-                logger.Error <| sprintf "Failed %s" (e.ToString())
-                Assert.Fail()
+            let data = 
+                tasks 
+                |> Async.Parallel
+                |> Async.RunSynchronously
+                |> Array.collect (id)
+
+            printfn "%d : %A" (Array.length data) data
+
+            data |> Array.length |> should equal cnt

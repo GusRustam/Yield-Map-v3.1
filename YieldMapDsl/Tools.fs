@@ -125,9 +125,9 @@ module Extensions =
             | Some(time) -> async { try return Async.RunSynchronously (operation, time.Milliseconds) |> Some with :? TimeoutException -> return None }
             | _ -> async { return operation |> Async.RunSynchronously |> Some }
 
-        static member WithTimeoutEx (timeout:TimeSpan option) operation = 
+        static member WithTimeoutEx (timeout:int option) operation = 
             match timeout with
-            | Some(time) -> async { return Async.RunSynchronously (operation, time.Milliseconds) }
+            | Some(time) -> async { return Async.RunSynchronously (operation, time) }
             | _ -> operation
 
 [<AutoOpen>]

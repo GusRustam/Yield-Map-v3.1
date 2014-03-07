@@ -282,7 +282,7 @@ module SdkFactory =
         abstract member Connect : unit -> Async<Answers.Connection>
 
         abstract member LoadChain : ChainRequest -> Async<Answers.Chain>
-        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> TimeSpan option -> Async<Answers.Meta<'a>>
+        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> int option -> Async<Answers.Meta<'a>>
         
         abstract member CreateAdxBondModule : unit -> AdxBondModule
         abstract member CreateAdxRtChain : unit -> AdxRtChain

@@ -9,7 +9,7 @@ module Requests =
     open YieldMap.Settings
     open YieldMap.Tools
 
-    type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : TimeSpan option }
+    type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : int option }
         with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = None }
 
     let private (|FirstLetter|) (str:string) = 
