@@ -1,5 +1,24 @@
 ﻿namespace YieldMap.Loading
 
+module HistoricalData = 
+    type HistoryLoader = class end
+
+module LiveQuotes = 
+    type RicFields = Map<string, string list>
+    type FieldValue = Map<string, string>
+    type RicFieldValue = Map<string, FieldValue>
+
+    type LiveSubscription = 
+        abstract member RequestFields : RicFields Event
+        abstract member StartResume : RicFieldValue Event
+        abstract member Pause : unit -> unit
+        abstract member StopAndClear : unit -> unit
+        abstract member AddRics : string list -> unit
+        abstract member RemoveRics : string list -> unit
+
+    type LiveLoader = 
+        abstract member setup : string * string -> LiveSubscription
+
 module SdkFactory = 
     open System
     open System.Collections.Generic
@@ -272,13 +291,13 @@ module SdkFactory =
                 with :? TimeoutException as e -> return Answers.Meta.Failed e
             }
 
-    type HistoryLoader = class end
-    type LiveLoader = class end
 
     /// In real case date m
     /// Connects to Eikon, stores current date
     type Loader = 
         abstract member Today : unit -> DateTime
+        abstract member DateChanged : DateTime IEvent
+
         abstract member Connect : unit -> Async<Answers.Connection>
 
         abstract member LoadChain : ChainRequest -> Async<Answers.Chain>
@@ -288,46 +307,46 @@ module SdkFactory =
         abstract member CreateAdxRtChain : unit -> AdxRtChain
         abstract member CreateDex2Mgr : unit -> Dex2Mgr
 
-    // Connection : timeout
-    // Today / LoadChain / LoadData : mock
-    // Adfin calcs : null
-    type MockOnlyFactory =
-        val today : DateTime
+    /// Connection : timeout;
+    /// Today / LoadChain / LoadData : mock;
+    /// Adfin calcs : null
+    type MockOnlyFactory(_today) =
+        let today = _today
+        let dateChanged = Event<DateTime>()
 
-        new () = { today = DateTime.Today }
-        new (_today) = { today = _today }
+        new () = MockOnlyFactory(DateTime.Today)
 
         interface Loader with
-            member x.Today () = x.today
+            member x.Today () = today
+            member x.DateChanged = dateChanged.Publish
             member x.Connect () = MockOperations.connect ()
-            member x.LoadChain request = MockOperations.chain request (Some x.today) 
-            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some x.today) timeout
+            member x.LoadChain request = MockOperations.chain request (Some today) 
+            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some today) timeout
             member x.CreateAdxBondModule () = null
             member x.CreateAdxRtChain () = null
             member x.CreateDex2Mgr () = null
 
-    // Connection : Eikon
-    // Today / LoadChain / LoadData : mock
-    // Adfin calcs : Eikon
-    type TestEikonFactory =
-        val today : DateTime
-        val eikon : EikonDesktopDataAPI
+    /// Connection : Eikon;
+    /// Today / LoadChain / LoadData : mock;
+    /// Adfin calcs : Eikon
+    type TestEikonFactory(_eikon, _today)  =
+        let today = _today
+        let eikon = _eikon
 
-        new (_eikon) = { today = DateTime.Today; eikon = _eikon }
-        new (_eikon, _today) = { today = _today; eikon = _eikon }
+        new (_eikon) = TestEikonFactory(_eikon, DateTime.Today)
 
         interface Loader with
-            member x.Connect () = EikonOperations.connect x.eikon
-            member x.Today () = x.today
-            member x.LoadChain request = MockOperations.chain request (Some x.today) 
-            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some x.today) timeout
-            member x.CreateAdxBondModule () = x.eikon.CreateAdxBondModule() :?> AdxBondModule
-            member x.CreateAdxRtChain () = x.eikon.CreateAdxRtChain() :?> AdxRtChain
-            member x.CreateDex2Mgr () = x.eikon.CreateDex2Mgr() :?> Dex2Mgr
+            member x.Connect () = EikonOperations.connect eikon
+            member x.Today () = today
+            member x.LoadChain request = MockOperations.chain request (Some today) 
+            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some today) timeout
+            member x.CreateAdxBondModule () = eikon.CreateAdxBondModule() :?> AdxBondModule
+            member x.CreateAdxRtChain () = eikon.CreateAdxRtChain() :?> AdxRtChain
+            member x.CreateDex2Mgr () = eikon.CreateDex2Mgr() :?> Dex2Mgr
 
-    // Connection : Eikon
-    // Today / LoadChain / LoadData : Real
-    // Adfin calcs : Eikon
+    /// Connection : Eikon;
+    /// Today / LoadChain / LoadData : Real;
+    /// Adfin calcs : Eikon
     type OuterEikonFactory (eikon:EikonDesktopDataAPI) =
         interface Loader with
             member x.Connect () = EikonOperations.connect eikon
@@ -338,9 +357,9 @@ module SdkFactory =
             member x.CreateAdxRtChain () = eikon.CreateAdxRtChain() :?> AdxRtChain
             member x.CreateDex2Mgr () = eikon.CreateDex2Mgr() :?> Dex2Mgr
 
-    // Connection : timeout
-    // Today / LoadChain / LoadData : Real
-    // Adfin calcs : Eikon
+    /// Connection : timeout;
+    /// Today / LoadChain / LoadData : Real;
+    /// Adfin calcs : Eikon
     type InnerEikonFactory (eikon:EikonDesktopDataAPI) =
         interface Loader with
             member x.Connect () = MockOperations.connect ()

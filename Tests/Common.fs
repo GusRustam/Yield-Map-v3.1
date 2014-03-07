@@ -4,11 +4,17 @@ open System
 open System.IO
 open System.Xml
 
+open EikonDesktopDataAPI
+
+open NUnit.Framework
+
 open YieldMap.Requests
 open YieldMap.Requests.Answers
 open YieldMap.Loading
 open YieldMap.MetaTables
 open YieldMap.Tools.Logging
+open YieldMap.Loading.SdkFactory
+open YieldMap.Tools
 
 module Dex2Tests = 
     let logger = LogFactory.create "Dex2Tests"
@@ -24,6 +30,24 @@ module Dex2Tests =
             logger.Trace <| sprintf "Failed to connect %s" (e.ToString())
             return false
     }
+
+//    let executeTestInMock dt test = 
+//        let loader = MockOnlyFactory(dt) :> Loader
+//        if connect loader |> Async.RunSynchronously then
+//            test loader
+//        else Assert.Fail()
+//
+//    let executeTestInEikon test = 
+//        let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
+//        try
+//            let loader = OuterEikonFactory(!eikon) :> Loader
+//            if connect loader |> Async.RunSynchronously then
+//                test loader
+//            else Assert.Fail()
+//        finally
+//            Ole32.killComObject eikon
+//            Ole32.CoUninitialize()
+//
 
     let getChain (q:SdkFactory.Loader) request = async {
         let! chain = q.LoadChain request

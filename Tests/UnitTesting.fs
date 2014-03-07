@@ -51,11 +51,7 @@
                 
             let tasks = [ chain "0#RUTSY=MM" (toSome t1); chain "0#RUSOVB=MM" (toSome t2) ]
                 
-            let data = 
-                tasks 
-                |> Async.Parallel
-                |> Async.RunSynchronously
-                |> Array.collect (id)
+            let data = tasks |> Async.Parallel |> Async.RunSynchronously |> Array.collect id
 
             printfn "%d : %A" (Array.length data) data
 
