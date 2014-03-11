@@ -17,7 +17,8 @@ module LiveQuotes =
         abstract member RemoveRics : string list -> unit
 
     type LiveLoader = 
-        abstract member setup : string * string -> LiveSubscription
+        abstract member Setup : string * string -> LiveSubscription // feed * ric
+        abstract member Setup : string -> LiveSubscription // default feed * ric
 
 module SdkFactory = 
     open System
@@ -291,6 +292,34 @@ module SdkFactory =
                 with :? TimeoutException as e -> return Answers.Meta.Failed e
             }
 
+    module DateChangeTrigger = 
+        let waitForTime (evt:DateTime Event) (span : TimeSpan) = 
+            let rec wait (time : DateTime) =  async {
+                do! Async.Sleep(1000)
+                let now = DateTime.Now
+                if now - time >= span then
+                    try
+                        evt.Trigger DateTime.Today
+                    with e -> logger.Error <| sprintf "Failed to handle date change: %s" (e.ToString())
+                    return! wait now
+                else return! wait time
+            }
+
+            wait DateTime.Now
+
+        let waitForTomorrow (evt:DateTime Event) = 
+            let rec wait (time : DateTime) =  async {
+                do! Async.Sleep(1000) // midnight check once a second
+                let now = DateTime.Now
+                if now.Date <> time.Date then
+                    try
+                        evt.Trigger DateTime.Today // tomorrow has come, informing
+                    with e -> logger.Error <| sprintf "Failed to handle date change: %s" (e.ToString())
+                    return! wait now // and now we'll count from new time, current's today
+                else return! wait time // counting from recent today
+            }
+
+            wait DateTime.Now
 
     /// In real case date m
     /// Connects to Eikon, stores current date
@@ -332,11 +361,13 @@ module SdkFactory =
     type TestEikonFactory(_eikon, _today)  =
         let today = _today
         let eikon = _eikon
+        let dateChanged = Event<DateTime>()
 
         new (_eikon) = TestEikonFactory(_eikon, DateTime.Today)
 
         interface Loader with
             member x.Connect () = EikonOperations.connect eikon
+            member x.DateChanged = dateChanged.Publish
             member x.Today () = today
             member x.LoadChain request = MockOperations.chain request (Some today) 
             member x.LoadMetadata rics timeout = MockOperations.meta rics (Some today) timeout
@@ -348,8 +379,12 @@ module SdkFactory =
     /// Today / LoadChain / LoadData : Real;
     /// Adfin calcs : Eikon
     type OuterEikonFactory (eikon:EikonDesktopDataAPI) =
+        let dateChanged = Event<DateTime>()
+        do DateChangeTrigger.waitForTomorrow dateChanged |> Async.Start
+
         interface Loader with
             member x.Connect () = EikonOperations.connect eikon
+            member x.DateChanged = dateChanged.Publish
             member x.Today () = DateTime.Today
             member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
             member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
@@ -357,12 +392,17 @@ module SdkFactory =
             member x.CreateAdxRtChain () = eikon.CreateAdxRtChain() :?> AdxRtChain
             member x.CreateDex2Mgr () = eikon.CreateDex2Mgr() :?> Dex2Mgr
 
+
     /// Connection : timeout;
     /// Today / LoadChain / LoadData : Real;
     /// Adfin calcs : Eikon
     type InnerEikonFactory (eikon:EikonDesktopDataAPI) =
+        let dateChanged = Event<DateTime>()
+        do DateChangeTrigger.waitForTomorrow dateChanged |> Async.Start
+
         interface Loader with
             member x.Connect () = MockOperations.connect ()
+            member x.DateChanged = dateChanged.Publish
             member x.Today () = DateTime.Today
             member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
             member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout

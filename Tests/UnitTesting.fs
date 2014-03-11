@@ -56,3 +56,15 @@
             printfn "%d : %A" (Array.length data) data
 
             data |> Array.length |> should equal cnt
+
+        [<Test>]
+        let ``tomorrow-test`` () =
+            let always x = fun _ -> x
+            let evt = Event<DateTime>()
+            let anEvent = evt.Publish
+            let count = ref 0
+            let counter = anEvent |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun x -> count := x)
+            anEvent |> Observable.add (fun dt -> logger.Info <| sprintf "Ping!!! %A" dt)
+            Async.Start (SdkFactory.DateChangeTrigger.waitForTime evt <| TimeSpan.FromSeconds(5.0))
+            Async.Sleep(21000) |> Async.RunSynchronously
+            !count |> should equal 4
