@@ -158,14 +158,14 @@ module Disposer =
     type ComDisposer<'T when 'T : equality and 'T : null>(item : 'T) = 
         inherit Disposer()
 
-        let mutable _object = item
-        member self.Object() = _object
+        let _object = ref item
+        member self.Object() = !_object
     
         override self.DisposeUnmanaged() = ()
         override self.DisposeManaged() =
-            if _object <> null && Marshal.IsComObject(_object) then
+            if !_object <> null && Marshal.IsComObject(!_object) then
                 Marshal.ReleaseComObject(_object) |> printfn "References left: %d" 
-                _object <- null
+                _object := null
 
 module Logging = 
     open NLog

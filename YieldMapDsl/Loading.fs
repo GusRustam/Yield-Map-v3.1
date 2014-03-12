@@ -4,21 +4,92 @@ module HistoricalData =
     type HistoryLoader = class end
 
 module LiveQuotes = 
+    open EikonDesktopDataAPI
+    open ThomsonReuters.Interop.RTX
+    
+    open System.Runtime.InteropServices
+    open System.Threading
+
+    open YieldMap.Tools
+    open YieldMap.Tools.Disposer
+    open YieldMap.Tools.Logging
+
+    let private logger = LogFactory.create "LiveQuotes"
+
+    type TimeoutAnswer<'T> = Timeout | Succeed of 'T | Invalid of exn
+    type TimeoutState<'T> = Init | Answer of TimeoutAnswer<'T>
+
     type RicFields = Map<string, string list>
     type FieldValue = Map<string, string>
     type RicFieldValue = Map<string, FieldValue>
 
-    type LiveSubscription = 
-        abstract member RequestFields : RicFields Event
-        abstract member StartResume : RicFieldValue Event
-        abstract member Pause : unit -> unit
-        abstract member StopAndClear : unit -> unit
-        abstract member AddRics : string list -> unit
-        abstract member RemoveRics : string list -> unit
+    type Subscription = 
+        abstract member OnQuotes : RicFieldValue IEvent
 
-    type LiveLoader = 
-        abstract member Setup : string * string -> LiveSubscription // feed * ric
-        abstract member Setup : string -> LiveSubscription // default feed * ric
+        abstract member Fields : string list -> RicFields Async
+        abstract member Snapshot : RicFields -> RicFieldValue Async
+
+        abstract member Start : unit -> unit
+        abstract member Pause : unit -> unit
+        abstract member Stop : unit -> unit
+
+        abstract member Add : RicFields -> unit
+        abstract member Remove : string list -> unit // removes rics
+
+    module private Watchers = 
+
+        type FieldWatcher (rics : string list, fields : AdxRtList) = 
+            let l = obj()
+            let fieldsData = Event<_>()
+            
+            let logger = LogFactory.create "FieldWatcher"
+            let state = ref Init
+
+            do
+                fields.add_OnStatusChange (fun listStatus sourceStatus runMode -> 
+                    lock l (fun _ -> 
+                        logger.Trace <| sprintf "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+
+                        if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
+                            if listStatus = RT_ListStatus.RT_LIST_RUNNING then
+                                fields.UnregisterAllItems ()
+                            state :=  exn() |> Invalid |> Answer
+
+                    ))
+
+                fields.add_OnUpdate (fun ric tag status -> 
+                    lock l (fun _ -> 
+                        ()
+                    ))
+
+            member x.FieldsData = fieldsData.Publish
+
+    type EikonSubscription (_eikon:EikonDesktopDataAPI, _feed) = 
+        inherit Disposer ()
+
+        let feed = _feed
+        let eikon = _eikon
+        let requests = Map.empty
+        let quotes = ref (eikon.CreateAdxRtList() :?> AdxRtList)
+        let quotesEvent = Event<RicFieldValue>()
+
+        override x.DisposeManaged () = Ole32.killComObject quotes
+        override x.DisposeUnmanaged () = ()
+
+        interface Subscription with
+            member x.OnQuotes = quotesEvent.Publish
+
+            member x.Fields rics = async {
+                try
+                    let fields = _eikon.CreateAdxRtList() :?> AdxRtList
+                    let fieldWatcher = Watchers.FieldWatcher(fields)
+                    fields.RegisterItems (rics |> String.concat ",", "*")
+                    return! Async.AwaitEvent fieldWatcher.FieldsData
+                with :? COMException as e ->
+                    logger.ErrorEx "Failed to load fields" e
+                    return Map.empty // todo
+            }
+
 
 module SdkFactory = 
     open System
