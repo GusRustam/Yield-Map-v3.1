@@ -37,32 +37,81 @@ module LiveQuotes =
         abstract member Remove : string list -> unit // removes rics
 
     module private Watchers = 
-
         type FieldWatcher (rics : string list, fields : AdxRtList) = 
-            let l = obj()
-            let fieldsData = Event<_>()
+            let _lock = obj()
+            let _fieldsData = Event<_>()
             
-            let logger = LogFactory.create "FieldWatcher"
-            let state = ref Init
+            let _logger = LogFactory.create "FieldWatcher"
+            
+            let mutable _rics = set rics
+            let mutable _failed = false
+            let mutable _finished = false
+            let mutable _answer = Map.empty
 
             do
-                fields.add_OnStatusChange (fun listStatus sourceStatus runMode -> 
-                    lock l (fun _ -> 
-                        logger.Trace <| sprintf "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+                let onStatusChange  listStatus sourceStatus runMode = 
+                    _logger.Trace <| sprintf "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
 
-                        if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
-                            if listStatus = RT_ListStatus.RT_LIST_RUNNING then
-                                fields.UnregisterAllItems ()
-                            state :=  exn() |> Invalid |> Answer
+                    if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
+                        if listStatus = RT_ListStatus.RT_LIST_RUNNING then
+                            fields.UnregisterAllItems ()
+                        _logger.Warn <| sprintf "Source not up %A" sourceStatus
+                        _failed <- true
 
-                    ))
+                fields.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
 
-                fields.add_OnUpdate (fun ric tag status -> 
-                    lock l (fun _ -> 
-                        ()
-                    ))
+//                let onUpdate ric _ status =
+//                    let rec getLine num arr (data : obj[,]) =
+//                        if num < data.GetLength(0) then
+//                            getLine (num+1) ((data.[num, 0].ToString()) :: arr) data
+//                        else arr
+//
+//                    lock _lock (fun _ -> 
+//                        if not _finished && _rics.Contains ric then
+//                            _rics  <- _rics.Remove ric
+//                            if [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> List.exists ((=) status) then
+//                                let data = fields.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_STATUS) :?> obj[,]
+//                                let f = data |> getLine 0 [] |> Array.ofList 
+//                                _answer <- _answer.Add (ric, f)
+//                                if _rics.Count = 0 then _finished <- true
+//                            else _logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
+//                        else _logger.Warn <| sprintf "Ric %s was not requested" ric)
+//
+//                fields.add_OnUpdate <| IAdxRtListEvents_OnUpdateEventHandler onUpdate
 
-            member x.FieldsData = fieldsData.Publish
+                let handle allRics answers ric status =
+                    _logger.Trace <| sprintf "Got ric %s with status %A" ric status
+
+                    let rec getLine num arr (data : obj[,]) =
+                        if num < data.GetLength(0) then getLine (num+1) ((data.[num, 0].ToString()) :: arr) data else arr
+
+                    if Set.contains ric allRics && not _failed then
+                        if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
+                            let data = fields.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_STATUS) :?> obj[,]
+                            let f = data |> getLine 0 [] 
+                            
+                            Set.remove ric allRics, Map.add ric f answers
+                        else 
+                            _logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
+                            allRics, answers
+                    else 
+                        _logger.Warn <| sprintf "Ric %s was not requested" ric
+                        allRics, answers
+
+//                IAdxRtListEvents_OnImageEventHandler
+                let rec handler allRics answers = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status ->
+                    fields.remove_OnUpdate (handler allRics answers)
+                    let ricsLeft, results = handle allRics answers ric status
+                    if Set.count ricsLeft = 0 then
+                        _fieldsData.Trigger results
+                    else
+                        (ricsLeft, results) ||> handler |> fields.add_OnUpdate 
+                )
+
+                _logger.Info "hihi"
+                fields.add_OnUpdate <| handler (set rics) Map.empty
+
+            member x.FieldsData = _fieldsData.Publish
 
     type EikonSubscription (_eikon:EikonDesktopDataAPI, _feed) = 
         inherit Disposer ()
@@ -82,14 +131,27 @@ module LiveQuotes =
             member x.Fields rics = async {
                 try
                     let fields = _eikon.CreateAdxRtList() :?> AdxRtList
-                    let fieldWatcher = Watchers.FieldWatcher(fields)
+                    fields.Source <- feed
+                    let fieldWatcher = Watchers.FieldWatcher(rics, fields)
                     fields.RegisterItems (rics |> String.concat ",", "*")
-                    return! Async.AwaitEvent fieldWatcher.FieldsData
+                    fields.StartUpdates RT_RunMode.RT_MODE_ONUPDATE
+                    let! res = Async.AwaitEvent fieldWatcher.FieldsData 
+                    fields.CloseAllLinks ()
+                    return res
                 with :? COMException as e ->
                     logger.ErrorEx "Failed to load fields" e
                     return Map.empty // todo
             }
 
+            member x.Snapshot _ = async {
+                return Map.empty
+            }
+
+            member x.Start () = ()
+            member x.Pause () = ()
+            member x.Stop () = ()
+            member x.Add _ = ()
+            member x.Remove _ = ()
 
 module SdkFactory = 
     open System

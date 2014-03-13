@@ -16,6 +16,7 @@
 
         open YieldMap.Requests.Answers
         open YieldMap.Requests
+        open YieldMap.Loading.LiveQuotes
         open YieldMap.Loading.SdkFactory
         open YieldMap.MetaTables
         open YieldMap.Tools.Logging
@@ -84,6 +85,27 @@
                 printfn "%d : %A" (Array.length data) data
 
                 data |> Array.length |> should equal cnt
+            finally
+                Ole32.killComObject eikon
+                Ole32.CoUninitialize()
+
+        [<Test>]
+        let ``fields-test`` () =
+            let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
+            let q = OuterEikonFactory(!eikon) :> Loader
+            try
+
+                try
+                    let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
+                    ans |> should be True
+                with :? TimeoutException -> 
+                    logger.Error "...timeout"
+                    Assert.Fail "Timeout"
+
+                use subscription = new EikonSubscription(!eikon, "IDN")
+                let s =  subscription :> Subscription
+                let answer = s.Fields ["RUB="; "GAZP.MM"] |> Async.RunSynchronously
+                logger.Info <| sprintf "Got answer %A" answer
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
