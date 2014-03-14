@@ -80,12 +80,11 @@ module LiveQuotes =
 
 // Version 2
                 let handle allRics answers ric status =
-                    _logger.Trace <| sprintf "Got ric %s with status %A" ric status
-
                     let rec getLine num arr (data : obj[,]) =
                         if num < data.GetLength(0) then getLine (num+1) ((data.[num, 0].ToString()) :: arr) data else arr
 
                     if Set.contains ric allRics && not _failed then
+                        _logger.Trace <| sprintf "Got ric %s with status %A" ric status
                         if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
                             let data = fields.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_STATUS) :?> obj[,]
                             let f = data |> getLine 0 [] 
@@ -95,20 +94,24 @@ module LiveQuotes =
                             _logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
                             allRics, answers
                     else 
-                        _logger.Warn <| sprintf "Ric %s was not requested" ric
+                        _logger.Trace <| sprintf "Ric %s was not requested" ric
                         allRics, answers
 
+                let self = ref <| IAdxRtListEvents_OnUpdateEventHandler  (fun _ _ _ -> ())
+                
                 let rec handler allRics answers = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status ->
-                    fields.remove_OnUpdate (handler allRics answers)
-                    let ricsLeft, results = handle allRics answers ric status
-                    if Set.count ricsLeft = 0 then
-                        _fieldsData.Trigger <| Succeed results
-                    else
-                        (ricsLeft, results) ||> handler |> fields.add_OnUpdate 
-                )
+                    lock _lock (fun _ -> 
+                        fields.remove_OnUpdate <| !self
+                        let ricsLeft, results = handle allRics answers ric status
+                        if Set.count ricsLeft = 0 then
+                            _fieldsData.Trigger <| Succeed results 
+                        else
+                            self := (ricsLeft, results) ||> handler 
+                            !self |> fields.add_OnUpdate))
+                                
+                self :=  handler (set rics) Map.empty
 
-                _logger.Info "hihi"
-                fields.add_OnUpdate <| handler (set rics) Map.empty
+                fields.add_OnUpdate !self  // <|  handler (set rics) Map.empty
 
 // Version 3
 //                fields.add_OnImage (fun status -> 
