@@ -16,8 +16,7 @@ module LiveQuotes =
 
     let private logger = LogFactory.create "LiveQuotes"
 
-    type TimeoutAnswer<'T> = Timeout | Succeed of 'T | Invalid of exn
-    type TimeoutState<'T> = Init | Answer of TimeoutAnswer<'T>
+    type TimeoutAnswer<'T> = Timeout | Invalid of exn | Succeed of 'T 
 
     type RicFields = Map<string, string list>
     type FieldValue = Map<string, string>
@@ -26,8 +25,8 @@ module LiveQuotes =
     type Subscription = 
         abstract member OnQuotes : RicFieldValue IEvent
 
-        abstract member Fields : string list -> RicFields Async
-        abstract member Snapshot : RicFields -> RicFieldValue Async
+        abstract member Fields : string list -> RicFields TimeoutAnswer Async
+        abstract member Snapshot : RicFields -> RicFieldValue TimeoutAnswer Async
 
         abstract member Start : unit -> unit
         abstract member Pause : unit -> unit
@@ -40,13 +39,11 @@ module LiveQuotes =
         type FieldWatcher (rics : string list, fields : AdxRtList) = 
             let _lock = obj()
             let _fieldsData = Event<_>()
+            let _rics = set rics
             
             let _logger = LogFactory.create "FieldWatcher"
             
-            let mutable _rics = set rics
             let mutable _failed = false
-            let mutable _finished = false
-            let mutable _answer = Map.empty
 
             do
                 let onStatusChange  listStatus sourceStatus runMode = 
@@ -55,11 +52,13 @@ module LiveQuotes =
                     if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
                         if listStatus = RT_ListStatus.RT_LIST_RUNNING then
                             fields.UnregisterAllItems ()
-                        _logger.Warn <| sprintf "Source not up %A" sourceStatus
+                        _logger.Warn <| sprintf "Source not up: %A" sourceStatus
                         _failed <- true
+                        _fieldsData.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
 
                 fields.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
 
+// Version 1
 //                let onUpdate ric _ status =
 //                    let rec getLine num arr (data : obj[,]) =
 //                        if num < data.GetLength(0) then
@@ -79,6 +78,7 @@ module LiveQuotes =
 //
 //                fields.add_OnUpdate <| IAdxRtListEvents_OnUpdateEventHandler onUpdate
 
+// Version 2
                 let handle allRics answers ric status =
                     _logger.Trace <| sprintf "Got ric %s with status %A" ric status
 
@@ -98,18 +98,61 @@ module LiveQuotes =
                         _logger.Warn <| sprintf "Ric %s was not requested" ric
                         allRics, answers
 
-//                IAdxRtListEvents_OnImageEventHandler
                 let rec handler allRics answers = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status ->
                     fields.remove_OnUpdate (handler allRics answers)
                     let ricsLeft, results = handle allRics answers ric status
                     if Set.count ricsLeft = 0 then
-                        _fieldsData.Trigger results
+                        _fieldsData.Trigger <| Succeed results
                     else
                         (ricsLeft, results) ||> handler |> fields.add_OnUpdate 
                 )
 
                 _logger.Info "hihi"
                 fields.add_OnUpdate <| handler (set rics) Map.empty
+
+// Version 3
+//                fields.add_OnImage (fun status -> 
+//                    if not _failed then
+//                        match status with
+//                        | RT_DataStatus.RT_DS_FULL -> 
+//                            let data = fields.ListItems(RT_ItemRowView.RT_IRV_ALL, RT_ItemColumnView.RT_ICV_STATUS) :?> obj[,]
+//
+//                            let slice (data : obj[,]) col = 
+//                                let rec getLine num arr =
+//                                    if num < data.GetLength(0) then getLine (num+1) (data.[num, col] :: arr) else arr
+//                                getLine 0 [] 
+//
+//                            let ricsList = slice data 0 |> List.map (fun x -> x.ToString())
+//                            let statusList = slice data 1 |> List.map (fun x -> x :?> RT_ItemStatus)
+//                            let ricsAndStatuses = List.zip ricsList statusList
+//
+//                            let rec parseRics rics answer =
+//                                let update ric answer status =
+//                                    _logger.Trace <| sprintf "Got ric %s with status %A" ric status
+//
+//                                    if List.exists (fun (r, _) -> r = ric) rics then
+//                                        if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
+//                                            let data = fields.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_STATUS) :?> obj[,]
+//                                            let f = slice data 0 |> List.map (fun x -> x.ToString())
+//                            
+//                                            Map.add ric f answer
+//                                        else 
+//                                            _logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
+//                                            answer
+//                                    else 
+//                                        _logger.Warn <| sprintf "Ric %s was not requested" ric
+//                                        answer
+//                                                                 
+//                                match rics with
+//                                | (ric, status) :: rest -> 
+//                                    parseRics rest (update ric answer status)
+//                                | [] -> answer
+//
+//                            let result = parseRics ricsAndStatuses Map.empty
+//                            _fieldsData.Trigger <| Succeed result
+//                        | RT_DataStatus.RT_DS_PARTIAL -> _logger.Warn "Partial data on fields"
+//                        | _ -> _fieldsData.Trigger <| Invalid(exn(sprintf "Fields not available, status: %A" status))
+//                )
 
             member x.FieldsData = _fieldsData.Publish
 
@@ -134,17 +177,18 @@ module LiveQuotes =
                     fields.Source <- feed
                     let fieldWatcher = Watchers.FieldWatcher(rics, fields)
                     fields.RegisterItems (rics |> String.concat ",", "*")
+//                    fields.StartUpdates RT_RunMode.RT_MODE_IMAGE
                     fields.StartUpdates RT_RunMode.RT_MODE_ONUPDATE
                     let! res = Async.AwaitEvent fieldWatcher.FieldsData 
                     fields.CloseAllLinks ()
                     return res
                 with :? COMException as e ->
                     logger.ErrorEx "Failed to load fields" e
-                    return Map.empty // todo
+                    return Invalid e
             }
 
             member x.Snapshot _ = async {
-                return Map.empty
+                return Succeed Map.empty
             }
 
             member x.Start () = ()
