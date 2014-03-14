@@ -126,6 +126,28 @@
                 use subscription = new EikonSubscription(!eikon, "IDN")
                 let s =  subscription :> Subscription
                 let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                let answer = s.Snapshot (ricFields, Some 10) |> Async.RunSynchronously
+                logger.Info <| sprintf "Got answer %A" answer
+            finally
+                Ole32.killComObject eikon
+                Ole32.CoUninitialize()
+
+        [<Test>]
+        let ``snapshot-test-1`` () =
+            let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
+            let q = OuterEikonFactory(!eikon) :> Loader
+            try
+
+                try
+                    let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
+                    ans |> should be True
+                with :? TimeoutException -> 
+                    logger.Error "...timeout"
+                    Assert.Fail "Timeout"
+
+                use subscription = new EikonSubscription(!eikon, "IDN")
+                let s =  subscription :> Subscription
+                let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID12"; "ASK33"])] |> Map.ofList
                 let answer = s.Snapshot (ricFields, None) |> Async.RunSynchronously
                 logger.Info <| sprintf "Got answer %A" answer
             finally

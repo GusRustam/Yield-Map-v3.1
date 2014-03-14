@@ -95,8 +95,7 @@ module LiveQuotes =
                                     answer
                                                                  
                             match rics with
-                            | (ric, status) :: rest -> 
-                                parseRics rest (update ric answer status)
+                            | (ric, status) :: rest -> parseRics rest (update ric answer status)
                             | [] -> answer                   
                              
                         let result = parseRics ricsAndStatuses Map.empty
@@ -207,39 +206,28 @@ module LiveQuotes =
                         return Invalid e
                 } |> Async.WithTimeoutEx timeout
 
-            member x.Snapshot (ricFields, ?timeout) = async {
-                try
-                    let! answers =   
-                        ricFields 
-                        |> Map.toSeq 
-                        |> Seq.map (fun (ric, fields) -> 
-                            async {
-                                let snap = eikon.CreateAdxRtList() :?> AdxRtList
-                                let snapshotter = ref snap
-                                try
-                                    snap.Source <- _feed
-                                    snap.RegisterItems(ric, String.Join(",", fields))
-                                    let snapWaiter = Watchers.SnapWatcher(snap)
-                                    snap.StartUpdates RT_RunMode.RT_MODE_IMAGE
-                                    let! res = Async.AwaitEvent snapWaiter.Snapshot
-                                    snap.CloseAllLinks()
-                                    return res
-                                finally
-                                    Ole32.killComObject snapshotter
-                            } |> Async.WithTimeout timeout) 
-                        |> Async.Parallel
+            member x.Snapshot (ricFields, ?timeout) = 
+                let rics, fields = Map.toList ricFields |> List.unzip
+                let fields = List.concat fields |> set
 
-                    let result = 
-                        answers 
-                        |> Array.choose id // remove timeouts
-                        |> Array.choose (function Succeed x -> Some x | _ -> None) // remove invalids
-                        |> Array.fold Map.join Map.empty
-
-                    return Succeed result
-                with :? COMException as e ->
-                    logger.ErrorEx "Failed to load fields" e
-                    return Invalid e
-            }
+                async {
+                    try
+                        let snap = eikon.CreateAdxRtList() :?> AdxRtList
+                        let snapshotter = ref snap
+                        try
+                            snap.Source <- _feed
+                            snap.RegisterItems(String.Join(",", rics), String.Join(",", fields))
+                            let snapWaiter = Watchers.SnapWatcher(snap)
+                            snap.StartUpdates RT_RunMode.RT_MODE_IMAGE
+                            let! res = Async.AwaitEvent snapWaiter.Snapshot
+                            snap.CloseAllLinks()
+                            return res
+                        finally
+                            Ole32.killComObject snapshotter
+                    with :? COMException as e ->
+                        logger.ErrorEx "Failed to load fields" e
+                        return Invalid e
+                }
 
             member x.Start () = ()
             member x.Pause () = ()
