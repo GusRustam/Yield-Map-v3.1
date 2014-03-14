@@ -87,6 +87,14 @@ module Extensions =
         let repeat arr times = [|1..times|] |> Array.fold (fun acc _ -> Array.append acc arr) [||]
         let unique arr = arr |> Seq.distinct |> Seq.toArray
 
+    module Map =
+        let join map another = 
+            let rec doInject m a = 
+                match a with
+                | (key, value) :: rest -> doInject (Map.add key value m) rest
+                | _ -> m
+            doInject map (Map.toList another)
+
     /// Extension methods to get single attribute in a cleaner way
     type MemberInfo with
         member self.Attr<'T when 'T :> Attribute> () = 
@@ -120,9 +128,9 @@ module Extensions =
             with _ -> None
 
     type Async with
-        static member WithTimeout (timeout:TimeSpan option) operation = 
+        static member WithTimeout (timeout:int option) operation = 
             match timeout with
-            | Some(time) -> async { try return Async.RunSynchronously (operation, time.Milliseconds) |> Some with :? TimeoutException -> return None }
+            | Some(time) -> async { try return Async.RunSynchronously (operation, time) |> Some with :? TimeoutException -> return None }
             | _ -> async { return operation |> Async.RunSynchronously |> Some }
 
         static member WithTimeoutEx (timeout:int option) operation = 
