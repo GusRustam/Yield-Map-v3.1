@@ -42,6 +42,9 @@
   <ItemGroup>
     <Compile Include="Settings.fs" />
     <Compile Include="Portfolio.fs" />
+    <Compile Include="Location.fs" />
+    <Compile Include="Logging.fs" />
+    <Compile Include="Calendar.fs" />
     <Compile Include="Tools.fs" />
     <Compile Include="Requests.fs" />
     <Compile Include="Loading.fs" />

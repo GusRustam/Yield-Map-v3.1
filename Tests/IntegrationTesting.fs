@@ -110,12 +110,16 @@
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
 
+        let counts (wut:RicFieldValue) = 
+            let rec cntRics rics fieldsValues = function
+                | (ric, fieldValue) :: rest -> rest |> cntRics (rics+1) (fieldsValues + (fieldValue |> Map.toList |> List.length))
+                | [] -> rics, fieldsValues
+            wut |> Map.toList |> cntRics 0 0
 
         let snapshot ricFields  =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
             let q = OuterEikonFactory(!eikon) :> Loader
             try
-
                 try
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
@@ -127,28 +131,30 @@
                 let s =  subscription :> Subscription
                 let answer = s.Snapshot (ricFields, Some 100000) |> Async.RunSynchronously
                 logger.Info <| sprintf "Got answer %A" answer
+
+                match answer with
+                | Succeed wut -> counts wut
+                | _ -> 0, 0
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
 
-
-
         [<Test>]
         let ``snapshot-test`` () =
             let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-            snapshot ricFields
+            snapshot ricFields |> should equal (2, 4)
 
         [<Test>]
         let ``snapshot-test-1`` () =
             let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID12"; "ASK33"])] |> Map.ofList
-            snapshot ricFields
+            snapshot ricFields |> should equal (1, 0)
 
         [<Test>]
         let ``snapshot-test-2`` () =
             let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
-            snapshot ricFields
+            snapshot ricFields |> should equal (1, 1)
 
         [<Test>]
         let ``snapshot-test-3`` () =
             let ricFields = [("EUR=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
-            snapshot ricFields
+            snapshot ricFields |> should equal (2, 3)

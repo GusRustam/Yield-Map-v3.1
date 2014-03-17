@@ -11,9 +11,9 @@ module LiveQuotes =
     open System.Runtime.InteropServices
     open System.Threading
 
+    open YieldMap.Logging
     open YieldMap.Tools
     open YieldMap.Tools.Disposer
-    open YieldMap.Tools.Logging
 
     let private logger = LogFactory.create "LiveQuotes"
 
@@ -87,7 +87,7 @@ module LiveQuotes =
                                         let fieldValues = 
                                             (names, values) 
                                             ||> List.zip 
-                                            |> List.filter (fun (_, v) -> v <> null) // (cross ((<>) << snd) null) // just for fun // skipping nulls
+                                            |> List.filter (fun (_, v) -> v <> null) // or use: (cross (snd >> (<>)) null) // skipping nulls
                                             |> Map.ofList
 
                                         Map.add ric fieldValues answer
@@ -113,7 +113,6 @@ module LiveQuotes =
                 snap.add_OnImage <| IAdxRtListEvents_OnImageEventHandler onImage
             
             member x.Snapshot = this.Event.Publish
-            
 
         type FieldWatcher (rics : string list, fields : AdxRtList) = 
             let _lock = obj()
@@ -155,11 +154,10 @@ module LiveQuotes =
                     else 
                         _logger.Trace <| sprintf "Ric %s was not requested" ric
                         allRics, answers
-
                 
                 let rec handler allRics answers = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status ->
                     lock _lock (fun _ -> 
-                        fields.remove_OnUpdate <| !_handler
+                        fields.remove_OnUpdate !_handler
                         let ricsLeft, results = handle allRics answers ric status
                         if Set.count ricsLeft = 0 then
                             _fieldsData.Trigger <| Succeed results 
@@ -167,7 +165,7 @@ module LiveQuotes =
                             _handler := (ricsLeft, results) ||> handler 
                             !_handler |> fields.add_OnUpdate))
                                 
-                _handler :=  handler (set rics) Map.empty
+                _handler := handler (set rics) Map.empty
                 fields.add_OnUpdate !_handler
 
             member x.FieldsData = _fieldsData.Publish
@@ -272,10 +270,11 @@ module SdkFactory =
     open EikonDesktopDataAPI
     open ThomsonReuters.Interop.RTX
     
+    open YieldMap.Calendar
+    open YieldMap.Logging
     open YieldMap.Requests
     open YieldMap.Requests.Answers
     open YieldMap.Tools
-    open YieldMap.Tools.Logging
 
     let private logger = LogFactory.create "SdkFactory"
 
@@ -531,41 +530,9 @@ module SdkFactory =
                 with :? TimeoutException as e -> return Answers.Meta.Failed e
             }
 
-    module DateChangeTrigger = 
-        let waitForTime (evt:DateTime Event) (span : TimeSpan) = 
-            let rec wait (time : DateTime) =  async {
-                do! Async.Sleep(1000)
-                let now = DateTime.Now
-                if now - time >= span then
-                    try
-                        evt.Trigger DateTime.Today
-                    with e -> logger.Error <| sprintf "Failed to handle date change: %s" (e.ToString())
-                    return! wait now
-                else return! wait time
-            }
-
-            wait DateTime.Now
-
-        let waitForTomorrow (evt:DateTime Event) = 
-            let rec wait (time : DateTime) =  async {
-                do! Async.Sleep(1000) // midnight check once a second
-                let now = DateTime.Now
-                if now.Date <> time.Date then
-                    try
-                        evt.Trigger DateTime.Today // tomorrow has come, informing
-                    with e -> logger.Error <| sprintf "Failed to handle date change: %s" (e.ToString())
-                    return! wait now // and now we'll count from new time, current's today
-                else return! wait time // counting from recent today
-            }
-
-            wait DateTime.Now
-
     /// In real case date m
     /// Connects to Eikon, stores current date
     type Loader = 
-        abstract member Today : unit -> DateTime
-        abstract member DateChanged : DateTime IEvent
-
         abstract member Connect : unit -> Async<Answers.Connection>
 
         abstract member LoadChain : ChainRequest -> Async<Answers.Chain>
@@ -580,13 +547,10 @@ module SdkFactory =
     /// Adfin calcs : null
     type MockOnlyFactory(_today) =
         let today = _today
-        let dateChanged = Event<DateTime>()
 
-        new () = MockOnlyFactory(DateTime.Today)
+        new () = MockOnlyFactory(defaultCalendar.Now)
 
         interface Loader with
-            member x.Today () = today
-            member x.DateChanged = dateChanged.Publish
             member x.Connect () = MockOperations.connect ()
             member x.LoadChain request = MockOperations.chain request (Some today) 
             member x.LoadMetadata rics timeout = MockOperations.meta rics (Some today) timeout
@@ -602,12 +566,10 @@ module SdkFactory =
         let eikon = _eikon
         let dateChanged = Event<DateTime>()
 
-        new (_eikon) = TestEikonFactory(_eikon, DateTime.Today)
+        new (_eikon) = TestEikonFactory(_eikon, defaultCalendar.Today)
 
         interface Loader with
             member x.Connect () = EikonOperations.connect eikon
-            member x.DateChanged = dateChanged.Publish
-            member x.Today () = today
             member x.LoadChain request = MockOperations.chain request (Some today) 
             member x.LoadMetadata rics timeout = MockOperations.meta rics (Some today) timeout
             member x.CreateAdxBondModule () = eikon.CreateAdxBondModule() :?> AdxBondModule
@@ -618,13 +580,9 @@ module SdkFactory =
     /// Today / LoadChain / LoadData : Real;
     /// Adfin calcs : Eikon
     type OuterEikonFactory (eikon:EikonDesktopDataAPI) =
-        let dateChanged = Event<DateTime>()
-        do DateChangeTrigger.waitForTomorrow dateChanged |> Async.Start
 
         interface Loader with
             member x.Connect () = EikonOperations.connect eikon
-            member x.DateChanged = dateChanged.Publish
-            member x.Today () = DateTime.Today
             member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
             member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
             member x.CreateAdxBondModule () = eikon.CreateAdxBondModule() :?> AdxBondModule
@@ -636,13 +594,9 @@ module SdkFactory =
     /// Today / LoadChain / LoadData : Real;
     /// Adfin calcs : Eikon
     type InnerEikonFactory (eikon:EikonDesktopDataAPI) =
-        let dateChanged = Event<DateTime>()
-        do DateChangeTrigger.waitForTomorrow dateChanged |> Async.Start
 
         interface Loader with
             member x.Connect () = MockOperations.connect ()
-            member x.DateChanged = dateChanged.Publish
-            member x.Today () = DateTime.Today
             member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
             member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
             member x.CreateAdxBondModule () = AdxBondModuleClass() :> AdxBondModule
