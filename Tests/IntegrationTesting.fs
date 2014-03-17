@@ -110,8 +110,8 @@
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
 
-        [<Test>]
-        let ``snapshot-test`` () =
+
+        let snapshot ricFields  =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
             let q = OuterEikonFactory(!eikon) :> Loader
             try
@@ -125,31 +125,30 @@
 
                 use subscription = new EikonSubscription(!eikon, "IDN")
                 let s =  subscription :> Subscription
-                let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                let answer = s.Snapshot (ricFields, Some 10) |> Async.RunSynchronously
+                let answer = s.Snapshot (ricFields, Some 100000) |> Async.RunSynchronously
                 logger.Info <| sprintf "Got answer %A" answer
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
+
+
+
+        [<Test>]
+        let ``snapshot-test`` () =
+            let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+            snapshot ricFields
 
         [<Test>]
         let ``snapshot-test-1`` () =
-            let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
-            let q = OuterEikonFactory(!eikon) :> Loader
-            try
+            let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID12"; "ASK33"])] |> Map.ofList
+            snapshot ricFields
 
-                try
-                    let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
-                    ans |> should be True
-                with :? TimeoutException -> 
-                    logger.Error "...timeout"
-                    Assert.Fail "Timeout"
+        [<Test>]
+        let ``snapshot-test-2`` () =
+            let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
+            snapshot ricFields
 
-                use subscription = new EikonSubscription(!eikon, "IDN")
-                let s =  subscription :> Subscription
-                let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID12"; "ASK33"])] |> Map.ofList
-                let answer = s.Snapshot (ricFields, None) |> Async.RunSynchronously
-                logger.Info <| sprintf "Got answer %A" answer
-            finally
-                Ole32.killComObject eikon
-                Ole32.CoUninitialize()
+        [<Test>]
+        let ``snapshot-test-3`` () =
+            let ricFields = [("EUR=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
+            snapshot ricFields

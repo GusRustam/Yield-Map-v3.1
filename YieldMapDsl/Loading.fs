@@ -60,8 +60,8 @@ module LiveQuotes =
                         this.Event.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
 
                 snap.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
-
-                snap.add_OnImage (fun status -> 
+                
+                let onImage status =
                     match status with
                     | RT_DataStatus.RT_DS_FULL ->
                         let data = snap.ListItems(RT_ItemRowView.RT_IRV_ALL, RT_ItemColumnView.RT_ICV_STATUS) :?> obj[,]
@@ -82,10 +82,14 @@ module LiveQuotes =
                                 if List.exists (fun (r, _) -> r = ric) rics then
                                     if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
                                         let data = snap.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_VALUE) :?> obj[,]
-                                        let names = slice data 0 |> List.map (fun x -> x.ToString())
-                                        let values = slice data 1 |> List.map (fun x -> x.ToString())
-                                        let fieldValues = (names, values) ||> List.zip |> Map.ofList
-                            
+                                        let names = slice data 0 |> List.map String.toString
+                                        let values = slice data 1 |> List.map String.toString
+                                        let fieldValues = 
+                                            (names, values) 
+                                            ||> List.zip 
+                                            |> List.filter (fun (_, v) -> v <> null) // (cross ((<>) << snd) null) // just for fun // skipping nulls
+                                            |> Map.ofList
+
                                         Map.add ric fieldValues answer
                                     else 
                                         this.Logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
@@ -93,15 +97,20 @@ module LiveQuotes =
                                 else 
                                     this.Logger.Warn <| sprintf "Ric %s was not requested" ric
                                     answer
-                                                                 
-                            match rics with
-                            | (ric, status) :: rest -> parseRics rest (update ric answer status)
-                            | [] -> answer                   
+                            try                                     
+                                match rics with
+                                | (ric, status) :: rest -> parseRics rest (update ric answer status)
+                                | [] -> answer                   
+                            with e -> 
+                                logger.ErrorEx "failed " e
+                                answer
                              
                         let result = parseRics ricsAndStatuses Map.empty
                         this.Event.Trigger <| Succeed result
                     | RT_DataStatus.RT_DS_PARTIAL -> this.Logger.Debug "Partial data"
-                    | _ -> this.Event.Trigger <| Invalid (exn(sprintf "Invalid data status: %A" status)))
+                    | _ -> this.Event.Trigger <| Invalid (exn(sprintf "Invalid data status: %A" status))
+
+                snap.add_OnImage <| IAdxRtListEvents_OnImageEventHandler onImage
             
             member x.Snapshot = this.Event.Publish
             
@@ -207,6 +216,13 @@ module LiveQuotes =
                 } |> Async.WithTimeoutEx timeout
 
             member x.Snapshot (ricFields, ?timeout) = 
+                let rec register (lst: list<string*string list>) (snap:AdxRtList) =
+                    match lst with
+                    | (ric, fields) :: rest -> 
+                        snap.RegisterItems (ric, String.Join(",", fields))
+                        register rest snap
+                    | [] -> ()
+
                 let rics, fields = Map.toList ricFields |> List.unzip
                 let fields = List.concat fields |> set
 
@@ -216,10 +232,18 @@ module LiveQuotes =
                         let snapshotter = ref snap
                         try
                             snap.Source <- _feed
-                            snap.RegisterItems(String.Join(",", rics), String.Join(",", fields))
-                            let snapWaiter = Watchers.SnapWatcher(snap)
+                            snap |> register (Map.toList ricFields)
+
+                            let snapWaiter = Watchers.SnapWatcher snap
                             snap.StartUpdates RT_RunMode.RT_MODE_IMAGE
-                            let! res = Async.AwaitEvent snapWaiter.Snapshot
+
+                            let res = 
+                                match timeout with
+                                | Some time -> 
+                                    try Async.RunSynchronously (Async.AwaitEvent snapWaiter.Snapshot, time)
+                                    with :? TimeoutException -> Timeout
+                                | None -> Async.RunSynchronously <| Async.AwaitEvent snapWaiter.Snapshot
+
                             snap.CloseAllLinks()
                             return res
                         finally
@@ -232,7 +256,7 @@ module LiveQuotes =
             member x.Start () = ()
             member x.Pause () = ()
             member x.Stop () = ()
-            member x.Add _ = ()
+            member x.Add ricsWithFields = ()
             member x.Remove _ = ()
 
 module SdkFactory = 

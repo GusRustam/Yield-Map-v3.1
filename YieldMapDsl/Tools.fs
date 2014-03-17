@@ -79,6 +79,8 @@ module Extensions =
     open System.Runtime.Serialization.Formatters.Binary
     open System.Text
 
+    let cross f a b = f b a
+
     (* Расширение встроенной функциональности *)
     module Array = 
         let first (arr: 'a array) = arr.[0]
@@ -126,6 +128,8 @@ module Extensions =
                 use stream = new MemoryStream(Convert.FromBase64String(self))
                 Some(formatter.Deserialize(stream) :?> 'T)
             with _ -> None
+
+        static member toString wut = match wut with null -> null | _ -> wut.ToString()
 
     type Async with
         static member WithTimeout (timeout:int option) operation = 
