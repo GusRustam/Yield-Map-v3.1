@@ -183,15 +183,80 @@ module LiveQuotes =
         abstract member Add : RicFields -> unit
         abstract member Remove : string list -> unit // removes rics
 
-    type EikonSubscription (_eikon:EikonDesktopDataAPI, _feed) = 
+    type QuoteMode = OnTime of int | OnTimeIfUpdated of int | OnUpdate
+
+    type EikonSubscription (_eikon:EikonDesktopDataAPI, _feed, _mode) = 
         inherit Disposer ()
 
-        let eikon = _eikon
         let requests = Map.empty
-        let quotes = ref (eikon.CreateAdxRtList() :?> AdxRtList)
+        let quotes = _eikon.CreateAdxRtList() :?> AdxRtList
+        do 
+            try quotes.Source <- _feed
+            with :? COMException -> logger.Error "Failed to set up a source"
+
+        let quotesRef = ref quotes
         let quotesEvent = Event<RicFieldValue>()
 
-        override x.DisposeManaged () = Ole32.killComObject quotes
+        let rec register (lst: (string*string list) list) (snap:AdxRtList) =
+            match lst with
+            | (ric, fields) :: rest -> 
+                snap.RegisterItems (ric, String.Join(",", fields))
+                register rest snap
+            | [] -> ()
+
+        let extractRfv ric status = 
+            try
+                if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
+                    let data = quotes.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_VALUE) :?> obj[,]
+                    let names =  data.[*, 0..0] |> Seq.cast<obj> |> Seq.map String.toString
+                    let values = data.[*, 1..1] |> Seq.cast<obj> |> Seq.map String.toString
+                    let fieldValues = (names, values) ||> Seq.zip |> Seq.filter (fun (_, v) -> v <> null) |> Map.ofSeq // or (cross (snd >> (<>)) null) 
+                    Some fieldValues
+                else 
+                    logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
+                    None
+            with e -> 
+                logger.WarnEx "Failed to extract rfv" e
+                None
+
+        let onTimeHandler = IAdxRtListEvents_OnTimeEventHandler (fun () -> 
+            let data = quotes.ListItems(RT_ItemRowView.RT_IRV_ALL, RT_ItemColumnView.RT_ICV_STATUS) :?> obj[,]
+
+            let ricsList = data.[*, 0..0] |> Seq.cast<obj> |> Seq.map String.toString
+            let statusList =  data.[*, 1..1] |> Seq.cast<obj> |> Seq.map (fun x -> x :?> RT_ItemStatus)
+            let ricsAndStatuses = Seq.zip ricsList statusList
+
+            let rec parseRics rics answer =
+                let update ric answer status =
+                    logger.Trace <| sprintf "Got ric %s with status %A" ric status
+
+                    if List.exists (fun (r, _) -> r = ric) rics then
+                        match extractRfv ric status with
+                        | Some fieldValues -> Map.add ric fieldValues answer
+                        | None -> answer
+                    else 
+                        logger.Warn <| sprintf "Ric %s was not requested" ric
+                        answer
+                try                                     
+                    match rics with
+                    | (ric, status) :: rest -> parseRics rest (update ric answer status)
+                    | [] -> answer                   
+                with e -> 
+                    logger.ErrorEx "failed" e
+                    answer
+                             
+            let result = parseRics (List.ofSeq ricsAndStatuses) Map.empty
+            quotesEvent.Trigger result
+        )
+
+        let onUpdateHandler = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status -> 
+            logger.Trace <| sprintf "Got ric %s with status %A" ric status
+            match extractRfv ric status with
+            | Some fieldValues -> quotesEvent.Trigger <| Map.add ric fieldValues Map.empty
+            | None -> ()            
+        )
+
+        override x.DisposeManaged () = Ole32.killComObject quotesRef
         override x.DisposeUnmanaged () = ()
 
         interface Subscription with
@@ -201,32 +266,29 @@ module LiveQuotes =
                 async {
                     try
                         let fields = _eikon.CreateAdxRtList() :?> AdxRtList
-                        fields.Source <- _feed
-                        let fieldWatcher = Watchers.FieldWatcher(rics, fields)
-                        fields.RegisterItems (rics |> String.concat ",", "*")
-                        fields.StartUpdates RT_RunMode.RT_MODE_ONUPDATE
-                        let! res = Async.AwaitEvent fieldWatcher.FieldsData 
-                        fields.CloseAllLinks ()
-                        return res
+                        let fielder = ref fields
+                        try
+                            fields.Source <- _feed
+                            let fieldWatcher = Watchers.FieldWatcher(rics, fields)
+                            fields.RegisterItems (rics |> String.concat ",", "*")
+                            fields.StartUpdates RT_RunMode.RT_MODE_ONUPDATE
+                            let! res = Async.AwaitEvent fieldWatcher.FieldsData 
+                            fields.CloseAllLinks ()
+                            return res
+                        finally
+                            Ole32.killComObject fielder
                     with :? COMException as e ->
                         logger.ErrorEx "Failed to load fields" e
                         return Invalid e
                 } |> Async.WithTimeoutEx timeout
 
             member x.Snapshot (ricFields, ?timeout) = 
-                let rec register (lst: list<string*string list>) (snap:AdxRtList) =
-                    match lst with
-                    | (ric, fields) :: rest -> 
-                        snap.RegisterItems (ric, String.Join(",", fields))
-                        register rest snap
-                    | [] -> ()
-
                 let rics, fields = Map.toList ricFields |> List.unzip
                 let fields = List.concat fields |> set
 
                 async {
                     try
-                        let snap = eikon.CreateAdxRtList() :?> AdxRtList
+                        let snap = _eikon.CreateAdxRtList() :?> AdxRtList
                         let snapshotter = ref snap
                         try
                             snap.Source <- _feed
@@ -240,7 +302,7 @@ module LiveQuotes =
                                 | Some time -> 
                                     try Async.RunSynchronously (Async.AwaitEvent snapWaiter.Snapshot, time)
                                     with :? TimeoutException -> Timeout
-                                | None -> Async.RunSynchronously <| Async.AwaitEvent snapWaiter.Snapshot
+                                | None -> Async.AwaitEvent snapWaiter.Snapshot |> Async.RunSynchronously
 
                             snap.CloseAllLinks()
                             return res
@@ -251,11 +313,71 @@ module LiveQuotes =
                         return Invalid e
                 }
 
-            member x.Start () = ()
-            member x.Pause () = ()
-            member x.Stop () = ()
-            member x.Add ricsWithFields = ()
-            member x.Remove _ = ()
+            member x.Start () = 
+                try
+                    quotes.remove_OnTime onTimeHandler
+                    quotes.remove_OnUpdate onUpdateHandler
+
+                    match _mode with
+                    | OnTime interval ->
+                        quotes.Mode <- sprintf "FRQ:%ds" interval
+                        quotes.add_OnTime onTimeHandler
+                        quotes.StartUpdates RT_RunMode.RT_MODE_ONTIME
+                    | OnTimeIfUpdated interval ->
+                        quotes.Mode <- sprintf "FRQ:%ds" interval
+                        quotes.add_OnTime onTimeHandler
+                        quotes.StartUpdates RT_RunMode.RT_MODE_ONTIME_IF_UPDATED
+                    | OnUpdate -> 
+                        quotes.Mode <- ""
+                        quotes.add_OnUpdate onUpdateHandler
+                        quotes.StartUpdates RT_RunMode.RT_MODE_ONUPDATE
+
+                with :? COMException as e -> 
+                    logger.WarnEx "Failed to start updates" e
+
+            member x.Pause () = 
+                try
+                    quotes.StopUpdates ()
+                with :? COMException as e -> 
+                    logger.WarnEx "Failed to pause updates" e
+
+            member x.Stop () = 
+                try
+                    quotes.UnregisterAllItems ()
+                    quotes.CloseAllLinks ()
+                with :? COMException as e -> 
+                    logger.WarnEx "Failed to stop updates" e
+
+            member x.Add ricFields = 
+                try
+                    quotes |> register (Map.toList ricFields)
+                with :? COMException as e -> 
+                    logger.WarnEx "Failed to add rics and fields" e
+
+            member x.Remove rics =
+                try
+                    quotes.UnregisterItems <| String.Join (",", rics)
+                with :? COMException as e -> 
+                    logger.WarnEx "Failed to remove rics" e
+
+        // todo mocks!
+        type MockSubscription() =
+            inherit Disposer ()
+            
+            let quotesEvent = Event<RicFieldValue>()
+            
+            override x.DisposeManaged () = ()
+            override x.DisposeUnmanaged () = ()
+
+            interface Subscription with
+                member x.OnQuotes = quotesEvent.Publish
+                member x.Fields (rics, ?timeout) = async { return Timeout }
+                member x.Snapshot (ricFields, ?timeout) = async { return Timeout }
+                member x.Start () = ()
+                member x.Pause () = ()
+                member x.Stop () = ()
+                member x.Add ricsWithFields = ()
+                member x.Remove _ = ()
 
 module SdkFactory = 
     open System

@@ -102,14 +102,13 @@
                     logger.Error "...timeout"
                     Assert.Fail "Timeout"
 
-                use subscription = new EikonSubscription(!eikon, "IDN")
+                use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
                 let s =  subscription :> Subscription
                 let answer = s.Fields (["RUB="; "GAZP.MM"], None) |> Async.RunSynchronously
                 logger.Info <| sprintf "Got answer %A" answer
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
-
 
         let snapshot ricFields eikon =
             let counts (wut:RicFieldValue) = 
@@ -120,7 +119,7 @@
                     | [] -> rics, fieldsValues
                 wut |> Map.toList |> cntRics 0 0
 
-            use subscription = new EikonSubscription(!eikon, "IDN")
+            use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
             let s = subscription :> Subscription
             let answer = s.Snapshot (ricFields, Some 100000) |> Async.RunSynchronously
             logger.Info <| sprintf "Got answer %A" answer
@@ -149,6 +148,85 @@
                     snapshot ricFields eikon |> should equal (1, 1)
                     let ricFields = [("EUR=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
                     snapshot ricFields eikon |> should equal (2, 3)
+            finally
+                Ole32.killComObject eikon
+                Ole32.CoUninitialize()
+
+        let considerIt eikon mode ricFields = 
+            use bebebe = new EikonSubscription(!eikon, "IDN", mode)
+            let qoqoqo = bebebe :> Subscription
+
+            qoqoqo.Add ricFields
+            qoqoqo.OnQuotes |> Observable.add (fun q -> 
+                logger.Info <| sprintf "Got quotes %A" q
+                try logger.Info <| sprintf "GAZPROM BID IS %s" q.["GAZP.MM"].["BID"]
+                with _ -> logger.Info "NO GAZP BID")
+
+            let always x = (fun _ -> x)
+            let count = ref 0
+            qoqoqo.OnQuotes |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun q -> logger.Info <| sprintf "Update #%d" q; count := q)
+                    
+            qoqoqo.Start()
+            Async.Sleep(10000) |> Async.RunSynchronously
+            qoqoqo.Stop()    
+            !count
+
+        [<Test>]
+        let ``realtime-quotes`` () =
+            let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
+            let q = OuterEikonFactory(!eikon) :> Loader
+            try
+                try
+                    let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
+                    ans |> should be True
+                with :? TimeoutException -> 
+                    logger.Error "...timeout"
+                    Assert.Fail "Timeout"
+
+                // test
+
+                logger.Info "1"
+                let rf = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                considerIt eikon QuoteMode.OnUpdate rf |> should be (greaterThan 1)
+
+                logger.Info "2"
+                let rf = [("RUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                considerIt eikon QuoteMode.OnUpdate rf |> should be (greaterThan 1)
+
+                logger.Info "3"
+                let rf = [("RxUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                considerIt eikon QuoteMode.OnUpdate rf |> should be (equal 0)
+
+            finally
+                Ole32.killComObject eikon
+                Ole32.CoUninitialize()
+
+        [<Test>]
+        let ``realtime-quotes-2`` () =
+            let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
+            let q = OuterEikonFactory(!eikon) :> Loader
+            try
+                try
+                    let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
+                    ans |> should be True
+                with :? TimeoutException -> 
+                    logger.Error "...timeout"
+                    Assert.Fail "Timeout"
+
+                // test
+
+                logger.Info "4"
+                let rf = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
+
+                logger.Info "5"
+                let rf = [("RUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
+
+                logger.Info "6"
+                let rf = [("RxUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (equal 0)
+
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
