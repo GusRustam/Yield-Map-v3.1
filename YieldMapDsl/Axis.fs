@@ -249,11 +249,13 @@
         open EikonDesktopDataAPI
         open Analytics
         open YieldMap.Loading
+        open YieldMap.Calendar
 
         type Main = {
             Loader : SdkFactory.Loader // todo split fundamental data and chains and realtime data
                                 // realtime can come from API while fundamentals should be separate by DB layer
                                 // this means that chain/fund come via DB
+            DateTime : Calendar
             QuoteQueue : Quotes IObservable // http://tomasp.net/blog/async-sequences.aspx/ TODO-DODO
 
             // todo storage provider
@@ -411,7 +413,7 @@
 
             interface Calculator with
                 member x.Calculate (party, storage) =
-                    let today = m.Loader.Today()
+                    let today = m.DateTime.Today
                     let s = (storage :?> BondStorage).Storage
                     let res = (s, party.Groups) ||> List.fold (fun s group ->
                         (s, group.Instruments) ||> List.fold (fun s item ->  evaluate s item today))

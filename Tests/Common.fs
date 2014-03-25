@@ -12,9 +12,9 @@ open YieldMap.Requests
 open YieldMap.Requests.Answers
 open YieldMap.Loading
 open YieldMap.MetaTables
-open YieldMap.Tools.Logging
 open YieldMap.Loading.SdkFactory
 open YieldMap.Tools
+open YieldMap.Logging
 
 module Dex2Tests = 
     let logger = LogFactory.create "Dex2Tests"

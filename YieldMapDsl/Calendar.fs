@@ -20,12 +20,13 @@ module Calendar =
                 let now = c.Now
                 if now.Date <> time.Date then
                     try
+                        logger.Trace "Triggering tomorrow"
                         evt.Trigger c.Today // tomorrow has come, informing
                     with e -> logger.Error <| sprintf "Failed to handle date change: %s" (e.ToString())
                     return! wait now // and now we'll count from new time, current's today
                 else return! wait time // counting from recent today
             }
-            wait DateTime.Now
+            wait c.Now
 
     type RealCalendar() as this = 
         let dateChanged = Event<DateTime>()
@@ -43,7 +44,7 @@ module Calendar =
         
         interface Calendar with
             member x.NewDay = dateChanged.Publish
-            member x.Now = DateTime.Now + (dt - _begin)
+            member x.Now = dt + (DateTime.Now - _begin)
             member x.Today = (x :> Calendar).Now.Date
 
     let defaultCalendar = RealCalendar() :> Calendar

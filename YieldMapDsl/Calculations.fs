@@ -1,7 +1,6 @@
 ﻿namespace YieldMap.Calculations
 
 open YieldMap.Tools
-open YieldMap.Tools.Logging
  
 open AdfinXAnalyticsFunctions
 

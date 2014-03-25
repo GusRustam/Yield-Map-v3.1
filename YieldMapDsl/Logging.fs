@@ -7,6 +7,8 @@ module Logging =
     open NLog.Layouts
     open NLog.Targets
 
+    open YieldMap.Tools
+
     open System
     open System.IO
     open System.Threading

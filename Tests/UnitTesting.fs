@@ -13,7 +13,8 @@
         open YieldMap.Loading
         open YieldMap.Loading.SdkFactory
         open YieldMap.MetaTables
-        open YieldMap.Tools.Logging
+        open YieldMap.Logging
+        open YieldMap.Calendar
 
         let logger = LogFactory.create "Dex2Tests"
 
@@ -60,11 +61,13 @@
         [<Test>]
         let ``tomorrow-test`` () =
             let always x = fun _ -> x
-            let evt = Event<DateTime>()
-            let anEvent = evt.Publish
             let count = ref 0
-            let counter = anEvent |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun x -> count := x)
-            anEvent |> Observable.add (fun dt -> logger.Info <| sprintf "Ping!!! %A" dt)
-            Async.Start (SdkFactory.DateChangeTrigger.waitForTime evt <| TimeSpan.FromSeconds(5.0))
-            Async.Sleep(21000) |> Async.RunSynchronously
-            !count |> should equal 4
+
+            let clndr = Calendar.MockCalendar(DateTime(2010, 1, 31, 23, 59, 55)) :> Calendar
+            
+            clndr.NewDay |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun x -> count := x)
+            clndr.NewDay |> Observable.add (fun dt -> logger.Info <| sprintf "Ping!!! %A" dt)
+
+            Async.AwaitEvent clndr.NewDay |> Async.Ignore |> Async.Start
+            Async.Sleep(10000) |> Async.RunSynchronously
+            !count |> should equal 1
