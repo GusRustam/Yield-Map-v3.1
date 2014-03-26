@@ -331,31 +331,74 @@ module LiveQuotes =
                 try quotes.UnregisterItems <| String.Join (",", rics)
                 with :? COMException as e -> logger.WarnEx "Failed to remove rics" e
 
+    type SlotItem = { Ric : string; Field : string; Value : string }
+    type Slot = { Interval : float; Items : SlotItem list }
+        with 
+            static member toRfv items =
+                let rec asRfv items agg = 
+                    match items with
+                    | { Ric=ric; Field=field; Value=value } :: rest -> 
+                        let newFv = if agg |> Map.containsKey ric then agg.[ric] else Map.empty
+                        asRfv rest (agg |> Map.add ric (newFv |> Map.add field value))
+                    | [] -> agg
+                asRfv items Map.empty
+
     [<AbstractClass>]
     type RfvGenerator() as this = 
         let stop = ref false
         let rfv = Event<RicFieldValue>()
         
         let rec flow () = async {
-            let! data = this.Generate ()
+            for slot in this.Generate () do
+                if !stop then return ()
+                do! Async.Sleep (1000.0 * slot.Interval |> int)
+                rfv.Trigger <| Slot.toRfv slot.Items
+
             if !stop then return ()
             else return! flow ()
         }
 
         do flow () |> Async.Start
-        
-        abstract member Generate : unit -> Async<RicFieldValue>
+
+        abstract member Generate : unit -> Slot seq
+               
         member x.Rfv = rfv.Publish
         member x.Stop () = stop := true
 
+    type SeqGenerator(slots, circular) = 
+        inherit RfvGenerator()
+        override x.Generate () = seq {
+            for slot in slots -> slot
+            if circular then yield! x.Generate ()
+        }
+
+    // todo Random Generator // do I need it? for stress tests mostly yes
+//    type RndGenerator(slots, circular) = 
+//        inherit RfvGenerator()
+//        override x.Generate () = seq {
+//            for slot in slots -> slot
+//            if circular then yield! x.Generate ()
+//        }
+
     // todo mocks!
-    type MockSubscription() =
+    type MockSubscription(generator : RfvGenerator) =
         inherit Disposer ()
             
         let quotesEvent = Event<RicFieldValue>()
+
+        let eventFilter rfv = 
+            // todo has to filter out all unnecessary rics and fields
+            // based on mutable dictionary of items of interest
+            Map.empty
+
+        do 
+            generator.Rfv 
+            |> Observable.map eventFilter 
+            |> Observable.filter (fun x -> not <| Map.isEmpty x) 
+            |> Observable.add (fun x -> quotesEvent.Trigger x)
             
         override x.DisposeManaged () = ()
-        override x.DisposeUnmanaged () = ()
+        override x.DisposeUnmanaged () = generator.Stop ()
 
         interface Subscription with
             member x.OnQuotes = quotesEvent.Publish
@@ -366,3 +409,5 @@ module LiveQuotes =
             member x.Stop () = ()
             member x.Add ricFields = ()
             member x.Remove rics = ()
+
+    // todo API's!

@@ -122,6 +122,8 @@ module Extensions =
 
         static member toString wut = match wut with null -> null | _ -> wut.ToString()
 
+        static member split delim (wut:string) = wut.Split(delim)
+
     type Async with
         static member WithTimeout (timeout:int option) operation = 
             match timeout with
