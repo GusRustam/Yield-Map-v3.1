@@ -84,7 +84,7 @@
 
                 printfn "%d : %A" (Array.length data) data
 
-                data |> Array.length |> should equal cnt
+                data |> Array.length |> should (equalWithin 5) cnt
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
@@ -124,9 +124,7 @@
             let answer = s.Snapshot (ricFields, Some 100000) |> Async.RunSynchronously
             logger.Info <| sprintf "Got answer %A" answer
 
-            match answer with
-            | Succeed wut -> counts wut
-            | _ -> 0, 0
+            match answer with Succeed wut -> counts wut | _ -> 0, 0
 
         [<Test>]
         let ``snapshot-tests`` () =
@@ -140,14 +138,14 @@
                     logger.Error "...timeout"
                     Assert.Fail "Timeout"
 
-                    let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                    snapshot ricFields eikon |> should equal (2, 4)
-                    let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID12"; "ASK33"])] |> Map.ofList
-                    snapshot ricFields eikon |> should equal (1, 0)
-                    let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
-                    snapshot ricFields eikon |> should equal (1, 1)
-                    let ricFields = [("EUR=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
-                    snapshot ricFields eikon |> should equal (2, 3)
+                let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
+                snapshot ricFields eikon |> should equal (2, 4)
+                let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID12"; "ASK33"])] |> Map.ofList
+                snapshot ricFields eikon |> should equal (1, 0)
+                let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
+                snapshot ricFields eikon |> should equal (1, 1)
+                let ricFields = [("EUR=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
+                snapshot ricFields eikon |> should equal (2, 3)
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
