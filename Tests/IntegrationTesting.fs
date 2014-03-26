@@ -166,9 +166,9 @@
             let count = ref 0
             qoqoqo.OnQuotes |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun q -> logger.Info <| sprintf "Update #%d" q; count := q)
                     
-            qoqoqo.Start()
-            Async.Sleep(10000) |> Async.RunSynchronously
-            qoqoqo.Stop()    
+            qoqoqo.Start ()
+            Async.Sleep 10000 |> Async.RunSynchronously
+            qoqoqo.Stop ()    
             !count
 
         [<Test>]
@@ -225,7 +225,7 @@
 
                 logger.Info "6"
                 let rf = [("RxUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (equal 0)
+                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (equal 3)
 
             finally
                 Ole32.killComObject eikon

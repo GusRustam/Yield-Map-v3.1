@@ -138,6 +138,10 @@ module Disposer =
     open System
     open System.Runtime.InteropServices
 
+    open YieldMap.Logging
+
+    let private logger = LogFactory.create "Disposer"
+
     [<AbstractClass>] 
     type Disposer() = 
         abstract member DisposeUnmanaged : unit -> unit
@@ -145,12 +149,12 @@ module Disposer =
 
         interface IDisposable with
             member self.Dispose() =
-                printfn "Dispose()" 
+                logger.Trace "Dispose()" 
                 self.PerformDispose true
                 GC.SuppressFinalize self
 
         override self.Finalize() =
-            printfn "Finalize()"
+            logger.Trace "Finalize()"
             self.PerformDispose false
 
         member self.PerformDispose disposeManaged =
@@ -167,7 +171,7 @@ module Disposer =
         override self.DisposeUnmanaged() = ()
         override self.DisposeManaged() =
             if !_object <> null && Marshal.IsComObject(!_object) then
-                Marshal.ReleaseComObject(_object) |> printfn "References left: %d" 
+                Marshal.ReleaseComObject(_object) |> sprintf "References left: %d" |> logger.Trace
                 _object := null
 
 [<RequireQualifiedAccess>]

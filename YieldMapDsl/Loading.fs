@@ -208,10 +208,14 @@ module LiveQuotes =
             try
                 if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
                     let data = quotes.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_VALUE) :?> obj[,]
-                    let names =  data.[*, 0..0] |> Seq.cast<obj> |> Seq.map String.toString
-                    let values = data.[*, 1..1] |> Seq.cast<obj> |> Seq.map String.toString
-                    let fieldValues = (names, values) ||> Seq.zip |> Seq.filter (fun (_, v) -> v <> null) |> Map.ofSeq // or (cross (snd >> (<>)) null) 
-                    Some fieldValues
+                    if data <> null then
+                        let names =  data.[*, 0..0] |> Seq.cast<obj> |> Seq.map String.toString
+                        let values = data.[*, 1..1] |> Seq.cast<obj> |> Seq.map String.toString
+                        let fieldValues = (names, values) ||> Seq.zip |> Seq.filter (fun (_, v) -> v <> null) |> Map.ofSeq // or (cross (snd >> (<>)) null) 
+                        Some fieldValues
+                    else
+                        logger.Warn <| sprintf "No data or ric %s" ric
+                        None
                 else 
                     logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
                     None
