@@ -5,6 +5,7 @@ module LiveQuotes =
     open ThomsonReuters.Interop.RTX
     
     open System
+    open System.Collections.Generic
     open System.Runtime.InteropServices
     open System.Threading
 
@@ -20,6 +21,7 @@ module LiveQuotes =
     type FieldValue = Map<string, string>
     type RicFieldValue = Map<string, FieldValue>
 
+    // useful extensions
     type AdxRtList with
         member x.Register (lst: (string*string list) list)  =
             match lst with
@@ -53,7 +55,6 @@ module LiveQuotes =
             let ricsList = data.[*, 0..0] |> Seq.cast<obj> |> Seq.map String.toString
             let statusList =  data.[*, 1..1] |> Seq.cast<obj> |> Seq.map (fun x -> x :?> RT_ItemStatus)
             Seq.zip ricsList statusList
-
     
     module private Watchers = 
         [<AbstractClass>]
@@ -385,11 +386,24 @@ module LiveQuotes =
         inherit Disposer ()
             
         let quotesEvent = Event<RicFieldValue>()
+        let paused = ref false
+        let ricsAndFields = Dictionary()
 
-        let eventFilter rfv = 
-            // todo has to filter out all unnecessary rics and fields
-            // based on mutable dictionary of items of interest
-            Map.empty
+        let eventFilter (rfv : RicFieldValue) = 
+            let rec filterOut items agg =
+                match items with
+                | (ric, fieldValues) :: rest -> 
+                    if ricsAndFields.ContainsKey ric then
+                        let newFieldValues = fieldValues |> Map.filter (fun fieldName _ -> ricsAndFields.[ric] |> Set.contains fieldName)
+                        filterOut rest (agg |> Map.add ric newFieldValues)
+                    else filterOut rest agg
+                | [] -> agg
+
+            if !paused then Map.empty
+            else 
+                let items = lock ricsAndFields (fun _ -> 
+                    filterOut (Map.toList rfv) Map.empty)
+                items |> Map.filter (fun _ value -> not <| Map.isEmpty value)
 
         do 
             generator.Rfv 
@@ -404,10 +418,32 @@ module LiveQuotes =
             member x.OnQuotes = quotesEvent.Publish
             member x.Fields (rics, ?timeout) = async { return Timeout }
             member x.Snapshot (ricFields, ?timeout) = async { return Timeout }
-            member x.Start () = ()
-            member x.Pause () = ()
-            member x.Stop () = ()
-            member x.Add ricFields = ()
-            member x.Remove rics = ()
+            member x.Start () = paused := false
+            member x.Pause () = paused := true
+
+            member x.Stop () = 
+                lock ricsAndFields (fun () -> ricsAndFields.Clear()) 
+                (x :> Subscription).Pause()
+
+            member x.Add ricFields = 
+                let rec add items = 
+                    match items with
+                    | (ric, fields) :: rest -> 
+                        lock ricsAndFields (fun () ->
+                            if ricsAndFields.ContainsKey ric then 
+                                ricsAndFields.[ric] <- ricsAndFields.[ric] + set fields
+                            else ricsAndFields.Add (ric, set fields))
+                        add rest
+                    | [] -> ()
+                ricFields |> Map.toList |> add
+
+            member x.Remove rics =
+                let rec remove items =
+                    match items with 
+                    | ric :: rest -> 
+                        lock ricsAndFields (fun () -> ricsAndFields.Remove ric |> ignore)
+                        remove rest
+                    | [] -> ()
+                remove rics
 
     // todo API's!

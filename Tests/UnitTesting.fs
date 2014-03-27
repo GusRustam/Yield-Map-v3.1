@@ -19,7 +19,7 @@
         let logger = LogFactory.create "Dex2Tests"
 
         [<Test>]
-        let ``connection`` () = 
+        let ``Mock connection establishes`` () = 
             let q = MockOnlyFactory() :> Loader
             let ans =  Dex2Tests.connect q |> Async.RunSynchronously
             ans |> should be True
@@ -71,3 +71,93 @@
             Async.AwaitEvent clndr.NewDay |> Async.Ignore |> Async.Start
             Async.Sleep(10000) |> Async.RunSynchronously
             !count |> should equal 1
+
+    module LiveQuotesTest = 
+        open YieldMap.Logging
+        open YieldMap.Loading.LiveQuotes
+
+        let logger = LogFactory.create "LiveQuotesTest"
+
+        [<Test>]
+        let ``I receive quotes I've subscribed`` () =
+            logger.Info "I receive quotes I subscribed"
+            let slots = seq {
+                yield { Interval = 1.0; Items = [{Ric="YYY";Field="BID";Value="11"}] }
+                yield { Interval = 2.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
+            }
+            let generator = SeqGenerator (slots, false)
+            use data = new MockSubscription(generator)
+            let subscription = data :> Subscription
+            let count = ref 0
+            subscription.Add ([("XXX",["BID"])] |> Map.ofList)
+            subscription.OnQuotes |> Observable.add (fun q -> 
+                logger.Info <| sprintf "Got quote %A" q
+                count := !count + 1)
+            subscription.Start ()
+            Async.Sleep 7000 |> Async.RunSynchronously
+            !count |> should equal 2
+
+        [<Test>]
+        let ``I don't receive quotes I'm not subscribed`` () =
+            logger.Info "I don't receive quotes I'm not subscribed"
+            let slots = seq {
+                yield { Interval = 1.0; Items = [{Ric="XXX";Field="ASK";Value="11"}] }
+                yield { Interval = 2.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
+            }
+            let generator = SeqGenerator (slots, false)
+            use data = new MockSubscription(generator)
+            let subscription = data :> Subscription
+            let count = ref 0
+            subscription.Add ([("XXX",["BID"])] |> Map.ofList)
+            subscription.OnQuotes |> Observable.add (fun q -> 
+                logger.Info <| sprintf "Got quote %A" q
+                count := !count + 1)
+            subscription.Start ()
+            Async.Sleep 7000 |> Async.RunSynchronously
+            !count |> should equal 2
+
+        [<Test>]
+        let ``I stop receiveing quotes I've unsubscribed`` () =
+            logger.Info "I stop receive quotes I've unsubscribed"
+            let slots = seq {
+                yield { Interval = 2.0; Items = [{Ric="YYY";Field="ASK";Value="11"}] }
+                yield { Interval = 3.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
+            }
+            let generator = SeqGenerator (slots, false)
+            use data = new MockSubscription(generator)
+            let subscription = data :> Subscription
+            let count = ref 0
+            subscription.Add ([("XXX",["BID"])] |> Map.ofList)
+            subscription.OnQuotes |> Observable.add (fun q -> 
+                logger.Info <| sprintf "Got quote %A" q
+                count := !count + 1)
+
+            subscription.Start ()
+            Async.Sleep 6000 |> Async.RunSynchronously
+            subscription.Remove ["XXX"]
+            Async.Sleep 6000 |> Async.RunSynchronously
+
+            !count |> should equal 1
+
+        [<Test>]
+        let ``I begin receiveing quotes I've subscribed to`` () =
+            logger.Info "I begin receiveing quotes I've subscribed to"
+            let slots = seq {
+                yield { Interval = 2.0; Items = [{Ric="YYY";Field="ASK";Value="11"}] }
+                yield { Interval = 3.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
+            }
+            let generator = SeqGenerator (slots, false)
+            use data = new MockSubscription(generator)
+            let subscription = data :> Subscription
+            let count = ref 0
+            subscription.Add ([("XXX",["BID"])] |> Map.ofList)
+            subscription.OnQuotes |> Observable.add (fun q -> 
+                logger.Info <| sprintf "Got quote %A" q
+                count := !count + 1)
+
+            subscription.Start ()
+            Async.Sleep 6000 |> Async.RunSynchronously
+            subscription.Add ([("YYY",["ASK"])] |> Map.ofList)
+            Async.Sleep 5000 |> Async.RunSynchronously
+
+            !count |> should equal 3
