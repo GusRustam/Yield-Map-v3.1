@@ -21,6 +21,14 @@ module LiveQuotes =
     type FieldValue = Map<string, string>
     type RicFieldValue = Map<string, FieldValue>
 
+    let counts (wut:RicFieldValue) =
+        let rec cntRics rics fieldsValues = function
+            | (ric, fieldValue) :: rest -> 
+                let addon = fieldValue |> Map.toList |> List.length
+                rest |> cntRics (rics+1) (fieldsValues + addon)
+            | [] -> rics, fieldsValues
+        wut |> Map.toList |> cntRics 0 0
+
     // useful extensions
     type AdxRtList with
         member x.Register (lst: (string*string list) list)  =
@@ -373,7 +381,13 @@ module LiveQuotes =
             if circular then yield! x.Generate ()
         }
 
-    // todo Random Generator // do I need it? for stress tests mostly yes
+    // idea is that I give RicFields as input (it is universe)
+    // then I subscribe for some rics and fields from that universe
+    // I also provide distributions for frequency, amount of quotes in a batch and price distribution
+    // and it generates what I need
+
+    // the question is if I really need it
+
 //    type RndGenerator(slots, circular) = 
 //        inherit RfvGenerator()
 //        override x.Generate () = seq {
@@ -381,58 +395,110 @@ module LiveQuotes =
 //            if circular then yield! x.Generate ()
 //        }
 
-    // todo mocks!
     type MockSubscription(generator : RfvGenerator) =
         inherit Disposer ()
             
         let quotesEvent = Event<RicFieldValue>()
-        let paused = ref false
-        let ricsAndFields = Dictionary()
 
-        let eventFilter (rfv : RicFieldValue) = 
-            let rec filterOut items agg =
+        // mutables 
+        let paused = ref false
+        let requested = Dictionary()
+        let lastValues = Dictionary<string, Dictionary<string, string>>()
+
+        let filterOut items request = 
+            let rec doFilterOut items agg request =
                 match items with
                 | (ric, fieldValues) :: rest -> 
-                    if ricsAndFields.ContainsKey ric then
-                        let newFieldValues = fieldValues |> Map.filter (fun fieldName _ -> ricsAndFields.[ric] |> Set.contains fieldName)
-                        filterOut rest (agg |> Map.add ric newFieldValues)
-                    else filterOut rest agg
-                | [] -> agg
+                    if request |> Map.containsKey ric then
+                        let newFieldValues = fieldValues |> Map.filter (fun fieldName _ -> set request.[ric] |> Set.contains fieldName)
+                        doFilterOut rest (agg |> Map.add ric newFieldValues) request
+                    else doFilterOut rest agg request
+                | [] -> agg 
+            doFilterOut (Map.toList items) Map.empty request
 
+        /// Filters out rics and fields user hasn't subscribed to
+        let eventFilter (rfv : RicFieldValue)  = 
             if !paused then Map.empty
             else 
-                let items = lock ricsAndFields (fun _ -> 
-                    filterOut (Map.toList rfv) Map.empty)
-                items |> Map.filter (fun _ value -> not <| Map.isEmpty value)
+                lock requested (fun _ -> filterOut rfv (Map.fromDict requested)) 
+                |> Map.filter (fun _ value -> not <| Map.isEmpty value)
+
+        /// Auxiliary function which stores last values in the dictionary
+        let rec saveLastValues items = 
+            let rec appendFv (existing : Dictionary<string, string>) items =
+                match items with
+                | (field, value) :: rest ->
+                    if existing.ContainsKey field then existing.[field] <- value
+                    else existing.Add (field, value)
+                    appendFv existing rest
+                | [] -> existing
+
+            match items with
+            | (ric, fieldsValues) :: rest -> 
+                if lastValues.ContainsKey ric then
+                    let existingFv = lastValues.[ric]
+                    let newFv = appendFv existingFv (Map.toList fieldsValues)
+                    lastValues.[ric] <- newFv
+                else
+                    let existingFv = Dictionary()
+                    let newFv = appendFv existingFv (Map.toList fieldsValues)
+                    lastValues.Add (ric, newFv)
+
+                saveLastValues rest
+            | [] -> ()
 
         do 
             generator.Rfv 
-            |> Observable.map eventFilter 
+            |> Observable.map eventFilter
             |> Observable.filter (fun x -> not <| Map.isEmpty x) 
-            |> Observable.add (fun x -> quotesEvent.Trigger x)
+            |> Observable.add quotesEvent.Trigger
             
+            generator.Rfv 
+            |> Observable.add (fun x -> lock lastValues (fun _ ->  
+                x |>  Map.toList |> saveLastValues
+                logger.Trace <| sprintf "Last values now are %A" (Map.fromDict2 lastValues)
+            ))
+
         override x.DisposeManaged () = ()
         override x.DisposeUnmanaged () = generator.Stop ()
 
         interface Subscription with
             member x.OnQuotes = quotesEvent.Publish
-            member x.Fields (rics, ?timeout) = async { return Timeout }
-            member x.Snapshot (ricFields, ?timeout) = async { return Timeout }
+            member x.Fields (rics, ?timeout) = async { 
+                do! Async.Sleep(100)
+
+                let rec extractRicFields items agg =
+                    match items with
+                    | (ric, fieldValue) :: rest -> 
+                        let addon = Map.keys fieldValue + set (if agg |> Map.containsKey ric then agg.[ric] else [])
+                        extractRicFields rest <| Map.add ric (Set.toList addon) agg
+                    | _ -> agg
+
+                return Succeed <| extractRicFields (lastValues |> Map.fromDict2 |> Map.toList) Map.empty
+            }
+
+            member x.Snapshot (ricFields, ?timeout) = async { 
+                do! Async.Sleep(100)
+                logger.Trace <| sprintf "Snapshot data is %A" (Map.fromDict2 lastValues)
+                let res = filterOut (Map.fromDict2 lastValues) ricFields
+                logger.Trace <| sprintf "Snapshot answer is %A" res
+                return Succeed <| res
+            }
+
             member x.Start () = paused := false
             member x.Pause () = paused := true
 
             member x.Stop () = 
-                lock ricsAndFields (fun () -> ricsAndFields.Clear()) 
+                lock requested (fun () -> requested.Clear()) 
                 (x :> Subscription).Pause()
 
             member x.Add ricFields = 
                 let rec add items = 
                     match items with
                     | (ric, fields) :: rest -> 
-                        lock ricsAndFields (fun () ->
-                            if ricsAndFields.ContainsKey ric then 
-                                ricsAndFields.[ric] <- ricsAndFields.[ric] + set fields
-                            else ricsAndFields.Add (ric, set fields))
+                        lock requested (fun () ->
+                            if requested.ContainsKey ric then requested.[ric] <- requested.[ric] + set fields
+                            else requested.Add (ric, set fields))
                         add rest
                     | [] -> ()
                 ricFields |> Map.toList |> add
@@ -441,7 +507,7 @@ module LiveQuotes =
                 let rec remove items =
                     match items with 
                     | ric :: rest -> 
-                        lock ricsAndFields (fun () -> ricsAndFields.Remove ric |> ignore)
+                        lock requested (fun () -> requested.Remove ric |> ignore)
                         remove rest
                     | [] -> ()
                 remove rics

@@ -21,6 +21,7 @@
         open YieldMap.MetaTables
         open YieldMap.Logging
         open YieldMap.Tools
+        open YieldMap.Loading
 
         open NUnit.Framework
 
@@ -111,20 +112,13 @@
                 Ole32.CoUninitialize()
 
         let snapshot ricFields eikon =
-            let counts (wut:RicFieldValue) = 
-                let rec cntRics rics fieldsValues = function
-                    | (ric, fieldValue) :: rest -> 
-                        let addon = fieldValue |> Map.toList |> List.length
-                        rest |> cntRics (rics+1) (fieldsValues + addon)
-                    | [] -> rics, fieldsValues
-                wut |> Map.toList |> cntRics 0 0
 
             use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
             let s = subscription :> Subscription
             let answer = s.Snapshot (ricFields, Some 100000) |> Async.RunSynchronously
             logger.Info <| sprintf "Got answer %A" answer
 
-            match answer with Succeed wut -> counts wut | _ -> 0, 0
+            match answer with Succeed wut -> LiveQuotes.counts wut | _ -> 0, 0
 
         [<Test>]
         let ``snapshot-tests`` () =

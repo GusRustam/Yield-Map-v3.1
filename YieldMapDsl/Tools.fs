@@ -64,6 +64,7 @@ module ExcelDates =
 [<AutoOpen>]
 module Extensions =
     open System
+    open System.Collections.Generic
     open System.IO
     open System.Reflection
     open System.Runtime.Serialization
@@ -87,6 +88,28 @@ module Extensions =
                 | (key, value) :: rest -> doInject (Map.add key value m) rest
                 | _ -> m
             doInject map (Map.toList another)
+
+        let fromDict (d:Dictionary<_,_>) =
+            let keys = d.Keys |> List.ofSeq
+            let rec append keys (dct:Dictionary<_,_>) agg = 
+                match keys with 
+                | key :: rest -> 
+                    let v = dct.[key]
+                    append rest d (agg |> Map.add key v)
+                | [] -> agg
+            append keys d Map.empty
+
+        let fromDict2 (d:Dictionary<_,Dictionary<_,_>>) =
+            let keys = d.Keys |> List.ofSeq
+            let rec append keys (dct:Dictionary<_,_>) agg = 
+                match keys with 
+                | key :: rest -> 
+                    let v = dct.[key]
+                    append rest d (agg |> Map.add key (fromDict v))
+                | [] -> agg
+            append keys d Map.empty
+
+        let keys m = m |> Map.toList |> List.unzip |> fst |> set
 
     /// Extension methods to get single attribute in a cleaner way
     type MemberInfo with

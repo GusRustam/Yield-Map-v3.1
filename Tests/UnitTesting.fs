@@ -161,3 +161,47 @@
             Async.Sleep 5000 |> Async.RunSynchronously
 
             !count |> should equal 3
+
+        [<Test>]
+        let ``I receive snapshots according to recent quotes`` () =
+            logger.Info "I receive snapshots according to recent quotes"
+            let slots = seq {
+                yield { Interval = 2.0; Items = [{Ric="YYY";Field="ASK";Value="11"}] }
+                yield { Interval = 3.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
+                yield { Interval = 3.0; Items = [{Ric="YYY";Field="ASK";Value="22"}] }
+            }
+
+            let generator = SeqGenerator (slots, false)
+            use data = new MockSubscription(generator)
+            let subscription = data :> Subscription
+
+            subscription.Start ()
+
+            let x = subscription.Snapshot (([("XXX",["BID"])] |> Map.ofList), None) |> Async.RunSynchronously
+            match x with Succeed rfv -> counts rfv |> should equal (0,0) | _ -> Assert.Fail()
+
+            let x = subscription.Snapshot (([("XXX",["BID"]); ("ZZZ",["QQQ"])] |> Map.ofList), None) |> Async.RunSynchronously
+            match x with Succeed rfv -> counts rfv |> should equal (0,0) | _ -> Assert.Fail()
+
+            Async.Sleep 2200 |> Async.RunSynchronously
+
+            let x = subscription.Snapshot (([("XXX",["BID"])] |> Map.ofList), None) |> Async.RunSynchronously
+            match x with Succeed rfv -> counts rfv |> should equal (1,1) | _ -> Assert.Fail()
+
+            Async.Sleep 3500 |> Async.RunSynchronously
+
+            let x = subscription.Snapshot (([("XXX",["BID"]); ("YYY",["ASK"])] |> Map.ofList), None) |> Async.RunSynchronously
+            logger.Info <| sprintf "Got snapshot %A" x
+            match x with Succeed rfv -> counts rfv |> should equal (2,2) | _ -> Assert.Fail()
+
+            Async.Sleep 3500 |> Async.RunSynchronously
+
+            let x = subscription.Snapshot (([("YYY",["ASK"])] |> Map.ofList), None) |> Async.RunSynchronously
+            logger.Info <| sprintf "Got snapshot %A" x
+            match x with 
+            | Succeed rfv -> 
+                counts rfv |> should equal (1,1) 
+                rfv.["YYY"].["ASK"] |> should equal "22"
+            | _ -> Assert.Fail()
+
+//            Async.Sleep 2500 |> Async.RunSynchronously
