@@ -204,12 +204,14 @@
             | _ -> Assert.Fail()
 
     module TestWebServer = 
-        open System.ServiceModel
-        open System.ServiceModel.Description
-        open System.ServiceModel.Web
+        open Newtonsoft.Json
+
+        open System.Net
+        open System.Text
 
         open YieldMap.Logging
         open YieldMap.WebServer
+        open YieldMap.Tools
 
         let logger = LogFactory.create "TestWebServer"
 
@@ -217,19 +219,41 @@
         let ``Web server starts and stops`` () = 
             HttpServer.start ()
             logger.Info "Seems 2B started"
+            Async.Sleep(5000) |> Async.RunSynchronously
+
+            logger.Info "Sending request"
+            use wb = new WebClient()
+
+            let q = HttpServer.ApiQuote()
+            q.Ric <- "XXX"
+            q.Field <- "FLD"
+            q.Value <- "12"
+
+            let z = HttpServer.ApiQuotes()
+            z.Quotes <- [|q|]
+
+            let ser = JsonConvert.SerializeObject(z)
+            let enc = String.toBytes ser
+            logger.Info "Sending request - 1"
+            let resp = wb.UploadData(HttpServer.host + "quote", enc)
+            logger.Info "Sending request - 2"
+            let response = Encoding.ASCII.GetString(resp)
+
+            logger.Info <| sprintf "Response is %s" response
+
             Async.Sleep(60000) |> Async.RunSynchronously
             HttpServer.stop ()
             logger.Info "Seems 2B stopped"
             Async.Sleep(60000) |> Async.RunSynchronously
 
-        [<Test>]
-        let ``How about WCF server?`` () =
-            WcfServer.start ()
-
-            use cf = new ChannelFactory<WcfServer.Service> (WebHttpBinding "http://localhost:8090")
-            let channel = cf.CreateChannel() 
-
-            logger.Info <| sprintf "With get it is %s" (channel.EchoWithGet "Hello")
-            logger.Info <| sprintf "With post it is %s" (channel.EchoWithPost "Hello")
-
-            WcfServer.stop ()
+//        [<Test>]
+//        let ``How about WCF server?`` () =
+//            WcfServer.start ()
+//
+//            use cf = new ChannelFactory<WcfServer.Service> (WebHttpBinding "http://localhost:8090")
+//            let channel = cf.CreateChannel() 
+//
+//            logger.Info <| sprintf "With get it is %s" (channel.EchoWithGet "Hello")
+//            logger.Info <| sprintf "With post it is %s" (channel.EchoWithPost "Hello")
+//
+//            WcfServer.stop ()

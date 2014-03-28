@@ -143,6 +143,11 @@ module Extensions =
                 Some(formatter.Deserialize(stream) :?> 'T)
             with _ -> None
 
+        static member toBytes (str:string) = 
+            let bytes = Array.init (str.Length * sizeof<char>) (fun _ -> 0uy)
+            Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length)
+            bytes
+
         static member toString wut = match wut with null -> null | _ -> wut.ToString()
 
         static member split delim (wut:string) = wut.Split(delim)
