@@ -47,6 +47,7 @@
     <Compile Include="Calendar.fs" />
     <Compile Include="Tools.fs" />
     <Compile Include="Requests.fs" />
+    <Compile Include="WebServer.fs" />
     <Compile Include="LiveQuotes.fs" />
     <Compile Include="Chains.fs" />
     <Compile Include="Calculations.fs" />

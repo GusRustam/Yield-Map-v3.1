@@ -512,4 +512,14 @@ module LiveQuotes =
                     | [] -> ()
                 remove rics
 
-    // todo API's!
+    type ApiSubscription (port) =
+        let quotesEvent = Event<RicFieldValue>()
+        interface Subscription with
+            member x.OnQuotes = quotesEvent.Publish
+            member x.Fields (rics, ?timeout) = async { return Timeout }
+            member x.Snapshot (ricFields, ?timeout) = async { return Timeout }
+            member x.Start () = ()
+            member x.Pause () = ()
+            member x.Stop () = ()
+            member x.Add ricFields = ()
+            member x.Remove rics = ()

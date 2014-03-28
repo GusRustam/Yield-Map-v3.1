@@ -16,14 +16,20 @@ module Settings =
         defaultFeed : string
     }
 
+    type ApiSettings = {
+        port : int
+    }
+
     type Settings = {
         logging : LoggingSettings
         quotes : QuoteSettings
         source : SourceSettings
+        api : ApiSettings
     }
 
     let globalSettings = ref {
         logging = {fileName = "yield-map.log"}
         quotes = {midIfBoth = true}
         source = {defaultFeed = "IDN"}
+        api = {port = 8089}
     }

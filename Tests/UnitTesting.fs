@@ -79,7 +79,7 @@
         let logger = LogFactory.create "LiveQuotesTest"
 
         [<Test>]
-        let ``I receive quotes I've subscribed`` () =
+        let ``I receive quotes I'm subscribed`` () =
             logger.Info "I receive quotes I subscribed"
             let slots = seq {
                 yield { Interval = 1.0; Items = [{Ric="YYY";Field="BID";Value="11"}] }
@@ -183,7 +183,7 @@
             let x = subscription.Snapshot (([("XXX",["BID"]); ("ZZZ",["QQQ"])] |> Map.ofList), None) |> Async.RunSynchronously
             match x with Succeed rfv -> counts rfv |> should equal (0,0) | _ -> Assert.Fail()
 
-            Async.Sleep 2200 |> Async.RunSynchronously
+            Async.Sleep 5200 |> Async.RunSynchronously
 
             let x = subscription.Snapshot (([("XXX",["BID"])] |> Map.ofList), None) |> Async.RunSynchronously
             match x with Succeed rfv -> counts rfv |> should equal (1,1) | _ -> Assert.Fail()
@@ -192,16 +192,44 @@
 
             let x = subscription.Snapshot (([("XXX",["BID"]); ("YYY",["ASK"])] |> Map.ofList), None) |> Async.RunSynchronously
             logger.Info <| sprintf "Got snapshot %A" x
-            match x with Succeed rfv -> counts rfv |> should equal (2,2) | _ -> Assert.Fail()
-
-            Async.Sleep 3500 |> Async.RunSynchronously
-
-            let x = subscription.Snapshot (([("YYY",["ASK"])] |> Map.ofList), None) |> Async.RunSynchronously
-            logger.Info <| sprintf "Got snapshot %A" x
             match x with 
             | Succeed rfv -> 
-                counts rfv |> should equal (1,1) 
+                counts rfv |> should equal (2,2) 
                 rfv.["YYY"].["ASK"] |> should equal "22"
             | _ -> Assert.Fail()
 
-//            Async.Sleep 2500 |> Async.RunSynchronously
+            let x = subscription.Snapshot (([("YYY",["ASK"])] |> Map.ofList), None) |> Async.RunSynchronously
+            match x with 
+            | Succeed rfv -> counts rfv |> should equal (1,1) 
+            | _ -> Assert.Fail()
+
+    module TestWebServer = 
+        open System.ServiceModel
+        open System.ServiceModel.Description
+        open System.ServiceModel.Web
+
+        open YieldMap.Logging
+        open YieldMap.WebServer
+
+        let logger = LogFactory.create "TestWebServer"
+
+        [<Test>]
+        let ``Web server starts and stops`` () = 
+            HttpServer.start ()
+            logger.Info "Seems 2B started"
+            Async.Sleep(60000) |> Async.RunSynchronously
+            HttpServer.stop ()
+            logger.Info "Seems 2B stopped"
+            Async.Sleep(60000) |> Async.RunSynchronously
+
+        [<Test>]
+        let ``How about WCF server?`` () =
+            WcfServer.start ()
+
+            use cf = new ChannelFactory<WcfServer.Service> (WebHttpBinding "http://localhost:8090")
+            let channel = cf.CreateChannel() 
+
+            logger.Info <| sprintf "With get it is %s" (channel.EchoWithGet "Hello")
+            logger.Info <| sprintf "With post it is %s" (channel.EchoWithPost "Hello")
+
+            WcfServer.stop ()
