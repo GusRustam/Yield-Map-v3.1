@@ -10,6 +10,7 @@ module LiveQuotes =
     open System.Threading
 
     open YieldMap.Logging
+    open YieldMap.WebServer
     open YieldMap.Tools
     open YieldMap.Tools.Disposer
 
@@ -51,7 +52,7 @@ module LiveQuotes =
                         logger.Warn <| sprintf "No data or ric %s" ric
                         None
                 else 
-                    logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
+                    logger.Trace <| sprintf "Ric %s has invalid status %A" ric status
                     None
             with e -> 
                 logger.WarnEx "Failed to extract rfv" e
@@ -482,7 +483,7 @@ module LiveQuotes =
                 logger.Trace <| sprintf "Snapshot data is %A" (Map.fromDict2 lastValues)
                 let res = filterOut (Map.fromDict2 lastValues) ricFields
                 logger.Trace <| sprintf "Snapshot answer is %A" res
-                return Succeed <| res
+                return Succeed res
             }
 
             member x.Start () = paused := false
@@ -512,8 +513,12 @@ module LiveQuotes =
                     | [] -> ()
                 remove rics
 
-    type ApiSubscription (port) =
+    type ApiSubscription () =
         let quotesEvent = Event<RicFieldValue>()
+        do
+            ApiServer.start()
+            ApiServer.onApiQuote |> Observable.add (fun x -> ()) // todo catch events
+            // todo USE SOMEHOW MockSubscription BECAUSE THERE ARE EXCELLENT PARTS
         interface Subscription with
             member x.OnQuotes = quotesEvent.Publish
             member x.Fields (rics, ?timeout) = async { return Timeout }

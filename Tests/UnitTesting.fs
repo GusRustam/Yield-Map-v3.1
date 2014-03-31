@@ -214,7 +214,31 @@
         let logger = LogFactory.create "TestWebServer"
 
         [<Test>]
-        let ``Web server starts and responds`` () = 
+        let ``Web server starts, responds and stops`` () = 
+            ApiServer.start ()
+            logger.Info "Server started"
+            Async.Sleep(3000) |> Async.RunSynchronously
+
+            use wb = new WebClient()
+            let res = wb.DownloadString(ApiServer.host)
+            logger.Info <| sprintf "Got answer %A" res
+            res.Substring(0,3) |> should equal "ERR"
+
+            ApiServer.stop ()
+            logger.Info "Server stopping"
+            Async.Sleep(3000) |> Async.RunSynchronously
+            logger.Info "Server must be stopped"
+
+            let req = wb.AsyncDownloadString <| Uri ApiServer.host
+            try
+                let q = Async.RunSynchronously(req, 5000)
+                logger.Error <| sprintf "got illegal answer %A" q
+                Assert.Fail()
+            with :? TimeoutException ->
+                logger.Info "Done"
+
+        [<Test>]
+        let ``Web server accepts quotes`` () = 
             ApiServer.start ()
             logger.Info "Seems 2B started"
             Async.Sleep(5000) |> Async.RunSynchronously
@@ -233,6 +257,3 @@
             response |> should equal "OK"
 
             ApiServer.stop ()
-            logger.Info "Seems 2B stopped"
-            Async.Sleep(10000) |> Async.RunSynchronously
-            logger.Info "Bye"

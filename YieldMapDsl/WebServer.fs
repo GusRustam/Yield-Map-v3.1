@@ -25,12 +25,8 @@ module WebServer =
             let x = ApiQuotes()
             x.Quotes <- arr
             x
-        static member pack (q : ApiQuotes) = 
-            let ser = JsonConvert.SerializeObject(q)
-            String.toBytes ser
-
-        static member unpack b = 
-            JsonConvert.DeserializeObject<ApiQuotes>(String.fromBytes b)
+        static member pack (q : ApiQuotes) = q |> JsonConvert.SerializeObject |> String.toBytes
+        static member unpack b = JsonConvert.DeserializeObject<ApiQuotes>(String.fromBytes b)
 
 module ApiServer = 
     open Newtonsoft.Json
@@ -50,6 +46,7 @@ module ApiServer =
 
     let private running = ref false
 
+    let isRunning () = !running
 
     let private listener (handler:(HttpListenerRequest -> HttpListenerResponse -> Async<unit>)) =
         let hl = new HttpListener()
@@ -66,11 +63,15 @@ module ApiServer =
         
     let private q = Event<_>()
 
+    let onApiQuote = q.Publish
+
     let start () = 
         if not !running then
             running := true
             listener (fun req resp -> async {
-                logger.Info <| sprintf "Got request with path %s" req.Url.AbsolutePath
+                if not !running then return ()
+
+                logger.TraceF ("Got request with path %s", req.Url.AbsolutePath)
 
                 let answer = 
                     if req.HttpMethod = "POST" then
@@ -80,7 +81,7 @@ module ApiServer =
                                 use ms = new MemoryStream()
                                 req.InputStream.CopyTo(ms)                                
                                 let quotes = ApiQuotes.unpack <| ms.ToArray()
-                                logger.Debug <| sprintf "Triggering with %A" quotes
+                                logger.TraceF ("Triggering with %A", quotes)
                                 q.Trigger quotes
                                 "OK"
                             with :? JsonException as e ->   
