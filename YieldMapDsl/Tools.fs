@@ -147,6 +147,11 @@ module Extensions =
             let bytes = Array.init (str.Length * sizeof<char>) (fun _ -> 0uy)
             Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length)
             bytes
+        
+        static member fromBytes (bytes:byte array) = 
+            let chars = Array.init (bytes.Length / sizeof<char>) (fun _ -> ' ')
+            Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length)
+            String(chars)
 
         static member toString wut = match wut with null -> null | _ -> wut.ToString()
 

@@ -204,8 +204,6 @@
             | _ -> Assert.Fail()
 
     module TestWebServer = 
-        open Newtonsoft.Json
-
         open System.Net
         open System.Text
 
@@ -216,44 +214,25 @@
         let logger = LogFactory.create "TestWebServer"
 
         [<Test>]
-        let ``Web server starts and stops`` () = 
-            HttpServer.start ()
+        let ``Web server starts and responds`` () = 
+            ApiServer.start ()
             logger.Info "Seems 2B started"
             Async.Sleep(5000) |> Async.RunSynchronously
 
             logger.Info "Sending request"
             use wb = new WebClient()
 
-            let q = HttpServer.ApiQuote()
-            q.Ric <- "XXX"
-            q.Field <- "FLD"
-            q.Value <- "12"
+            let q = ApiQuote.create "XXX" "FLD" "12"
+            let z = ApiQuotes.create [|q|]
+            let enc = ApiQuotes.pack z
 
-            let z = HttpServer.ApiQuotes()
-            z.Quotes <- [|q|]
-
-            let ser = JsonConvert.SerializeObject(z)
-            let enc = String.toBytes ser
-            logger.Info "Sending request - 1"
-            let resp = wb.UploadData(HttpServer.host + "quote", enc)
-            logger.Info "Sending request - 2"
+            let resp = wb.UploadData(ApiServer.host + "quote", enc)
             let response = Encoding.ASCII.GetString(resp)
 
             logger.Info <| sprintf "Response is %s" response
+            response |> should equal "OK"
 
-            Async.Sleep(60000) |> Async.RunSynchronously
-            HttpServer.stop ()
+            ApiServer.stop ()
             logger.Info "Seems 2B stopped"
-            Async.Sleep(60000) |> Async.RunSynchronously
-
-//        [<Test>]
-//        let ``How about WCF server?`` () =
-//            WcfServer.start ()
-//
-//            use cf = new ChannelFactory<WcfServer.Service> (WebHttpBinding "http://localhost:8090")
-//            let channel = cf.CreateChannel() 
-//
-//            logger.Info <| sprintf "With get it is %s" (channel.EchoWithGet "Hello")
-//            logger.Info <| sprintf "With post it is %s" (channel.EchoWithPost "Hello")
-//
-//            WcfServer.stop ()
+            Async.Sleep(10000) |> Async.RunSynchronously
+            logger.Info "Bye"
