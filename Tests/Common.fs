@@ -27,7 +27,7 @@ module Dex2Tests =
             logger.Trace "Connected"
             return true
         | Connection.Failed e -> 
-            logger.Trace <| sprintf "Failed to connect %s" (e.ToString())
+            logger.TraceF "Failed to connect %s" (e.ToString())
             return false
     }
 
@@ -55,7 +55,7 @@ module Dex2Tests =
         | Chain.Answer data -> 
             return data
         | Chain.Failed e -> 
-            logger.Trace <| sprintf "Failed to load chain: %s" e.Message
+            logger.TraceF "Failed to load chain: %s" e.Message
             return [||]
     }
 
@@ -63,61 +63,61 @@ module Dex2Tests =
         let! connected = connect q
         logger.Trace "After connection"
         if connected then
-            logger.Trace <| sprintf "Before chain %s" chainName
+            logger.TraceF "Before chain %s" chainName
             // todo strange when feed is Q it just hangs, it doesn't report any error...
             // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
             let! data = getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
             logger.Trace "After chain"
             if Array.length data <> 0 then
                 let success = ref true
-                logger.Trace <| sprintf "Chain %A" data
+                logger.TraceF "Chain %A" data
 
                 logger.Info "Loading BondDescr table"
                 let! meta = q.LoadMetadata<BondDescr> data None
                 match meta with
-                | Meta.Answer metaData -> logger.Trace <| sprintf "BondDescr is %A" metaData
+                | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
                 | Meta.Failed e -> 
-                    logger.Error <| sprintf "Failed to load BondDescr: %s" (e.ToString())
+                    logger.ErrorF "Failed to load BondDescr: %s" (e.ToString())
                     success := false
 
                 logger.Info "Loading CouponData table"
                 let! meta = q.LoadMetadata<CouponData> data None
                 match meta with
-                | Meta.Answer metaData -> logger.Trace <| sprintf "CouponData is %A" metaData
+                | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
                 | Meta.Failed e -> 
-                    logger.Error <| sprintf "Failed to load CouponData: %s" (e.ToString())
+                    logger.ErrorF "Failed to load CouponData: %s" (e.ToString())
                     success := false
         
                 logger.Info "Loading IssueRatingData table"
                 let! meta = q.LoadMetadata<IssueRatingData> data None
                 match meta with
-                | Meta.Answer metaData -> logger.Trace <| sprintf "IssueRatingData is %A" metaData
+                | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
                 | Meta.Failed e -> 
-                    logger.Error <| sprintf "Failed to load IssueRatingData: %s" (e.ToString())
+                    logger.ErrorF "Failed to load IssueRatingData: %s" (e.ToString())
                     success := false
         
                 logger.Info "Loading IssuerRatingData table"
                 let! meta = q.LoadMetadata<IssuerRatingData> data None
                 match meta with
-                | Meta.Answer metaData -> logger.Trace <| sprintf "IssuerRatingData is %A" metaData
+                | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
                 | Meta.Failed e -> 
-                    logger.Error <| sprintf "Failed to load IssuerRatingData: %s" (e.ToString())
+                    logger.ErrorF "Failed to load IssuerRatingData: %s" (e.ToString())
                     success := false
 
                 logger.Info "Loading FrnData table"
                 let! meta = q.LoadMetadata<FrnData> data None
                 match meta with
-                | Meta.Answer metaData -> logger.Trace <| sprintf "FrnData is %A" metaData
+                | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
                 | Meta.Failed e -> 
-                    logger.Error <| sprintf "Failed to load FrnData: %s" (e.ToString())
+                    logger.ErrorF "Failed to load FrnData: %s" (e.ToString())
                     success := false
         
                 logger.Info "Loading RicData table"
                 let! meta = q.LoadMetadata<RicData> data None
                 match meta with
-                | Meta.Answer metaData -> logger.Trace <| sprintf "RicData is %A" metaData
+                | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
                 | Meta.Failed e -> 
-                    logger.Error <| sprintf "Failed to load RicData: %s" (e.ToString())
+                    logger.ErrorF "Failed to load RicData: %s" (e.ToString())
                     success := false
         
                 return !success

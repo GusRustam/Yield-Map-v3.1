@@ -34,7 +34,7 @@
 
                 Dex2Tests.test q "0#RUTSY=MM" |> Async.RunSynchronously |> should be True // Why it fails, I don't know ((
             with e -> 
-                logger.Error <| sprintf "Failed %s" (e.ToString())
+                logger.ErrorF "Failed %s" (e.ToString())
                 Assert.Fail()
         
         [<TestCase(0, 0, 126)>]
@@ -44,7 +44,7 @@
         let ``chains-in-parallel`` (t1 : int, t2 : int, cnt : int) =
             let toSome t = if t <= 0 then None else Some t
 
-            logger.Trace <| sprintf "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
+            logger.TraceF "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
 
             let dt = DateTime(2014,3,4)
             let q = MockOnlyFactory(dt) :> Loader
@@ -66,7 +66,7 @@
             let clndr = Calendar.MockCalendar(DateTime(2010, 1, 31, 23, 59, 55)) :> Calendar
             
             clndr.NewDay |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun x -> count := x)
-            clndr.NewDay |> Observable.add (fun dt -> logger.Info <| sprintf "Ping!!! %A" dt)
+            clndr.NewDay |> Observable.add (fun dt -> logger.InfoF "Ping!!! %A" dt)
 
             Async.AwaitEvent clndr.NewDay |> Async.Ignore |> Async.Start
             Async.Sleep(10000) |> Async.RunSynchronously
@@ -91,7 +91,7 @@
             let count = ref 0
             subscription.Add ([("XXX",["BID"])] |> Map.ofList)
             subscription.OnQuotes |> Observable.add (fun q -> 
-                logger.Info <| sprintf "Got quote %A" q
+                logger.InfoF "Got quote %A" q
                 count := !count + 1)
             subscription.Start ()
             Async.Sleep 7000 |> Async.RunSynchronously
@@ -110,7 +110,7 @@
             let count = ref 0
             subscription.Add ([("XXX",["BID"])] |> Map.ofList)
             subscription.OnQuotes |> Observable.add (fun q -> 
-                logger.Info <| sprintf "Got quote %A" q
+                logger.InfoF "Got quote %A" q
                 count := !count + 1)
             subscription.Start ()
             Async.Sleep 7000 |> Async.RunSynchronously
@@ -129,7 +129,7 @@
             let count = ref 0
             subscription.Add ([("XXX",["BID"])] |> Map.ofList)
             subscription.OnQuotes |> Observable.add (fun q -> 
-                logger.Info <| sprintf "Got quote %A" q
+                logger.InfoF "Got quote %A" q
                 count := !count + 1)
 
             subscription.Start ()
@@ -152,7 +152,7 @@
             let count = ref 0
             subscription.Add ([("XXX",["BID"])] |> Map.ofList)
             subscription.OnQuotes |> Observable.add (fun q -> 
-                logger.Info <| sprintf "Got quote %A" q
+                logger.InfoF "Got quote %A" q
                 count := !count + 1)
 
             subscription.Start ()
@@ -191,7 +191,7 @@
             Async.Sleep 3500 |> Async.RunSynchronously
 
             let x = subscription.Snapshot (([("XXX",["BID"]); ("YYY",["ASK"])] |> Map.ofList), None) |> Async.RunSynchronously
-            logger.Info <| sprintf "Got snapshot %A" x
+            logger.InfoF "Got snapshot %A" x
             match x with 
             | Succeed rfv -> 
                 counts rfv |> should equal (2,2) 
@@ -221,7 +221,7 @@
 
             use wb = new WebClient()
             let res = wb.DownloadString(ApiServer.host)
-            logger.Info <| sprintf "Got answer %A" res
+            logger.InfoF "Got answer %A" res
             res.Substring(0,3) |> should equal "ERR"
 
             ApiServer.stop ()
@@ -232,7 +232,9 @@
             let req = wb.AsyncDownloadString <| Uri ApiServer.host
             try
                 let q = Async.RunSynchronously(req, 5000)
-                logger.Error <| sprintf "got illegal answer %A" q
+                logger.ErrorF "got illegal answer %A" q
+                let q = Async.RunSynchronously(req, 5000)
+                logger.ErrorF "got illegal answer %A" q
                 Assert.Fail()
             with :? TimeoutException ->
                 logger.Info "Done"
@@ -253,7 +255,7 @@
             let resp = wb.UploadData(ApiServer.host + "quote", enc)
             let response = Encoding.ASCII.GetString(resp)
 
-            logger.Info <| sprintf "Response is %s" response
+            logger.InfoF "Response is %s" response
             response |> should equal "OK"
 
             ApiServer.stop ()

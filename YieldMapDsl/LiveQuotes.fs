@@ -49,10 +49,10 @@ module LiveQuotes =
                         let fieldValues = (names, values) ||> Seq.zip |> Seq.filter (fun (_, v) -> v <> null) |> Map.ofSeq // or (cross (snd >> (<>)) null) 
                         Some fieldValues
                     else
-                        logger.Warn <| sprintf "No data or ric %s" ric
+                        logger.WarnF "No data or ric %s" ric
                         None
                 else 
-                    logger.Trace <| sprintf "Ric %s has invalid status %A" ric status
+                    logger.TraceF "Ric %s has invalid status %A" ric status
                     None
             with e -> 
                 logger.WarnEx "Failed to extract rfv" e
@@ -74,13 +74,13 @@ module LiveQuotes =
             let _logger = LogFactory.create "Watcher"
             do 
                 let onStatusChange  listStatus sourceStatus runMode = 
-                    _logger.Trace <| sprintf "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+                    _logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
                     lock _lock (fun _ ->
                         if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
                             if listStatus = RT_ListStatus.RT_LIST_RUNNING then
                                 list.UnregisterAllItems ()
                             _failed <- true
-                            _logger.Warn <| sprintf "Source not up: %A" sourceStatus
+                            _logger.WarnF "Source not up: %A" sourceStatus
                             _evt.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus)))
 
                 list.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
@@ -94,11 +94,11 @@ module LiveQuotes =
 
             do 
                 let onStatusChange listStatus sourceStatus runMode = 
-                    this.Logger.Trace <| sprintf "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+                    this.Logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
                     if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
                         if listStatus = RT_ListStatus.RT_LIST_RUNNING then
                             snap.UnregisterAllItems ()
-                        this.Logger.Warn <| sprintf "Source not up: %A" sourceStatus
+                        this.Logger.WarnF "Source not up: %A" sourceStatus
                         this.Event.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
 
                 snap.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
@@ -108,7 +108,7 @@ module LiveQuotes =
                     | RT_DataStatus.RT_DS_FULL ->
                         let rec parseRics rics answer =
                             let update ric answer status =
-                                this.Logger.Trace <| sprintf "Got ric %s with status %A" ric status
+                                this.Logger.TraceF "Got ric %s with status %A" ric status
                                 
                                 match snap.ExtractFv ric status with
                                 | Some fv -> Map.add ric fv answer
@@ -142,12 +142,12 @@ module LiveQuotes =
 
             do
                 let onStatusChange  listStatus sourceStatus runMode = 
-                    _logger.Trace <| sprintf "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+                    _logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
 
                     if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
                         if listStatus = RT_ListStatus.RT_LIST_RUNNING then
                             fields.UnregisterAllItems ()
-                        _logger.Warn <| sprintf "Source not up: %A" sourceStatus
+                        _logger.WarnF "Source not up: %A" sourceStatus
                         _failed <- true
                         _fieldsData.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
 
@@ -158,17 +158,17 @@ module LiveQuotes =
                         if num < data.GetLength(0) then getLine (num+1) ((data.[num, 0].ToString()) :: arr) data else arr
 
                     if Set.contains ric allRics && not _failed then
-                        _logger.Trace <| sprintf "Got ric %s with status %A" ric status
+                        _logger.TraceF "Got ric %s with status %A" ric status
                         if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
                             let data = fields.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_STATUS) :?> obj[,]
                             let f = data |> getLine 0 [] 
                             
                             Set.remove ric allRics, Map.add ric f answers
                         else 
-                            _logger.Warn <| sprintf "Ric %s has invalid status %A" ric status
+                            _logger.WarnF "Ric %s has invalid status %A" ric status
                             allRics, answers
                     else 
-                        _logger.Trace <| sprintf "Ric %s was not requested" ric
+                        _logger.TraceF "Ric %s was not requested" ric
                         allRics, answers
                 
                 let rec handler allRics answers = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status ->
@@ -216,14 +216,14 @@ module LiveQuotes =
         let onTimeHandler = IAdxRtListEvents_OnTimeEventHandler (fun () -> 
             let rec parseRics rics answer =
                 let update ric answer status =
-                    logger.Trace <| sprintf "Got ric %s with status %A" ric status
+                    logger.TraceF "Got ric %s with status %A" ric status
 
                     if List.exists (fun (r, _) -> r = ric) rics then
                         match quotes.ExtractFv ric status with
                         | Some fieldValues -> Map.add ric fieldValues answer
                         | None -> answer
                     else 
-                        logger.Warn <| sprintf "Ric %s was not requested" ric
+                        logger.WarnF "Ric %s was not requested" ric
                         answer
                 try                                     
                     match rics with
@@ -238,7 +238,7 @@ module LiveQuotes =
         )
 
         let onUpdateHandler = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status -> 
-            logger.Trace <| sprintf "Got ric %s with status %A" ric status
+            logger.TraceF "Got ric %s with status %A" ric status
             match quotes.ExtractFv ric status with
             | Some fieldValues -> quotesEvent.Trigger <| Map.add ric fieldValues Map.empty
             | None -> ()            
@@ -457,7 +457,7 @@ module LiveQuotes =
             generator.Rfv 
             |> Observable.add (fun x -> lock lastValues (fun _ ->  
                 x |>  Map.toList |> saveLastValues
-                logger.Trace <| sprintf "Last values now are %A" (Map.fromDict2 lastValues)
+                logger.TraceF "Last values now are %A" (Map.fromDict2 lastValues)
             ))
 
         override x.DisposeManaged () = ()
@@ -480,9 +480,9 @@ module LiveQuotes =
 
             member x.Snapshot (ricFields, ?timeout) = async { 
                 do! Async.Sleep(100)
-                logger.Trace <| sprintf "Snapshot data is %A" (Map.fromDict2 lastValues)
+                logger.TraceF "Snapshot data is %A" (Map.fromDict2 lastValues)
                 let res = filterOut (Map.fromDict2 lastValues) ricFields
-                logger.Trace <| sprintf "Snapshot answer is %A" res
+                logger.TraceF "Snapshot answer is %A" res
                 return Succeed res
             }
 

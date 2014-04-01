@@ -28,7 +28,7 @@ module SdkFactory =
         type Eikon(eikon : EikonDesktopDataAPI) =
             let changed = new Event<_>()
             do eikon.add_OnStatusChanged (fun e -> 
-                logger.Trace <| sprintf "Status changed -> %A!" e
+                logger.TraceF "Status changed -> %A!" e
                 changed.Trigger <| Answers.Connection.parse e)
             member self.StatusChanged = changed.Publish
 
@@ -122,7 +122,7 @@ module SdkFactory =
                                 let converted value = 
                                     match conv with
                                     | Some(conv) -> 
-                                        logger.Trace <| sprintf "Converting value %A to type %s" value p.PropertyType.Name
+                                        logger.TraceF "Converting value %A to type %s" value p.PropertyType.Name
 
                                         let converter = 
                                             if converters.ContainsKey(conv) then 
@@ -135,13 +135,13 @@ module SdkFactory =
                                         try converter.Convert <| value.ToString()
                                         with _ -> value
                                     | _ -> 
-                                        logger.Trace <| sprintf "Value is %A" value
+                                        logger.TraceF "Value is %A" value
                                         value
                             
                                 p.SetValue(res, converted row.[num-minCol]) 
                             import ([res] @ acc) (n+1)
                         with e -> 
-                            logger.Debug <| sprintf "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())
+                            logger.DebugF "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())
                             import acc (n+1)
             
                 Meta.Answer <| import [] minRow
@@ -170,7 +170,7 @@ module SdkFactory =
                     try
                         let xDoc = XmlDocument()
                         let path = Path.Combine(Location.path, chainPath date)
-                        logger.Trace <| sprintf "The path to load chains is %s" path
+                        logger.TraceF "The path to load chains is %s" path
                         xDoc.Load(path)
                         let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
                         match node with
@@ -192,7 +192,7 @@ module SdkFactory =
                     try
                         let setRics = set rics
                         let path = Path.Combine(Location.path, metaPath<'a> date)
-                        logger.Trace <| sprintf "The path to load meta is %s" path
+                        logger.TraceF "The path to load meta is %s" path
                         let items = 
                             path 
                             |> File.ReadLines

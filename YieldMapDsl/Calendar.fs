@@ -22,7 +22,7 @@ module Calendar =
                     try
                         logger.Trace "Triggering tomorrow"
                         evt.Trigger c.Today // tomorrow has come, informing
-                    with e -> logger.Error <| sprintf "Failed to handle date change: %s" (e.ToString())
+                    with e -> logger.ErrorF "Failed to handle date change: %s" (e.ToString())
                     return! wait now // and now we'll count from new time, current's today
                 else return! wait time // counting from recent today
             }

@@ -75,7 +75,7 @@
                 
                 let toSome t = if t <= 0 then None else Some t
 
-                logger.Trace <| sprintf "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
+                logger.TraceF "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
 
                 let chain name timeout = Dex2Tests.getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
@@ -106,7 +106,7 @@
                 use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
                 let s =  subscription :> Subscription
                 let answer = s.Fields (["RUB="; "GAZP.MM"], None) |> Async.RunSynchronously
-                logger.Info <| sprintf "Got answer %A" answer
+                logger.InfoF "Got answer %A" answer
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
@@ -116,7 +116,7 @@
             use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
             let s = subscription :> Subscription
             let answer = s.Snapshot (ricFields, Some 100000) |> Async.RunSynchronously
-            logger.Info <| sprintf "Got answer %A" answer
+            logger.InfoF "Got answer %A" answer
 
             match answer with Succeed wut -> LiveQuotes.counts wut | _ -> 0, 0
 
@@ -150,13 +150,13 @@
 
             qoqoqo.Add ricFields
             qoqoqo.OnQuotes |> Observable.add (fun q -> 
-                logger.Info <| sprintf "Got quotes %A" q
-                try logger.Info <| sprintf "GAZPROM BID IS %s" q.["GAZP.MM"].["BID"]
+                logger.InfoF "Got quotes %A" q
+                try logger.InfoF "GAZPROM BID IS %s" q.["GAZP.MM"].["BID"]
                 with _ -> logger.Info "NO GAZP BID")
 
             let always x = (fun _ -> x)
             let count = ref 0
-            qoqoqo.OnQuotes |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun q -> logger.Info <| sprintf "Update #%d" q; count := q)
+            qoqoqo.OnQuotes |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun q -> logger.InfoF "Update #%d" q; count := q)
                     
             qoqoqo.Start ()
             Async.Sleep 10000 |> Async.RunSynchronously

@@ -71,7 +71,7 @@ module ApiServer =
             listener (fun req resp -> async {
                 if not !running then return ()
 
-                logger.TraceF ("Got request with path %s", req.Url.AbsolutePath)
+                logger.TraceF "Got request with path %s" req.Url.AbsolutePath
 
                 let answer = 
                     if req.HttpMethod = "POST" then
@@ -81,7 +81,7 @@ module ApiServer =
                                 use ms = new MemoryStream()
                                 req.InputStream.CopyTo(ms)                                
                                 let quotes = ApiQuotes.unpack <| ms.ToArray()
-                                logger.TraceF ("Triggering with %A", quotes)
+                                logger.TraceF "Triggering with %A" quotes
                                 q.Trigger quotes
                                 "OK"
                             with :? JsonException as e ->   
