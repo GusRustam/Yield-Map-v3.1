@@ -20,11 +20,11 @@ module Dex2Tests =
     let logger = LogFactory.create "Dex2Tests"
 
     let connect (q:SdkFactory.Loader) = async {
-        logger.Trace "Connection request sent"
+        logger.TraceF "Connection request sent"
         let! connectRes = q.Connect()
         match connectRes with
         | Connection.Connected -> 
-            logger.Trace "Connected"
+            logger.TraceF "Connected"
             return true
         | Connection.Failed e -> 
             logger.TraceF "Failed to connect %s" (e.ToString())
@@ -61,18 +61,18 @@ module Dex2Tests =
 
     let test (q:SdkFactory.Loader) chainName = async {
         let! connected = connect q
-        logger.Trace "After connection"
+        logger.TraceF "After connection"
         if connected then
             logger.TraceF "Before chain %s" chainName
             // todo strange when feed is Q it just hangs, it doesn't report any error...
             // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
             let! data = getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
-            logger.Trace "After chain"
+            logger.TraceF "After chain"
             if Array.length data <> 0 then
                 let success = ref true
                 logger.TraceF "Chain %A" data
 
-                logger.Info "Loading BondDescr table"
+                logger.InfoF "Loading BondDescr table"
                 let! meta = q.LoadMetadata<BondDescr> data None
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
@@ -80,7 +80,7 @@ module Dex2Tests =
                     logger.ErrorF "Failed to load BondDescr: %s" (e.ToString())
                     success := false
 
-                logger.Info "Loading CouponData table"
+                logger.InfoF "Loading CouponData table"
                 let! meta = q.LoadMetadata<CouponData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
@@ -88,7 +88,7 @@ module Dex2Tests =
                     logger.ErrorF "Failed to load CouponData: %s" (e.ToString())
                     success := false
         
-                logger.Info "Loading IssueRatingData table"
+                logger.InfoF "Loading IssueRatingData table"
                 let! meta = q.LoadMetadata<IssueRatingData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
@@ -96,7 +96,7 @@ module Dex2Tests =
                     logger.ErrorF "Failed to load IssueRatingData: %s" (e.ToString())
                     success := false
         
-                logger.Info "Loading IssuerRatingData table"
+                logger.InfoF "Loading IssuerRatingData table"
                 let! meta = q.LoadMetadata<IssuerRatingData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
@@ -104,7 +104,7 @@ module Dex2Tests =
                     logger.ErrorF "Failed to load IssuerRatingData: %s" (e.ToString())
                     success := false
 
-                logger.Info "Loading FrnData table"
+                logger.InfoF "Loading FrnData table"
                 let! meta = q.LoadMetadata<FrnData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
@@ -112,7 +112,7 @@ module Dex2Tests =
                     logger.ErrorF "Failed to load FrnData: %s" (e.ToString())
                     success := false
         
-                logger.Info "Loading RicData table"
+                logger.InfoF "Loading RicData table"
                 let! meta = q.LoadMetadata<RicData> data None
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
@@ -123,6 +123,6 @@ module Dex2Tests =
                 return !success
             else return false
         else 
-            logger.Trace "Not connected"
+            logger.TraceF "Not connected"
             return false
     } 

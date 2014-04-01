@@ -123,7 +123,7 @@ module LiveQuotes =
                              
                         let result = parseRics (List.ofSeq <| snap.RicsStatuses()) Map.empty
                         this.Event.Trigger <| Succeed result
-                    | RT_DataStatus.RT_DS_PARTIAL -> this.Logger.Debug "Partial data"
+                    | RT_DataStatus.RT_DS_PARTIAL -> this.Logger.DebugF "Partial data"
                     | _ -> this.Event.Trigger <| Invalid (exn(sprintf "Invalid data status: %A" status))
 
                 snap.add_OnImage <| IAdxRtListEvents_OnImageEventHandler onImage
@@ -208,7 +208,7 @@ module LiveQuotes =
         let quotes = _eikon.CreateAdxRtList() :?> AdxRtList
         do 
             try quotes.Source <- _feed
-            with :? COMException -> logger.Error "Failed to set up a source"
+            with :? COMException -> logger.ErrorF "Failed to set up a source"
 
         let quotesRef = ref quotes
         let quotesEvent = Event<RicFieldValue>()
@@ -396,9 +396,8 @@ module LiveQuotes =
 //            if circular then yield! x.Generate ()
 //        }
 
-    type MockSubscription(generator : RfvGenerator) =
-        inherit Disposer ()
-            
+    [<AbstractClass>]
+    type AccumulatingSubscription() =
         let quotesEvent = Event<RicFieldValue>()
 
         // mutables 
@@ -406,7 +405,10 @@ module LiveQuotes =
         let requested = Dictionary()
         let lastValues = Dictionary<string, Dictionary<string, string>>()
 
-        let filterOut items request = 
+        member x.LastValues = lastValues
+        member x.QuotesEvent = quotesEvent  
+
+        member x.FilterOut items request = 
             let rec doFilterOut items agg request =
                 match items with
                 | (ric, fieldValues) :: rest -> 
@@ -418,14 +420,14 @@ module LiveQuotes =
             doFilterOut (Map.toList items) Map.empty request
 
         /// Filters out rics and fields user hasn't subscribed to
-        let eventFilter (rfv : RicFieldValue)  = 
+        member x.EventFilter (rfv : RicFieldValue)  = 
             if !paused then Map.empty
             else 
-                lock requested (fun _ -> filterOut rfv (Map.fromDict requested)) 
+                lock requested (fun _ -> x.FilterOut rfv (Map.fromDict requested)) 
                 |> Map.filter (fun _ value -> not <| Map.isEmpty value)
 
         /// Auxiliary function which stores last values in the dictionary
-        let rec saveLastValues items = 
+        member x.SaveLastValues items = 
             let rec appendFv (existing : Dictionary<string, string>) items =
                 match items with
                 | (field, value) :: rest ->
@@ -445,23 +447,8 @@ module LiveQuotes =
                     let newFv = appendFv existingFv (Map.toList fieldsValues)
                     lastValues.Add (ric, newFv)
 
-                saveLastValues rest
+                x.SaveLastValues rest
             | [] -> ()
-
-        do 
-            generator.Rfv 
-            |> Observable.map eventFilter
-            |> Observable.filter (fun x -> not <| Map.isEmpty x) 
-            |> Observable.add quotesEvent.Trigger
-            
-            generator.Rfv 
-            |> Observable.add (fun x -> lock lastValues (fun _ ->  
-                x |>  Map.toList |> saveLastValues
-                logger.TraceF "Last values now are %A" (Map.fromDict2 lastValues)
-            ))
-
-        override x.DisposeManaged () = ()
-        override x.DisposeUnmanaged () = generator.Stop ()
 
         interface Subscription with
             member x.OnQuotes = quotesEvent.Publish
@@ -481,7 +468,7 @@ module LiveQuotes =
             member x.Snapshot (ricFields, ?timeout) = async { 
                 do! Async.Sleep(100)
                 logger.TraceF "Snapshot data is %A" (Map.fromDict2 lastValues)
-                let res = filterOut (Map.fromDict2 lastValues) ricFields
+                let res = x.FilterOut (Map.fromDict2 lastValues) ricFields
                 logger.TraceF "Snapshot answer is %A" res
                 return Succeed res
             }
@@ -513,18 +500,32 @@ module LiveQuotes =
                     | [] -> ()
                 remove rics
 
-    type ApiSubscription () =
-        let quotesEvent = Event<RicFieldValue>()
+    type MockSubscription(generator : RfvGenerator) as this =
+        inherit AccumulatingSubscription ()
+        
+        do 
+            generator.Rfv 
+            |> Observable.map this.EventFilter
+            |> Observable.filter (fun x -> not <| Map.isEmpty x) 
+            |> Observable.add this.QuotesEvent.Trigger
+            
+            generator.Rfv 
+            |> Observable.add (fun x -> lock this.LastValues (fun _ ->  
+                x |>  Map.toList |> this.SaveLastValues
+                logger.TraceF "Last values now are %A" (Map.fromDict2 this.LastValues)
+            ))
+
+        interface IDisposable with override x.Dispose () = generator.Stop ()
+
+    type ApiSubscription () as this =
+        inherit AccumulatingSubscription ()
+  
+        let toRfv apiQuotes = Map.empty // todo convert ApiQuotes to ricfieldvalue
+
         do
             ApiServer.start()
-            ApiServer.onApiQuote |> Observable.add (fun x -> ()) // todo catch events
-            // todo USE SOMEHOW MockSubscription BECAUSE THERE ARE EXCELLENT PARTS
-        interface Subscription with
-            member x.OnQuotes = quotesEvent.Publish
-            member x.Fields (rics, ?timeout) = async { return Timeout }
-            member x.Snapshot (ricFields, ?timeout) = async { return Timeout }
-            member x.Start () = ()
-            member x.Pause () = ()
-            member x.Stop () = ()
-            member x.Add ricFields = ()
-            member x.Remove rics = ()
+            ApiServer.onApiQuote 
+            |> Observable.map toRfv
+            |> Observable.map this.EventFilter
+            |> Observable.filter (fun x -> not <| Map.isEmpty x) 
+            |> Observable.add this.QuotesEvent.Trigger

@@ -80,7 +80,7 @@
 
         [<Test>]
         let ``I receive quotes I'm subscribed`` () =
-            logger.Info "I receive quotes I subscribed"
+            logger.InfoF "I receive quotes I subscribed"
             let slots = seq {
                 yield { Interval = 1.0; Items = [{Ric="YYY";Field="BID";Value="11"}] }
                 yield { Interval = 2.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
@@ -99,7 +99,7 @@
 
         [<Test>]
         let ``I don't receive quotes I'm not subscribed`` () =
-            logger.Info "I don't receive quotes I'm not subscribed"
+            logger.InfoF "I don't receive quotes I'm not subscribed"
             let slots = seq {
                 yield { Interval = 1.0; Items = [{Ric="XXX";Field="ASK";Value="11"}] }
                 yield { Interval = 2.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
@@ -118,7 +118,7 @@
 
         [<Test>]
         let ``I stop receiveing quotes I've unsubscribed`` () =
-            logger.Info "I stop receive quotes I've unsubscribed"
+            logger.InfoF "I stop receive quotes I've unsubscribed"
             let slots = seq {
                 yield { Interval = 2.0; Items = [{Ric="YYY";Field="ASK";Value="11"}] }
                 yield { Interval = 3.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
@@ -141,7 +141,7 @@
 
         [<Test>]
         let ``I begin receiveing quotes I've subscribed to`` () =
-            logger.Info "I begin receiveing quotes I've subscribed to"
+            logger.InfoF "I begin receiveing quotes I've subscribed to"
             let slots = seq {
                 yield { Interval = 2.0; Items = [{Ric="YYY";Field="ASK";Value="11"}] }
                 yield { Interval = 3.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
@@ -164,7 +164,7 @@
 
         [<Test>]
         let ``I receive snapshots according to recent quotes`` () =
-            logger.Info "I receive snapshots according to recent quotes"
+            logger.InfoF "I receive snapshots according to recent quotes"
             let slots = seq {
                 yield { Interval = 2.0; Items = [{Ric="YYY";Field="ASK";Value="11"}] }
                 yield { Interval = 3.0; Items = [{Ric="XXX";Field="BID";Value="12"}] }
@@ -216,7 +216,7 @@
         [<Test>]
         let ``Web server starts, responds and stops`` () = 
             ApiServer.start ()
-            logger.Info "Server started"
+            logger.InfoF "Server started"
             Async.Sleep(3000) |> Async.RunSynchronously
 
             use wb = new WebClient()
@@ -225,9 +225,9 @@
             res.Substring(0,3) |> should equal "ERR"
 
             ApiServer.stop ()
-            logger.Info "Server stopping"
+            logger.InfoF "Server stopping"
             Async.Sleep(3000) |> Async.RunSynchronously
-            logger.Info "Server must be stopped"
+            logger.InfoF "Server must be stopped"
 
             let req = wb.AsyncDownloadString <| Uri ApiServer.host
             try
@@ -237,15 +237,15 @@
                 logger.ErrorF "got illegal answer %A" q
                 Assert.Fail()
             with :? TimeoutException ->
-                logger.Info "Done"
+                logger.InfoF "Done"
 
         [<Test>]
         let ``Web server accepts quotes`` () = 
             ApiServer.start ()
-            logger.Info "Seems 2B started"
+            logger.InfoF "Seems 2B started"
             Async.Sleep(5000) |> Async.RunSynchronously
 
-            logger.Info "Sending request"
+            logger.InfoF "Sending request"
             use wb = new WebClient()
 
             let q = ApiQuote.create "XXX" "FLD" "12"

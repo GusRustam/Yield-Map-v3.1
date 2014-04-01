@@ -71,7 +71,7 @@ module SdkFactory =
 
             do chain.add_OnUpdate (
                 fun status -> 
-                    status.ToString() |>  sprintf "Chain / status -> %s" |> logger.Trace
+                    logger.TraceF "Chain / status -> %s" (status.ToString())
                     match status with 
                     | RT_DataStatus.RT_DS_FULL -> dataEvent.Trigger <| parseData chain.Data
                     | RT_DataStatus.RT_DS_PARTIAL -> () // todo logging
@@ -80,7 +80,7 @@ module SdkFactory =
 
             do chain.add_OnStatusChange (
                 fun status ->
-                    status.ToString() |>  sprintf "Status changed -> %s" |> logger.Trace
+                    logger.TraceF "Status changed -> %s" (status.ToString())
                     match status with
                     | RT_SourceStatus.RT_SOURCE_UP -> ()
                     | _ -> dataEvent.Trigger <| Answers.Chain.Failed(Exception(sprintf "Invalid feed %s" chain.Source))

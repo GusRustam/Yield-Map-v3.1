@@ -184,12 +184,12 @@ module Disposer =
 
         interface IDisposable with
             member self.Dispose() =
-                logger.Trace "Dispose()" 
+                logger.TraceF "Dispose()" 
                 self.PerformDispose true
                 GC.SuppressFinalize self
 
         override self.Finalize() =
-            logger.Trace "Finalize()"
+            logger.TraceF "Finalize()"
             self.PerformDispose false
 
         member self.PerformDispose disposeManaged =
@@ -206,7 +206,7 @@ module Disposer =
         override self.DisposeUnmanaged() = ()
         override self.DisposeManaged() =
             if !_object <> null && Marshal.IsComObject(!_object) then
-                Marshal.ReleaseComObject(_object) |> sprintf "References left: %d" |> logger.Trace
+                logger.TraceF "References left: %d" (Marshal.ReleaseComObject(_object))
                 _object := null
 
 [<RequireQualifiedAccess>]
@@ -222,5 +222,5 @@ module Ole32 =
         let he = !wut
         if he <> null && Marshal.IsComObject(he) then
             let refLeft = Marshal.ReleaseComObject(he) 
-            refLeft |> sprintf "References left: %d" |> logger.Trace
+            logger.TraceF "References left: %d" refLeft
             wut := null

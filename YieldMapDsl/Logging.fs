@@ -37,27 +37,21 @@ module Logging =
         | _ -> LogLevel.Off
 
     type Logger = 
-        [<Conditional("TRACE")>] abstract member Trace : string -> unit
         [<Conditional("TRACE")>] abstract member TraceEx : string -> exn -> unit
         [<Conditional("TRACE")>] abstract member TraceF : StringFormat<'a, unit> -> 'a
 
-        [<Conditional("DEBUG")>] abstract member Debug : string -> unit
         [<Conditional("DEBUG")>] abstract member DebugEx : string -> exn -> unit
         [<Conditional("DEBUG")>] abstract member DebugF : StringFormat<'a, unit> -> 'a
 
-        [<Conditional("DEBUG")>] abstract member Info : string -> unit
         [<Conditional("DEBUG")>] abstract member InfoEx : string -> exn -> unit
         [<Conditional("DEBUG")>] abstract member InfoF : StringFormat<'a, unit> -> 'a
 
-        [<Conditional("DEBUG")>] abstract member Warn : string -> unit
         [<Conditional("DEBUG")>] abstract member WarnEx : string -> exn -> unit
         [<Conditional("DEBUG")>] abstract member WarnF : StringFormat<'a, unit> -> 'a
 
-        [<Conditional("DEBUG")>] abstract member Error : string -> unit
         [<Conditional("DEBUG")>] abstract member ErrorEx : string -> exn -> unit
         [<Conditional("DEBUG")>] abstract member ErrorF : StringFormat<'a, unit> -> 'a
 
-        [<Conditional("DEBUG")>] abstract member Fatal : string -> unit
         [<Conditional("DEBUG")>] abstract member FatalEx : string -> exn -> unit
         [<Conditional("DEBUG")>] abstract member FatalF : StringFormat<'a, unit> -> 'a
 
@@ -135,27 +129,21 @@ module Logging =
                     let newLogger = {
                         new Logger with
                             member x.TraceEx message ex = crtEx LoggingLevel.Trace message ex
-                            member x.Trace message = crt LoggingLevel.Trace <| message
                             member x.TraceF format = kprintf (fun x -> crt LoggingLevel.Trace x) format 
 
                             member x.DebugEx message ex = crtEx LoggingLevel.Debug message ex
-                            member x.Debug message = crt LoggingLevel.Debug message 
                             member x.DebugF format = kprintf (fun x -> crt LoggingLevel.Debug x) format 
 
                             member x.InfoEx message ex = crtEx LoggingLevel.Info message ex
-                            member x.Info message = crt LoggingLevel.Info message 
                             member x.InfoF format = kprintf (fun x -> crt LoggingLevel.Info x) format 
 
                             member x.WarnEx message ex = crtEx LoggingLevel.Warn message ex
-                            member x.Warn message = crt LoggingLevel.Warn message 
                             member x.WarnF format = kprintf (fun x -> crt LoggingLevel.Warn x) format 
 
                             member x.ErrorEx message ex = crtEx LoggingLevel.Error message ex
-                            member x.Error message = crt LoggingLevel.Error message 
                             member x.ErrorF format = kprintf (fun x -> crt LoggingLevel.Error x) format 
 
                             member x.FatalEx message ex = crtEx LoggingLevel.Fatal message ex
-                            member x.Fatal message = crt LoggingLevel.Fatal message
                             member x.FatalF format = kprintf (fun x -> crt LoggingLevel.Fatal x) format}
 
                     loggers.Add(name, newLogger)

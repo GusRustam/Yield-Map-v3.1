@@ -36,7 +36,7 @@
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
                 with :? TimeoutException -> 
-                    logger.Error "...timeout"
+                    logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
             finally
                 Ole32.killComObject eikon
@@ -50,7 +50,7 @@
                 try
                     Async.RunSynchronously (Dex2Tests.test q "0#RUCORP=MM", int <| TimeSpan.FromMinutes(1.0).TotalMilliseconds) |> should be True
                 with :? TimeoutException -> 
-                    logger.Error "...timeout"
+                    logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
             finally
                 Ole32.killComObject eikon
@@ -70,7 +70,7 @@
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
                 with :? TimeoutException -> 
-                    logger.Error "...timeout"
+                    logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
                 
                 let toSome t = if t <= 0 then None else Some t
@@ -100,7 +100,7 @@
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
                 with :? TimeoutException -> 
-                    logger.Error "...timeout"
+                    logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
 
                 use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
@@ -129,7 +129,7 @@
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
                 with :? TimeoutException -> 
-                    logger.Error "...timeout"
+                    logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
 
                 let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
@@ -152,7 +152,7 @@
             qoqoqo.OnQuotes |> Observable.add (fun q -> 
                 logger.InfoF "Got quotes %A" q
                 try logger.InfoF "GAZPROM BID IS %s" q.["GAZP.MM"].["BID"]
-                with _ -> logger.Info "NO GAZP BID")
+                with _ -> logger.InfoF "NO GAZP BID")
 
             let always x = (fun _ -> x)
             let count = ref 0
@@ -172,20 +172,17 @@
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
                 with :? TimeoutException -> 
-                    logger.Error "...timeout"
+                    logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
 
                 // test
 
-                logger.Info "1"
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
                 considerIt eikon QuoteMode.OnUpdate rf |> should be (greaterThan 1)
 
-                logger.Info "2"
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
                 considerIt eikon QuoteMode.OnUpdate rf |> should be (greaterThan 1)
 
-                logger.Info "3"
                 let rf = [("RxUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
                 considerIt eikon QuoteMode.OnUpdate rf |> should be (equal 0)
 
@@ -202,20 +199,17 @@
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
                 with :? TimeoutException -> 
-                    logger.Error "...timeout"
+                    logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
 
                 // test
 
-                logger.Info "4"
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
                 considerIt eikon (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
 
-                logger.Info "5"
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
                 considerIt eikon (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
 
-                logger.Info "6"
                 let rf = [("RxUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
                 considerIt eikon (QuoteMode.OnTime 4) rf |> should be (equal 3)
 
