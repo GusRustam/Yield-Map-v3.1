@@ -503,10 +503,9 @@ module LiveQuotes =
     type MockSubscription(generator : RfvGenerator) as this =
         inherit AccumulatingSubscription ()
         
-        do 
-            generator.Rfv 
+        do  generator.Rfv 
             |> Observable.map this.EventFilter
-            |> Observable.filter (fun x -> not <| Map.isEmpty x) 
+            |> Observable.filter (not << Map.isEmpty) 
             |> Observable.add this.QuotesEvent.Trigger
             
             generator.Rfv 
@@ -519,13 +518,10 @@ module LiveQuotes =
 
     type ApiSubscription () as this =
         inherit AccumulatingSubscription ()
-  
-        let toRfv apiQuotes = Map.empty // todo convert ApiQuotes to ricfieldvalue
-
-        do
-            ApiServer.start()
+ 
+        do  ApiServer.start()
             ApiServer.onApiQuote 
-            |> Observable.map toRfv
+            |> Observable.map ApiQuotes.toRfv
             |> Observable.map this.EventFilter
-            |> Observable.filter (fun x -> not <| Map.isEmpty x) 
+            |> Observable.filter (not << Map.isEmpty)
             |> Observable.add this.QuotesEvent.Trigger

@@ -27,6 +27,13 @@ module WebServer =
             x
         static member pack (q : ApiQuotes) = q |> JsonConvert.SerializeObject |> String.toBytes
         static member unpack b = JsonConvert.DeserializeObject<ApiQuotes>(String.fromBytes b)
+        static member toRfv (apiQuotes : ApiQuotes) = 
+            apiQuotes.Quotes 
+            |> Array.fold (fun agg item -> 
+                let fv = if agg |> Map.containsKey item.Ric then agg.[item.Ric] else Map.empty
+                let fv = fv |> Map.add item.Field item.Value
+                agg |> Map.add item.Ric fv
+            ) Map.empty 
 
 module ApiServer = 
     open Newtonsoft.Json

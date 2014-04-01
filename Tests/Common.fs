@@ -31,29 +31,10 @@ module Dex2Tests =
             return false
     }
 
-//    let executeTestInMock dt test = 
-//        let loader = MockOnlyFactory(dt) :> Loader
-//        if connect loader |> Async.RunSynchronously then
-//            test loader
-//        else Assert.Fail()
-//
-//    let executeTestInEikon test = 
-//        let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
-//        try
-//            let loader = OuterEikonFactory(!eikon) :> Loader
-//            if connect loader |> Async.RunSynchronously then
-//                test loader
-//            else Assert.Fail()
-//        finally
-//            Ole32.killComObject eikon
-//            Ole32.CoUninitialize()
-//
-
     let getChain (q:SdkFactory.Loader) request = async {
         let! chain = q.LoadChain request
         match chain with
-        | Chain.Answer data -> 
-            return data
+        | Chain.Answer data -> return data
         | Chain.Failed e -> 
             logger.TraceF "Failed to load chain: %s" e.Message
             return [||]

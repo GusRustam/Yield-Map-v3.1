@@ -7,7 +7,7 @@
     open NUnit.Framework
     open FsUnit
 
-    module DataTests = 
+    module MetaChainsTests = 
         open YieldMap.Requests
         open YieldMap.Requests.Answers
         open YieldMap.Loading
@@ -25,14 +25,14 @@
             ans |> should be True
 
         [<Test>]
-        let ``retrieve-mock-data`` () = 
+        let ``Requested chain is recieved`` () = 
             try
                 let dt = DateTime(2014,3,4)
                 let q = MockOnlyFactory(dt) :> Loader
 
                 globalThreshold := LoggingLevel.Debug
 
-                Dex2Tests.test q "0#RUTSY=MM" |> Async.RunSynchronously |> should be True // Why it fails, I don't know ((
+                Dex2Tests.test q "0#RUTSY=MM" |> Async.RunSynchronously |> should be True
             with e -> 
                 logger.ErrorF "Failed %s" (e.ToString())
                 Assert.Fail()
@@ -41,7 +41,7 @@
         [<TestCase(1, 0, 87)>]
         [<TestCase(0, 1, 39)>]
         [<TestCase(1, 1, 0)>]
-        let ``chains-in-parallel`` (t1 : int, t2 : int, cnt : int) =
+        let ``Chains come up in parallel and if some fails, the other don't`` (t1 : int, t2 : int, cnt : int) =
             let toSome t = if t <= 0 then None else Some t
 
             logger.TraceF "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
@@ -51,15 +51,12 @@
             let chain name timeout = Dex2Tests.getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
             let tasks = [ chain "0#RUTSY=MM" (toSome t1); chain "0#RUSOVB=MM" (toSome t2) ]
-                
             let data = tasks |> Async.Parallel |> Async.RunSynchronously |> Array.collect id
-
             printfn "%d : %A" (Array.length data) data
-
             data |> Array.length |> should equal cnt
 
         [<Test>]
-        let ``tomorrow-test`` () =
+        let ``Tomorrow event happens in mock calendar`` () =
             let always x = fun _ -> x
             let count = ref 0
 
@@ -72,7 +69,7 @@
             Async.Sleep(10000) |> Async.RunSynchronously
             !count |> should equal 1
 
-    module LiveQuotesTest = 
+    module MockSubscriptionTest = 
         open YieldMap.Logging
         open YieldMap.Loading.LiveQuotes
 
@@ -259,3 +256,67 @@
             response |> should equal "OK"
 
             ApiServer.stop ()
+
+    module TestApiQuotes =
+        open System.Net
+        open System.Text
+        open System.Threading
+
+        open YieldMap.Logging
+        open YieldMap.Loading.LiveQuotes
+        open YieldMap.Tools
+        open YieldMap.WebServer
+
+        let logger = LogFactory.create "TestApiQuotes"
+
+        [<Test>]
+        let ``I recieve quotes I sent`` () = 
+            let apiQuotes = ApiSubscription() :> Subscription
+
+            let slots = [|
+                ApiQuotes.create [|ApiQuote.create "YYY" "ASK" "12"|]
+                ApiQuotes.create [|ApiQuote.create "YYY" "ASK" "13"|]
+                ApiQuotes.create [|ApiQuote.create "XXX" "BID" "95"|]
+                ApiQuotes.create [|
+                    ApiQuote.create "YYY" "BID" "10"
+                    ApiQuote.create "YYY" "ASK" "15"
+                    ApiQuote.create "XXX" "ASK" "105"
+                |]
+            |]
+
+            let count = ref 0
+
+            let subscription = [
+                ("YYY", ["BID"; "ASK"])
+                ("XXX", ["BID"; "ASK"])
+            ]
+
+            subscription |> Map.ofList |> apiQuotes.Add 
+            apiQuotes.Start()
+            apiQuotes.OnQuotes 
+            |> Observable.scan (fun (count, item) evt -> (count+1, evt)) (-1, Map.empty)
+            |> Observable.add (fun (i, rfv) -> 
+                count := i
+                logger.InfoF "Got quotes %A" rfv
+                try rfv |> should equal (ApiQuotes.toRfv slots.[i])
+                with e -> logger.ErrorEx "Failed" e
+                logger.InfoF "Ok"
+            )
+
+            use wb = new WebClient()
+
+            let q = ApiQuote.create "XXX" "FLD" "12"
+            let z = ApiQuotes.create [|q|]
+            let enc = ApiQuotes.pack z
+
+            slots |> Array.iter (fun slot -> 
+                logger.InfoF "To send quotes %A" slot
+                let enc = ApiQuotes.pack slot
+                let resp = wb.UploadData(ApiServer.host + "quote", enc)
+                let response = Encoding.ASCII.GetString(resp)
+                response |> should equal "OK"
+                Async.Sleep(1000) |> Async.RunSynchronously
+            )
+
+            count |> should equal (Array.length slots)
+            apiQuotes.Stop()
