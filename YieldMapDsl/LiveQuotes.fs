@@ -1,6 +1,8 @@
 ﻿namespace YieldMap.Loading
 
-module LiveQuotes = 
+type TimeoutAnswer<'T> = Timeout | Invalid of exn | Succeed of 'T 
+
+module private Watchers = 
     open EikonDesktopDataAPI
     open ThomsonReuters.Interop.RTX
     
@@ -14,21 +16,7 @@ module LiveQuotes =
     open YieldMap.Tools
     open YieldMap.Tools.Disposer
 
-    let private logger = LogFactory.create "LiveQuotes"
-
-    type TimeoutAnswer<'T> = Timeout | Invalid of exn | Succeed of 'T 
-
-    type RicFields = Map<string, string list>
-    type FieldValue = Map<string, string>
-    type RicFieldValue = Map<string, FieldValue>
-
-    let counts (wut:RicFieldValue) =
-        let rec cntRics rics fieldsValues = function
-            | (ric, fieldValue) :: rest -> 
-                let addon = fieldValue |> Map.toList |> List.length
-                rest |> cntRics (rics+1) (fieldsValues + addon)
-            | [] -> rics, fieldsValues
-        wut |> Map.toList |> cntRics 0 0
+    let private logger = LogFactory.create "Watchers"
 
     // useful extensions
     type AdxRtList with
@@ -65,127 +53,159 @@ module LiveQuotes =
             let statusList =  data.[*, 1..1] |> Seq.cast<obj> |> Seq.map (fun x -> x :?> RT_ItemStatus)
             Seq.zip ricsList statusList
     
-    module private Watchers = 
-        [<AbstractClass>]
-        type Watcher (list : AdxRtList) =
-            let _evt = Event<_>()
-            let _lock = obj()
-            let mutable _failed = false
-            let _logger = LogFactory.create "Watcher"
-            do 
-                let onStatusChange  listStatus sourceStatus runMode = 
-                    _logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
-                    lock _lock (fun _ ->
-                        if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
-                            if listStatus = RT_ListStatus.RT_LIST_RUNNING then
-                                list.UnregisterAllItems ()
-                            _failed <- true
-                            _logger.WarnF "Source not up: %A" sourceStatus
-                            _evt.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus)))
-
-                list.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
-
-            member x.Logger = _logger
-            member x.Failed = _failed
-            member x.Event = _evt
-
-        type SnapWatcher(snap : AdxRtList) as this = 
-            inherit Watcher (snap)
-
-            do 
-                let onStatusChange listStatus sourceStatus runMode = 
-                    this.Logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+    
+    [<AbstractClass>]
+    type Watcher (list : AdxRtList) =
+        let _evt = Event<_>()
+        let _lock = obj()
+        let mutable _failed = false
+        let _logger = LogFactory.create "Watcher"
+        do 
+            let onStatusChange  listStatus sourceStatus runMode = 
+                _logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+                lock _lock (fun _ ->
                     if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
                         if listStatus = RT_ListStatus.RT_LIST_RUNNING then
-                            snap.UnregisterAllItems ()
-                        this.Logger.WarnF "Source not up: %A" sourceStatus
-                        this.Event.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
-
-                snap.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
-                
-                let onImage status =
-                    match status with
-                    | RT_DataStatus.RT_DS_FULL ->
-                        let rec parseRics rics answer =
-                            let update ric answer status =
-                                this.Logger.TraceF "Got ric %s with status %A" ric status
-                                
-                                match snap.ExtractFv ric status with
-                                | Some fv -> Map.add ric fv answer
-                                | None -> answer
-                            try                                     
-                                match rics with
-                                | (ric, status) :: rest -> parseRics rest (update ric answer status)
-                                | [] -> answer                   
-                            with e -> 
-                                logger.ErrorEx "failed " e
-                                answer
-                             
-                        let result = parseRics (List.ofSeq <| snap.RicsStatuses()) Map.empty
-                        this.Event.Trigger <| Succeed result
-                    | RT_DataStatus.RT_DS_PARTIAL -> this.Logger.DebugF "Partial data"
-                    | _ -> this.Event.Trigger <| Invalid (exn(sprintf "Invalid data status: %A" status))
-
-                snap.add_OnImage <| IAdxRtListEvents_OnImageEventHandler onImage
-            
-            member x.Snapshot = this.Event.Publish
-
-        type FieldWatcher (rics : string list, fields : AdxRtList) = 
-            let _lock = obj()
-            let _fieldsData = Event<_>()
-            let _rics = set rics
-            
-            let _logger = LogFactory.create "FieldWatcher"
-            
-            let mutable _failed = false
-            let _handler = ref null
-
-            do
-                let onStatusChange  listStatus sourceStatus runMode = 
-                    _logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
-
-                    if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
-                        if listStatus = RT_ListStatus.RT_LIST_RUNNING then
-                            fields.UnregisterAllItems ()
-                        _logger.WarnF "Source not up: %A" sourceStatus
+                            list.UnregisterAllItems ()
                         _failed <- true
-                        _fieldsData.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
+                        _logger.WarnF "Source not up: %A" sourceStatus
+                        _evt.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus)))
 
-                fields.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
+            list.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
 
-                let handle allRics answers ric status =
-                    let rec getLine num arr (data : obj[,]) =
-                        if num < data.GetLength(0) then getLine (num+1) ((data.[num, 0].ToString()) :: arr) data else arr
+        member x.Logger = _logger
+        member x.Failed = _failed
+        member x.Event = _evt
 
-                    if Set.contains ric allRics && not _failed then
-                        _logger.TraceF "Got ric %s with status %A" ric status
-                        if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
-                            let data = fields.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_STATUS) :?> obj[,]
-                            let f = data |> getLine 0 [] 
-                            
-                            Set.remove ric allRics, Map.add ric f answers
-                        else 
-                            _logger.WarnF "Ric %s has invalid status %A" ric status
-                            allRics, answers
-                    else 
-                        _logger.TraceF "Ric %s was not requested" ric
-                        allRics, answers
+    type SnapWatcher(snap : AdxRtList) as this = 
+        inherit Watcher (snap)
+
+        do 
+            let onStatusChange listStatus sourceStatus runMode = 
+                this.Logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+                if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
+                    if listStatus = RT_ListStatus.RT_LIST_RUNNING then
+                        snap.UnregisterAllItems ()
+                    this.Logger.WarnF "Source not up: %A" sourceStatus
+                    this.Event.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
+
+            snap.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
                 
-                let rec handler allRics answers = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status ->
-                    lock _lock (fun _ -> 
-                        fields.remove_OnUpdate !_handler
-                        let ricsLeft, results = handle allRics answers ric status
-                        if Set.count ricsLeft = 0 then
-                            _fieldsData.Trigger <| Succeed results 
-                        else
-                            _handler := (ricsLeft, results) ||> handler 
-                            !_handler |> fields.add_OnUpdate))
+            let onImage status =
+                match status with
+                | RT_DataStatus.RT_DS_FULL ->
+                    let rec parseRics rics answer =
+                        let update ric answer status =
+                            this.Logger.TraceF "Got ric %s with status %A" ric status
                                 
-                _handler := handler (set rics) Map.empty
-                fields.add_OnUpdate !_handler
+                            match snap.ExtractFv ric status with
+                            | Some fv -> Map.add ric fv answer
+                            | None -> answer
+                        try                                     
+                            match rics with
+                            | (ric, status) :: rest -> parseRics rest (update ric answer status)
+                            | [] -> answer                   
+                        with e -> 
+                            logger.ErrorEx "failed " e
+                            answer
+                             
+                    let result = parseRics (List.ofSeq <| snap.RicsStatuses()) Map.empty
+                    this.Event.Trigger <| Succeed result
+                | RT_DataStatus.RT_DS_PARTIAL -> this.Logger.DebugF "Partial data"
+                | _ -> this.Event.Trigger <| Invalid (exn(sprintf "Invalid data status: %A" status))
 
-            member x.FieldsData = _fieldsData.Publish
+            snap.add_OnImage <| IAdxRtListEvents_OnImageEventHandler onImage
+            
+        member x.Snapshot = this.Event.Publish
 
+    type FieldWatcher (rics : string list, fields : AdxRtList) = 
+        let _lock = obj()
+        let _fieldsData = Event<_>()
+        let _rics = set rics
+            
+        let _logger = LogFactory.create "FieldWatcher"
+            
+        let mutable _failed = false
+        let _handler = ref null
+
+        do
+            let onStatusChange  listStatus sourceStatus runMode = 
+                _logger.TraceF "OnStatusChange (%A, %A, %A)" listStatus sourceStatus runMode
+
+                if sourceStatus <> RT_SourceStatus.RT_SOURCE_UP then 
+                    if listStatus = RT_ListStatus.RT_LIST_RUNNING then
+                        fields.UnregisterAllItems ()
+                    _logger.WarnF "Source not up: %A" sourceStatus
+                    _failed <- true
+                    _fieldsData.Trigger <| Invalid(exn(sprintf "Source not up: %A" sourceStatus))
+
+            fields.add_OnStatusChange <| IAdxRtListEvents_OnStatusChangeEventHandler onStatusChange
+
+            let handle allRics answers ric status =
+                let rec getLine num arr (data : obj[,]) =
+                    if num < data.GetLength(0) then getLine (num+1) ((data.[num, 0].ToString()) :: arr) data else arr
+
+                if Set.contains ric allRics && not _failed then
+                    _logger.TraceF "Got ric %s with status %A" ric status
+                    if set [RT_ItemStatus.RT_ITEM_DELAYED; RT_ItemStatus.RT_ITEM_OK] |> Set.contains status then
+                        let data = fields.ListFields(ric, RT_FieldRowView.RT_FRV_UPDATED, RT_FieldColumnView.RT_FCV_STATUS) :?> obj[,]
+                        let f = data |> getLine 0 [] 
+                            
+                        Set.remove ric allRics, Map.add ric f answers
+                    else 
+                        _logger.WarnF "Ric %s has invalid status %A" ric status
+                        allRics, answers
+                else 
+                    _logger.TraceF "Ric %s was not requested" ric
+                    allRics, answers
+                
+            let rec handler allRics answers = IAdxRtListEvents_OnUpdateEventHandler (fun ric _ status ->
+                lock _lock (fun _ -> 
+                    fields.remove_OnUpdate !_handler
+                    let ricsLeft, results = handle allRics answers ric status
+                    if Set.count ricsLeft = 0 then
+                        _fieldsData.Trigger <| Succeed results 
+                    else
+                        _handler := (ricsLeft, results) ||> handler 
+                        !_handler |> fields.add_OnUpdate))
+                                
+            _handler := handler (set rics) Map.empty
+            fields.add_OnUpdate !_handler
+
+        member x.FieldsData = _fieldsData.Publish
+
+module LiveQuotes = 
+    open EikonDesktopDataAPI
+    open ThomsonReuters.Interop.RTX
+    
+    open System
+    open System.Collections.Generic
+    open System.Runtime.InteropServices
+    open System.Threading
+
+    open YieldMap.Loading
+    open YieldMap.Logging
+    open YieldMap.Tools
+    open YieldMap.Tools.Disposer
+    open YieldMap.WebServer
+
+    open Watchers
+
+    let private logger = LogFactory.create "LiveQuotes"
+
+    type RicFields = Map<string, string list>
+    type FieldValue = Map<string, string>
+    type RicFieldValue = Map<string, FieldValue>
+
+    let counts (wut:RicFieldValue) =
+        let rec cntRics rics fieldsValues = function
+            | (ric, fieldValue) :: rest -> 
+                let addon = fieldValue |> Map.toList |> List.length
+                rest |> cntRics (rics+1) (fieldsValues + addon)
+            | [] -> rics, fieldsValues
+        wut |> Map.toList |> cntRics 0 0    
+
+    /// General subscription interface
     type Subscription = 
         abstract member OnQuotes : RicFieldValue IEvent
 
@@ -201,11 +221,12 @@ module LiveQuotes =
 
     type QuoteMode = OnTime of int | OnTimeIfUpdated of int | OnUpdate
 
-    type EikonSubscription (_eikon:EikonDesktopDataAPI, _feed, _mode) = 
+    /// Eikon subscription
+    type EikonSubscription (_loader : SdkFactory.Loader, _feed, _mode) = 
         inherit Disposer ()
 
         let requests = Map.empty
-        let quotes = _eikon.CreateAdxRtList() :?> AdxRtList
+        let quotes = _loader.CreateAdxRtList()
         do 
             try quotes.Source <- _feed
             with :? COMException -> logger.ErrorF "Failed to set up a source"
@@ -253,7 +274,7 @@ module LiveQuotes =
             member x.Fields (rics, ?timeout) = 
                 async {
                     try
-                        let fields = _eikon.CreateAdxRtList() :?> AdxRtList
+                        let fields = _loader.CreateAdxRtList()
                         let fielder = ref fields
                         try
                             fields.Source <- _feed
@@ -276,7 +297,7 @@ module LiveQuotes =
 
                 async {
                     try
-                        let snap = _eikon.CreateAdxRtList() :?> AdxRtList
+                        let snap = _loader.CreateAdxRtList()
                         let snapshotter = ref snap
                         try
                             snap.Source <- _feed
@@ -289,7 +310,7 @@ module LiveQuotes =
                                 match timeout with
                                 | Some time -> 
                                     try Async.RunSynchronously (Async.AwaitEvent snapWaiter.Snapshot, time)
-                                    with :? TimeoutException -> Timeout
+                                    with :? TimeoutException -> TimeoutAnswer.Timeout
                                 | None -> Async.AwaitEvent snapWaiter.Snapshot |> Async.RunSynchronously
 
                             snap.CloseAllLinks()

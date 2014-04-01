@@ -283,6 +283,7 @@ module SdkFactory =
         abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> int option -> Async<Answers.Meta<'a>>
         abstract member CreateAdxBondModule : unit -> AdxBondModule
         abstract member CreateAdxRtChain : unit -> AdxRtChain
+        abstract member CreateAdxRtList : unit -> AdxRtList
         abstract member CreateDex2Mgr : unit -> Dex2Mgr
 
     /// Connection : timeout;
@@ -297,6 +298,7 @@ module SdkFactory =
             member x.LoadMetadata rics timeout = MockOperations.meta rics (Some _today) timeout
             member x.CreateAdxBondModule () = null
             member x.CreateAdxRtChain () = null
+            member x.CreateAdxRtList () = null
             member x.CreateDex2Mgr () = null
 
     /// Connection : Eikon;
@@ -312,6 +314,7 @@ module SdkFactory =
             member x.LoadMetadata rics timeout = MockOperations.meta rics (Some _today) timeout
             member x.CreateAdxBondModule () = _eikon.CreateAdxBondModule() :?> AdxBondModule
             member x.CreateAdxRtChain () = _eikon.CreateAdxRtChain() :?> AdxRtChain
+            member x.CreateAdxRtList () = _eikon.CreateAdxRtList() :?> AdxRtList
             member x.CreateDex2Mgr () = _eikon.CreateDex2Mgr() :?> Dex2Mgr
 
     /// Connection : Eikon;
@@ -324,6 +327,7 @@ module SdkFactory =
             member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
             member x.CreateAdxBondModule () = eikon.CreateAdxBondModule() :?> AdxBondModule
             member x.CreateAdxRtChain () = eikon.CreateAdxRtChain() :?> AdxRtChain
+            member x.CreateAdxRtList () = eikon.CreateAdxRtList() :?> AdxRtList
             member x.CreateDex2Mgr () = eikon.CreateDex2Mgr() :?> Dex2Mgr
 
 
@@ -337,4 +341,5 @@ module SdkFactory =
             member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
             member x.CreateAdxBondModule () = AdxBondModuleClass() :> AdxBondModule
             member x.CreateAdxRtChain () = new AdxRtChainClass() :> AdxRtChain
+            member x.CreateAdxRtList () = new AdxRtListClass() :> AdxRtList
             member x.CreateDex2Mgr () =  new Dex2MgrClass() :> Dex2Mgr

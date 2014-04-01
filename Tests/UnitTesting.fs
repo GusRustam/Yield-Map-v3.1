@@ -296,7 +296,7 @@
             apiQuotes.OnQuotes 
             |> Observable.scan (fun (count, item) evt -> (count+1, evt)) (-1, Map.empty)
             |> Observable.add (fun (i, rfv) -> 
-                count := i
+                count := i+1
                 logger.InfoF "Got quotes %A" rfv
                 try rfv |> should equal (ApiQuotes.toRfv slots.[i])
                 with e -> logger.ErrorEx "Failed" e
@@ -304,10 +304,6 @@
             )
 
             use wb = new WebClient()
-
-            let q = ApiQuote.create "XXX" "FLD" "12"
-            let z = ApiQuotes.create [|q|]
-            let enc = ApiQuotes.pack z
 
             slots |> Array.iter (fun slot -> 
                 logger.InfoF "To send quotes %A" slot
@@ -318,5 +314,5 @@
                 Async.Sleep(1000) |> Async.RunSynchronously
             )
 
-            count |> should equal (Array.length slots)
+            !count |> should equal (Array.length slots)
             apiQuotes.Stop()

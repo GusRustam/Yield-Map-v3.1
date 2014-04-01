@@ -103,7 +103,7 @@
                     logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
 
-                use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
+                use subscription = new EikonSubscription(q, "IDN", QuoteMode.OnUpdate)
                 let s =  subscription :> Subscription
                 let answer = s.Fields (["RUB="; "GAZP.MM"], None) |> Async.RunSynchronously
                 logger.InfoF "Got answer %A" answer
@@ -133,19 +133,19 @@
                     Assert.Fail "Timeout"
 
                 let ricFields = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                snapshot ricFields eikon |> should equal (2, 4)
+                snapshot ricFields q |> should equal (2, 4)
                 let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID12"; "ASK33"])] |> Map.ofList
-                snapshot ricFields eikon |> should equal (1, 0)
+                snapshot ricFields q |> should equal (1, 0)
                 let ricFields = [("XXX", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
-                snapshot ricFields eikon |> should equal (1, 1)
+                snapshot ricFields q |> should equal (1, 1)
                 let ricFields = [("EUR=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK33"])] |> Map.ofList
-                snapshot ricFields eikon |> should equal (2, 3)
+                snapshot ricFields q |> should equal (2, 3)
             finally
                 Ole32.killComObject eikon
                 Ole32.CoUninitialize()
 
         let considerIt eikon mode ricFields = 
-            use bebebe = new EikonSubscription(!eikon, "IDN", mode)
+            use bebebe = new EikonSubscription(eikon, "IDN", mode)
             let qoqoqo = bebebe :> Subscription
 
             qoqoqo.Add ricFields
@@ -178,13 +178,13 @@
                 // test
 
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                considerIt eikon QuoteMode.OnUpdate rf |> should be (greaterThan 1)
+                considerIt q QuoteMode.OnUpdate rf |> should be (greaterThan 1)
 
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                considerIt eikon QuoteMode.OnUpdate rf |> should be (greaterThan 1)
+                considerIt q QuoteMode.OnUpdate rf |> should be (greaterThan 1)
 
                 let rf = [("RxUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                considerIt eikon QuoteMode.OnUpdate rf |> should be (equal 0)
+                considerIt q QuoteMode.OnUpdate rf |> should be (equal 0)
 
             finally
                 Ole32.killComObject eikon
@@ -205,13 +205,13 @@
                 // test
 
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
+                considerIt q (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
 
                 let rf = [("RUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
+                considerIt q (QuoteMode.OnTime 4) rf |> should be (greaterThan 1)
 
                 let rf = [("RxUB=", ["BID"; "ASK"]); ("GxAZP.MM", ["BID"; "ASK"])] |> Map.ofList
-                considerIt eikon (QuoteMode.OnTime 4) rf |> should be (equal 3)
+                considerIt q (QuoteMode.OnTime 4) rf |> should be (equal 3)
 
             finally
                 Ole32.killComObject eikon
