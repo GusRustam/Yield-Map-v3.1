@@ -7,10 +7,10 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>f19b076c-c552-46fa-88b0-3f33a96dfadc</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>YieldMapDsl</RootNamespace>
-    <AssemblyName>YieldMap</AssemblyName>
+    <RootNamespace>YieldMap.Core</RootNamespace>
+    <AssemblyName>YieldMap.Core</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <Name>YieldMap</Name>
+    <Name>YieldMap.Core</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Debug\YieldMapDsl.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\YieldMap.Core.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -32,7 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Release\YieldMapDsl.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\YieldMap.Core.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
