@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap.Core", "YieldMap.Core\YieldMap.fsproj", "{F19B076C-C552-46FA-88B0-3F33A96DFADC}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap", "YieldMap.Core\YieldMap.Core.fsproj", "{F19B076C-C552-46FA-88B0-3F33A96DFADC}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap.Tests", "YieldMap.Tests\Tests.fsproj", "{EECFCDFE-2AAA-433C-A8BA-AC44027D4BF8}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "YieldMap.Tests\YieldMap.Tests.fsproj", "{EECFCDFE-2AAA-433C-A8BA-AC44027D4BF8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
