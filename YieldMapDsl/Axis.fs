@@ -242,8 +242,6 @@
 //        type FeatureConverter = 
 //            abstract member Range : int * int
 //            abstract member ToSlot : string -> int * string
-    
-    
 
     module Program = 
         open EikonDesktopDataAPI
@@ -260,7 +258,6 @@
 
             // todo storage provider
         }
-
 
     module Ansamble = 
         open Analytics
