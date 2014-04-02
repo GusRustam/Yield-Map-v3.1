@@ -92,8 +92,8 @@
   <PropertyGroup>
     <PostBuildEvent>mkdir "$(TargetDir)data" 
 xcopy "$(ProjectDir)data" "$(TargetDir)data" /E /I /F /Y
-xcopy "$(ProjectDir)data" "$(TargetDir)../../../Tests/bin/Debug/data" /E /I /F /Y
-;copy "$(TargetDir)$(TargetFileName)" "$(ProjectDir)../Tests/packages" /Y</PostBuildEvent>
+xcopy "$(ProjectDir)data" "$(TargetDir)../../../YieldMap.Tests/bin/Debug/data" /E /I /F /Y
+;copy "$(TargetDir)$(TargetFileName)" "$(ProjectDir)../YieldMap.Tests/packages" /Y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
