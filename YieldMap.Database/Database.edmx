@@ -1,0 +1,1279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="mainModel.Store" Alias="Self" Provider="System.Data.SQLite" ProviderManifestToken="ISO8601" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityContainer Name="mainModelStoreContainer">
+          <EntitySet Name="InstrumentBond" EntityType="mainModel.Store.InstrumentBond" store:Type="Tables" />
+          <EntitySet Name="InstrumentCustomBond" EntityType="mainModel.Store.InstrumentCustomBond" store:Type="Tables" />
+          <EntitySet Name="RawBondInfo" EntityType="mainModel.Store.RawBondInfo" store:Type="Tables" />
+          <EntitySet Name="RawFrnData" EntityType="mainModel.Store.RawFrnData" store:Type="Tables" />
+          <EntitySet Name="RawRating" EntityType="mainModel.Store.RawRating" store:Type="Tables" />
+          <EntitySet Name="RefBorrower" EntityType="mainModel.Store.RefBorrower" store:Type="Tables" />
+          <EntitySet Name="RefChain" EntityType="mainModel.Store.RefChain" store:Type="Tables" />
+          <EntitySet Name="RefCountry" EntityType="mainModel.Store.RefCountry" store:Type="Tables" />
+          <EntitySet Name="RefCurrency" EntityType="mainModel.Store.RefCurrency" store:Type="Tables" />
+          <EntitySet Name="RefIndustry" EntityType="mainModel.Store.RefIndustry" store:Type="Tables" />
+          <EntitySet Name="RefInstrument" EntityType="mainModel.Store.RefInstrument" store:Type="Tables" />
+          <EntitySet Name="RefIsin" EntityType="mainModel.Store.RefIsin" store:Type="Tables" />
+          <EntitySet Name="RefIssuer" EntityType="mainModel.Store.RefIssuer" store:Type="Tables" />
+          <EntitySet Name="RefRating" EntityType="mainModel.Store.RefRating" store:Type="Tables" />
+          <EntitySet Name="RefRatingAgency" EntityType="mainModel.Store.RefRatingAgency" store:Type="Tables" />
+          <EntitySet Name="RefRic" EntityType="mainModel.Store.RefRic" store:Type="Tables" />
+          <EntitySet Name="RefRicToChain" EntityType="mainModel.Store.RefRicToChain" store:Type="Tables" />
+          <EntitySet Name="RefSeniority" EntityType="mainModel.Store.RefSeniority" store:Type="Tables" />
+          <EntitySet Name="RefSubIndustry" EntityType="mainModel.Store.RefSubIndustry" store:Type="Tables" />
+          <EntitySet Name="RefTicker" EntityType="mainModel.Store.RefTicker" store:Type="Tables" />
+          <AssociationSet Name="FK_InstrumentBond_0_0" Association="mainModel.Store.FK_InstrumentBond_0_0">
+            <End Role="RefCurrency" EntitySet="RefCurrency" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_1_0" Association="mainModel.Store.FK_InstrumentBond_1_0">
+            <End Role="RefBorrower" EntitySet="RefBorrower" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_2_0" Association="mainModel.Store.FK_InstrumentBond_2_0">
+            <End Role="RefInstrument" EntitySet="RefInstrument" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_3_0" Association="mainModel.Store.FK_InstrumentBond_3_0">
+            <End Role="RefSubIndustry" EntitySet="RefSubIndustry" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_4_0" Association="mainModel.Store.FK_InstrumentBond_4_0">
+            <End Role="RefTicker" EntitySet="RefTicker" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_5_0" Association="mainModel.Store.FK_InstrumentBond_5_0">
+            <End Role="RefRic" EntitySet="RefRic" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_6_0" Association="mainModel.Store.FK_InstrumentBond_6_0">
+            <End Role="RefIsin" EntitySet="RefIsin" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_7_0" Association="mainModel.Store.FK_InstrumentBond_7_0">
+            <End Role="RefIssuer" EntitySet="RefIssuer" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentCustomBond_0_0" Association="mainModel.Store.FK_InstrumentCustomBond_0_0">
+            <End Role="RefCurrency" EntitySet="RefCurrency" />
+            <End Role="InstrumentCustomBond" EntitySet="InstrumentCustomBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefBorrower_0_0" Association="mainModel.Store.FK_RefBorrower_0_0">
+            <End Role="RefCountry" EntitySet="RefCountry" />
+            <End Role="RefBorrower" EntitySet="RefBorrower" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefIssuer_0_0" Association="mainModel.Store.FK_RefIssuer_0_0">
+            <End Role="RefCountry" EntitySet="RefCountry" />
+            <End Role="RefIssuer" EntitySet="RefIssuer" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRating_0_0" Association="mainModel.Store.FK_RefRating_0_0">
+            <End Role="RefRatingAgency" EntitySet="RefRatingAgency" />
+            <End Role="RefRating" EntitySet="RefRating" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRic_0_0" Association="mainModel.Store.FK_RefRic_0_0">
+            <End Role="RefIsin" EntitySet="RefIsin" />
+            <End Role="RefRic" EntitySet="RefRic" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRicToChain_0_0" Association="mainModel.Store.FK_RefRicToChain_0_0">
+            <End Role="RefRic" EntitySet="RefRic" />
+            <End Role="RefRicToChain" EntitySet="RefRicToChain" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRicToChain_1_0" Association="mainModel.Store.FK_RefRicToChain_1_0">
+            <End Role="RefChain" EntitySet="RefChain" />
+            <End Role="RefRicToChain" EntitySet="RefRicToChain" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefSubIndustry_0_0" Association="mainModel.Store.FK_RefSubIndustry_0_0">
+            <End Role="RefIndustry" EntitySet="RefIndustry" />
+            <End Role="RefSubIndustry" EntitySet="RefSubIndustry" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefTicker_0_0" Association="mainModel.Store.FK_RefTicker_0_0">
+            <End Role="RefTicker" EntitySet="RefTicker" />
+            <End Role="RefTicker1" EntitySet="RefTicker" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="InstrumentBond">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_Issuer" Type="integer" />
+          <Property Name="id_Borrower" Type="integer" />
+          <Property Name="id_Currency" Type="integer" />
+          <Property Name="BondStructure" Type="nvarchar" />
+          <Property Name="RateStructure" Type="nvarchar" />
+          <Property Name="IssueSize" Type="integer" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="IsCallable" Type="bit" />
+          <Property Name="IsPutable" Type="bit" />
+          <Property Name="Series" Type="varchar" MaxLength="50" />
+          <Property Name="id_Isin" Type="integer" />
+          <Property Name="id_Ric" Type="integer" />
+          <Property Name="id_Ticker" Type="integer" />
+          <Property Name="id_SubIndustry" Type="integer" />
+          <Property Name="id_Type" Type="integer" />
+          <Property Name="Issue" Type="datetime" />
+          <Property Name="Maturity" Type="datetime" />
+        </EntityType>
+        <EntityType Name="InstrumentCustomBond">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" MaxLength="50" />
+          <Property Name="BondStructure" Type="nvarchar" />
+          <Property Name="RateStructure" Type="nvarchar" />
+          <Property Name="id_Currency" Type="integer" />
+          <Property Name="Issue" Type="datetime" />
+          <Property Name="Maturity" Type="datetime" />
+        </EntityType>
+        <EntityType Name="RawBondInfo">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="BondStructure" Type="nvarchar" />
+          <Property Name="RateStructure" Type="nvarchar" />
+          <Property Name="IssueSize" Type="integer" />
+          <Property Name="IssuerName" Type="varchar" MaxLength="50" />
+          <Property Name="BorrowerName" Type="varchar" MaxLength="50" />
+          <Property Name="Coupon" Type="real" />
+          <Property Name="Issue" Type="datetime" />
+          <Property Name="Maturity" Type="datetime" />
+          <Property Name="Currency" Type="varchar" MaxLength="50" />
+          <Property Name="ShortName" Type="varchar" MaxLength="50" />
+          <Property Name="IsCallable" Type="bit" />
+          <Property Name="IsPutable" Type="bit" />
+          <Property Name="IsFloater" Type="bit" />
+          <Property Name="IsConvertible" Type="bit" />
+          <Property Name="IsStraight" Type="bit" />
+          <Property Name="Ticker" Type="varchar" MaxLength="50" />
+          <Property Name="Series" Type="varchar" MaxLength="50" />
+          <Property Name="BorrowerCountry" Type="varchar" MaxLength="50" />
+          <Property Name="IssuerCountry" Type="varchar" MaxLength="50" />
+          <Property Name="Isin" Type="varchar" MaxLength="50" />
+          <Property Name="ParentTicker" Type="varchar" MaxLength="50" />
+          <Property Name="Seniority" Type="varchar" MaxLength="50" />
+          <Property Name="Industry" Type="varchar" MaxLength="50" />
+          <Property Name="SubIndustry" Type="varchar" MaxLength="50" />
+          <Property Name="Instrument" Type="varchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RawFrnData">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Cap" Type="real" />
+          <Property Name="Floor" Type="real" />
+          <Property Name="Margin" Type="real" />
+          <Property Name="Index" Type="varchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RawRating">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Date" Type="datetime" />
+          <Property Name="Rating" Type="varchar" MaxLength="50" />
+          <Property Name="Source" Type="varchar" MaxLength="50" />
+          <Property Name="Issue" Type="bit" />
+        </EntityType>
+        <EntityType Name="RefBorrower">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="id_Country" Type="integer" Nullable="false" />
+        </EntityType>
+        <EntityType Name="RefChain">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefCountry">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefCurrency">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefIndustry">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefInstrument">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefIsin">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefIssuer">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="id_Country" Type="integer" Nullable="false" />
+        </EntityType>
+        <EntityType Name="RefRating">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Value" Type="integer" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="50" />
+          <Property Name="id_RatingAgency" Type="integer" />
+        </EntityType>
+        <EntityType Name="RefRatingAgency">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefRic">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="Isin_id" Type="integer" />
+        </EntityType>
+        <EntityType Name="RefRicToChain">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Ric_id" Type="integer" Nullable="false" />
+          <Property Name="Chain_id" Type="integer" Nullable="false" />
+        </EntityType>
+        <EntityType Name="RefSeniority">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="RefSubIndustry">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="id_Industry" Type="integer" Nullable="false" />
+        </EntityType>
+        <EntityType Name="RefTicker">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="id_ParentTicker" Type="integer" />
+        </EntityType>
+        <Association Name="FK_InstrumentBond_0_0">
+          <End Role="RefCurrency" Type="mainModel.Store.RefCurrency" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCurrency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Currency" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_1_0">
+          <End Role="RefBorrower" Type="mainModel.Store.RefBorrower" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefBorrower">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Borrower" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_2_0">
+          <End Role="RefInstrument" Type="mainModel.Store.RefInstrument" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefInstrument">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Type" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_3_0">
+          <End Role="RefSubIndustry" Type="mainModel.Store.RefSubIndustry" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefSubIndustry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_SubIndustry" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_4_0">
+          <End Role="RefTicker" Type="mainModel.Store.RefTicker" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefTicker">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Ticker" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_5_0">
+          <End Role="RefRic" Type="mainModel.Store.RefRic" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefRic">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Ric" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_6_0">
+          <End Role="RefIsin" Type="mainModel.Store.RefIsin" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIsin">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Isin" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_7_0">
+          <End Role="RefIssuer" Type="mainModel.Store.RefIssuer" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIssuer">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Issuer" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentCustomBond_0_0">
+          <End Role="RefCurrency" Type="mainModel.Store.RefCurrency" Multiplicity="0..1" />
+          <End Role="InstrumentCustomBond" Type="mainModel.Store.InstrumentCustomBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCurrency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentCustomBond">
+              <PropertyRef Name="id_Currency" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefBorrower_0_0">
+          <End Role="RefCountry" Type="mainModel.Store.RefCountry" Multiplicity="1" />
+          <End Role="RefBorrower" Type="mainModel.Store.RefBorrower" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCountry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefBorrower">
+              <PropertyRef Name="id_Country" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefIssuer_0_0">
+          <End Role="RefCountry" Type="mainModel.Store.RefCountry" Multiplicity="1" />
+          <End Role="RefIssuer" Type="mainModel.Store.RefIssuer" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCountry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefIssuer">
+              <PropertyRef Name="id_Country" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRating_0_0">
+          <End Role="RefRatingAgency" Type="mainModel.Store.RefRatingAgency" Multiplicity="1" />
+          <End Role="RefRating" Type="mainModel.Store.RefRating" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="RefRatingAgency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRating">
+              <PropertyRef Name="id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRic_0_0">
+          <End Role="RefIsin" Type="mainModel.Store.RefIsin" Multiplicity="0..1" />
+          <End Role="RefRic" Type="mainModel.Store.RefRic" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIsin">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRic">
+              <PropertyRef Name="Isin_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRicToChain_0_0">
+          <End Role="RefRic" Type="mainModel.Store.RefRic" Multiplicity="1" />
+          <End Role="RefRicToChain" Type="mainModel.Store.RefRicToChain" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefRic">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRicToChain">
+              <PropertyRef Name="Ric_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRicToChain_1_0">
+          <End Role="RefChain" Type="mainModel.Store.RefChain" Multiplicity="1" />
+          <End Role="RefRicToChain" Type="mainModel.Store.RefRicToChain" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefChain">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRicToChain">
+              <PropertyRef Name="Chain_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefSubIndustry_0_0">
+          <End Role="RefIndustry" Type="mainModel.Store.RefIndustry" Multiplicity="1" />
+          <End Role="RefSubIndustry" Type="mainModel.Store.RefSubIndustry" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIndustry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefSubIndustry">
+              <PropertyRef Name="id_Industry" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefTicker_0_0">
+          <End Role="RefTicker" Type="mainModel.Store.RefTicker" Multiplicity="0..1" />
+          <End Role="RefTicker1" Type="mainModel.Store.RefTicker" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefTicker">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefTicker1">
+              <PropertyRef Name="id_ParentTicker" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="mainModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="mainEntities" p1:LazyLoadingEnabled="true">
+          <EntitySet Name="RawBondInfoes" EntityType="mainModel.RawBondInfo" />
+          <EntitySet Name="RawFrnDatas" EntityType="mainModel.RawFrnData" />
+          <EntitySet Name="RawRatings" EntityType="mainModel.RawRating" />
+          <EntitySet Name="RefBorrowers" EntityType="mainModel.RefBorrower" />
+          <EntitySet Name="RefChains" EntityType="mainModel.RefChain" />
+          <EntitySet Name="RefCountries" EntityType="mainModel.RefCountry" />
+          <EntitySet Name="RefCurrencies" EntityType="mainModel.RefCurrency" />
+          <EntitySet Name="RefIndustries" EntityType="mainModel.RefIndustry" />
+          <EntitySet Name="RefInstruments" EntityType="mainModel.RefInstrument" />
+          <EntitySet Name="RefIsins" EntityType="mainModel.RefIsin" />
+          <EntitySet Name="RefIssuers" EntityType="mainModel.RefIssuer" />
+          <EntitySet Name="RefRatings" EntityType="mainModel.RefRating" />
+          <EntitySet Name="RefRatingAgencies" EntityType="mainModel.RefRatingAgency" />
+          <AssociationSet Name="FK_RefBorrower_0_0" Association="mainModel.FK_RefBorrower_0_0">
+            <End Role="RefCountry" EntitySet="RefCountries" />
+            <End Role="RefBorrower" EntitySet="RefBorrowers" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefIssuer_0_0" Association="mainModel.FK_RefIssuer_0_0">
+            <End Role="RefCountry" EntitySet="RefCountries" />
+            <End Role="RefIssuer" EntitySet="RefIssuers" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRating_0_0" Association="mainModel.FK_RefRating_0_0">
+            <End Role="RefRatingAgency" EntitySet="RefRatingAgencies" />
+            <End Role="RefRating" EntitySet="RefRatings" />
+          </AssociationSet>
+          <EntitySet Name="RefRics" EntityType="mainModel.RefRic" />
+          <EntitySet Name="RefRicToChains" EntityType="mainModel.RefRicToChain" />
+          <EntitySet Name="RefSeniorities" EntityType="mainModel.RefSeniority" />
+          <EntitySet Name="RefSubIndustries" EntityType="mainModel.RefSubIndustry" />
+          <EntitySet Name="RefTickers" EntityType="mainModel.RefTicker" />
+          <AssociationSet Name="FK_RefRicToChain_1_0" Association="mainModel.FK_RefRicToChain_1_0">
+            <End Role="RefChain" EntitySet="RefChains" />
+            <End Role="RefRicToChain" EntitySet="RefRicToChains" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefSubIndustry_0_0" Association="mainModel.FK_RefSubIndustry_0_0">
+            <End Role="RefIndustry" EntitySet="RefIndustries" />
+            <End Role="RefSubIndustry" EntitySet="RefSubIndustries" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRic_0_0" Association="mainModel.FK_RefRic_0_0">
+            <End Role="RefIsin" EntitySet="RefIsins" />
+            <End Role="RefRic" EntitySet="RefRics" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRicToChain_0_0" Association="mainModel.FK_RefRicToChain_0_0">
+            <End Role="RefRic" EntitySet="RefRics" />
+            <End Role="RefRicToChain" EntitySet="RefRicToChains" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefTicker_0_0" Association="mainModel.FK_RefTicker_0_0">
+            <End Role="RefTicker" EntitySet="RefTickers" />
+            <End Role="RefTicker1" EntitySet="RefTickers" />
+          </AssociationSet>
+          <EntitySet Name="InstrumentCustomBonds" EntityType="mainModel.InstrumentCustomBond" />
+          <AssociationSet Name="FK_InstrumentCustomBond_0_0" Association="mainModel.FK_InstrumentCustomBond_0_0">
+            <End Role="RefCurrency" EntitySet="RefCurrencies" />
+            <End Role="InstrumentCustomBond" EntitySet="InstrumentCustomBonds" />
+          </AssociationSet>
+          <EntitySet Name="InstrumentBonds" EntityType="mainModel.InstrumentBond" />
+          <AssociationSet Name="FK_InstrumentBond_0_0" Association="mainModel.FK_InstrumentBond_0_0">
+            <End Role="RefCurrency" EntitySet="RefCurrencies" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_1_0" Association="mainModel.FK_InstrumentBond_1_0">
+            <End Role="RefBorrower" EntitySet="RefBorrowers" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_2_0" Association="mainModel.FK_InstrumentBond_2_0">
+            <End Role="RefInstrument" EntitySet="RefInstruments" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_3_0" Association="mainModel.FK_InstrumentBond_3_0">
+            <End Role="RefSubIndustry" EntitySet="RefSubIndustries" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_4_0" Association="mainModel.FK_InstrumentBond_4_0">
+            <End Role="RefTicker" EntitySet="RefTickers" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_5_0" Association="mainModel.FK_InstrumentBond_5_0">
+            <End Role="RefRic" EntitySet="RefRics" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_6_0" Association="mainModel.FK_InstrumentBond_6_0">
+            <End Role="RefIsin" EntitySet="RefIsins" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_7_0" Association="mainModel.FK_InstrumentBond_7_0">
+            <End Role="RefIssuer" EntitySet="RefIssuers" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="RawBondInfo">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="BondStructure" Type="String" MaxLength="2147483647" Unicode="true" FixedLength="false" />
+          <Property Name="RateStructure" Type="String" MaxLength="2147483647" Unicode="true" FixedLength="false" />
+          <Property Name="IssueSize" Type="Int64" />
+          <Property Name="IssuerName" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="BorrowerName" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Coupon" Type="Double" />
+          <Property Name="Issue" Type="DateTime" />
+          <Property Name="Maturity" Type="DateTime" />
+          <Property Name="Currency" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="ShortName" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="IsCallable" Type="Boolean" />
+          <Property Name="IsPutable" Type="Boolean" />
+          <Property Name="IsFloater" Type="Boolean" />
+          <Property Name="IsConvertible" Type="Boolean" />
+          <Property Name="IsStraight" Type="Boolean" />
+          <Property Name="Ticker" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Series" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="BorrowerCountry" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="IssuerCountry" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Isin" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="ParentTicker" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Seniority" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Industry" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="SubIndustry" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Instrument" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="RawFrnData">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Cap" Type="Double" />
+          <Property Name="Floor" Type="Double" />
+          <Property Name="Margin" Type="Double" />
+          <Property Name="Index" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="RawRating">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Date" Type="DateTime" />
+          <Property Name="Rating" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Source" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="Issue" Type="Boolean" />
+        </EntityType>
+        <EntityType Name="RefBorrower">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="id_Country" Type="Int64" Nullable="false" />
+          <NavigationProperty Name="RefCountry" Relationship="mainModel.FK_RefBorrower_0_0" FromRole="RefBorrower" ToRole="RefCountry" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_1_0" FromRole="RefBorrower" ToRole="InstrumentBond" />
+        </EntityType>
+        <EntityType Name="RefChain">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="RefRicToChains" Relationship="mainModel.FK_RefRicToChain_1_0" FromRole="RefChain" ToRole="RefRicToChain" />
+        </EntityType>
+        <EntityType Name="RefCountry">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="RefBorrowers" Relationship="mainModel.FK_RefBorrower_0_0" FromRole="RefCountry" ToRole="RefBorrower" />
+          <NavigationProperty Name="RefIssuers" Relationship="mainModel.FK_RefIssuer_0_0" FromRole="RefCountry" ToRole="RefIssuer" />
+        </EntityType>
+        <EntityType Name="RefCurrency">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="InstrumentCustomBonds" Relationship="mainModel.FK_InstrumentCustomBond_0_0" FromRole="RefCurrency" ToRole="InstrumentCustomBond" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_0_0" FromRole="RefCurrency" ToRole="InstrumentBond" />
+        </EntityType>
+        <EntityType Name="RefIndustry">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="RefSubIndustries" Relationship="mainModel.FK_RefSubIndustry_0_0" FromRole="RefIndustry" ToRole="RefSubIndustry" />
+        </EntityType>
+        <EntityType Name="RefInstrument">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_2_0" FromRole="RefInstrument" ToRole="InstrumentBond" />
+        </EntityType>
+        <EntityType Name="RefIsin">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="RefRics" Relationship="mainModel.FK_RefRic_0_0" FromRole="RefIsin" ToRole="RefRic" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_6_0" FromRole="RefIsin" ToRole="InstrumentBond" />
+        </EntityType>
+        <EntityType Name="RefIssuer">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="id_Country" Type="Int64" Nullable="false" />
+          <NavigationProperty Name="RefCountry" Relationship="mainModel.FK_RefIssuer_0_0" FromRole="RefIssuer" ToRole="RefCountry" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_7_0" FromRole="RefIssuer" ToRole="InstrumentBond" />
+        </EntityType>
+        <EntityType Name="RefRating">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Value" Type="Int64" Nullable="false" />
+          <Property Name="Name" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="id_RatingAgency" Type="Int64" />
+          <NavigationProperty Name="RefRatingAgency" Relationship="mainModel.FK_RefRating_0_0" FromRole="RefRating" ToRole="RefRatingAgency" />
+        </EntityType>
+        <EntityType Name="RefRatingAgency">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="RefRating" Relationship="mainModel.FK_RefRating_0_0" FromRole="RefRatingAgency" ToRole="RefRating" />
+        </EntityType>
+        <Association Name="FK_RefBorrower_0_0">
+          <End Role="RefCountry" Type="mainModel.RefCountry" Multiplicity="1" />
+          <End Role="RefBorrower" Type="mainModel.RefBorrower" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCountry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefBorrower">
+              <PropertyRef Name="id_Country" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefIssuer_0_0">
+          <End Role="RefCountry" Type="mainModel.RefCountry" Multiplicity="1" />
+          <End Role="RefIssuer" Type="mainModel.RefIssuer" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCountry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefIssuer">
+              <PropertyRef Name="id_Country" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRating_0_0">
+          <End Role="RefRatingAgency" Type="mainModel.RefRatingAgency" Multiplicity="1" />
+          <End Role="RefRating" Type="mainModel.RefRating" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="RefRatingAgency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRating">
+              <PropertyRef Name="id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="RefRic">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="Isin_id" />
+          <NavigationProperty Name="RefIsin" Relationship="mainModel.FK_RefRic_0_0" FromRole="RefRic" ToRole="RefIsin" />
+          <NavigationProperty Name="RefRicToChains" Relationship="mainModel.FK_RefRicToChain_0_0" FromRole="RefRic" ToRole="RefRicToChain" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_5_0" FromRole="RefRic" ToRole="InstrumentBond" />
+        </EntityType>
+        <EntityType Name="RefRicToChain">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="Ric_id" Nullable="false" />
+          <Property Type="Int64" Name="Chain_id" Nullable="false" />
+          <NavigationProperty Name="RefChain" Relationship="mainModel.FK_RefRicToChain_1_0" FromRole="RefRicToChain" ToRole="RefChain" />
+          <NavigationProperty Name="RefRic" Relationship="mainModel.FK_RefRicToChain_0_0" FromRole="RefRicToChain" ToRole="RefRic" />
+        </EntityType>
+        <EntityType Name="RefSeniority">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="RefSubIndustry">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_Industry" Nullable="false" />
+          <NavigationProperty Name="RefIndustry" Relationship="mainModel.FK_RefSubIndustry_0_0" FromRole="RefSubIndustry" ToRole="RefIndustry" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_3_0" FromRole="RefSubIndustry" ToRole="InstrumentBond" />
+        </EntityType>
+        <EntityType Name="RefTicker">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_ParentTicker" />
+          <NavigationProperty Name="RefTicker1" Relationship="mainModel.FK_RefTicker_0_0" FromRole="RefTicker" ToRole="RefTicker1" />
+          <NavigationProperty Name="RefTicker2" Relationship="mainModel.FK_RefTicker_0_0" FromRole="RefTicker1" ToRole="RefTicker" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_4_0" FromRole="RefTicker" ToRole="InstrumentBond" />
+        </EntityType>
+        <Association Name="FK_RefRicToChain_1_0">
+          <End Type="mainModel.RefChain" Role="RefChain" Multiplicity="1" />
+          <End Type="mainModel.RefRicToChain" Role="RefRicToChain" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefChain">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRicToChain">
+              <PropertyRef Name="Chain_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefSubIndustry_0_0">
+          <End Type="mainModel.RefIndustry" Role="RefIndustry" Multiplicity="1" />
+          <End Type="mainModel.RefSubIndustry" Role="RefSubIndustry" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIndustry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefSubIndustry">
+              <PropertyRef Name="id_Industry" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRic_0_0">
+          <End Type="mainModel.RefIsin" Role="RefIsin" Multiplicity="0..1" />
+          <End Type="mainModel.RefRic" Role="RefRic" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIsin">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRic">
+              <PropertyRef Name="Isin_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRicToChain_0_0">
+          <End Type="mainModel.RefRic" Role="RefRic" Multiplicity="1" />
+          <End Type="mainModel.RefRicToChain" Role="RefRicToChain" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefRic">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRicToChain">
+              <PropertyRef Name="Ric_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefTicker_0_0">
+          <End Type="mainModel.RefTicker" Role="RefTicker" Multiplicity="0..1" />
+          <End Type="mainModel.RefTicker" Role="RefTicker1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefTicker">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefTicker1">
+              <PropertyRef Name="id_ParentTicker" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="InstrumentCustomBond">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="BondStructure" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RateStructure" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="Int64" Name="id_Currency" />
+          <Property Type="DateTime" Name="Issue" />
+          <Property Type="DateTime" Name="Maturity" />
+          <NavigationProperty Name="RefCurrency" Relationship="mainModel.FK_InstrumentCustomBond_0_0" FromRole="InstrumentCustomBond" ToRole="RefCurrency" />
+        </EntityType>
+        <Association Name="FK_InstrumentCustomBond_0_0">
+          <End Type="mainModel.RefCurrency" Role="RefCurrency" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentCustomBond" Role="InstrumentCustomBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCurrency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentCustomBond">
+              <PropertyRef Name="id_Currency" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="InstrumentBond">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Issuer" />
+          <Property Type="Int64" Name="id_Borrower" />
+          <Property Type="Int64" Name="id_Currency" />
+          <Property Type="String" Name="BondStructure" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RateStructure" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="Int64" Name="IssueSize" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="IsCallable" />
+          <Property Type="Boolean" Name="IsPutable" />
+          <Property Type="String" Name="Series" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_Isin" />
+          <Property Type="Int64" Name="id_Ric" />
+          <Property Type="Int64" Name="id_Ticker" />
+          <Property Type="Int64" Name="id_SubIndustry" />
+          <Property Type="Int64" Name="id_Type" />
+          <Property Type="DateTime" Name="Issue" />
+          <Property Type="DateTime" Name="Maturity" />
+          <NavigationProperty Name="RefCurrency" Relationship="mainModel.FK_InstrumentBond_0_0" FromRole="InstrumentBond" ToRole="RefCurrency" />
+          <NavigationProperty Name="RefBorrower" Relationship="mainModel.FK_InstrumentBond_1_0" FromRole="InstrumentBond" ToRole="RefBorrower" />
+          <NavigationProperty Name="RefInstrument" Relationship="mainModel.FK_InstrumentBond_2_0" FromRole="InstrumentBond" ToRole="RefInstrument" />
+          <NavigationProperty Name="RefSubIndustry" Relationship="mainModel.FK_InstrumentBond_3_0" FromRole="InstrumentBond" ToRole="RefSubIndustry" />
+          <NavigationProperty Name="RefTicker" Relationship="mainModel.FK_InstrumentBond_4_0" FromRole="InstrumentBond" ToRole="RefTicker" />
+          <NavigationProperty Name="RefRic" Relationship="mainModel.FK_InstrumentBond_5_0" FromRole="InstrumentBond" ToRole="RefRic" />
+          <NavigationProperty Name="RefIsin" Relationship="mainModel.FK_InstrumentBond_6_0" FromRole="InstrumentBond" ToRole="RefIsin" />
+          <NavigationProperty Name="RefIssuer" Relationship="mainModel.FK_InstrumentBond_7_0" FromRole="InstrumentBond" ToRole="RefIssuer" />
+        </EntityType>
+        <Association Name="FK_InstrumentBond_0_0">
+          <End Type="mainModel.RefCurrency" Role="RefCurrency" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCurrency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Currency" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_1_0">
+          <End Type="mainModel.RefBorrower" Role="RefBorrower" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefBorrower">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Borrower" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_2_0">
+          <End Type="mainModel.RefInstrument" Role="RefInstrument" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefInstrument">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Type" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_3_0">
+          <End Type="mainModel.RefSubIndustry" Role="RefSubIndustry" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefSubIndustry">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_SubIndustry" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_4_0">
+          <End Type="mainModel.RefTicker" Role="RefTicker" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefTicker">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Ticker" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_5_0">
+          <End Type="mainModel.RefRic" Role="RefRic" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefRic">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Ric" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_6_0">
+          <End Type="mainModel.RefIsin" Role="RefIsin" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIsin">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Isin" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_7_0">
+          <End Type="mainModel.RefIssuer" Role="RefIssuer" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefIssuer">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Issuer" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="mainModelStoreContainer" CdmEntityContainer="mainEntities">
+          <EntitySetMapping Name="RawBondInfoes">
+            <EntityTypeMapping TypeName="mainModel.RawBondInfo">
+              <MappingFragment StoreEntitySet="RawBondInfo">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
+                <ScalarProperty Name="RateStructure" ColumnName="RateStructure" />
+                <ScalarProperty Name="IssueSize" ColumnName="IssueSize" />
+                <ScalarProperty Name="IssuerName" ColumnName="IssuerName" />
+                <ScalarProperty Name="BorrowerName" ColumnName="BorrowerName" />
+                <ScalarProperty Name="Coupon" ColumnName="Coupon" />
+                <ScalarProperty Name="Issue" ColumnName="Issue" />
+                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
+                <ScalarProperty Name="Currency" ColumnName="Currency" />
+                <ScalarProperty Name="ShortName" ColumnName="ShortName" />
+                <ScalarProperty Name="IsCallable" ColumnName="IsCallable" />
+                <ScalarProperty Name="IsPutable" ColumnName="IsPutable" />
+                <ScalarProperty Name="IsFloater" ColumnName="IsFloater" />
+                <ScalarProperty Name="IsConvertible" ColumnName="IsConvertible" />
+                <ScalarProperty Name="IsStraight" ColumnName="IsStraight" />
+                <ScalarProperty Name="Ticker" ColumnName="Ticker" />
+                <ScalarProperty Name="Series" ColumnName="Series" />
+                <ScalarProperty Name="BorrowerCountry" ColumnName="BorrowerCountry" />
+                <ScalarProperty Name="IssuerCountry" ColumnName="IssuerCountry" />
+                <ScalarProperty Name="Isin" ColumnName="Isin" />
+                <ScalarProperty Name="ParentTicker" ColumnName="ParentTicker" />
+                <ScalarProperty Name="Seniority" ColumnName="Seniority" />
+                <ScalarProperty Name="Industry" ColumnName="Industry" />
+                <ScalarProperty Name="SubIndustry" ColumnName="SubIndustry" />
+                <ScalarProperty Name="Instrument" ColumnName="Instrument" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RawFrnDatas">
+            <EntityTypeMapping TypeName="mainModel.RawFrnData">
+              <MappingFragment StoreEntitySet="RawFrnData">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Cap" ColumnName="Cap" />
+                <ScalarProperty Name="Floor" ColumnName="Floor" />
+                <ScalarProperty Name="Margin" ColumnName="Margin" />
+                <ScalarProperty Name="Index" ColumnName="Index" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RawRatings">
+            <EntityTypeMapping TypeName="mainModel.RawRating">
+              <MappingFragment StoreEntitySet="RawRating">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Rating" ColumnName="Rating" />
+                <ScalarProperty Name="Source" ColumnName="Source" />
+                <ScalarProperty Name="Issue" ColumnName="Issue" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefBorrowers">
+            <EntityTypeMapping TypeName="mainModel.RefBorrower">
+              <MappingFragment StoreEntitySet="RefBorrower">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id_Country" ColumnName="id_Country" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefChains">
+            <EntityTypeMapping TypeName="mainModel.RefChain">
+              <MappingFragment StoreEntitySet="RefChain">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefCountries">
+            <EntityTypeMapping TypeName="mainModel.RefCountry">
+              <MappingFragment StoreEntitySet="RefCountry">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefCurrencies">
+            <EntityTypeMapping TypeName="mainModel.RefCurrency">
+              <MappingFragment StoreEntitySet="RefCurrency">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefIndustries">
+            <EntityTypeMapping TypeName="mainModel.RefIndustry">
+              <MappingFragment StoreEntitySet="RefIndustry">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefInstruments">
+            <EntityTypeMapping TypeName="mainModel.RefInstrument">
+              <MappingFragment StoreEntitySet="RefInstrument">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefIsins">
+            <EntityTypeMapping TypeName="mainModel.RefIsin">
+              <MappingFragment StoreEntitySet="RefIsin">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefIssuers">
+            <EntityTypeMapping TypeName="mainModel.RefIssuer">
+              <MappingFragment StoreEntitySet="RefIssuer">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id_Country" ColumnName="id_Country" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefRatings">
+            <EntityTypeMapping TypeName="mainModel.RefRating">
+              <MappingFragment StoreEntitySet="RefRating">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Value" ColumnName="Value" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id_RatingAgency" ColumnName="id_RatingAgency" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefRatingAgencies">
+            <EntityTypeMapping TypeName="mainModel.RefRatingAgency">
+              <MappingFragment StoreEntitySet="RefRatingAgency">
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefRics">
+            <EntityTypeMapping TypeName="mainModel.RefRic">
+              <MappingFragment StoreEntitySet="RefRic">
+                <ScalarProperty Name="Isin_id" ColumnName="Isin_id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefRicToChains">
+            <EntityTypeMapping TypeName="mainModel.RefRicToChain">
+              <MappingFragment StoreEntitySet="RefRicToChain">
+                <ScalarProperty Name="Chain_id" ColumnName="Chain_id" />
+                <ScalarProperty Name="Ric_id" ColumnName="Ric_id" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefSeniorities">
+            <EntityTypeMapping TypeName="mainModel.RefSeniority">
+              <MappingFragment StoreEntitySet="RefSeniority">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefSubIndustries">
+            <EntityTypeMapping TypeName="mainModel.RefSubIndustry">
+              <MappingFragment StoreEntitySet="RefSubIndustry">
+                <ScalarProperty Name="id_Industry" ColumnName="id_Industry" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefTickers">
+            <EntityTypeMapping TypeName="mainModel.RefTicker">
+              <MappingFragment StoreEntitySet="RefTicker">
+                <ScalarProperty Name="id_ParentTicker" ColumnName="id_ParentTicker" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="InstrumentCustomBonds">
+            <EntityTypeMapping TypeName="mainModel.InstrumentCustomBond">
+              <MappingFragment StoreEntitySet="InstrumentCustomBond">
+                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
+                <ScalarProperty Name="Issue" ColumnName="Issue" />
+                <ScalarProperty Name="id_Currency" ColumnName="id_Currency" />
+                <ScalarProperty Name="RateStructure" ColumnName="RateStructure" />
+                <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="InstrumentBonds">
+            <EntityTypeMapping TypeName="mainModel.InstrumentBond">
+              <MappingFragment StoreEntitySet="InstrumentBond">
+                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
+                <ScalarProperty Name="Issue" ColumnName="Issue" />
+                <ScalarProperty Name="id_Type" ColumnName="id_Type" />
+                <ScalarProperty Name="id_SubIndustry" ColumnName="id_SubIndustry" />
+                <ScalarProperty Name="id_Ticker" ColumnName="id_Ticker" />
+                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
+                <ScalarProperty Name="id_Isin" ColumnName="id_Isin" />
+                <ScalarProperty Name="Series" ColumnName="Series" />
+                <ScalarProperty Name="IsPutable" ColumnName="IsPutable" />
+                <ScalarProperty Name="IsCallable" ColumnName="IsCallable" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="IssueSize" ColumnName="IssueSize" />
+                <ScalarProperty Name="RateStructure" ColumnName="RateStructure" />
+                <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
+                <ScalarProperty Name="id_Currency" ColumnName="id_Currency" />
+                <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
+                <ScalarProperty Name="id_Issuer" ColumnName="id_Issuer" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

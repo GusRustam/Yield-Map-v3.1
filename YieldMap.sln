@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap.Loader", "YieldMap
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap.Tools", "YieldMap.Tools\YieldMap.Tools.fsproj", "{41CF2E5F-752E-4E65-8773-AE7061242BA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YieldMap.Database", "YieldMap.Database\YieldMap.Database.csproj", "{21174B80-86BF-491F-9BF5-057D46A39D4C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,16 @@ Global
 		{41CF2E5F-752E-4E65-8773-AE7061242BA9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{41CF2E5F-752E-4E65-8773-AE7061242BA9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{41CF2E5F-752E-4E65-8773-AE7061242BA9}.Release|x86.ActiveCfg = Release|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{21174B80-86BF-491F-9BF5-057D46A39D4C}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
