@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Calculations
+﻿namespace YieldMap.Core.Calculations
 
 open YieldMap.Tools
  
@@ -12,9 +12,10 @@ open System.IO
 module Calculations = 
     open AdfinXAnalyticsFunctions
 
-    open YieldMap.Loading
-    open YieldMap.Tools.Workflows
-    open YieldMap.Tools.Workflows.Attempt
+    open YieldMap.Loader.Loading
+    open YieldMap.Tools.Aux
+    open YieldMap.Tools.Aux.Workflows
+    open YieldMap.Tools.Aux.Workflows.Attempt
 
     [<RequireQualifiedAccess>]
     module Bonds = 

@@ -56,7 +56,7 @@
     open YieldMap.Axis.Analytics
     open YieldMap.Axis.Ansamble
     
-    open YieldMap.Loading
+    open YieldMap.Loader.Loading
 
     open YieldMap.Tools
 

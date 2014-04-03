@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Logging
+﻿namespace YieldMap.Tools.Logging
 
 [<AutoOpen>]
 module Logging = 
@@ -7,9 +7,9 @@ module Logging =
     open NLog.Layouts
     open NLog.Targets
 
-    open YieldMap.Tools
-
     open Core.Printf
+
+    open YieldMap.Tools.Location
 
     open System
     open System.IO
@@ -129,22 +129,22 @@ module Logging =
                     let newLogger = {
                         new Logger with
                             member x.TraceEx message ex = crtEx LoggingLevel.Trace message ex
-                            member x.TraceF format = kprintf (fun x -> crt LoggingLevel.Trace x) format 
+                            member x.TraceF format = kprintf (crt LoggingLevel.Trace) format 
 
                             member x.DebugEx message ex = crtEx LoggingLevel.Debug message ex
-                            member x.DebugF format = kprintf (fun x -> crt LoggingLevel.Debug x) format 
+                            member x.DebugF format = kprintf (crt LoggingLevel.Debug) format 
 
                             member x.InfoEx message ex = crtEx LoggingLevel.Info message ex
-                            member x.InfoF format = kprintf (fun x -> crt LoggingLevel.Info x) format 
+                            member x.InfoF format = kprintf (crt LoggingLevel.Info) format 
 
                             member x.WarnEx message ex = crtEx LoggingLevel.Warn message ex
-                            member x.WarnF format = kprintf (fun x -> crt LoggingLevel.Warn x) format 
+                            member x.WarnF format = kprintf (crt LoggingLevel.Warn) format 
 
                             member x.ErrorEx message ex = crtEx LoggingLevel.Error message ex
-                            member x.ErrorF format = kprintf (fun x -> crt LoggingLevel.Error x) format 
+                            member x.ErrorF format = kprintf (crt LoggingLevel.Error) format 
 
                             member x.FatalEx message ex = crtEx LoggingLevel.Fatal message ex
-                            member x.FatalF format = kprintf (fun x -> crt LoggingLevel.Fatal x) format}
+                            member x.FatalF format = kprintf (crt LoggingLevel.Fatal) format}
 
                     loggers.Add(name, newLogger)
                     newLogger

@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Tools 
+﻿namespace YieldMap.Tools.Location
     
 [<RequireQualifiedAccess>]
 module Location =

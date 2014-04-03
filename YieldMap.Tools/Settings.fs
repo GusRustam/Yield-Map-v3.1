@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Settings
+﻿namespace YieldMap.Tools.Settings
 
 [<AutoOpen>]
 module Settings =

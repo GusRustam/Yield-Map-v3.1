@@ -1,10 +1,10 @@
-﻿namespace YieldMap.WebServer
+﻿namespace YieldMap.Loader.WebServer
 
 [<AutoOpen>]
 module WebServer = 
     open Newtonsoft.Json
     open System
-    open YieldMap.Tools
+    open YieldMap.Tools.Aux
 
     type ApiQuote() =
         member val Ric = String.Empty with get, set
@@ -43,9 +43,8 @@ module ApiServer =
     open System.Text
     open System.IO
 
-    open YieldMap.Logging
-    open YieldMap.Settings
-    open YieldMap.Tools
+    open YieldMap.Tools.Logging
+    open YieldMap.Tools.Settings
 
     let private logger = LogFactory.create "HttpServer"
  

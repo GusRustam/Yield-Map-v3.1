@@ -1,4 +1,4 @@
-﻿namespace Portfolio
+﻿namespace YieldMap.Core.Portfolio
 
     [<AutoOpen>]
     module Portfolio = 

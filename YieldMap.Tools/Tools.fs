@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Tools
+﻿namespace YieldMap.Tools.Aux
 open System.Runtime.InteropServices
 
 [<AutoOpen>]
@@ -173,7 +173,7 @@ module Disposer =
     open System
     open System.Runtime.InteropServices
 
-    open YieldMap.Logging
+    open YieldMap.Tools.Logging
 
     let private logger = LogFactory.create "Disposer"
 
@@ -211,7 +211,7 @@ module Disposer =
 
 [<RequireQualifiedAccess>]
 module Ole32 = 
-    open YieldMap.Logging
+    open YieldMap.Tools.Logging
 
     let logger = LogFactory.create "Ole32"
 

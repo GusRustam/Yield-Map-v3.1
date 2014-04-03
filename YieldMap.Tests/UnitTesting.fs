@@ -8,13 +8,15 @@
     open FsUnit
 
     module MetaChainsTests = 
-        open YieldMap.Requests
-        open YieldMap.Requests.Answers
-        open YieldMap.Loading
-        open YieldMap.Loading.SdkFactory
-        open YieldMap.MetaTables
-        open YieldMap.Logging
-        open YieldMap.Calendar
+        open YieldMap.Loader.Requests
+        open YieldMap.Loader.Requests.Answers
+        open YieldMap.Loader.Loading
+        open YieldMap.Loader.Requests
+        open YieldMap.Loader.Loading.SdkFactory
+        open YieldMap.Loader.MetaTables
+        open YieldMap.Loader.Calendar
+        
+        open YieldMap.Tools.Logging
 
         let logger = LogFactory.create "Dex2Tests"
 
@@ -70,8 +72,8 @@
             !count |> should equal 1
 
     module MockSubscriptionTest = 
-        open YieldMap.Logging
-        open YieldMap.Loading.LiveQuotes
+        open YieldMap.Tools.Logging
+        open YieldMap.Loader.LiveQuotes
 
         let logger = LogFactory.create "LiveQuotesTest"
 
@@ -204,9 +206,9 @@
         open System.Net
         open System.Text
 
-        open YieldMap.Logging
-        open YieldMap.WebServer
-        open YieldMap.Tools
+        open YieldMap.Tools.Logging
+        open YieldMap.Loader.WebServer
+        open YieldMap.Tools.Aux
 
         let logger = LogFactory.create "TestWebServer"
 
@@ -262,10 +264,10 @@
         open System.Text
         open System.Threading
 
-        open YieldMap.Logging
-        open YieldMap.Loading.LiveQuotes
-        open YieldMap.Tools
-        open YieldMap.WebServer
+        open YieldMap.Tools.Logging
+        open YieldMap.Loader.LiveQuotes
+        open YieldMap.Tools.Aux
+        open YieldMap.Loader.WebServer
 
         let logger = LogFactory.create "TestApiQuotes"
 

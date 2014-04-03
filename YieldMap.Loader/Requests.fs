@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Requests
+﻿namespace YieldMap.Loader.Requests
 
 [<AutoOpen>]
 module Requests =
@@ -6,8 +6,8 @@ module Requests =
     open System.Globalization
     open System.Reflection
 
-    open YieldMap.Settings
-    open YieldMap.Tools
+    open YieldMap.Tools.Settings
+    open YieldMap.Tools.Aux
 
     type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : int option }
         with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = None }

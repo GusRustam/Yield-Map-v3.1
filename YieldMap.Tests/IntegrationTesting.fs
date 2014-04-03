@@ -14,14 +14,14 @@
 
         open EikonDesktopDataAPI
 
-        open YieldMap.Requests.Answers
-        open YieldMap.Requests
-        open YieldMap.Loading.LiveQuotes
-        open YieldMap.Loading.SdkFactory
-        open YieldMap.MetaTables
-        open YieldMap.Logging
-        open YieldMap.Tools
-        open YieldMap.Loading
+        open YieldMap.Loader.LiveQuotes
+        open YieldMap.Loader.Loading.SdkFactory
+        open YieldMap.Loader.MetaTables
+        open YieldMap.Loader.Requests
+        open YieldMap.Loader.Requests.Answers
+        
+        open YieldMap.Tools.Logging
+        open YieldMap.Tools.Aux
 
         open NUnit.Framework
 
@@ -103,7 +103,7 @@
                     logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
 
-                use subscription = new EikonSubscription(q, "IDN", QuoteMode.OnUpdate)
+                use subscription = new RtxSubscription(q, "IDN", QuoteMode.OnUpdate)
                 let s =  subscription :> Subscription
                 let answer = s.Fields (["RUB="; "GAZP.MM"], None) |> Async.RunSynchronously
                 logger.InfoF "Got answer %A" answer
@@ -112,8 +112,7 @@
                 Ole32.CoUninitialize()
 
         let snapshot ricFields eikon =
-
-            use subscription = new EikonSubscription(!eikon, "IDN", QuoteMode.OnUpdate)
+            use subscription = new RtxSubscription(eikon, "IDN", QuoteMode.OnUpdate)
             let s = subscription :> Subscription
             let answer = s.Snapshot (ricFields, Some 100000) |> Async.RunSynchronously
             logger.InfoF "Got answer %A" answer
@@ -145,7 +144,7 @@
                 Ole32.CoUninitialize()
 
         let considerIt eikon mode ricFields = 
-            use bebebe = new EikonSubscription(eikon, "IDN", mode)
+            use bebebe = new RtxSubscription(eikon, "IDN", mode)
             let qoqoqo = bebebe :> Subscription
 
             qoqoqo.Add ricFields

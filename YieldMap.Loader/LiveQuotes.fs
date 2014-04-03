@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Loading
+﻿namespace YieldMap.Loader.LiveQuotes
 
 type TimeoutAnswer<'T> = Timeout | Invalid of exn | Succeed of 'T 
 
@@ -11,10 +11,12 @@ module private Watchers =
     open System.Runtime.InteropServices
     open System.Threading
 
-    open YieldMap.Logging
-    open YieldMap.WebServer
-    open YieldMap.Tools
-    open YieldMap.Tools.Disposer
+    open YieldMap.Loader.WebServer
+    open YieldMap.Loader.Loading
+    
+    open YieldMap.Tools.Aux
+    open YieldMap.Tools.Aux.Disposer
+    open YieldMap.Tools.Logging
 
     let private logger = LogFactory.create "Watchers"
 
@@ -174,6 +176,7 @@ module private Watchers =
 
         member x.FieldsData = _fieldsData.Publish
 
+[<AutoOpen>]
 module LiveQuotes = 
     open EikonDesktopDataAPI
     open ThomsonReuters.Interop.RTX
@@ -183,11 +186,12 @@ module LiveQuotes =
     open System.Runtime.InteropServices
     open System.Threading
 
-    open YieldMap.Loading
-    open YieldMap.Logging
-    open YieldMap.Tools
-    open YieldMap.Tools.Disposer
-    open YieldMap.WebServer
+    open YieldMap.Loader.WebServer
+    open YieldMap.Loader.Loading
+
+    open YieldMap.Tools.Logging
+    open YieldMap.Tools.Aux
+    open YieldMap.Tools.Aux.Disposer
 
     open Watchers
 
@@ -221,8 +225,8 @@ module LiveQuotes =
 
     type QuoteMode = OnTime of int | OnTimeIfUpdated of int | OnUpdate
 
-    /// Eikon subscription
-    type EikonSubscription (_loader : SdkFactory.Loader, _feed, _mode) = 
+    /// Adfin realtime subscription
+    type RtxSubscription (_loader : SdkFactory.Loader, _feed, _mode) = 
         inherit Disposer ()
 
         let requests = Map.empty

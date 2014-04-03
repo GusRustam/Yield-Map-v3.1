@@ -8,13 +8,13 @@ open EikonDesktopDataAPI
 
 open NUnit.Framework
 
-open YieldMap.Requests
-open YieldMap.Requests.Answers
-open YieldMap.Loading
-open YieldMap.MetaTables
-open YieldMap.Loading.SdkFactory
-open YieldMap.Tools
-open YieldMap.Logging
+open YieldMap.Loader.Requests
+open YieldMap.Loader.Requests.Answers
+open YieldMap.Loader.Loading
+open YieldMap.Loader.MetaTables
+open YieldMap.Loader.Loading.SdkFactory
+open YieldMap.Tools.Aux
+open YieldMap.Tools.Logging
 
 module Dex2Tests = 
     let logger = LogFactory.create "Dex2Tests"

@@ -1,10 +1,10 @@
-﻿namespace YieldMap.Calendar
+﻿namespace YieldMap.Loader.Calendar
 
 [<AutoOpen>]
 module Calendar = 
     open System
 
-    open YieldMap.Logging
+    open YieldMap.Tools.Logging
 
     let private logger = LogFactory.create "Calendar"
 

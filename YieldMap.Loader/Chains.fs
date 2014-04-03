@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Loading
+﻿namespace YieldMap.Loader.Loading
 
 module HistoricalData = 
     type HistoryLoader = class end
@@ -16,11 +16,13 @@ module SdkFactory =
     open EikonDesktopDataAPI
     open ThomsonReuters.Interop.RTX
     
-    open YieldMap.Calendar
-    open YieldMap.Logging
-    open YieldMap.Requests
-    open YieldMap.Requests.Answers
-    open YieldMap.Tools
+    open YieldMap.Loader.Calendar
+    open YieldMap.Loader.Requests
+    open YieldMap.Loader.Requests.Answers
+    
+    open YieldMap.Tools.Aux
+    open YieldMap.Tools.Logging
+    open YieldMap.Tools.Location
 
     let private logger = LogFactory.create "SdkFactory"
 

@@ -99,7 +99,7 @@
     (* === Инструменты === *)
     module Instruments = 
         open Ratings
-        open YieldMap.Calculations
+        open YieldMap.Core.Calculations
 
         type BondMetadata = {
             Isin : string
@@ -246,8 +246,8 @@
     module Program = 
         open EikonDesktopDataAPI
         open Analytics
-        open YieldMap.Loading
-        open YieldMap.Calendar
+        open YieldMap.Loader.Loading
+        open YieldMap.Loader.Calendar
 
         type Main = {
             Loader : SdkFactory.Loader // todo split fundamental data and chains and realtime data
@@ -261,9 +261,9 @@
 
     module Ansamble = 
         open Analytics
-        open YieldMap.Calculations
+        open YieldMap.Core.Calculations
         open Features
-        open YieldMap.Tools.Workflows.Attempt
+        open YieldMap.Tools.Aux.Workflows.Attempt
 
         type Gauge = Calc of Result | Given of Feature
         type Currency = Any | Concrete of string
