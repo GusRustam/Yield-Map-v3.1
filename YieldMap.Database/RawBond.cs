@@ -12,8 +12,14 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RawBondInfo
+    public partial class RawBond
     {
+        public RawBond()
+        {
+            this.RawFrnDatas = new HashSet<RawFrnData>();
+            this.RawRatings = new HashSet<RawRating>();
+        }
+    
         public long id { get; set; }
         public string BondStructure { get; set; }
         public string RateStructure { get; set; }
@@ -40,5 +46,8 @@ namespace YieldMap.Database
         public string Industry { get; set; }
         public string SubIndustry { get; set; }
         public string Instrument { get; set; }
+    
+        public virtual ICollection<RawFrnData> RawFrnDatas { get; set; }
+        public virtual ICollection<RawRating> RawRatings { get; set; }
     }
 }

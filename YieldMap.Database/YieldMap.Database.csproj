@@ -68,7 +68,7 @@
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RawBondInfo.cs">
+    <Compile Include="RawBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="RawFrnData.cs">
@@ -105,6 +105,9 @@
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="RefRatingAgency.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="RefRatingToBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="RefRic.cs">
@@ -146,6 +149,9 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="main.db.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

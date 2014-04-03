@@ -14,11 +14,17 @@ namespace YieldMap.Database
     
     public partial class RefRating
     {
+        public RefRating()
+        {
+            this.RefRatingToBonds = new HashSet<RefRatingToBond>();
+        }
+    
         public long id { get; set; }
         public long Value { get; set; }
         public string Name { get; set; }
         public Nullable<long> id_RatingAgency { get; set; }
     
         public virtual RefRatingAgency RefRatingAgency { get; set; }
+        public virtual ICollection<RefRatingToBond> RefRatingToBonds { get; set; }
     }
 }

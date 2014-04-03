@@ -14,7 +14,14 @@ namespace YieldMap.Database
     
     public partial class RefSeniority
     {
+        public RefSeniority()
+        {
+            this.InstrumentBonds = new HashSet<InstrumentBond>();
+        }
+    
         public long id { get; set; }
         public string Name { get; set; }
+    
+        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }
 }

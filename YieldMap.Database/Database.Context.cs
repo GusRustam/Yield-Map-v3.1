@@ -25,8 +25,8 @@ namespace YieldMap.Database
             throw new UnintentionalCodeFirstException();
         }
     
-        public DbSet<RawBondInfo> RawBondInfoes { get; set; }
-        public DbSet<RawFrnData> RawFrnDatas { get; set; }
+        public DbSet<RawBond> RawBonds1 { get; set; }
+        public DbSet<RawFrnData> RawFrnData { get; set; }
         public DbSet<RawRating> RawRatings { get; set; }
         public DbSet<RefBorrower> RefBorrowers { get; set; }
         public DbSet<RefChain> RefChains { get; set; }
@@ -45,5 +45,6 @@ namespace YieldMap.Database
         public DbSet<RefTicker> RefTickers { get; set; }
         public DbSet<InstrumentCustomBond> InstrumentCustomBonds { get; set; }
         public DbSet<InstrumentBond> InstrumentBonds { get; set; }
+        public DbSet<RefRatingToBond> RefRatingToBonds { get; set; }
     }
 }

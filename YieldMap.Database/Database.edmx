@@ -21,25 +21,26 @@
           <EntitySet Name="RefIssuer" EntityType="mainModel.Store.RefIssuer" store:Type="Tables" />
           <EntitySet Name="RefRating" EntityType="mainModel.Store.RefRating" store:Type="Tables" />
           <EntitySet Name="RefRatingAgency" EntityType="mainModel.Store.RefRatingAgency" store:Type="Tables" />
+          <EntitySet Name="RefRatingToBond" EntityType="mainModel.Store.RefRatingToBond" store:Type="Tables" />
           <EntitySet Name="RefRic" EntityType="mainModel.Store.RefRic" store:Type="Tables" />
           <EntitySet Name="RefRicToChain" EntityType="mainModel.Store.RefRicToChain" store:Type="Tables" />
           <EntitySet Name="RefSeniority" EntityType="mainModel.Store.RefSeniority" store:Type="Tables" />
           <EntitySet Name="RefSubIndustry" EntityType="mainModel.Store.RefSubIndustry" store:Type="Tables" />
           <EntitySet Name="RefTicker" EntityType="mainModel.Store.RefTicker" store:Type="Tables" />
           <AssociationSet Name="FK_InstrumentBond_0_0" Association="mainModel.Store.FK_InstrumentBond_0_0">
-            <End Role="RefCurrency" EntitySet="RefCurrency" />
+            <End Role="RefSeniority" EntitySet="RefSeniority" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_1_0" Association="mainModel.Store.FK_InstrumentBond_1_0">
-            <End Role="RefBorrower" EntitySet="RefBorrower" />
+            <End Role="RefIssuer" EntitySet="RefIssuer" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_2_0" Association="mainModel.Store.FK_InstrumentBond_2_0">
-            <End Role="RefInstrument" EntitySet="RefInstrument" />
+            <End Role="RefIsin" EntitySet="RefIsin" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_3_0" Association="mainModel.Store.FK_InstrumentBond_3_0">
-            <End Role="RefSubIndustry" EntitySet="RefSubIndustry" />
+            <End Role="RefRic" EntitySet="RefRic" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_4_0" Association="mainModel.Store.FK_InstrumentBond_4_0">
@@ -47,20 +48,32 @@
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_5_0" Association="mainModel.Store.FK_InstrumentBond_5_0">
-            <End Role="RefRic" EntitySet="RefRic" />
+            <End Role="RefSubIndustry" EntitySet="RefSubIndustry" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_6_0" Association="mainModel.Store.FK_InstrumentBond_6_0">
-            <End Role="RefIsin" EntitySet="RefIsin" />
+            <End Role="RefInstrument" EntitySet="RefInstrument" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_7_0" Association="mainModel.Store.FK_InstrumentBond_7_0">
-            <End Role="RefIssuer" EntitySet="RefIssuer" />
+            <End Role="RefBorrower" EntitySet="RefBorrower" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_8_0" Association="mainModel.Store.FK_InstrumentBond_8_0">
+            <End Role="RefCurrency" EntitySet="RefCurrency" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentCustomBond_0_0" Association="mainModel.Store.FK_InstrumentCustomBond_0_0">
             <End Role="RefCurrency" EntitySet="RefCurrency" />
             <End Role="InstrumentCustomBond" EntitySet="InstrumentCustomBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RawFrnData_0_0" Association="mainModel.Store.FK_RawFrnData_0_0">
+            <End Role="RawBondInfo" EntitySet="RawBondInfo" />
+            <End Role="RawFrnData" EntitySet="RawFrnData" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RawRating_0_0" Association="mainModel.Store.FK_RawRating_0_0">
+            <End Role="RawBondInfo" EntitySet="RawBondInfo" />
+            <End Role="RawRating" EntitySet="RawRating" />
           </AssociationSet>
           <AssociationSet Name="FK_RefBorrower_0_0" Association="mainModel.Store.FK_RefBorrower_0_0">
             <End Role="RefCountry" EntitySet="RefCountry" />
@@ -73,6 +86,14 @@
           <AssociationSet Name="FK_RefRating_0_0" Association="mainModel.Store.FK_RefRating_0_0">
             <End Role="RefRatingAgency" EntitySet="RefRatingAgency" />
             <End Role="RefRating" EntitySet="RefRating" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRatingToBond_0_0" Association="mainModel.Store.FK_RefRatingToBond_0_0">
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+            <End Role="RefRatingToBond" EntitySet="RefRatingToBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRatingToBond_1_0" Association="mainModel.Store.FK_RefRatingToBond_1_0">
+            <End Role="RefRating" EntitySet="RefRating" />
+            <End Role="RefRatingToBond" EntitySet="RefRatingToBond" />
           </AssociationSet>
           <AssociationSet Name="FK_RefRic_0_0" Association="mainModel.Store.FK_RefRic_0_0">
             <End Role="RefIsin" EntitySet="RefIsin" />
@@ -117,6 +138,7 @@
           <Property Name="id_Type" Type="integer" />
           <Property Name="Issue" Type="datetime" />
           <Property Name="Maturity" Type="datetime" />
+          <Property Name="id_Seniority" Type="integer" />
         </EntityType>
         <EntityType Name="InstrumentCustomBond">
           <Key>
@@ -170,6 +192,7 @@
           <Property Name="Floor" Type="real" />
           <Property Name="Margin" Type="real" />
           <Property Name="Index" Type="varchar" MaxLength="50" />
+          <Property Name="id_RawBond" Type="integer" />
         </EntityType>
         <EntityType Name="RawRating">
           <Key>
@@ -180,6 +203,7 @@
           <Property Name="Rating" Type="varchar" MaxLength="50" />
           <Property Name="Source" Type="varchar" MaxLength="50" />
           <Property Name="Issue" Type="bit" />
+          <Property Name="id_RawBond" Type="integer" />
         </EntityType>
         <EntityType Name="RefBorrower">
           <Key>
@@ -255,6 +279,14 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
         </EntityType>
+        <EntityType Name="RefRatingToBond">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_Rating" Type="integer" />
+          <Property Name="id_Bond" Type="integer" />
+        </EntityType>
         <EntityType Name="RefRic">
           <Key>
             <PropertyRef Name="id" />
@@ -295,50 +327,50 @@
           <Property Name="id_ParentTicker" Type="integer" />
         </EntityType>
         <Association Name="FK_InstrumentBond_0_0">
-          <End Role="RefCurrency" Type="mainModel.Store.RefCurrency" Multiplicity="0..1" />
+          <End Role="RefSeniority" Type="mainModel.Store.RefSeniority" Multiplicity="0..1" />
           <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="RefCurrency">
+            <Principal Role="RefSeniority">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="InstrumentBond">
-              <PropertyRef Name="id_Currency" />
+              <PropertyRef Name="id_Seniority" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_InstrumentBond_1_0">
-          <End Role="RefBorrower" Type="mainModel.Store.RefBorrower" Multiplicity="0..1" />
+          <End Role="RefIssuer" Type="mainModel.Store.RefIssuer" Multiplicity="0..1" />
           <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="RefBorrower">
+            <Principal Role="RefIssuer">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="InstrumentBond">
-              <PropertyRef Name="id_Borrower" />
+              <PropertyRef Name="id_Issuer" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_InstrumentBond_2_0">
-          <End Role="RefInstrument" Type="mainModel.Store.RefInstrument" Multiplicity="0..1" />
+          <End Role="RefIsin" Type="mainModel.Store.RefIsin" Multiplicity="0..1" />
           <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="RefInstrument">
+            <Principal Role="RefIsin">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="InstrumentBond">
-              <PropertyRef Name="id_Type" />
+              <PropertyRef Name="id_Isin" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_InstrumentBond_3_0">
-          <End Role="RefSubIndustry" Type="mainModel.Store.RefSubIndustry" Multiplicity="0..1" />
+          <End Role="RefRic" Type="mainModel.Store.RefRic" Multiplicity="0..1" />
           <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="RefSubIndustry">
+            <Principal Role="RefRic">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="InstrumentBond">
-              <PropertyRef Name="id_SubIndustry" />
+              <PropertyRef Name="id_Ric" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -355,38 +387,50 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_InstrumentBond_5_0">
-          <End Role="RefRic" Type="mainModel.Store.RefRic" Multiplicity="0..1" />
+          <End Role="RefSubIndustry" Type="mainModel.Store.RefSubIndustry" Multiplicity="0..1" />
           <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="RefRic">
+            <Principal Role="RefSubIndustry">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="InstrumentBond">
-              <PropertyRef Name="id_Ric" />
+              <PropertyRef Name="id_SubIndustry" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_InstrumentBond_6_0">
-          <End Role="RefIsin" Type="mainModel.Store.RefIsin" Multiplicity="0..1" />
+          <End Role="RefInstrument" Type="mainModel.Store.RefInstrument" Multiplicity="0..1" />
           <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="RefIsin">
+            <Principal Role="RefInstrument">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="InstrumentBond">
-              <PropertyRef Name="id_Isin" />
+              <PropertyRef Name="id_Type" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_InstrumentBond_7_0">
-          <End Role="RefIssuer" Type="mainModel.Store.RefIssuer" Multiplicity="0..1" />
+          <End Role="RefBorrower" Type="mainModel.Store.RefBorrower" Multiplicity="0..1" />
           <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="RefIssuer">
+            <Principal Role="RefBorrower">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="InstrumentBond">
-              <PropertyRef Name="id_Issuer" />
+              <PropertyRef Name="id_Borrower" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_8_0">
+          <End Role="RefCurrency" Type="mainModel.Store.RefCurrency" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefCurrency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Currency" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -399,6 +443,30 @@
             </Principal>
             <Dependent Role="InstrumentCustomBond">
               <PropertyRef Name="id_Currency" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RawFrnData_0_0">
+          <End Role="RawBondInfo" Type="mainModel.Store.RawBondInfo" Multiplicity="0..1" />
+          <End Role="RawFrnData" Type="mainModel.Store.RawFrnData" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RawBondInfo">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RawFrnData">
+              <PropertyRef Name="id_RawBond" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RawRating_0_0">
+          <End Role="RawBondInfo" Type="mainModel.Store.RawBondInfo" Multiplicity="0..1" />
+          <End Role="RawRating" Type="mainModel.Store.RawRating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RawBondInfo">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RawRating">
+              <PropertyRef Name="id_RawBond" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -435,6 +503,30 @@
             </Principal>
             <Dependent Role="RefRating">
               <PropertyRef Name="id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRatingToBond_0_0">
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="0..1" />
+          <End Role="RefRatingToBond" Type="mainModel.Store.RefRatingToBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="InstrumentBond">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRatingToBond">
+              <PropertyRef Name="id_Bond" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRatingToBond_1_0">
+          <End Role="RefRating" Type="mainModel.Store.RefRating" Multiplicity="0..1" />
+          <End Role="RefRatingToBond" Type="mainModel.Store.RefRatingToBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefRating">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRatingToBond">
+              <PropertyRef Name="id_Rating" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -503,8 +595,8 @@
     <edmx:ConceptualModels>
       <Schema Namespace="MainModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityContainer Name="MainEntities" p1:LazyLoadingEnabled="true">
-          <EntitySet Name="RawBondInfoes" EntityType="MainModel.RawBondInfo" />
-          <EntitySet Name="RawFrnDatas" EntityType="MainModel.RawFrnData" />
+          <EntitySet Name="RawBonds1" EntityType="MainModel.RawBond" />
+          <EntitySet Name="RawFrnData" EntityType="MainModel.RawFrnData" />
           <EntitySet Name="RawRatings" EntityType="MainModel.RawRating" />
           <EntitySet Name="RefBorrowers" EntityType="MainModel.RefBorrower" />
           <EntitySet Name="RefChains" EntityType="MainModel.RefChain" />
@@ -591,8 +683,29 @@
             <End Role="RefIssuer" EntitySet="RefIssuers" />
             <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
           </AssociationSet>
+          <EntitySet Name="RefRatingToBonds" EntityType="MainModel.RefRatingToBond" />
+          <AssociationSet Name="FK_InstrumentBond_0_01" Association="MainModel.FK_InstrumentBond_0_01">
+            <End Role="RefSeniority" EntitySet="RefSeniorities" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRatingToBond_0_0" Association="MainModel.FK_RefRatingToBond_0_0">
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+            <End Role="RefRatingToBond" EntitySet="RefRatingToBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RefRatingToBond_1_0" Association="MainModel.FK_RefRatingToBond_1_0">
+            <End Role="RefRating" EntitySet="RefRatings" />
+            <End Role="RefRatingToBond" EntitySet="RefRatingToBonds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RawFrnData_0_0" Association="MainModel.FK_RawFrnData_0_0">
+            <End Role="RawBondInfo" EntitySet="RawBonds1" />
+            <End Role="RawFrnData" EntitySet="RawFrnData" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RawRating_0_0" Association="MainModel.FK_RawRating_0_0">
+            <End Role="RawBondInfo" EntitySet="RawBonds1" />
+            <End Role="RawRating" EntitySet="RawRatings" />
+          </AssociationSet>
         </EntityContainer>
-        <EntityType Name="RawBondInfo">
+        <EntityType Name="RawBond">
           <Key>
             <PropertyRef Name="id" />
           </Key>
@@ -622,6 +735,8 @@
           <Property Name="Industry" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="SubIndustry" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="Instrument" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <NavigationProperty Name="RawFrnDatas" Relationship="MainModel.FK_RawFrnData_0_0" FromRole="RawBondInfo" ToRole="RawFrnData" />
+          <NavigationProperty Name="RawRatings" Relationship="MainModel.FK_RawRating_0_0" FromRole="RawBondInfo" ToRole="RawRating" />
         </EntityType>
         <EntityType Name="RawFrnData">
           <Key>
@@ -632,6 +747,8 @@
           <Property Name="Floor" Type="Double" />
           <Property Name="Margin" Type="Double" />
           <Property Name="Index" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Type="Int64" Name="id_RawBond" />
+          <NavigationProperty Name="RawBondInfo" Relationship="MainModel.FK_RawFrnData_0_0" FromRole="RawFrnData" ToRole="RawBondInfo" />
         </EntityType>
         <EntityType Name="RawRating">
           <Key>
@@ -642,6 +759,8 @@
           <Property Name="Rating" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="Source" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="Issue" Type="Boolean" />
+          <Property Type="Int64" Name="id_RawBond" />
+          <NavigationProperty Name="RawBondInfo" Relationship="MainModel.FK_RawRating_0_0" FromRole="RawRating" ToRole="RawBondInfo" />
         </EntityType>
         <EntityType Name="RefBorrower">
           <Key>
@@ -723,6 +842,7 @@
           <Property Name="Name" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="id_RatingAgency" Type="Int64" />
           <NavigationProperty Name="RefRatingAgency" Relationship="MainModel.FK_RefRating_0_0" FromRole="RefRating" ToRole="RefRatingAgency" />
+          <NavigationProperty Name="RefRatingToBonds" Relationship="MainModel.FK_RefRatingToBond_1_0" FromRole="RefRating" ToRole="RefRatingToBond" />
         </EntityType>
         <EntityType Name="RefRatingAgency">
           <Key>
@@ -795,6 +915,7 @@
           </Key>
           <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="MainModel.FK_InstrumentBond_0_01" FromRole="RefSeniority" ToRole="InstrumentBond" />
         </EntityType>
         <EntityType Name="RefSubIndustry">
           <Key>
@@ -932,6 +1053,9 @@
           <NavigationProperty Name="RefRic" Relationship="MainModel.FK_InstrumentBond_5_0" FromRole="InstrumentBond" ToRole="RefRic" />
           <NavigationProperty Name="RefIsin" Relationship="MainModel.FK_InstrumentBond_6_0" FromRole="InstrumentBond" ToRole="RefIsin" />
           <NavigationProperty Name="RefIssuer" Relationship="MainModel.FK_InstrumentBond_7_0" FromRole="InstrumentBond" ToRole="RefIssuer" />
+          <Property Type="Int64" Name="id_Seniority" />
+          <NavigationProperty Name="RefSeniority" Relationship="MainModel.FK_InstrumentBond_0_01" FromRole="InstrumentBond" ToRole="RefSeniority" />
+          <NavigationProperty Name="RefRatingToBonds" Relationship="MainModel.FK_RefRatingToBond_0_0" FromRole="InstrumentBond" ToRole="RefRatingToBond" />
         </EntityType>
         <Association Name="FK_InstrumentBond_0_0">
           <End Type="MainModel.RefCurrency" Role="RefCurrency" Multiplicity="0..1" />
@@ -1029,14 +1153,84 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="RefRatingToBond">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Rating" />
+          <Property Type="Int64" Name="id_Bond" />
+          <NavigationProperty Name="InstrumentBond" Relationship="MainModel.FK_RefRatingToBond_0_0" FromRole="RefRatingToBond" ToRole="InstrumentBond" />
+          <NavigationProperty Name="RefRating" Relationship="MainModel.FK_RefRatingToBond_1_0" FromRole="RefRatingToBond" ToRole="RefRating" />
+        </EntityType>
+        <Association Name="FK_InstrumentBond_0_01">
+          <End Type="MainModel.RefSeniority" Role="RefSeniority" Multiplicity="0..1" />
+          <End Type="MainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefSeniority">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Seniority" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRatingToBond_0_0">
+          <End Type="MainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="0..1" />
+          <End Type="MainModel.RefRatingToBond" Role="RefRatingToBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="InstrumentBond">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRatingToBond">
+              <PropertyRef Name="id_Bond" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RefRatingToBond_1_0">
+          <End Type="MainModel.RefRating" Role="RefRating" Multiplicity="0..1" />
+          <End Type="MainModel.RefRatingToBond" Role="RefRatingToBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RefRating">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RefRatingToBond">
+              <PropertyRef Name="id_Rating" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RawFrnData_0_0">
+          <End Type="MainModel.RawBond" Role="RawBondInfo" Multiplicity="0..1" />
+          <End Type="MainModel.RawFrnData" Role="RawFrnData" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RawBondInfo">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RawFrnData">
+              <PropertyRef Name="id_RawBond" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RawRating_0_0">
+          <End Type="MainModel.RawBond" Role="RawBondInfo" Multiplicity="0..1" />
+          <End Type="MainModel.RawRating" Role="RawRating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RawBondInfo">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RawRating">
+              <PropertyRef Name="id_RawBond" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
         <EntityContainerMapping StorageEntityContainer="mainModelStoreContainer" CdmEntityContainer="MainEntities">
-          <EntitySetMapping Name="RawBondInfoes">
-            <EntityTypeMapping TypeName="MainModel.RawBondInfo">
+          <EntitySetMapping Name="RawBonds1">
+            <EntityTypeMapping TypeName="MainModel.RawBond">
               <MappingFragment StoreEntitySet="RawBondInfo">
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
@@ -1067,9 +1261,10 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="RawFrnDatas">
+          <EntitySetMapping Name="RawFrnData">
             <EntityTypeMapping TypeName="MainModel.RawFrnData">
               <MappingFragment StoreEntitySet="RawFrnData">
+                <ScalarProperty Name="id_RawBond" ColumnName="id_RawBond" />
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="Cap" ColumnName="Cap" />
                 <ScalarProperty Name="Floor" ColumnName="Floor" />
@@ -1081,6 +1276,7 @@
           <EntitySetMapping Name="RawRatings">
             <EntityTypeMapping TypeName="MainModel.RawRating">
               <MappingFragment StoreEntitySet="RawRating">
+                <ScalarProperty Name="id_RawBond" ColumnName="id_RawBond" />
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="Date" ColumnName="Date" />
                 <ScalarProperty Name="Rating" ColumnName="Rating" />
@@ -1233,6 +1429,7 @@
           <EntitySetMapping Name="InstrumentBonds">
             <EntityTypeMapping TypeName="MainModel.InstrumentBond">
               <MappingFragment StoreEntitySet="InstrumentBond">
+                <ScalarProperty Name="id_Seniority" ColumnName="id_Seniority" />
                 <ScalarProperty Name="Maturity" ColumnName="Maturity" />
                 <ScalarProperty Name="Issue" ColumnName="Issue" />
                 <ScalarProperty Name="id_Type" ColumnName="id_Type" />
@@ -1250,6 +1447,15 @@
                 <ScalarProperty Name="id_Currency" ColumnName="id_Currency" />
                 <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
                 <ScalarProperty Name="id_Issuer" ColumnName="id_Issuer" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RefRatingToBonds">
+            <EntityTypeMapping TypeName="MainModel.RefRatingToBond">
+              <MappingFragment StoreEntitySet="RefRatingToBond">
+                <ScalarProperty Name="id_Bond" ColumnName="id_Bond" />
+                <ScalarProperty Name="id_Rating" ColumnName="id_Rating" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>

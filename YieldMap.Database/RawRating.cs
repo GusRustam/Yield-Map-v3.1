@@ -19,5 +19,8 @@ namespace YieldMap.Database
         public string Rating { get; set; }
         public string Source { get; set; }
         public Nullable<bool> Issue { get; set; }
+        public Nullable<long> id_RawBond { get; set; }
+    
+        public virtual RawBond RawBondInfo { get; set; }
     }
 }

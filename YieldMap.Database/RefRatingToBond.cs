@@ -12,15 +12,13 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RawFrnData
+    public partial class RefRatingToBond
     {
         public long id { get; set; }
-        public Nullable<double> Cap { get; set; }
-        public Nullable<double> Floor { get; set; }
-        public Nullable<double> Margin { get; set; }
-        public string Index { get; set; }
-        public Nullable<long> id_RawBond { get; set; }
+        public Nullable<long> id_Rating { get; set; }
+        public Nullable<long> id_Bond { get; set; }
     
-        public virtual RawBond RawBondInfo { get; set; }
+        public virtual InstrumentBond InstrumentBond { get; set; }
+        public virtual RefRating RefRating { get; set; }
     }
 }

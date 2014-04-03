@@ -23,37 +23,42 @@ CREATE TABLE InstrumentBond (
   id_Type         integer,
   Issue           date,
   Maturity        date,
+  id_Seniority    integer,
   /* Foreign keys */
-  FOREIGN KEY (id_Currency)
-    REFERENCES RefCurrency(id)
+  FOREIGN KEY (id_Seniority)
+    REFERENCES RefSenioarity(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_Borrower)
-    REFERENCES RefBorrower(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_Type)
-    REFERENCES RefInstrument(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_SubIndustry)
-    REFERENCES RefSubIndustry(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_Ticker)
-    REFERENCES RefTicker(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_Ric)
-    REFERENCES RefRic(id)
+  FOREIGN KEY (id_Issuer)
+    REFERENCES RefIssuer(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Isin)
     REFERENCES RefIsin(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_Issuer)
-    REFERENCES RefIssuer(id)
+  FOREIGN KEY (id_Ric)
+    REFERENCES RefRic(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_Ticker)
+    REFERENCES RefTicker(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_SubIndustry)
+    REFERENCES RefSubIndustry(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_Type)
+    REFERENCES RefInstrument(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_Borrower)
+    REFERENCES RefBorrower(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_Currency)
+    REFERENCES RefCurrency(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
@@ -115,11 +120,17 @@ CREATE INDEX RawBondInfo_Index01
   (id);
 
 CREATE TABLE RawFrnData (
-  id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Cap      float(50),
-  Floor    float(50),
-  Margin   float(50),
-  "Index"  varchar(50)
+  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Cap         float(50),
+  Floor       float(50),
+  Margin      float(50),
+  "Index"     varchar(50),
+  id_RawBond  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_RawBond)
+    REFERENCES RawBondInfo(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
 );
 
 CREATE INDEX RawFrnData_Index01
@@ -127,11 +138,17 @@ CREATE INDEX RawFrnData_Index01
   (id);
 
 CREATE TABLE RawRating (
-  id      integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  "Date"  date,
-  Rating  varchar(50),
-  Source  varchar(50),
-  Issue   bit
+  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  "Date"      date,
+  Rating      varchar(50),
+  Source      varchar(50),
+  Issue       bit,
+  id_RawBond  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_RawBond)
+    REFERENCES RawBondInfo(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
 );
 
 CREATE INDEX RawRating_Index01
@@ -274,6 +291,21 @@ CREATE INDEX RefRatingAgency_Index01
 CREATE INDEX RefRatingAgency_Index02
   ON RefRatingAgency
   (Name);
+
+CREATE TABLE RefRatingToBond (
+  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_Rating  integer,
+  id_Bond    integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_Bond)
+    REFERENCES InstrumentBond(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_Rating)
+    REFERENCES RefRating(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
+);
 
 CREATE TABLE RefRic (
   id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,

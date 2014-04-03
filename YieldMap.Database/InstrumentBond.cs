@@ -14,6 +14,11 @@ namespace YieldMap.Database
     
     public partial class InstrumentBond
     {
+        public InstrumentBond()
+        {
+            this.RefRatingToBonds = new HashSet<RefRatingToBond>();
+        }
+    
         public long id { get; set; }
         public Nullable<long> id_Issuer { get; set; }
         public Nullable<long> id_Borrower { get; set; }
@@ -32,6 +37,7 @@ namespace YieldMap.Database
         public Nullable<long> id_Type { get; set; }
         public Nullable<System.DateTime> Issue { get; set; }
         public Nullable<System.DateTime> Maturity { get; set; }
+        public Nullable<long> id_Seniority { get; set; }
     
         public virtual RefCurrency RefCurrency { get; set; }
         public virtual RefBorrower RefBorrower { get; set; }
@@ -41,5 +47,7 @@ namespace YieldMap.Database
         public virtual RefRic RefRic { get; set; }
         public virtual RefIsin RefIsin { get; set; }
         public virtual RefIssuer RefIssuer { get; set; }
+        public virtual RefSeniority RefSeniority { get; set; }
+        public virtual ICollection<RefRatingToBond> RefRatingToBonds { get; set; }
     }
 }

@@ -335,6 +335,8 @@
                 count
             }
             logger.InfoF "Da count is %d" q
+            q |> should equal 0
+
             let c = RefChain()
             c.Name <- "Hello"
             let c = ctx.RefChains.Add c
@@ -347,6 +349,7 @@
                 count
             }
             logger.InfoF "Da count is now %d" q
+            q |> should equal 1
 
             let c = ctx.RefChains.Remove (c)
             ctx.SaveChanges() |> ignore
@@ -357,3 +360,4 @@
                 count
             }
             logger.InfoF "Da count is now %d" q
+            q |> should equal 0
