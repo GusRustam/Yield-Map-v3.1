@@ -11,10 +11,9 @@
 
     module MetaChainsTests = 
         open YieldMap.Loader.Requests
-        open YieldMap.Loader.Requests.Answers
-        open YieldMap.Loader.Loading
+        open YieldMap.Loader.SdkFactory
         open YieldMap.Loader.Requests
-        open YieldMap.Loader.Loading.SdkFactory
+        open YieldMap.Loader.MetaChains
         open YieldMap.Loader.MetaTables
         open YieldMap.Loader.Calendar
         
@@ -23,20 +22,15 @@
         let logger = LogFactory.create "Dex2Tests"
 
         [<Test>]
-        let ``Mock connection establishes`` () = 
-            let q = MockOnlyFactory() :> Loader
-            let ans =  Dex2Tests.connect q |> Async.RunSynchronously
-            ans |> should be True
-
-        [<Test>]
         let ``Requested chain is recieved`` () = 
             try
                 let dt = DateTime(2014,3,4)
-                let q = MockOnlyFactory(dt) :> Loader
+                let f = MockFactory() :> EikonFactory
+                let l = MockChainMeta() :> ChainMetaLoader
 
                 globalThreshold := LoggingLevel.Debug
 
-                Dex2Tests.test q "0#RUTSY=MM" |> Async.RunSynchronously |> should be True
+                Dex2Tests.test f l "0#RUTSY=MM" |> Async.RunSynchronously |> should be True
             with e -> 
                 logger.ErrorF "Failed %s" (e.ToString())
                 Assert.Fail()
@@ -51,8 +45,9 @@
             logger.TraceF "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
 
             let dt = DateTime(2014,3,4)
-            let q = MockOnlyFactory(dt) :> Loader
-            let chain name timeout = Dex2Tests.getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
+            let f = MockFactory() :> EikonFactory
+            let l = MockChainMeta() :> ChainMetaLoader
+            let chain name timeout = Dex2Tests.getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
             let tasks = [ chain "0#RUTSY=MM" (toSome t1); chain "0#RUSOVB=MM" (toSome t2) ]
             let data = tasks |> Async.Parallel |> Async.RunSynchronously |> Array.collect id
@@ -322,42 +317,128 @@
             apiQuotes.Stop()
 
     module DbTests =
+        open YieldMap.Loader.Requests
+        open YieldMap.Loader.MetaTables
+        open YieldMap.Loader.MetaChains
+        open YieldMap.Loader.SdkFactory
         open YieldMap.Tools.Logging
         open YieldMap.Database
+
+
         let logger = LogFactory.create "TestApiQuotes"
 
         [<Test>]
-        let ``Read something from Db`` () = 
+        let ``Reading and writing to Db works`` () = 
             use ctx = new MainEntities()
-            let q = query {
-                for x in ctx.RefChains do 
-                select x 
-                count
-            }
-            logger.InfoF "Da count is %d" q
-            q |> should equal 0
+
+            let cnt boo = query { for x in boo do select x; count }
+
+            let count = cnt ctx.RefChains
+            logger.InfoF "Da count is %d" count
 
             let c = RefChain()
-            c.Name <- "Hello"
+            c.Name <- Guid.NewGuid().ToString()
             let c = ctx.RefChains.Add c
+            logger.InfoF "First c is <%d; %s>" c.id c.Name
             ctx.SaveChanges() |> ignore
 
-            logger.InfoF "Now c is %A" c
-            let q = query {
-                for x in ctx.RefChains do 
-                select x 
-                count
-            }
-            logger.InfoF "Da count is now %d" q
-            q |> should equal 1
+            logger.InfoF "Now c is <%d; %s>" c.id c.Name
+            let poo =  cnt ctx.RefChains
+            logger.InfoF "Da count is now %d" poo
+            poo |> should equal (count+1)
 
             let c = ctx.RefChains.Remove (c)
             ctx.SaveChanges() |> ignore
-            logger.InfoF "And now c is %A" c
-            let q = query {
-                for x in ctx.RefChains do 
-                select x 
-                count
-            }
-            logger.InfoF "Da count is now %d" q
-            q |> should equal 0
+            logger.InfoF "And now c is <%d; %s>" c.id c.Name
+            let poo =  cnt ctx.RefChains
+            logger.InfoF "Da count is now %d" poo
+            poo |> should equal count
+
+        let connect (q:EikonFactory) = async {
+            logger.TraceF "Connection request sent"
+            let! connectRes = q.Connect()
+            match connectRes with
+            | Connection.Connected -> 
+                logger.TraceF "Connected"
+                return true
+            | Connection.Failed e -> 
+                logger.TraceF "Failed to connect %s" (e.ToString())
+                return false
+        }
+
+        let getChain (q:ChainMetaLoader) request = async {
+            let! chain = q.LoadChain request
+            match chain with
+            | Chain.Answer data -> return data
+            | Chain.Failed e -> 
+                logger.TraceF "Failed to load chain: %s" e.Message
+                return [||]
+        }
+
+        let test (q:EikonFactory) (f:ChainMetaLoader) chainName = async {
+            let! connected = connect q
+            logger.TraceF "After connection"
+            if connected then
+                logger.TraceF "Before chain %s" chainName
+                // todo strange when feed is Q it just hangs, it doesn't report any error...
+                // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
+                let! data = getChain f { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
+                logger.TraceF "After chain"
+                if Array.length data <> 0 then
+                    let success = ref true
+                    logger.TraceF "Chain %A" data
+
+                    logger.InfoF "Loading BondDescr table"
+                    let! meta = f.LoadMetadata<BondDescr> data None
+                    match meta with
+                    | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
+                    | Meta.Failed e -> 
+                        logger.ErrorF "Failed to load BondDescr: %s" (e.ToString())
+                        success := false
+
+                    logger.InfoF "Loading CouponData table"
+                    let! meta = f.LoadMetadata<CouponData> data None
+                    match meta with
+                    | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
+                    | Meta.Failed e -> 
+                        logger.ErrorF "Failed to load CouponData: %s" (e.ToString())
+                        success := false
+        
+                    logger.InfoF "Loading IssueRatingData table"
+                    let! meta = f.LoadMetadata<IssueRatingData> data None
+                    match meta with
+                    | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
+                    | Meta.Failed e -> 
+                        logger.ErrorF "Failed to load IssueRatingData: %s" (e.ToString())
+                        success := false
+        
+                    logger.InfoF "Loading IssuerRatingData table"
+                    let! meta = f.LoadMetadata<IssuerRatingData> data None
+                    match meta with
+                    | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
+                    | Meta.Failed e -> 
+                        logger.ErrorF "Failed to load IssuerRatingData: %s" (e.ToString())
+                        success := false
+
+                    logger.InfoF "Loading FrnData table"
+                    let! meta = f.LoadMetadata<FrnData> data None
+                    match meta with
+                    | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
+                    | Meta.Failed e -> 
+                        logger.ErrorF "Failed to load FrnData: %s" (e.ToString())
+                        success := false
+        
+                    logger.InfoF "Loading RicData table"
+                    let! meta = f.LoadMetadata<RicData> data None
+                    match meta with
+                    | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
+                    | Meta.Failed e -> 
+                        logger.ErrorF "Failed to load RicData: %s" (e.ToString())
+                        success := false
+        
+                    return !success
+                else return false
+            else 
+                logger.TraceF "Not connected"
+                return false
+        } 

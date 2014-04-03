@@ -12,7 +12,7 @@ module private Watchers =
     open System.Threading
 
     open YieldMap.Loader.WebServer
-    open YieldMap.Loader.Loading
+    open YieldMap.Loader.MetaChains
     
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Aux.Disposer
@@ -187,7 +187,8 @@ module LiveQuotes =
     open System.Threading
 
     open YieldMap.Loader.WebServer
-    open YieldMap.Loader.Loading
+    open YieldMap.Loader.MetaChains
+    open YieldMap.Loader.SdkFactory
 
     open YieldMap.Tools.Logging
     open YieldMap.Tools.Aux
@@ -226,7 +227,7 @@ module LiveQuotes =
     type QuoteMode = OnTime of int | OnTimeIfUpdated of int | OnUpdate
 
     /// Adfin realtime subscription
-    type RtxSubscription (_loader : SdkFactory.Loader, _feed, _mode) = 
+    type RtxSubscription (_loader : EikonFactory, _feed, _mode) = 
         inherit Disposer ()
 
         let requests = Map.empty

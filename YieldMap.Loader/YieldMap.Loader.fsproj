@@ -38,7 +38,8 @@
   <ItemGroup>
     <Compile Include="Calendar.fs" />
     <Compile Include="Requests.fs" />
-    <Compile Include="Chains.fs" />
+    <Compile Include="SdkFactory.fs" />
+    <Compile Include="MetaChains.fs" />
     <Compile Include="WebServer.fs" />
     <Compile Include="MetaTables.fs" />
     <Compile Include="LiveQuotes.fs" />

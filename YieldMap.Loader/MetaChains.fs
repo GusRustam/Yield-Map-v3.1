@@ -1,9 +1,7 @@
-﻿namespace YieldMap.Loader.Loading
+﻿namespace YieldMap.Loader.MetaChains
 
-module HistoricalData = 
-    type HistoryLoader = class end
-
-module SdkFactory = 
+[<AutoOpen>]
+module MetaChains = 
     open System
     open System.Collections.Generic
     open System.IO
@@ -18,7 +16,7 @@ module SdkFactory =
     
     open YieldMap.Loader.Calendar
     open YieldMap.Loader.Requests
-    open YieldMap.Loader.Requests.Answers
+    open YieldMap.Loader.SdkFactory
     
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Logging
@@ -26,14 +24,12 @@ module SdkFactory =
 
     let private logger = LogFactory.create "SdkFactory"
 
-    module private Watchers =
-        type Eikon(eikon : EikonDesktopDataAPI) =
-            let changed = new Event<_>()
-            do eikon.add_OnStatusChanged (fun e -> 
-                logger.TraceF "Status changed -> %A!" e
-                changed.Trigger <| Answers.Connection.parse e)
-            member self.StatusChanged = changed.Publish
+    /// Loads chains and metadata
+    type ChainMetaLoader = 
+        abstract member LoadChain : ChainRequest -> Async<Chain>
+        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> int option -> 'a Meta Async
 
+    module private Watchers =
         /// Event wrapper of async call
         type RawMeta = Data of obj[,] | Failed of string
 
@@ -65,11 +61,11 @@ module SdkFactory =
                             result.[index-min] <- data.GetValue(index).ToString()
                         
                         let result = Array.filter (not << String.IsNullOrEmpty) result
-                        Answers.Chain.Answer(result)
+                        Chain.Answer(result)
                     else 
-                        Answers.Chain.Failed(Exception("Invalid data format"))
+                        Chain.Failed(Exception("Invalid data format"))
                 with e -> 
-                    Answers.Chain.Failed(Exception(sprintf "Failed to parse chain, error is %s" <| e.ToString()))
+                    Chain.Failed(Exception(sprintf "Failed to parse chain, error is %s" <| e.ToString()))
 
             do chain.add_OnUpdate (
                 fun status -> 
@@ -77,7 +73,7 @@ module SdkFactory =
                     match status with 
                     | RT_DataStatus.RT_DS_FULL -> dataEvent.Trigger <| parseData chain.Data
                     | RT_DataStatus.RT_DS_PARTIAL -> () // todo logging
-                    | _ -> dataEvent.Trigger <| Answers.Chain.Failed(Exception("Invalid ric"))
+                    | _ -> dataEvent.Trigger <| Chain.Failed(Exception("Invalid ric"))
             )
 
             do chain.add_OnStatusChange (
@@ -85,7 +81,7 @@ module SdkFactory =
                     logger.TraceF "Status changed -> %s" (status.ToString())
                     match status with
                     | RT_SourceStatus.RT_SOURCE_UP -> ()
-                    | _ -> dataEvent.Trigger <| Answers.Chain.Failed(Exception(sprintf "Invalid feed %s" chain.Source))
+                    | _ -> dataEvent.Trigger <| Chain.Failed(Exception(sprintf "Invalid feed %s" chain.Source))
             )
 
             member x.Data = dataEvent.Publish
@@ -150,11 +146,6 @@ module SdkFactory =
             with e -> Meta.Failed(e)
 
     module private MockOperations = 
-        let connect () = async {
-            do! Async.Sleep(500) 
-            return Answers.Connected
-        }
-
         let private metaPath<'a> (date : DateTime option) = 
             match date with
             | None -> sprintf "data/meta/%s.csv" <| typedefof<'a>.Name
@@ -176,14 +167,14 @@ module SdkFactory =
                         xDoc.Load(path)
                         let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
                         match node with
-                        | null -> return Answers.Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
-                        | _ -> return Answers.Chain.Answer <| node.InnerText.Split('\t')
-                    with e -> return Answers.Chain.Failed e
+                        | null -> return Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
+                        | _ -> return Chain.Answer <| node.InnerText.Split('\t')
+                    with e -> return Chain.Failed e
                 } |> Async.WithTimeoutEx setup.Timeout
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Answers.Chain.Failed e
+                with :? TimeoutException as e -> return Chain.Failed e
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> rics date timeout = 
@@ -210,22 +201,17 @@ module SdkFactory =
                             let x = MetaParser.parse<'a> data
                             return x
                         else
-                            return Answers.Meta.Failed <| Exception ("No data")
+                            return Meta.Failed <| Exception ("No data")
                         
-                    with e -> return Answers.Meta.Failed e
+                    with e -> return Meta.Failed e
                 } |> Async.WithTimeoutEx timeout
 
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Answers.Meta.Failed e
+                with :? TimeoutException as e -> return Meta.Failed e
             }
 
     module private EikonOperations = 
-        let connect (eikon : EikonDesktopDataAPI) = 
-            let watcher = Watchers.Eikon eikon
-            let res = eikon.Initialize()
-            Async.AwaitEvent watcher.StatusChanged
-
         let chain (adxRtChain:AdxRtChain) setup = 
             let workflow = 
                 async {
@@ -242,7 +228,7 @@ module SdkFactory =
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Answers.Chain.Failed e
+                with :? TimeoutException as e -> return Chain.Failed e
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> (dex2 : Dex2Mgr) (rics:string array) timeout = 
@@ -275,73 +261,25 @@ module SdkFactory =
 
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Answers.Meta.Failed e
+                with :? TimeoutException as e -> return Meta.Failed e
             }
 
-    /// Connects to Eikon, loads chains and metadata
-    type Loader = 
-        abstract member Connect : unit -> Async<Answers.Connection>
-        abstract member LoadChain : ChainRequest -> Async<Answers.Chain>
-        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> int option -> Async<Answers.Meta<'a>>
-        abstract member CreateAdxBondModule : unit -> AdxBondModule
-        abstract member CreateAdxRtChain : unit -> AdxRtChain
-        abstract member CreateAdxRtList : unit -> AdxRtList
-        abstract member CreateDex2Mgr : unit -> Dex2Mgr
 
     /// Connection : timeout;
     /// Today / LoadChain / LoadData : mock;
     /// Adfin calcs : null
-    type MockOnlyFactory(_today) =
-        new () = MockOnlyFactory(defaultCalendar.Now)
+    type MockChainMeta(_today) =
+        new () = MockChainMeta(defaultCalendar.Now)
 
-        interface Loader with
-            member x.Connect () = MockOperations.connect ()
+        interface ChainMetaLoader with
             member x.LoadChain request = MockOperations.chain request (Some _today) 
             member x.LoadMetadata rics timeout = MockOperations.meta rics (Some _today) timeout
-            member x.CreateAdxBondModule () = null
-            member x.CreateAdxRtChain () = null
-            member x.CreateAdxRtList () = null
-            member x.CreateDex2Mgr () = null
-
-    /// Connection : Eikon;
-    /// Today / LoadChain / LoadData : mock;
-    /// Adfin calcs : Eikon
-    type TestEikonFactory(_eikon, _today)  =
-        let dateChanged = Event<DateTime>()
-        new (_eikon) = TestEikonFactory(_eikon, defaultCalendar.Today)
-
-        interface Loader with
-            member x.Connect () = EikonOperations.connect _eikon
-            member x.LoadChain request = MockOperations.chain request (Some _today) 
-            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some _today) timeout
-            member x.CreateAdxBondModule () = _eikon.CreateAdxBondModule() :?> AdxBondModule
-            member x.CreateAdxRtChain () = _eikon.CreateAdxRtChain() :?> AdxRtChain
-            member x.CreateAdxRtList () = _eikon.CreateAdxRtList() :?> AdxRtList
-            member x.CreateDex2Mgr () = _eikon.CreateDex2Mgr() :?> Dex2Mgr
 
     /// Connection : Eikon;
     /// Today / LoadChain / LoadData : Real;
     /// Adfin calcs : Eikon
-    type OuterEikonFactory (eikon:EikonDesktopDataAPI) =
-        interface Loader with
-            member x.Connect () = EikonOperations.connect eikon
-            member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
-            member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
-            member x.CreateAdxBondModule () = eikon.CreateAdxBondModule() :?> AdxBondModule
-            member x.CreateAdxRtChain () = eikon.CreateAdxRtChain() :?> AdxRtChain
-            member x.CreateAdxRtList () = eikon.CreateAdxRtList() :?> AdxRtList
-            member x.CreateDex2Mgr () = eikon.CreateDex2Mgr() :?> Dex2Mgr
+    type EikonChainMeta (factory:EikonFactory) =
+        interface ChainMetaLoader with
+            member x.LoadChain request = EikonOperations.chain (factory.CreateAdxRtChain ()) request
+            member x.LoadMetadata rics timeout = EikonOperations.meta (factory.CreateDex2Mgr ()) rics timeout
 
-
-    /// Connection : timeout;
-    /// Today / LoadChain / LoadData : Real;
-    /// Adfin calcs : Eikon
-    type InnerEikonFactory (eikon:EikonDesktopDataAPI) =
-        interface Loader with
-            member x.Connect () = MockOperations.connect ()
-            member x.LoadChain request = EikonOperations.chain ((x :> Loader).CreateAdxRtChain ()) request
-            member x.LoadMetadata rics timeout = EikonOperations.meta ((x :> Loader).CreateDex2Mgr ()) rics timeout
-            member x.CreateAdxBondModule () = AdxBondModuleClass() :> AdxBondModule
-            member x.CreateAdxRtChain () = new AdxRtChainClass() :> AdxRtChain
-            member x.CreateAdxRtList () = new AdxRtListClass() :> AdxRtList
-            member x.CreateDex2Mgr () =  new Dex2MgrClass() :> Dex2Mgr

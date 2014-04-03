@@ -15,10 +15,10 @@
         open EikonDesktopDataAPI
 
         open YieldMap.Loader.LiveQuotes
-        open YieldMap.Loader.Loading.SdkFactory
+        open YieldMap.Loader.SdkFactory
+        open YieldMap.Loader.MetaChains
         open YieldMap.Loader.MetaTables
         open YieldMap.Loader.Requests
-        open YieldMap.Loader.Requests.Answers
         
         open YieldMap.Tools.Logging
         open YieldMap.Tools.Aux
@@ -31,7 +31,7 @@
         let ``connection`` () =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
             try
-                let q = OuterEikonFactory(!eikon) :> Loader
+                let q = OuterFactory(!eikon) :> EikonFactory
                 try
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
                     ans |> should be True
@@ -46,9 +46,10 @@
         let ``retrieve-real-data`` () = 
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
             try
-                let q = OuterEikonFactory(!eikon) :> Loader
+                let q = OuterFactory(!eikon) :> EikonFactory
+                let l = EikonChainMeta(q)
                 try
-                    Async.RunSynchronously (Dex2Tests.test q "0#RUCORP=MM", int <| TimeSpan.FromMinutes(1.0).TotalMilliseconds) |> should be True
+                    Async.RunSynchronously (Dex2Tests.test q l "0#RUCORP=MM", int <| TimeSpan.FromMinutes(1.0).TotalMilliseconds) |> should be True
                 with :? TimeoutException -> 
                     logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
@@ -63,7 +64,8 @@
         [<TestCase(1, 1, 0)>]
         let ``chains-in-parallel`` (t1 : int, t2 : int, cnt : int) =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
-            let q = OuterEikonFactory(!eikon) :> Loader
+            let q = OuterFactory(!eikon) :> EikonFactory
+            let l = EikonChainMeta q
             try
 
                 try
@@ -77,7 +79,7 @@
 
                 logger.TraceF "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
 
-                let chain name timeout = Dex2Tests.getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
+                let chain name timeout = Dex2Tests.getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
                 let tasks = [ chain "0#RUTSY=MM" (toSome t1); chain "0#RUSOVB=MM" (toSome t2) ]
                 
@@ -93,7 +95,7 @@
         [<Test>]
         let ``fields-test`` () =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
-            let q = OuterEikonFactory(!eikon) :> Loader
+            let q = OuterFactory(!eikon) :> EikonFactory
             try
 
                 try
@@ -122,7 +124,7 @@
         [<Test>]
         let ``snapshot-tests`` () =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
-            let q = OuterEikonFactory(!eikon) :> Loader
+            let q = OuterFactory(!eikon) :> EikonFactory
             try
                 try
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
@@ -165,7 +167,7 @@
         [<Test>]
         let ``realtime-quotes`` () =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
-            let q = OuterEikonFactory(!eikon) :> Loader
+            let q = OuterFactory(!eikon) :> EikonFactory
             try
                 try
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)
@@ -192,7 +194,7 @@
         [<Test>]
         let ``realtime-quotes-2`` () =
             let eikon = ref (EikonDesktopDataAPIClass() :> EikonDesktopDataAPI)
-            let q = OuterEikonFactory(!eikon) :> Loader
+            let q = OuterFactory(!eikon) :> EikonFactory
             try
                 try
                     let ans =  Async.RunSynchronously(Dex2Tests.connect q, 10000)

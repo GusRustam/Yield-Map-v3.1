@@ -2,6 +2,8 @@
 
 [<AutoOpen>]
 module Requests =
+    open EikonDesktopDataAPI
+
     open System
     open System.Globalization
     open System.Reflection
@@ -78,10 +80,6 @@ module Requests =
                     |> List.ofArray
                 {Request = x.Request; Display = x.Display;  Fields = fields}
             | None -> failwith "Invalid setup, no RequestAttribute"
-
-module Answers = 
-    open Requests
-    open EikonDesktopDataAPI
 
     type Connection = Connected | Failed of exn
         with static member parse (e:EEikonStatus) = 

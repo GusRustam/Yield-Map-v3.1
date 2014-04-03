@@ -9,17 +9,16 @@ open EikonDesktopDataAPI
 open NUnit.Framework
 
 open YieldMap.Loader.Requests
-open YieldMap.Loader.Requests.Answers
-open YieldMap.Loader.Loading
+open YieldMap.Loader.SdkFactory
+open YieldMap.Loader.MetaChains
 open YieldMap.Loader.MetaTables
-open YieldMap.Loader.Loading.SdkFactory
 open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
 
 module Dex2Tests = 
     let logger = LogFactory.create "Dex2Tests"
 
-    let connect (q:SdkFactory.Loader) = async {
+    let connect (q:EikonFactory) = async {
         logger.TraceF "Connection request sent"
         let! connectRes = q.Connect()
         match connectRes with
@@ -31,7 +30,7 @@ module Dex2Tests =
             return false
     }
 
-    let getChain (q:SdkFactory.Loader) request = async {
+    let getChain (q:ChainMetaLoader) request = async {
         let! chain = q.LoadChain request
         match chain with
         | Chain.Answer data -> return data
@@ -40,8 +39,8 @@ module Dex2Tests =
             return [||]
     }
 
-    let test (q:SdkFactory.Loader) chainName = async {
-        let! connected = connect q
+    let test (f:EikonFactory) (q:ChainMetaLoader) chainName = async {
+        let! connected = connect f
         logger.TraceF "After connection"
         if connected then
             logger.TraceF "Before chain %s" chainName
