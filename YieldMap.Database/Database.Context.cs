@@ -13,10 +13,10 @@ namespace YieldMap.Database
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
     
-    public partial class mainEntities : DbContext
+    public partial class MainEntities : DbContext
     {
-        public mainEntities()
-            : base("name=mainEntities")
+        public MainEntities()
+            : base("name=MainEntities")
         {
         }
     

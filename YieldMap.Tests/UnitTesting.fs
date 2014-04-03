@@ -1,8 +1,10 @@
-﻿namespace YieldMap.Tests.Common
+﻿namespace YieldMap.Tests.Unit
 
     open System
     open System.IO
     open System.Xml
+
+    open YieldMap.Tests.Common
 
     open NUnit.Framework
     open FsUnit
@@ -318,3 +320,40 @@
 
             !count |> should equal (Array.length slots)
             apiQuotes.Stop()
+
+    module DbTests =
+        open YieldMap.Tools.Logging
+        open YieldMap.Database
+        let logger = LogFactory.create "TestApiQuotes"
+
+        [<Test>]
+        let ``Read something from Db`` () = 
+            use ctx = new MainEntities()
+            let q = query {
+                for x in ctx.RefChains do 
+                select x 
+                count
+            }
+            logger.InfoF "Da count is %d" q
+            let c = RefChain()
+            c.Name <- "Hello"
+            let c = ctx.RefChains.Add c
+            ctx.SaveChanges() |> ignore
+
+            logger.InfoF "Now c is %A" c
+            let q = query {
+                for x in ctx.RefChains do 
+                select x 
+                count
+            }
+            logger.InfoF "Da count is now %d" q
+
+            let c = ctx.RefChains.Remove (c)
+            ctx.SaveChanges() |> ignore
+            logger.InfoF "And now c is %A" c
+            let q = query {
+                for x in ctx.RefChains do 
+                select x 
+                count
+            }
+            logger.InfoF "Da count is now %d" q

@@ -1,7 +1,7 @@
 --SQLite Maestro 12.1.0.1
 ------------------------------------------
 --Host     : localhost
---Database : C:\Users\Rustam Guseynov\Documents\yieldmap.sqlite3
+--Database : C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Database\main.db
 
 
 CREATE TABLE InstrumentBond (
@@ -9,10 +9,10 @@ CREATE TABLE InstrumentBond (
   id_Issuer       integer,
   id_Borrower     integer,
   id_Currency     integer,
-  BondStructure   varchar(50),
-  RateStructure   varchar(50),
+  BondStructure   text,
+  RateStructure   text,
   IssueSize       integer,
-  ShortName       varchar(50) NOT NULL,
+  Name            varchar(50) NOT NULL,
   IsCallable      bit,
   IsPutable       bit,
   Series          varchar(50),
@@ -58,6 +58,10 @@ CREATE TABLE InstrumentBond (
     ON UPDATE RESTRICT
 );
 
+CREATE INDEX InstrumentBond_Index01
+  ON InstrumentBond
+  (id);
+
 CREATE TABLE InstrumentCustomBond (
   id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name           varchar(50),
@@ -72,6 +76,10 @@ CREATE TABLE InstrumentCustomBond (
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
+
+CREATE INDEX InstrumentCustomBond_Index01
+  ON InstrumentCustomBond
+  (id);
 
 CREATE TABLE RawBondInfo (
   id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -102,6 +110,10 @@ CREATE TABLE RawBondInfo (
   Instrument       varchar(50)
 );
 
+CREATE INDEX RawBondInfo_Index01
+  ON RawBondInfo
+  (id);
+
 CREATE TABLE RawFrnData (
   id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Cap      float(50),
@@ -110,6 +122,10 @@ CREATE TABLE RawFrnData (
   "Index"  varchar(50)
 );
 
+CREATE INDEX RawFrnData_Index01
+  ON RawFrnData
+  (id);
+
 CREATE TABLE RawRating (
   id      integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   "Date"  date,
@@ -117,6 +133,10 @@ CREATE TABLE RawRating (
   Source  varchar(50),
   Issue   bit
 );
+
+CREATE INDEX RawRating_Index01
+  ON RawRating
+  (id);
 
 CREATE TABLE RefBorrower (
   id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -133,35 +153,79 @@ CREATE INDEX RefBorrower_Index01
   ON RefBorrower
   (id);
 
+CREATE INDEX RefBorrower_Index02
+  ON RefBorrower
+  (id);
+
 CREATE TABLE RefChain (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50) NOT NULL UNIQUE
 );
+
+CREATE INDEX RefChain_Index01
+  ON RefChain
+  (id);
+
+CREATE INDEX RefChain_Index02
+  ON RefChain
+  (Name);
 
 CREATE TABLE RefCountry (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50) NOT NULL UNIQUE
 );
 
+CREATE INDEX RefCountry_Index01
+  ON RefCountry
+  (id);
+
+CREATE INDEX RefCountry_Index02
+  ON RefCountry
+  (Name);
+
 CREATE TABLE RefCurrency (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50)
 );
+
+CREATE INDEX RefCurrency_Index01
+  ON RefCurrency
+  (id);
 
 CREATE TABLE RefIndustry (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50) UNIQUE
 );
 
+CREATE INDEX RefIndustry_Index01
+  ON RefIndustry
+  (id);
+
+CREATE INDEX RefIndustry_Index02
+  ON RefIndustry
+  (Name);
+
 CREATE TABLE RefInstrument (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50)
 );
 
+CREATE INDEX RefInstrument_Index01
+  ON RefInstrument
+  (id);
+
 CREATE TABLE RefIsin (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50) NOT NULL UNIQUE
 );
+
+CREATE INDEX RefIsin_Index01
+  ON RefIsin
+  (id);
+
+CREATE INDEX RefIsin_Index02
+  ON RefIsin
+  (Name);
 
 CREATE TABLE RefIssuer (
   id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -173,6 +237,10 @@ CREATE TABLE RefIssuer (
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
+
+CREATE INDEX RefIssuer_Index01
+  ON RefIssuer
+  (id);
 
 CREATE TABLE RefRating (
   id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -186,10 +254,26 @@ CREATE TABLE RefRating (
     ON UPDATE RESTRICT
 );
 
+CREATE INDEX RefRating_Index01
+  ON RefRating
+  (id);
+
+CREATE INDEX RefRating_Index02
+  ON RefRating
+  (Name);
+
 CREATE TABLE RefRatingAgency (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50) NOT NULL UNIQUE
 );
+
+CREATE INDEX RefRatingAgency_Index01
+  ON RefRatingAgency
+  (id);
+
+CREATE INDEX RefRatingAgency_Index02
+  ON RefRatingAgency
+  (Name);
 
 CREATE TABLE RefRic (
   id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -202,25 +286,41 @@ CREATE TABLE RefRic (
     ON UPDATE RESTRICT
 );
 
+CREATE INDEX RefRic_Index01
+  ON RefRic
+  (id);
+
 CREATE TABLE RefRicToChain (
   id        integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Ric_id    integer NOT NULL,
   Chain_id  integer NOT NULL,
   /* Foreign keys */
-  FOREIGN KEY (Chain_id)
-    REFERENCES RefChain(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
   FOREIGN KEY (Ric_id)
     REFERENCES RefRic(id)
     ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (Chain_id)
+    REFERENCES RefChain(id)
+    ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
+
+CREATE INDEX RefRicToChain_Index01
+  ON RefRicToChain
+  (id);
 
 CREATE TABLE RefSeniority (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50) NOT NULL UNIQUE
 );
+
+CREATE INDEX RefSeniority_Index01
+  ON RefSeniority
+  (id);
+
+CREATE INDEX RefSeniority_Index02
+  ON RefSeniority
+  (Name);
 
 CREATE TABLE RefSubIndustry (
   id           integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -233,6 +333,14 @@ CREATE TABLE RefSubIndustry (
     ON UPDATE RESTRICT
 );
 
+CREATE INDEX RefSubIndustry_Index01
+  ON RefSubIndustry
+  (id);
+
+CREATE INDEX RefSubIndustry_Index02
+  ON RefSubIndustry
+  (Name);
+
 CREATE TABLE RefTicker (
   id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name             varchar(50) NOT NULL UNIQUE,
@@ -244,101 +352,11 @@ CREATE TABLE RefTicker (
     ON UPDATE RESTRICT
 );
 
-/* Data for table InstrumentBond */
-
-
-
-
-/* Data for table InstrumentCustomBond */
-
-
-
-
-/* Data for table RawBondInfo */
-
-
-
-
-/* Data for table RawFrnData */
-
-
-
-
-/* Data for table RawRating */
-
-
-
-
-/* Data for table RefBorrower */
-
-
-
-
-/* Data for table RefChain */
-
-
-
-
-/* Data for table RefCountry */
-
-
-
-
-/* Data for table RefCurrency */
-
-
-
-
-/* Data for table RefIndustry */
-
-
-
-
-/* Data for table RefInstrument */
-
-
-
-
-/* Data for table RefIsin */
-
-
-
-
-/* Data for table RefIssuer */
-
-
-
-
-/* Data for table RefRating */
-
-
-
-
-/* Data for table RefRatingAgency */
-
-
-
-
-/* Data for table RefRic */
-
-
-
-
-/* Data for table RefRicToChain */
-
-
-
-
-/* Data for table RefSeniority */
-
-
-
-
-/* Data for table RefSubIndustry */
-
-
-
-
-/* Data for table RefTicker */
-
+CREATE INDEX RefTicker_Index01
+  ON RefTicker
+  (id);
+
+CREATE INDEX RefTicker_Index02
+  ON RefTicker
+  (Name);
 

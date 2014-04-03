@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap.Core", "YieldMap.Core\YieldMap.Core.fsproj", "{F19B076C-C552-46FA-88B0-3F33A96DFADC}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap.Tests", "YieldMap.Tests\YieldMap.Tests.fsproj", "{EECFCDFE-2AAA-433C-A8BA-AC44027D4BF8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{21174B80-86BF-491F-9BF5-057D46A39D4C} = {21174B80-86BF-491F-9BF5-057D46A39D4C}
+	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "YieldMap.Loader", "YieldMap.Loader\YieldMap.Loader.fsproj", "{EF7A6217-B508-43B1-8012-E4A041E50108}"
 EndProject
