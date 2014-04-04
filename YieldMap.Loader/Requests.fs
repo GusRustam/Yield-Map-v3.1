@@ -87,5 +87,11 @@ module Requests =
                 | EEikonStatus.Connected -> Connected
                 | _ -> Failed <| exn (e.ToString())
 
-    type Meta<'T> = Answer of 'T list | Failed of exn
+    type Meta<'T> = 
+        | Answer of 'T list 
+        | Failed of exn
+        with 
+            static member isAnswer (m : Meta<'T>) = match m with Answer _ -> true | _ -> false
+            static member getAnswer (Answer m) = m
+
     type Chain = Answer of string array | Failed of exn

@@ -323,7 +323,7 @@
         open YieldMap.Loader.SdkFactory
         
         open YieldMap.Tools.Aux
-        open YieldMap.Tools.Aux.Workflows.Attempt
+        open YieldMap.Tools.Aux.Workflows.AsyncAttempt
         open YieldMap.Tools.Logging
         
         open YieldMap.Database
@@ -379,18 +379,30 @@
                 return [||]
         }
 
+//        let atteptMeta<'a when 'a : (new : unit -> 'a)> (l:ChainMetaLoader) rics timeout = 
+//            let r = async {
+//                let! meta = l.LoadMetadata<'a> rics timeout
+//                match meta with
+//                | Meta.Answer metaData -> return Some metaData
+//                | Meta.Failed e -> 
+//                    logger.ErrorEx "Failed to get metadata" e
+//                    return None
+//            }
+//            
+//            AsAttempt.optionOrExcn (Async.RunSynchronously << Async.WithTimeoutEx timeout) r
+
         let atteptMeta<'a when 'a : (new : unit -> 'a)> (l:ChainMetaLoader) rics timeout = 
-            let r = async {
-                let! meta = l.LoadMetadata<'a> rics timeout
-                match meta with
-                | Meta.Answer metaData -> return Some metaData
-                | Meta.Failed e -> 
-                    logger.ErrorEx "Failed to get metadata" e
-                    return None
+            imperative {
+                let! meta = Parallel <| l.LoadMetadata<'a> rics timeout
+                condition (Meta.isAnswer meta)
+                return Meta<'a>.getAnswer meta
+            } |> AsyncAttempt.runAttempt
+            
+        let test1 (q:EikonFactory) (f:ChainMetaLoader) chainName = 
+            imperative {
+                return 1
             }
             
-            AsAttempt.optionOrExcn (Async.RunSynchronously << Async.WithTimeoutEx timeout) r
-
         let test (q:EikonFactory) (f:ChainMetaLoader) chainName = 
 
             async {

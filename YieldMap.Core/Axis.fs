@@ -246,17 +246,16 @@
     module Program = 
         open EikonDesktopDataAPI
         open Analytics
-        open YieldMap.Loader.Loading
         open YieldMap.Loader.Calendar
+        open YieldMap.Loader.SdkFactory
+        open YieldMap.Loader.MetaChains
+        open YieldMap.Loader.LiveQuotes
 
         type Main = {
-            Loader : SdkFactory.Loader // todo split fundamental data and chains and realtime data
-                                // realtime can come from API while fundamentals should be separate by DB layer
-                                // this means that chain/fund come via DB
+            MetaChains : ChainMetaLoader 
+            Quotes : Subscription
+            Factory : EikonFactory
             DateTime : Calendar
-            QuoteQueue : Quotes IObservable // http://tomasp.net/blog/async-sequences.aspx/ TODO-DODO
-
-            // todo storage provider
         }
 
     module Ansamble = 
@@ -313,8 +312,8 @@
                 member x.Get (key, res) = None // todo!
 
         type StraightBondCalculator (m:Program.Main) = 
-            let straight = Bonds.StraightCalc(m.Loader) 
-            let frn = Bonds.FrnCalc(m.Loader) 
+            let straight = Bonds.StraightCalc(m.Factory) 
+            let frn = Bonds.FrnCalc(m.Factory) 
 
             let calcStraight quoteName price today settle (meta:Instruments.BondMetadata) = attempt {
                 let yr = {
@@ -327,9 +326,9 @@
                     Bonds.StraightRequest.PRC = Some price
                     Bonds.StraightRequest.YLD = None
                 }
-                let! yld = straight.Yield(yr) |> asAttempt
+                let! yld = straight.Yield(yr) |> AsAttempt.value
                 let dr = {yr with YLD = Some yld.Yield}
-                let! dur = straight.Durations(dr) |> asAttempt
+                let! dur = straight.Durations(dr) |> AsAttempt.value
                 return {
                     Price = price
                     Yield = yld
@@ -349,9 +348,9 @@
                     Bonds.FrnRequest.CI = currentIndex
                     Bonds.FrnRequest.PI = currentIndex
                 }
-                let! yld = frn.Yield(yr) |> asAttempt
+                let! yld = frn.Yield(yr) |> AsAttempt.value
                 let dr = {yr with YLD = Some yld.Yield}
-                let! dur = frn.Durations(dr) |> asAttempt
+                let! dur = frn.Durations(dr) |> AsAttempt.value
                 return {
                     Price = price
                     Yield = yld

@@ -56,8 +56,6 @@
     open YieldMap.Axis.Analytics
     open YieldMap.Axis.Ansamble
     
-    open YieldMap.Loader.Loading
-
     open YieldMap.Tools
 
 //    [<EntryPoint>]

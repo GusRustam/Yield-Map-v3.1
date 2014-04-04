@@ -3,133 +3,6 @@ open System.Runtime.InteropServices
 open System.Collections.Generic
 
 [<AutoOpen>]
-module Workflows =
-    module AsyncAttempt = 
-        type AsyncAttempt<'T> = 
-        | Parallel of 'T option Async
-        | Func of (unit -> 'T option)
-        | Bool of bool
-
-        let runAttempt (a : AsyncAttempt<'T>) =
-            match a with
-            | Parallel call -> try call |> Async.RunSynchronously with e -> None
-            | Func call -> try call() with e -> None
-            | Bool b -> if b then Some Unchecked.defaultof<'T> else None
-
-        let fail = Func (fun () -> None) : AsyncAttempt<'T>
-        let succeed x = Func (fun () -> Some(x)) : AsyncAttempt<'T>
-        let bind p rest = match runAttempt p with None -> fail | Some r -> (rest r)
-        let delay f = Func (fun () -> runAttempt (f())) : AsyncAttempt<'T>
-        let combine p1 p2 = (fun () -> match runAttempt p1 with None -> runAttempt p2 | res -> res)
-        let condition p guard = Func (fun () -> match runAttempt p with Some x when guard x -> Some x | _ -> None)
-
-        let asBool v = Bool v
-        let asFunc v = Func (fun () -> v)
-        let asPar v = Parallel v
-
-        type AsyncAttemptBuilder() = 
-            member b.Bind (p, rest) = bind p rest
-            member b.Delay f = delay f
-            member b.Return x = succeed x
-            member b.ReturnFrom (x : AsyncAttempt<'T>)  = x
-            member b.Combine (p1 : AsyncAttempt<'T>, p2 : AsyncAttempt<'T>) = Func (combine p1 p2)
-            member b.Zero () = fail
-            member x.For (inp : _ seq, f) =
-                let rec loop(en : _ IEnumerator) = 
-                    if not <| en.MoveNext() then x.Zero() else x.Combine(f(en.Current), x.Delay(fun () -> loop(en)))
-                loop <| inp.GetEnumerator()
-            member x.Yield () = ()
-
-            [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
-            member x.Condition (p, [<ProjectionParameter>] guard) = condition p guard
-
-        let imperative = AsyncAttemptBuilder()
-
-        let someAsync = async { return Some 1 }
-        let connection = async { return true }
-        let chk x = x > 4
-        let test x = if x > 5 then Some x else None
-
-        let res = imperative {
-            let a = 2 + 2
-            condition (a < 5) 
-            let! b = someAsync |> asPar
-            let! c = test (a + b) |> asFunc
-            return 3
-        }
-
-    module Attempt = 
-        type Attempt<'T> = (unit -> 'T option)
-
-        let runAttempt (a : Attempt<'T>) = a() 
-        let fail = (fun () -> None) : Attempt<'T>
-        let succeed x = (fun () -> Some(x)) : Attempt<'T>
-        let bind p rest = match runAttempt p with None -> fail | Some r -> (rest r)
-        let delay f = (fun () -> runAttempt (f())) : Attempt<'T>
-        let combine p1 p2 = (fun () -> match p1() with None -> p2() | res -> res)
-
-        type AttemptBuilder() = 
-            member b.Bind(p, rest) = bind p rest
-            member b.Delay(f) = delay f
-            member b.Return(x) = succeed x
-            member b.ReturnFrom(x : Attempt<'T>)  = x
-            member b.Combine(p1 : Attempt<'T>, p2 : Attempt<'T>) = combine p1 p2
-            member b.Zero() = fail
-
-            [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
-            member x.Condition (p, [<ProjectionParameter>] guard) = (fun () ->
-                match p() with
-                | Some x when guard x -> Some x
-                | _ -> None)
-      
-        let attempt = AttemptBuilder()
-
-//    [<RequireQualifiedAccess>]
-//    module AsAttempt = 
-//        open Attempt
-//
-//        let bool (a : bool) = fun () -> if a then Some () else None
-//        let value (a : 'T option) = fun () -> a
-//        let excn f x = try Some (f x) with _ -> None
-//        let optionOrExcn f x = try f x with _ -> None
-
-
-[<RequireQualifiedAccess>]
-module Solver = 
-    open Workflows
-    open Workflows.Attempt
-    open System
-
-    let private solve (f:float->float) a b maxlev thX thY = 
-        let rec doSolve a b level = attempt {
-            if level > maxlev then return! fail
-            let fa, fb = f a, f b
-            if Math.Sign(fa) = Math.Sign(fb) then return! fail
-            let start, finish = if fa < 0.0 then a, b else b, a
-            let m = (a+b)/2.0
-            let fm = f m
-
-            if Math.Abs(fm) < thY || Math.Abs(finish-start) < thX then
-                return m                
-            else 
-                if fm < 0.0 then
-                    return! doSolve m finish (level+1)
-                else 
-                    return! doSolve start m (level+1)
-        }
-        doSolve a b 0 |> runAttempt
-
-    let bisect (f:float->float) (a:float) (b:float) = solve f a b 100 1e-4 1e-4
-
-[<RequireQualifiedAccess>]
-module ExcelDates = 
-    open System
-
-    let toDateTime serialDate = 
-        let serialDate = if serialDate > 59 then serialDate - 1 else serialDate
-        DateTime(1899, 12, 31).AddDays(float serialDate)
-
-[<AutoOpen>]
 module Extensions =
     open System
     open System.Collections.Generic
@@ -235,6 +108,123 @@ module Extensions =
             match timeout with
             | Some(time) -> async { return Async.RunSynchronously (operation, time) }
             | _ -> operation
+
+[<AutoOpen>]
+module Workflows =
+    module AsyncAttempt = 
+        type AsyncAttempt<'T> = 
+        | Parallel of 'T Async
+        | Func of (unit -> 'T option)
+        | Bool of bool
+
+        let runAttempt (a : AsyncAttempt<'T>) timeout =
+            match a with
+            | Parallel call -> try Some (call |> Async.WithTimeoutEx timeout |> Async.RunSynchronously) with e -> None
+            | Func call -> try call() with e -> None
+            | Bool b -> if b then Some Unchecked.defaultof<'T> else None
+
+        let fail = Func (fun () -> None) : AsyncAttempt<'T>
+        let succeed x = Func (fun () -> Some(x)) : AsyncAttempt<'T>
+        let bind p rest timeout = match runAttempt p timeout with None -> fail | Some r -> (rest r)
+        let delay f timeout = Func (fun () -> runAttempt (f()) timeout)  : AsyncAttempt<'T>
+        let combine p1 p2 timeout = (fun () -> match runAttempt p1 timeout with None -> runAttempt p2 timeout | res -> res)
+        let condition p guard timeout = Func (fun () -> match runAttempt p timeout with Some x when guard x -> Some x | _ -> None)
+
+        type AsyncAttemptBuilder(timeout) = 
+            member b.Bind (p, rest) = bind p rest timeout
+            member b.Delay f = delay f timeout
+            member b.Return x = succeed x 
+            member b.ReturnFrom (x : AsyncAttempt<'T>)  = x
+            member b.Combine (p1 : AsyncAttempt<'T>, p2 : AsyncAttempt<'T>) = Func (combine p1 p2 timeout)
+            member b.Zero () = fail
+
+            [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
+            member x.Condition (p, [<ProjectionParameter>] guard) = condition p guard timeout
+
+        let imperativeTimeout timeout = AsyncAttemptBuilder timeout
+        let imperative = imperativeTimeout None
+
+//        let someAsync = async { return Some 1 }
+//        let connection = async { return true }
+//        let chk x = x > 4
+//        let test x = if x > 5 then Some x else None
+//
+//        let res = imperative {
+//            let a = 2 + 2
+//            condition (a < 5) 
+//            let! b = Parallel someAsync 
+//            condition (Option.isSome <| test (a + b))
+//            return 3
+//        }
+
+    module Attempt = 
+        type Attempt<'T> = (unit -> 'T option)
+
+        let runAttempt (a : Attempt<'T>) = a() 
+        let fail = (fun () -> None) : Attempt<'T>
+        let succeed x = (fun () -> Some(x)) : Attempt<'T>
+        let bind p rest = match runAttempt p with None -> fail | Some r -> (rest r)
+        let delay f = (fun () -> runAttempt (f())) : Attempt<'T>
+        let combine p1 p2 = (fun () -> match p1() with None -> p2() | res -> res)
+
+        type AttemptBuilder() = 
+            member b.Bind(p, rest) = bind p rest
+            member b.Delay(f) = delay f
+            member b.Return(x) = succeed x
+            member b.ReturnFrom(x : Attempt<'T>)  = x
+            member b.Combine(p1 : Attempt<'T>, p2 : Attempt<'T>) = combine p1 p2
+            member b.Zero() = fail
+
+            [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
+            member x.Condition (p, [<ProjectionParameter>] guard) = (fun () ->
+                match p() with
+                | Some x when guard x -> Some x
+                | _ -> None)
+      
+        let attempt = AttemptBuilder()
+
+        [<RequireQualifiedAccess>]
+        module AsAttempt = 
+            let bool (a : bool) = fun () -> if a then Some () else None
+            let value (a : 'T option) = fun () -> a
+            let excn f x = try Some (f x) with _ -> None
+            let optionOrExcn f x = try f x with _ -> None
+
+
+[<RequireQualifiedAccess>]
+module Solver = 
+    open Workflows
+    open Workflows.Attempt
+    open System
+
+    let private solve (f:float->float) a b maxlev thX thY = 
+        let rec doSolve a b level = attempt {
+            if level > maxlev then return! fail
+            let fa, fb = f a, f b
+            if Math.Sign(fa) = Math.Sign(fb) then return! fail
+            let start, finish = if fa < 0.0 then a, b else b, a
+            let m = (a+b)/2.0
+            let fm = f m
+
+            if Math.Abs(fm) < thY || Math.Abs(finish-start) < thX then
+                return m                
+            else 
+                if fm < 0.0 then
+                    return! doSolve m finish (level+1)
+                else 
+                    return! doSolve start m (level+1)
+        }
+        doSolve a b 0 |> runAttempt
+
+    let bisect (f:float->float) (a:float) (b:float) = solve f a b 100 1e-4 1e-4
+
+[<RequireQualifiedAccess>]
+module ExcelDates = 
+    open System
+
+    let toDateTime serialDate = 
+        let serialDate = if serialDate > 59 then serialDate - 1 else serialDate
+        DateTime(1899, 12, 31).AddDays(float serialDate)
 
 [<AutoOpen>]
 module Disposer = 
