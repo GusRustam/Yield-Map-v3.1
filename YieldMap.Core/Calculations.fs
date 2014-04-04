@@ -12,7 +12,7 @@ open System.IO
 module Calculations = 
     open AdfinXAnalyticsFunctions
 
-    open YieldMap.Loader.Loading
+    open YieldMap.Loader.SdkFactory
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Aux.Workflows
     open YieldMap.Tools.Aux.Workflows.Attempt
@@ -46,8 +46,8 @@ module Calculations =
             PRC : decimal option  // price
             YLD : decimal option  // yield
         } with 
-            member r.Yield = r.YLD |> asAttempt
-            member r.Price = r.PRC |> asAttempt
+            member r.Yield = r.YLD |> AsAttempt.value
+            member r.Price = r.PRC |> AsAttempt.value
 
         type FrnRequest = {
             FS : string           // bond structure
@@ -62,8 +62,8 @@ module Calculations =
             PRC : decimal option  // price
             YLD : decimal option  // yield
         } with 
-            member r.Yield = r.YLD |> asAttempt
-            member r.Price = r.PRC |> asAttempt
+            member r.Yield = r.YLD |> AsAttempt.value
+            member r.Price = r.PRC |> AsAttempt.value
 
         type YieldInfo = {
             Yield : decimal
@@ -89,7 +89,7 @@ module Calculations =
         let getFloat str = getValue str Double.TryParse
         let getDecimal str = getValue str Decimal.TryParse
         let getInt str =  getValue str Int32.TryParse
-        let getYtw str = asAttempt (YieldToWhat.tryParse str)
+        let getYtw str = AsAttempt.value (YieldToWhat.tryParse str)
         let getNotNull v = attempt {
             if v = null then return! fail
             return v
@@ -102,7 +102,7 @@ module Calculations =
             abstract member ToXY : unit -> unit
 
         /// Handles straight, putable/callable (european) and perpetual bonds
-        type StraightCalc (factory : SdkFactory.Loader) = 
+        type StraightCalc (factory : EikonFactory) = 
             let bondModule = factory.CreateAdxBondModule()
 
 //            abstract member PointSpread : SpreadRequest * Curve -> decimal option
@@ -159,7 +159,7 @@ module Calculations =
                         let avgLife = derivatives.GetValue(rowNum, 6).ToString() |> getDecimal |> runAttempt // !!
                         let! cvxty = derivatives.GetValue(rowNum, 7).ToString() |> getDecimal
 
-                        let price delta = x.Price {dr with YLD = Some (y + delta)} |> asAttempt
+                        let price delta = x.Price {dr with YLD = Some (y + delta)} |> AsAttempt.value
                         
                         let delta = 1e-4M
                         let! pMinus = price -delta
@@ -177,7 +177,7 @@ module Calculations =
                     } |> runAttempt
                 with _ -> None
 
-        type FrnCalc(factory : SdkFactory.Loader) = 
+        type FrnCalc(factory :  EikonFactory) = 
             let bondModule = factory.CreateAdxBondModule()
             member x.Settle (d, s) = bondModule.BdSettle(d, s)
             member x.Yield fr = 
@@ -239,7 +239,7 @@ module Calculations =
                         let avgLife = derivatives.GetValue(rowNum, 7).ToString() |> getDecimal |> runAttempt
                         let! cvxty = derivatives.GetValue(rowNum, 8).ToString() |> getDecimal
 
-                        let price delta = x.Price {dr with YLD = Some (y + delta)} |> asAttempt
+                        let price delta = x.Price {dr with YLD = Some (y + delta)} |> AsAttempt.value
                       
                         let delta = 1e-4M
                         let! pMinus = price -delta

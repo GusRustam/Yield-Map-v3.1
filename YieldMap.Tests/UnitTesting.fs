@@ -321,7 +321,11 @@
         open YieldMap.Loader.MetaTables
         open YieldMap.Loader.MetaChains
         open YieldMap.Loader.SdkFactory
+        
+        open YieldMap.Tools.Aux
+        open YieldMap.Tools.Aux.Workflows.Attempt
         open YieldMap.Tools.Logging
+        
         open YieldMap.Database
 
 
@@ -375,70 +379,84 @@
                 return [||]
         }
 
-        let test (q:EikonFactory) (f:ChainMetaLoader) chainName = async {
-            let! connected = connect q
-            logger.TraceF "After connection"
-            if connected then
-                logger.TraceF "Before chain %s" chainName
-                // todo strange when feed is Q it just hangs, it doesn't report any error...
-                // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
-                let! data = getChain f { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
-                logger.TraceF "After chain"
-                if Array.length data <> 0 then
-                    let success = ref true
-                    logger.TraceF "Chain %A" data
+        let atteptMeta<'a when 'a : (new : unit -> 'a)> (l:ChainMetaLoader) rics timeout = 
+            let r = async {
+                let! meta = l.LoadMetadata<'a> rics timeout
+                match meta with
+                | Meta.Answer metaData -> return Some metaData
+                | Meta.Failed e -> 
+                    logger.ErrorEx "Failed to get metadata" e
+                    return None
+            }
+            
+            AsAttempt.optionOrExcn (Async.RunSynchronously << Async.WithTimeoutEx timeout) r
 
-                    logger.InfoF "Loading BondDescr table"
-                    let! meta = f.LoadMetadata<BondDescr> data None
-                    match meta with
-                    | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
-                    | Meta.Failed e -> 
-                        logger.ErrorF "Failed to load BondDescr: %s" (e.ToString())
-                        success := false
+        let test (q:EikonFactory) (f:ChainMetaLoader) chainName = 
 
-                    logger.InfoF "Loading CouponData table"
-                    let! meta = f.LoadMetadata<CouponData> data None
-                    match meta with
-                    | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
-                    | Meta.Failed e -> 
-                        logger.ErrorF "Failed to load CouponData: %s" (e.ToString())
-                        success := false
-        
-                    logger.InfoF "Loading IssueRatingData table"
-                    let! meta = f.LoadMetadata<IssueRatingData> data None
-                    match meta with
-                    | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
-                    | Meta.Failed e -> 
-                        logger.ErrorF "Failed to load IssueRatingData: %s" (e.ToString())
-                        success := false
-        
-                    logger.InfoF "Loading IssuerRatingData table"
-                    let! meta = f.LoadMetadata<IssuerRatingData> data None
-                    match meta with
-                    | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
-                    | Meta.Failed e -> 
-                        logger.ErrorF "Failed to load IssuerRatingData: %s" (e.ToString())
-                        success := false
+            async {
+                let! connected = connect q
+                logger.TraceF "After connection"
+                if connected then
+                    logger.TraceF "Before chain %s" chainName
+                    // todo strange when feed is Q it just hangs, it doesn't report any error...
+                    // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
+                    let! data = getChain f { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
+                    logger.TraceF "After chain"
+                    if Array.length data <> 0 then
+                        let success = ref true
+                        logger.TraceF "Chain %A" data
 
-                    logger.InfoF "Loading FrnData table"
-                    let! meta = f.LoadMetadata<FrnData> data None
-                    match meta with
-                    | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
-                    | Meta.Failed e -> 
-                        logger.ErrorF "Failed to load FrnData: %s" (e.ToString())
-                        success := false
+                        logger.InfoF "Loading BondDescr table"
+                        let! meta = f.LoadMetadata<BondDescr> data None
+                        match meta with
+                        | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
+                        | Meta.Failed e -> 
+                            logger.ErrorF "Failed to load BondDescr: %s" (e.ToString())
+                            success := false
+
+                        logger.InfoF "Loading CouponData table"
+                        let! meta = f.LoadMetadata<CouponData> data None
+                        match meta with
+                        | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
+                        | Meta.Failed e -> 
+                            logger.ErrorF "Failed to load CouponData: %s" (e.ToString())
+                            success := false
         
-                    logger.InfoF "Loading RicData table"
-                    let! meta = f.LoadMetadata<RicData> data None
-                    match meta with
-                    | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
-                    | Meta.Failed e -> 
-                        logger.ErrorF "Failed to load RicData: %s" (e.ToString())
-                        success := false
+                        logger.InfoF "Loading IssueRatingData table"
+                        let! meta = f.LoadMetadata<IssueRatingData> data None
+                        match meta with
+                        | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
+                        | Meta.Failed e -> 
+                            logger.ErrorF "Failed to load IssueRatingData: %s" (e.ToString())
+                            success := false
         
-                    return !success
-                else return false
-            else 
-                logger.TraceF "Not connected"
-                return false
-        } 
+                        logger.InfoF "Loading IssuerRatingData table"
+                        let! meta = f.LoadMetadata<IssuerRatingData> data None
+                        match meta with
+                        | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
+                        | Meta.Failed e -> 
+                            logger.ErrorF "Failed to load IssuerRatingData: %s" (e.ToString())
+                            success := false
+
+                        logger.InfoF "Loading FrnData table"
+                        let! meta = f.LoadMetadata<FrnData> data None
+                        match meta with
+                        | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
+                        | Meta.Failed e -> 
+                            logger.ErrorF "Failed to load FrnData: %s" (e.ToString())
+                            success := false
+        
+                        logger.InfoF "Loading RicData table"
+                        let! meta = f.LoadMetadata<RicData> data None
+                        match meta with
+                        | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
+                        | Meta.Failed e -> 
+                            logger.ErrorF "Failed to load RicData: %s" (e.ToString())
+                            success := false
+        
+                        return !success
+                    else return false
+                else 
+                    logger.TraceF "Not connected"
+                    return false
+            } 
