@@ -35,6 +35,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
     <Reference Include="System.Runtime.Serialization" />
@@ -67,6 +68,7 @@
     <Compile Include="InstrumentCustomBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="MainEntities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
@@ -144,6 +146,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <DependentUpon>Database.edmx</DependentUpon>
       <LastGenOutput>Database.cs</LastGenOutput>
+    </None>
+    <None Include="main.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

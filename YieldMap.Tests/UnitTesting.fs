@@ -325,6 +325,7 @@
         open YieldMap.Tools.Aux
         open YieldMap.Tools.Aux.Workflows.AsyncAttempt
         open YieldMap.Tools.Logging
+        open YieldMap.Tools.Location
         
         open YieldMap.Database
 
@@ -333,7 +334,9 @@
 
         [<Test>]
         let ``Reading and writing to Db works`` () = 
-            use ctx = new MainEntities()
+            MainEntities.SetVariable("PathToTheDatabase", Location.path)
+            let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
+            use ctx = new MainEntities(cnnStr)
 
             let cnt boo = query { for x in boo do select x; count }
 
@@ -358,117 +361,87 @@
             logger.InfoF "Da count is now %d" poo
             poo |> should equal count
 
-        let connect (q:EikonFactory) = async {
-            logger.TraceF "Connection request sent"
-            let! connectRes = q.Connect()
-            match connectRes with
-            | Connection.Connected -> 
-                logger.TraceF "Connected"
-                return true
-            | Connection.Failed e -> 
-                logger.TraceF "Failed to connect %s" (e.ToString())
-                return false
-        }
 
-        let getChain (q:ChainMetaLoader) request = async {
-            let! chain = q.LoadChain request
-            match chain with
-            | Chain.Answer data -> return data
-            | Chain.Failed e -> 
-                logger.TraceF "Failed to load chain: %s" e.Message
-                return [||]
-        }
-
-//        let atteptMeta<'a when 'a : (new : unit -> 'a)> (l:ChainMetaLoader) rics timeout = 
-//            let r = async {
-//                let! meta = l.LoadMetadata<'a> rics timeout
-//                match meta with
-//                | Meta.Answer metaData -> return Some metaData
-//                | Meta.Failed e -> 
-//                    logger.ErrorEx "Failed to get metadata" e
-//                    return None
-//            }
-//            
-//            AsAttempt.optionOrExcn (Async.RunSynchronously << Async.WithTimeoutEx timeout) r
-
-        let atteptMeta<'a when 'a : (new : unit -> 'a)> (l:ChainMetaLoader) rics timeout = 
-            imperative {
-                let! meta = Parallel <| l.LoadMetadata<'a> rics timeout
-                condition (Meta.isAnswer meta)
-                return Meta<'a>.getAnswer meta
-            } |> AsyncAttempt.runAttempt
-            
-        let test1 (q:EikonFactory) (f:ChainMetaLoader) chainName = 
-            imperative {
-                return 1
-            }
-            
-        let test (q:EikonFactory) (f:ChainMetaLoader) chainName = 
-
-            async {
-                let! connected = connect q
-                logger.TraceF "After connection"
-                if connected then
-                    logger.TraceF "Before chain %s" chainName
-                    // todo strange when feed is Q it just hangs, it doesn't report any error...
-                    // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
-                    let! data = getChain f { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
-                    logger.TraceF "After chain"
-                    if Array.length data <> 0 then
-                        let success = ref true
-                        logger.TraceF "Chain %A" data
-
-                        logger.InfoF "Loading BondDescr table"
-                        let! meta = f.LoadMetadata<BondDescr> data None
-                        match meta with
-                        | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
-                        | Meta.Failed e -> 
-                            logger.ErrorF "Failed to load BondDescr: %s" (e.ToString())
-                            success := false
-
-                        logger.InfoF "Loading CouponData table"
-                        let! meta = f.LoadMetadata<CouponData> data None
-                        match meta with
-                        | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
-                        | Meta.Failed e -> 
-                            logger.ErrorF "Failed to load CouponData: %s" (e.ToString())
-                            success := false
-        
-                        logger.InfoF "Loading IssueRatingData table"
-                        let! meta = f.LoadMetadata<IssueRatingData> data None
-                        match meta with
-                        | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
-                        | Meta.Failed e -> 
-                            logger.ErrorF "Failed to load IssueRatingData: %s" (e.ToString())
-                            success := false
-        
-                        logger.InfoF "Loading IssuerRatingData table"
-                        let! meta = f.LoadMetadata<IssuerRatingData> data None
-                        match meta with
-                        | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
-                        | Meta.Failed e -> 
-                            logger.ErrorF "Failed to load IssuerRatingData: %s" (e.ToString())
-                            success := false
-
-                        logger.InfoF "Loading FrnData table"
-                        let! meta = f.LoadMetadata<FrnData> data None
-                        match meta with
-                        | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
-                        | Meta.Failed e -> 
-                            logger.ErrorF "Failed to load FrnData: %s" (e.ToString())
-                            success := false
-        
-                        logger.InfoF "Loading RicData table"
-                        let! meta = f.LoadMetadata<RicData> data None
-                        match meta with
-                        | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
-                        | Meta.Failed e -> 
-                            logger.ErrorF "Failed to load RicData: %s" (e.ToString())
-                            success := false
-        
-                        return !success
-                    else return false
-                else 
-                    logger.TraceF "Not connected"
+        [<Test>]
+        let ``Load and save data to raw db`` ()   = 
+            let connect (q:EikonFactory) = async {
+                logger.TraceF "Connection request sent"
+                let! connectRes = q.Connect()
+                match connectRes with
+                | Connection.Connected -> return true
+                | Connection.Failed e -> 
+                    logger.TraceF "Failed to connect %s" (e.ToString())
                     return false
-            } 
+            }
+
+            let getChain (q:ChainMetaLoader) request = async {
+                let! chain = q.LoadChain request
+                match chain with
+                | Chain.Answer data -> return data
+                | Chain.Failed e -> 
+                    logger.TraceF "Failed to load chain: %s" e.Message
+                    return [||]
+            }
+
+            let saveBondDescrs (descrs : BondDescr list) = 
+                MainEntities.SetVariable("PathToTheDatabase", Location.path)
+                let attempt = imperative {  
+                    use ctx = new MainEntities("TheMainEntities")
+
+                    let rawBond = RawBond( )
+
+                    return true
+                }
+                AsyncAttempt.runAttempt attempt None
+
+            let dt = DateTime(2014,3,4)
+            let f = MockFactory() :> EikonFactory
+            let l = MockChainMeta(dt) :> ChainMetaLoader
+
+            logger.TraceF "Before imperative"
+            let request chainName = imperative {
+                logger.TraceF "Before connection"
+                let! connected = Parallel (connect f)
+                condition (connected)
+                logger.TraceF "After connection"
+
+                let! rics = Parallel (getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None })
+                condition (Array.length rics <> 0)
+                logger.TraceF "After chain %s" chainName
+                
+                logger.InfoF "Loading BondDescr table"
+                let! meta = Parallel (l.LoadMetadata<BondDescr> rics None)
+                condition (Meta.isAnswer meta)
+                let descrs = Meta<BondDescr>.getAnswer meta
+                saveBondDescrs descrs
+
+                logger.InfoF "Loading CouponData table"
+                let! meta = Parallel (l.LoadMetadata<CouponData> rics None)
+                condition (Meta.isAnswer meta)
+                logger.TraceF "CouponData is %A" (Meta<CouponData>.getAnswer meta)
+                
+                logger.InfoF "Loading IssueRatingData table"
+                let! meta = Parallel (l.LoadMetadata<IssueRatingData> rics None)
+                condition (Meta.isAnswer meta)
+                logger.TraceF "IssueRatingData is %A" (Meta<IssueRatingData>.getAnswer meta)
+                       
+                logger.InfoF "Loading IssuerRatingData table"
+                let! meta = Parallel (l.LoadMetadata<IssuerRatingData> rics None)
+                condition (Meta.isAnswer meta)
+                logger.TraceF "IssuerRatingData is %A" (Meta<IssuerRatingData>.getAnswer meta)
+                
+                logger.InfoF "Loading FrnData table"
+                let! meta = Parallel (l.LoadMetadata<FrnData> rics None)
+                condition (Meta.isAnswer meta)
+                logger.TraceF "FrnData is %A" (Meta<FrnData>.getAnswer meta)
+                
+                logger.InfoF "Loading RicData table"
+                let! meta = Parallel (l.LoadMetadata<RicData> rics None)
+                condition (Meta.isAnswer meta)
+                logger.TraceF "RicData is %A" (Meta<RicData>.getAnswer meta)  
+                    
+                return true          
+            }
+
+            let res = AsyncAttempt.runAttempt (request "0#RUAER=MM") None
+            res |> should equal (Some true)

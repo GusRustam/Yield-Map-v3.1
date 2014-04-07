@@ -111,6 +111,11 @@ module Extensions =
 
 [<AutoOpen>]
 module Workflows =
+    open System
+
+//    module AttemptWithException =
+//        type Attempt<'T> = Case of (unit -> exn * 'T option)
+//
     module AsyncAttempt = 
         type AsyncAttempt<'T> = 
         | Parallel of 'T Async
@@ -129,6 +134,7 @@ module Workflows =
         let delay f timeout = Func (fun () -> runAttempt (f()) timeout)  : AsyncAttempt<'T>
         let combine p1 p2 timeout = (fun () -> match runAttempt p1 timeout with None -> runAttempt p2 timeout | res -> res)
         let condition p guard timeout = Func (fun () -> match runAttempt p timeout with Some x when guard x -> Some x | _ -> None)
+        let disposable (value : IDisposable) func timeout =  Func (fun () -> try runAttempt (func value) timeout finally value.Dispose())
 
         type AsyncAttemptBuilder(timeout) = 
             member b.Bind (p, rest) = bind p rest timeout
@@ -137,6 +143,7 @@ module Workflows =
             member b.ReturnFrom (x : AsyncAttempt<'T>)  = x
             member b.Combine (p1 : AsyncAttempt<'T>, p2 : AsyncAttempt<'T>) = Func (combine p1 p2 timeout)
             member b.Zero () = fail
+            member b.Using (x, f) = disposable x f timeout
 
             [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
             member x.Condition (p, [<ProjectionParameter>] guard) = condition p guard timeout
