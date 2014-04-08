@@ -19,8 +19,8 @@ module MetaTables =
         [<Field(3, "EJV.C.Description")>] 
         member val Description = String.Empty with get, set
 
-        [<Field(4, "EJV.C.OriginalAmountIssued", typeof<SomeFloatConverter>)>] 
-        member val OriginalAmountIssued : float Nullable = Nullable() with get, set
+        [<Field(4, "EJV.C.OriginalAmountIssued", typeof<SomeInt64Converter>)>] 
+        member val IssueSize : int64 Nullable = Nullable() with get, set
 
         [<Field(5, "EJV.C.IssuerName")>] 
         member val IssuerName = String.Empty with get, set
@@ -32,10 +32,10 @@ module MetaTables =
         member val Coupon : float Nullable = Nullable() with get, set
 
         [<Field(8, "EJV.C.IssueDate", typeof<DateConverter>)>] 
-        member val IssueDate : DateTime Nullable = Nullable() with get, set
+        member val Issue : DateTime Nullable = Nullable() with get, set
 
         [<Field(9, "EJV.C.MaturityDate", typeof<DateConverter>)>] 
-        member val MaturityDate : DateTime Nullable = Nullable() with get, set
+        member val Maturity : DateTime Nullable = Nullable() with get, set
 
         [<Field(10, "EJV.C.Currency")>] 
         member val Currency = String.Empty with get, set
@@ -77,7 +77,7 @@ module MetaTables =
         member val ParentTicker = String.Empty with get, set
 
         [<Field(23, "EJV.C.SeniorityTypeDescription")>]
-        member val SeniorityType = String.Empty with get, set
+        member val Seniority = String.Empty with get, set
 
         [<Field(24, "EJV.C.SPIndustryDescription")>]
         member val Industry = String.Empty with get, set

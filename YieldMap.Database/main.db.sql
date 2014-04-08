@@ -26,7 +26,7 @@ CREATE TABLE InstrumentBond (
   id_Seniority    integer,
   /* Foreign keys */
   FOREIGN KEY (id_Seniority)
-    REFERENCES RefSenioarity(id)
+    REFERENCES RefSeniority(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Issuer)
@@ -112,7 +112,8 @@ CREATE TABLE RawBondInfo (
   Seniority        varchar(50),
   Industry         varchar(50),
   SubIndustry      varchar(50),
-  Instrument       varchar(50)
+  Instrument       varchar(50),
+  Ric              text
 );
 
 CREATE INDEX RawBondInfo_Index01

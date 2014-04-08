@@ -364,6 +364,9 @@
 
         [<Test>]
         let ``Load and save data to raw db`` ()   = 
+            MainEntities.SetVariable("PathToTheDatabase", Location.path)
+            let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
+          
             let connect (q:EikonFactory) = async {
                 logger.TraceF "Connection request sent"
                 let! connectRes = q.Connect()
@@ -384,15 +387,53 @@
             }
 
             let saveBondDescrs (descrs : BondDescr list) = 
-                MainEntities.SetVariable("PathToTheDatabase", Location.path)
-                let attempt = imperative {  
-                    use ctx = new MainEntities("TheMainEntities")
+                imperative {  
+                    use ctx = new MainEntities(cnnStr)
 
-                    let rawBond = RawBond( )
-
-                    return true
+                    descrs |> List.iter (fun item -> 
+                        // todo in case it takes much time, this might be somehow optimized
+                        // todo I can for example use Database "raw" classes as requests...
+                        // but then they will have to reference Loader.
+                        // hmmmmmm.... well, it is possible
+                        // but maybe i will just delete those "Raw" tables ))
+                        let rawBond =
+                            new RawBond ( 
+                                BondStructure = item.BondStructure,
+                                RateStructure = item.RateStructure,
+                                IssueSize = item.IssueSize,
+                                IssuerName = item.IssuerName,
+                                BorrowerName = item.BorrowerName,
+                                Coupon = item.Coupon,
+                                Issue = item.Issue,
+                                Maturity = item.Maturity,
+                                Currency = item.Currency,
+                                ShortName = item.ShortName,
+                                IsCallable = item.IsCallable,
+                                IsPutable = item.IsPutable,
+                                IsFloater = item.IsFloater,
+                                IsConvertible = item.IsConvertible,
+                                IsStraight = item.IsStraight,
+                                Ticker = item.Ticker,
+                                Series = item.Series,
+                                BorrowerCountry = item.BorrowerCountry,
+                                IssuerCountry = item.IssuerCountry,
+                                Isin = item.Isin,
+                                ParentTicker = item.ParentTicker,
+                                Seniority = item.Seniority,
+                                Industry = item.Industry,
+                                SubIndustry = item.SubIndustry,
+                                Instrument = item.Instrument,
+                                Ric = item.Ric                                
+                            )
+                        ctx.RawBonds.Add rawBond |> ignore
+                    )
+                    return ctx.SaveChanges () 
                 }
-                AsyncAttempt.runAttempt attempt None
+
+            let saveCoupons coupons = 
+                imperative {
+                    return 1
+                }
 
             let dt = DateTime(2014,3,4)
             let f = MockFactory() :> EikonFactory
@@ -413,12 +454,15 @@
                 let! meta = Parallel (l.LoadMetadata<BondDescr> rics None)
                 condition (Meta.isAnswer meta)
                 let descrs = Meta<BondDescr>.getAnswer meta
-                saveBondDescrs descrs
+                let! res = saveBondDescrs descrs
+                res |> should equal (List.length descrs) // ezerisink eddid
 
                 logger.InfoF "Loading CouponData table"
                 let! meta = Parallel (l.LoadMetadata<CouponData> rics None)
                 condition (Meta.isAnswer meta)
-                logger.TraceF "CouponData is %A" (Meta<CouponData>.getAnswer meta)
+                let coupons = Meta<BondDescr>.getAnswer meta
+                logger.TraceF "CouponData is %A" coupons
+                let! res = saveCoupons coupons
                 
                 logger.InfoF "Loading IssueRatingData table"
                 let! meta = Parallel (l.LoadMetadata<IssueRatingData> rics None)

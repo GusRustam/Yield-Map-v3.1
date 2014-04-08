@@ -25,7 +25,7 @@ namespace YieldMap.Database
             throw new UnintentionalCodeFirstException();
         }
     
-        public DbSet<RawBond> RawBonds1 { get; set; }
+        public DbSet<RawBond> RawBonds { get; set; }
         public DbSet<RawFrnData> RawFrnData { get; set; }
         public DbSet<RawRating> RawRatings { get; set; }
         public DbSet<RefBorrower> RefBorrowers { get; set; }

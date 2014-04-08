@@ -167,11 +167,11 @@
           <Property Name="Maturity" Type="datetime" />
           <Property Name="Currency" Type="varchar" MaxLength="50" />
           <Property Name="ShortName" Type="varchar" MaxLength="50" />
-          <Property Name="IsCallable" Type="bit" />
-          <Property Name="IsPutable" Type="bit" />
-          <Property Name="IsFloater" Type="bit" />
-          <Property Name="IsConvertible" Type="bit" />
-          <Property Name="IsStraight" Type="bit" />
+          <Property Name="IsCallable" Type="bit" Nullable="false" />
+          <Property Name="IsPutable" Type="bit" Nullable="false" />
+          <Property Name="IsFloater" Type="bit" Nullable="false" />
+          <Property Name="IsConvertible" Type="bit" Nullable="false" />
+          <Property Name="IsStraight" Type="bit" Nullable="false" />
           <Property Name="Ticker" Type="varchar" MaxLength="50" />
           <Property Name="Series" Type="varchar" MaxLength="50" />
           <Property Name="BorrowerCountry" Type="varchar" MaxLength="50" />
@@ -182,6 +182,7 @@
           <Property Name="Industry" Type="varchar" MaxLength="50" />
           <Property Name="SubIndustry" Type="varchar" MaxLength="50" />
           <Property Name="Instrument" Type="varchar" MaxLength="50" />
+          <Property Name="Ric" Type="nvarchar" />
         </EntityType>
         <EntityType Name="RawFrnData">
           <Key>
@@ -595,7 +596,7 @@
     <edmx:ConceptualModels>
       <Schema Namespace="MainModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityContainer Name="MainEntities" p1:LazyLoadingEnabled="true">
-          <EntitySet Name="RawBonds1" EntityType="MainModel.RawBond" />
+          <EntitySet Name="RawBonds" EntityType="MainModel.RawBond" />
           <EntitySet Name="RawFrnData" EntityType="MainModel.RawFrnData" />
           <EntitySet Name="RawRatings" EntityType="MainModel.RawRating" />
           <EntitySet Name="RefBorrowers" EntityType="MainModel.RefBorrower" />
@@ -697,11 +698,11 @@
             <End Role="RefRatingToBond" EntitySet="RefRatingToBonds" />
           </AssociationSet>
           <AssociationSet Name="FK_RawFrnData_0_0" Association="MainModel.FK_RawFrnData_0_0">
-            <End Role="RawBondInfo" EntitySet="RawBonds1" />
+            <End Role="RawBondInfo" EntitySet="RawBonds" />
             <End Role="RawFrnData" EntitySet="RawFrnData" />
           </AssociationSet>
           <AssociationSet Name="FK_RawRating_0_0" Association="MainModel.FK_RawRating_0_0">
-            <End Role="RawBondInfo" EntitySet="RawBonds1" />
+            <End Role="RawBondInfo" EntitySet="RawBonds" />
             <End Role="RawRating" EntitySet="RawRatings" />
           </AssociationSet>
         </EntityContainer>
@@ -720,11 +721,11 @@
           <Property Name="Maturity" Type="DateTime" />
           <Property Name="Currency" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="ShortName" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
-          <Property Name="IsCallable" Type="Boolean" />
-          <Property Name="IsPutable" Type="Boolean" />
-          <Property Name="IsFloater" Type="Boolean" />
-          <Property Name="IsConvertible" Type="Boolean" />
-          <Property Name="IsStraight" Type="Boolean" />
+          <Property Name="IsCallable" Type="Boolean" Nullable="false" />
+          <Property Name="IsPutable" Type="Boolean" Nullable="false" />
+          <Property Name="IsFloater" Type="Boolean" Nullable="false" />
+          <Property Name="IsConvertible" Type="Boolean" Nullable="false" />
+          <Property Name="IsStraight" Type="Boolean" Nullable="false" />
           <Property Name="Ticker" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="Series" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="BorrowerCountry" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
@@ -737,6 +738,7 @@
           <Property Name="Instrument" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <NavigationProperty Name="RawFrnDatas" Relationship="MainModel.FK_RawFrnData_0_0" FromRole="RawBondInfo" ToRole="RawFrnData" />
           <NavigationProperty Name="RawRatings" Relationship="MainModel.FK_RawRating_0_0" FromRole="RawBondInfo" ToRole="RawRating" />
+          <Property Type="String" Name="Ric" MaxLength="2147483647" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="RawFrnData">
           <Key>
@@ -1229,9 +1231,10 @@
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
         <EntityContainerMapping StorageEntityContainer="mainModelStoreContainer" CdmEntityContainer="MainEntities">
-          <EntitySetMapping Name="RawBonds1">
+          <EntitySetMapping Name="RawBonds">
             <EntityTypeMapping TypeName="MainModel.RawBond">
               <MappingFragment StoreEntitySet="RawBondInfo">
+                <ScalarProperty Name="Ric" ColumnName="Ric" />
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
                 <ScalarProperty Name="RateStructure" ColumnName="RateStructure" />

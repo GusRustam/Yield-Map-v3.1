@@ -31,11 +31,11 @@ namespace YieldMap.Database
         public Nullable<System.DateTime> Maturity { get; set; }
         public string Currency { get; set; }
         public string ShortName { get; set; }
-        public Nullable<bool> IsCallable { get; set; }
-        public Nullable<bool> IsPutable { get; set; }
-        public Nullable<bool> IsFloater { get; set; }
-        public Nullable<bool> IsConvertible { get; set; }
-        public Nullable<bool> IsStraight { get; set; }
+        public bool IsCallable { get; set; }
+        public bool IsPutable { get; set; }
+        public bool IsFloater { get; set; }
+        public bool IsConvertible { get; set; }
+        public bool IsStraight { get; set; }
         public string Ticker { get; set; }
         public string Series { get; set; }
         public string BorrowerCountry { get; set; }
@@ -46,6 +46,7 @@ namespace YieldMap.Database
         public string Industry { get; set; }
         public string SubIndustry { get; set; }
         public string Instrument { get; set; }
+        public string Ric { get; set; }
     
         public virtual ICollection<RawFrnData> RawFrnDatas { get; set; }
         public virtual ICollection<RawRating> RawRatings { get; set; }

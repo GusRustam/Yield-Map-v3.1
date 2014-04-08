@@ -37,6 +37,11 @@ module Requests =
                 let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
                 if success then box num else null
 
+    type SomeInt64Converter() = 
+        interface Cnv with
+            member self.Convert x =
+                let success, num = Int64.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
+                if success then box num else null
 
     (* Request attributes *) 
     type RequestAttribute = 
