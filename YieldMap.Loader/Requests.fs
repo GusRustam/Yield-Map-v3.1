@@ -22,7 +22,7 @@ module Requests =
     type Cnv = abstract member Convert : string -> obj
 
     type BoolConverter() = interface Cnv with member self.Convert x = box (match x with FirstLetter "Y" -> true | _ -> false)
-    type NotNullConverter() = interface Cnv with member self.Convert x = if x <> String.Empty then box x else null
+    type NotNullConverter() = interface Cnv with member self.Convert x = if x.Trim() <> String.Empty then box x else null
 
     type DateConverter() = 
         interface Cnv with
