@@ -21,13 +21,11 @@ module Extensions =
         let split arr = first arr, others arr
         let repeat arr times = [|1..times|] |> Array.fold (fun acc _ -> Array.append acc arr) [||]
         let unique arr = arr |> Seq.distinct |> Seq.toArray
+//        let unique1 : 'a seq -> 'a array when 'a : equality = Seq.distinct >> Seq.toArray
 
     module Map =
         let join map another = 
-            let rec doInject m a = 
-                match a with
-                | (key, value) :: rest -> doInject (Map.add key value m) rest
-                | _ -> m
+            let rec doInject m = function (key, value) :: rest -> doInject (Map.add key value m) rest | _ -> m
             doInject map (Map.toList another)
 
         let fromDict (d:Dictionary<_,_>) =
@@ -113,35 +111,34 @@ module Extensions =
 module Workflows =
     open System
 
-//    module AttemptWithException =
-//        type Attempt<'T> = Case of (unit -> exn * 'T option)
-//
     module AsyncAttempt = 
         type AsyncAttempt<'T> = 
         | Parallel of 'T Async
         | Func of (unit -> 'T option)
         | Bool of bool
 
+        let always x = Func (fun () -> x)
+
         let runAttempt (a : AsyncAttempt<'T>) timeout =
             match a with
-            | Parallel call -> try Some (call |> Async.WithTimeoutEx timeout |> Async.RunSynchronously) with e -> None
-            | Func call -> try call() with e -> None
+            | Parallel call -> Some (call |> Async.WithTimeoutEx timeout |> Async.RunSynchronously) 
+            | Func call -> call()
             | Bool b -> if b then Some Unchecked.defaultof<'T> else None
 
         let fail = Func (fun () -> None) : AsyncAttempt<'T>
-        let succeed x = Func (fun () -> Some(x)) : AsyncAttempt<'T>
+        let succeed x = always (Some x)
         let bind p rest timeout = match runAttempt p timeout with None -> fail | Some r -> (rest r)
-        let delay f timeout = Func (fun () -> runAttempt (f()) timeout)  : AsyncAttempt<'T>
-        let combine p1 p2 timeout = (fun () -> match runAttempt p1 timeout with None -> runAttempt p2 timeout | res -> res)
-        let condition p guard timeout = Func (fun () -> match runAttempt p timeout with Some x when guard x -> Some x | _ -> None)
-        let disposable (value : 'a when 'a :> IDisposable) func timeout =  Func (fun () -> try runAttempt (func value) timeout finally value.Dispose())
+        let delay f timeout = always (runAttempt <| f() <| timeout)
+        let combine p1 p2 timeout = always (match runAttempt p1 timeout with None -> runAttempt p2 timeout | res -> res)
+        let condition p guard timeout = always (match runAttempt p timeout with Some x when guard x -> Some x | _ -> None)
+        let disposable (value : 'a when 'a :> IDisposable) func timeout =  always (try runAttempt (func value) timeout finally value.Dispose())
 
         type AsyncAttemptBuilder(timeout) = 
             member b.Bind (p, rest) = bind p rest timeout
             member b.Delay f = delay f timeout
             member b.Return x = succeed x 
             member b.ReturnFrom (x : AsyncAttempt<'T>)  = x
-            member b.Combine (p1 : AsyncAttempt<'T>, p2 : AsyncAttempt<'T>) = Func (combine p1 p2 timeout)
+            member b.Combine (p1 : AsyncAttempt<'T>, p2 : AsyncAttempt<'T>) = combine p1 p2 timeout
             member b.Zero () = fail
             member b.Using (x, f) = disposable x f timeout
 

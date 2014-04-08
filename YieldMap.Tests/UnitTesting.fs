@@ -362,6 +362,7 @@
             poo |> should equal count
 
 
+
         [<Test>]
         let ``Load and save data to raw db`` ()   = 
             MainEntities.SetVariable("PathToTheDatabase", Location.path)
@@ -386,54 +387,142 @@
                     return [||]
             }
 
-            let saveBondDescrs (descrs : BondDescr list) = 
-                imperative {  
-                    use ctx = new MainEntities(cnnStr)
+            let saveBondDescrs (descrs : BondDescr list) = imperative {  
+                use ctx = new MainEntities(cnnStr)
 
-                    descrs |> List.iter (fun item -> 
-                        // todo in case it takes much time, this might be somehow optimized
-                        // todo I can for example use Database "raw" classes as requests...
-                        // but then they will have to reference Loader.
-                        // hmmmmmm.... well, it is possible
-                        // but maybe i will just delete those "Raw" tables ))
-                        let rawBond =
-                            new RawBond ( 
-                                BondStructure = item.BondStructure,
-                                RateStructure = item.RateStructure,
-                                IssueSize = item.IssueSize,
-                                IssuerName = item.IssuerName,
-                                BorrowerName = item.BorrowerName,
-                                Coupon = item.Coupon,
-                                Issue = item.Issue,
-                                Maturity = item.Maturity,
-                                Currency = item.Currency,
-                                ShortName = item.ShortName,
-                                IsCallable = item.IsCallable,
-                                IsPutable = item.IsPutable,
-                                IsFloater = item.IsFloater,
-                                IsConvertible = item.IsConvertible,
-                                IsStraight = item.IsStraight,
-                                Ticker = item.Ticker,
-                                Series = item.Series,
-                                BorrowerCountry = item.BorrowerCountry,
-                                IssuerCountry = item.IssuerCountry,
-                                Isin = item.Isin,
-                                ParentTicker = item.ParentTicker,
-                                Seniority = item.Seniority,
-                                Industry = item.Industry,
-                                SubIndustry = item.SubIndustry,
-                                Instrument = item.Instrument,
-                                Ric = item.Ric                                
+                descrs |> List.iter (fun item -> 
+                    // todo in case it takes much time, this might be somehow optimized
+                    // todo I can for example use Database "raw" classes as requests...
+                    // but then they will have to reference Loader.
+                    // hmmmmmm.... well, it is possible
+                    // but maybe i will just delete those "Raw" tables ))
+                    let rawBond =
+                        new RawBond ( 
+                            BondStructure = item.BondStructure,
+                            RateStructure = item.RateStructure,
+                            IssueSize = item.IssueSize,
+                            IssuerName = item.IssuerName,
+                            BorrowerName = item.BorrowerName,
+                            Coupon = item.Coupon,
+                            Issue = item.Issue,
+                            Maturity = item.Maturity,
+                            Currency = item.Currency,
+                            ShortName = item.ShortName,
+                            IsCallable = item.IsCallable,
+                            IsPutable = item.IsPutable,
+                            IsFloater = item.IsFloater,
+                            IsConvertible = item.IsConvertible,
+                            IsStraight = item.IsStraight,
+                            Ticker = item.Ticker,
+                            Series = item.Series,
+                            BorrowerCountry = item.BorrowerCountry,
+                            IssuerCountry = item.IssuerCountry,
+                            Isin = item.Isin,
+                            ParentTicker = item.ParentTicker,
+                            Seniority = item.Seniority,
+                            Industry = item.Industry,
+                            SubIndustry = item.SubIndustry,
+                            Instrument = item.Instrument,
+                            Ric = item.Ric                                
+                        )
+                    ctx.RawBonds.Add rawBond |> ignore
+                )
+                return ctx.SaveChanges () 
+            }
+
+            let saveIssueRatings (ratings : IssueRatingData list ) = imperative {
+                use ctx = new MainEntities(cnnStr)
+                ratings |> List.iter (fun item -> 
+                    let bondId = query {
+                        for bond in ctx.RawBonds do
+                        where (bond.Ric = item.Ric)
+                        select bond.id
+                        exactlyOneOrDefault
+                    }
+                    if bondId > 0L then
+                        let rawIssueRating = 
+                            RawRating (
+                                Date = item.RatingDate,
+                                Rating = item.Rating,
+                                Source = item.RatingSourceCode,
+                                Issue = Nullable true,
+                                id_RawBond = Nullable bondId
                             )
-                        ctx.RawBonds.Add rawBond |> ignore
-                    )
-                    return ctx.SaveChanges () 
-                }
+                        ctx.RawRatings.Add rawIssueRating |> ignore
+                )
+                return ctx.SaveChanges () 
+            }
 
-            let saveCoupons coupons = 
-                imperative {
-                    return 1
-                }
+            let saveIssuerRatings (ratings : IssuerRatingData list ) = imperative {
+                use ctx = new MainEntities(cnnStr)
+                ratings |> List.iter (fun item -> 
+                    let bondId = query {
+                        for bond in ctx.RawBonds do
+                        where (bond.Ric = item.Ric)
+                        select bond.id
+                        exactlyOneOrDefault
+                    }
+                    if bondId > 0L then
+                        let rawIssueRating = 
+                            RawRating (
+                                Date = item.RatingDate,
+                                Rating = item.Rating,
+                                Source = item.RatingSourceCode,
+                                Issue = Nullable false,
+                                id_RawBond = Nullable bondId
+                            )
+                        ctx.RawRatings.Add rawIssueRating |> ignore
+                )
+                return ctx.SaveChanges () 
+            }
+
+            let saveFrns (frns : FrnData list) = imperative {
+                use ctx = new MainEntities(cnnStr)
+                frns |> List.iter (fun item -> 
+                    let bondId = query {
+                        for bond in ctx.RawBonds do
+                        where (bond.Ric = item.Ric)
+                        select bond.id
+                        exactlyOneOrDefault
+                    }   
+                    if bondId > 0L then
+                        let rawFrn = 
+                            RawFrnData (
+                                Cap = item.Cap,
+                                Floor = item.Floor,
+                                Frequency = item.Frequency,
+                                Margin = item.Margin,
+                                Index = item.IndexRic,
+                                id_RawBond = Nullable bondId
+                            )
+                        ctx.RawFrnData.Add rawFrn |> ignore
+                )
+                return ctx.SaveChanges () 
+            }
+
+//            let saveRicData (rics : RicData list) = imperative {
+//                use ctx = new MainEntities(cnnStr)
+//                rics |> List.iter (fun item -> 
+//                    let bondId = query {
+//                        for bond in ctx.RawBonds do
+//                        where (bond.Ric = item.Ric)
+//                        select bond.id
+//                        exactlyOneOrDefault
+//                    }   
+//                    if bondId > 0L then
+//                        let rawRics = 
+//                            Raw (
+//                                Cap = item.Cap,
+//                                Floor = item.Floor,
+//                                Frequency = item.Frequency,
+//                                Margin = item.Margin,
+//                                Index = item.IndexRic,
+//                                id_RawBond = Nullable bondId
+//                            )
+//                        ctx.RawRicData.Add rawFrn |> ignore
+//                )
+//                return ctx.SaveChanges () 
+//            }
 
             let dt = DateTime(2014,3,4)
             let f = MockFactory() :> EikonFactory
@@ -442,11 +531,11 @@
             logger.TraceF "Before imperative"
             let request chainName = imperative {
                 logger.TraceF "Before connection"
-                let! connected = Parallel (connect f)
+                let! connected = Parallel <| connect f
                 condition (connected)
                 logger.TraceF "After connection"
 
-                let! rics = Parallel (getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None })
+                let! rics = Parallel <| getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
                 condition (Array.length rics <> 0)
                 logger.TraceF "After chain %s" chainName
                 
@@ -457,32 +546,45 @@
                 let! res = saveBondDescrs descrs
                 res |> should equal (List.length descrs) // ezerisink eddid
 
-                logger.InfoF "Loading CouponData table"
-                let! meta = Parallel (l.LoadMetadata<CouponData> rics None)
-                condition (Meta.isAnswer meta)
-                let coupons = Meta<BondDescr>.getAnswer meta
-                logger.TraceF "CouponData is %A" coupons
-                let! res = saveCoupons coupons
-                
+//                logger.InfoF "Loading CouponData table"
+//                let! meta = Parallel (l.LoadMetadata<CouponData> rics None)
+//                condition (Meta.isAnswer meta)
+//                let coupons = Meta<BondDescr>.getAnswer meta
+//                logger.TraceF "CouponData is %A" coupons
+//                let! res = saveCoupons coupons
+//                
                 logger.InfoF "Loading IssueRatingData table"
                 let! meta = Parallel (l.LoadMetadata<IssueRatingData> rics None)
                 condition (Meta.isAnswer meta)
-                logger.TraceF "IssueRatingData is %A" (Meta<IssueRatingData>.getAnswer meta)
+                let ratings = Meta<IssueRatingData>.getAnswer meta
+                logger.TraceF "IssueRatingData is %A" ratings
+                let! res = saveIssueRatings ratings
+                res |> should equal (List.length ratings) // ezerisink eddid
                        
                 logger.InfoF "Loading IssuerRatingData table"
                 let! meta = Parallel (l.LoadMetadata<IssuerRatingData> rics None)
                 condition (Meta.isAnswer meta)
-                logger.TraceF "IssuerRatingData is %A" (Meta<IssuerRatingData>.getAnswer meta)
+                let ratings = Meta<IssuerRatingData>.getAnswer meta
+                logger.TraceF "IssuerRatingData is %A" ratings
+                let! res = saveIssuerRatings ratings
+                res |> should equal (List.length ratings) // ezerisink eddid
                 
                 logger.InfoF "Loading FrnData table"
                 let! meta = Parallel (l.LoadMetadata<FrnData> rics None)
                 condition (Meta.isAnswer meta)
-                logger.TraceF "FrnData is %A" (Meta<FrnData>.getAnswer meta)
+                let frns = Meta<FrnData>.getAnswer meta
+                logger.TraceF "FrnData is %A" frns
+                let! res = saveFrns frns
+                res |> should equal (List.length frns) // ezerisink eddid
+
+                // TODO LOAD ALL RICS FOR ONLY THOSE RICS WHICH ARE IN OPENED PORTFOLIO
                 
-                logger.InfoF "Loading RicData table"
-                let! meta = Parallel (l.LoadMetadata<RicData> rics None)
-                condition (Meta.isAnswer meta)
-                logger.TraceF "RicData is %A" (Meta<RicData>.getAnswer meta)  
+//                logger.InfoF "Loading RicData table"
+//                let! meta = Parallel (l.LoadMetadata<RicData> rics None)
+//                condition (Meta.isAnswer meta)
+//                let ricData = Meta<RicData>.getAnswer meta
+//                logger.TraceF "RicData is %A" ricData
+//                let! res = saveRicData ricData
                     
                 return true          
             }

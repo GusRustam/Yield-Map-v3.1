@@ -20,6 +20,7 @@ namespace YieldMap.Database
         public Nullable<double> Margin { get; set; }
         public string Index { get; set; }
         public Nullable<long> id_RawBond { get; set; }
+        public string Frequency { get; set; }
     
         public virtual RawBond RawBondInfo { get; set; }
     }

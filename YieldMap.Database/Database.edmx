@@ -194,6 +194,7 @@
           <Property Name="Margin" Type="real" />
           <Property Name="Index" Type="varchar" MaxLength="50" />
           <Property Name="id_RawBond" Type="integer" />
+          <Property Name="Frequency" Type="nvarchar" />
         </EntityType>
         <EntityType Name="RawRating">
           <Key>
@@ -751,6 +752,7 @@
           <Property Name="Index" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Type="Int64" Name="id_RawBond" />
           <NavigationProperty Name="RawBondInfo" Relationship="MainModel.FK_RawFrnData_0_0" FromRole="RawFrnData" ToRole="RawBondInfo" />
+          <Property Type="String" Name="Frequency" MaxLength="2147483647" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="RawRating">
           <Key>
@@ -1267,6 +1269,7 @@
           <EntitySetMapping Name="RawFrnData">
             <EntityTypeMapping TypeName="MainModel.RawFrnData">
               <MappingFragment StoreEntitySet="RawFrnData">
+                <ScalarProperty Name="Frequency" ColumnName="Frequency" />
                 <ScalarProperty Name="id_RawBond" ColumnName="id_RawBond" />
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="Cap" ColumnName="Cap" />
