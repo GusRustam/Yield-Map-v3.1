@@ -1,4 +1,5 @@
 ﻿namespace YieldMap.Tools.Aux
+
 open System.Runtime.InteropServices
 open System.Collections.Generic
 
@@ -12,7 +13,11 @@ module Extensions =
     open System.Runtime.Serialization.Formatters.Binary
     open System.Text
 
+    type Agent<'T> = MailboxProcessor<'T>
+
     let cross f a b = f b a
+    let inline (|-) item items = Set.contains item (set items)
+    let inline (-|) items item = Set.contains item (set items)
 
     (* Расширение встроенной функциональности *)
     module Array = 
@@ -21,7 +26,6 @@ module Extensions =
         let split arr = first arr, others arr
         let repeat arr times = [|1..times|] |> Array.fold (fun acc _ -> Array.append acc arr) [||]
         let unique arr = arr |> Seq.distinct |> Seq.toArray
-//        let unique1 : 'a seq -> 'a array when 'a : equality = Seq.distinct >> Seq.toArray
 
     module Map =
         let join map another = 

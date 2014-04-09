@@ -45,7 +45,7 @@ module SdkFactory =
 
     type InnerFactory()  =
         interface EikonFactory with
-            member x.Connect () = async {
+            member x.Connect () = async { 
                 do! Async.Sleep(500) 
                 return Connected
             }

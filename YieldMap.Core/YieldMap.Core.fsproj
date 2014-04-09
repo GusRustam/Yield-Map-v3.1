@@ -45,6 +45,7 @@
     <Compile Include="Visual.fs" />
     <Compile Include="Axis.fs" />
     <Compile Include="Program.fs" />
+    <Compile Include="Startup.fs" />
     <None Include="App.config" />
     <None Include="packages.config" />
     <None Include="tdd.fsx" />

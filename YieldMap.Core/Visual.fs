@@ -1,4 +1,6 @@
-﻿module Visual
+﻿namespace YieldMap.Core.Visual
+
+module Visual =
     open System
     module Ranges =
             type Limit<'T> = 

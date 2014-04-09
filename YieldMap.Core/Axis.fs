@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Axis
+﻿namespace YieldMap.Core.Axis
     open System
 
 //    [<AutoOpen>]
