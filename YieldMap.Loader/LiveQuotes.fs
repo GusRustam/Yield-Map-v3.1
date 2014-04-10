@@ -212,22 +212,27 @@ module LiveQuotes =
 
     /// General subscription interface
     type Subscription = 
-        abstract member OnQuotes : RicFieldValue IEvent
+        inherit IComparable
 
-        abstract member Fields : string list * int option -> RicFields TimeoutAnswer Async
-        abstract member Snapshot : RicFields * int option -> RicFieldValue TimeoutAnswer Async
+        abstract OnQuotes : RicFieldValue IEvent
 
-        abstract member Start : unit -> unit
-        abstract member Pause : unit -> unit
-        abstract member Stop : unit -> unit
+        abstract Id : Guid
+        abstract Name : string with get, set
 
-        abstract member Add : RicFields -> unit
-        abstract member Remove : string list -> unit // removes rics
+        abstract Fields : string list * int option -> RicFields TimeoutAnswer Async
+        abstract Snapshot : RicFields * int option -> RicFieldValue TimeoutAnswer Async
+
+        abstract Start : unit -> unit
+        abstract Pause : unit -> unit
+        abstract Stop : unit -> unit
+
+        abstract Add : RicFields -> unit
+        abstract Remove : string list -> unit // removes rics
 
     type QuoteMode = OnTime of int | OnTimeIfUpdated of int | OnUpdate
 
     /// Adfin realtime subscription
-    type RtxSubscription (_loader : EikonFactory, _feed, _mode) = 
+    type RtxSubscription (_loader : EikonFactory, _feed, _mode) as self = 
         inherit Disposer ()
 
         let requests = Map.empty
@@ -270,10 +275,21 @@ module LiveQuotes =
             | None -> ()            
         )
 
+        let mutable name =  "Eikon.Feed." + _feed
+
         override x.DisposeManaged () = Ole32.killComObject quotesRef
         override x.DisposeUnmanaged () = ()
 
+        override x.Equals o =  match o with :? Subscription as y -> (self :> Subscription).Id = y.Id | _ -> failwith  "Unable to compare"
+        override x.GetHashCode () = (x :> Subscription).Id.GetHashCode ()
+
+        interface IComparable with
+            member x.CompareTo o = match o with :? Subscription as y -> (self :> Subscription).Id.CompareTo y.Id | _ -> failwith  "Unable to compare"
+
         interface Subscription with
+            member x.Id = Guid.NewGuid ()
+            member x.Name with get () = name and set n = name <- n
+
             member x.OnQuotes = quotesEvent.Publish
 
             member x.Fields (rics, ?timeout) = 
@@ -423,7 +439,7 @@ module LiveQuotes =
 //        }
 
     [<AbstractClass>]
-    type AccumulatingSubscription() =
+    type AccumulatingSubscription() as self =
         let quotesEvent = Event<RicFieldValue>()
 
         // mutables 
@@ -476,7 +492,18 @@ module LiveQuotes =
                 x.SaveLastValues rest
             | [] -> ()
 
+        abstract Name : string with get, set
+
+        override x.Equals o =  match o with :? Subscription as y -> (self :> Subscription).Id = y.Id | _ -> failwith  "Unable to compare"
+        override x.GetHashCode () = (x :> Subscription).Id.GetHashCode ()
+
+        interface IComparable with
+            member x.CompareTo o = match o with :? Subscription as y -> (self :> Subscription).Id.CompareTo y.Id | _ -> failwith  "Unable to compare"
+
         interface Subscription with
+            member x.Id = Guid.NewGuid ()
+            member x.Name with get () = self.Name and set n = self.Name <- n
+
             member x.OnQuotes = quotesEvent.Publish
             member x.Fields (rics, ?timeout) = async { 
                 do! Async.Sleep(100)
@@ -528,7 +555,7 @@ module LiveQuotes =
 
     type MockSubscription(generator : RfvGenerator) as this =
         inherit AccumulatingSubscription ()
-        
+
         do  generator.Rfv 
             |> Observable.map this.EventFilter
             |> Observable.filter (not << Map.isEmpty) 
@@ -540,6 +567,10 @@ module LiveQuotes =
                 logger.TraceF "Last values now are %A" (Map.fromDict2 this.LastValues)
             ))
 
+        let mutable name = "Mock subscription"
+        override x.Name with get () = name and set n = name <- n
+
+//        override x.Name = ""
         interface IDisposable with override x.Dispose () = generator.Stop ()
 
     type ApiSubscription () as this =
@@ -551,3 +582,47 @@ module LiveQuotes =
             |> Observable.map this.EventFilter
             |> Observable.filter (not << Map.isEmpty)
             |> Observable.add this.QuotesEvent.Trigger
+
+        let mutable name = "Api subscription"
+        override x.Name with get () = name and set n = name <- n
+
+[<AutoOpen>]
+module Subscriptions = 
+    open System
+    open YieldMap.Tools.Aux
+    
+    let rec joinEvents (items : Subscription list) agg = 
+        match items with
+        | s :: rest -> 
+            let mergedQuotes = 
+                s.OnQuotes 
+                |> Observable.map (fun x -> s.Id, x) 
+                |> Observable.merge agg 
+
+            joinEvents rest mergedQuotes
+        | [] -> agg
+
+    type Subscriptions = {
+        quotes : Map<Guid, Subscription>
+        onQuotes : (Guid * RicFieldValue) IObservable
+    } with  
+        static member private joinQuotesAndEvents subscriptions tools =
+            let events = subscriptions |> Map.values |> Set.toList
+            let baseEvent = Event<Guid * RicFieldValue> ()
+            let joinedQuotes = joinEvents events baseEvent.Publish
+
+            { tools with 
+                quotes = subscriptions
+                onQuotes = joinedQuotes }
+
+        member x.AddSubscription (s : Subscription) = 
+            if x.quotes |> (not << (Map.containsKey s.Id)) then
+                let subscriptions = x.quotes |> Map.add s.Id s 
+                x |> Subscriptions.joinQuotesAndEvents subscriptions
+            else x
+
+        member x.RemoveSubscription (s : Subscription) = 
+            if x.quotes |> Map.containsKey s.Id then
+                let subscriptions = x.quotes |> Map.remove s.Id 
+                x |> Subscriptions.joinQuotesAndEvents subscriptions 
+            else x

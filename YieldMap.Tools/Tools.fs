@@ -53,6 +53,7 @@ module Extensions =
             append keys d Map.empty
 
         let keys m = m |> Map.toList |> List.unzip |> fst |> set
+        let values m = m |> Map.toList |> List.unzip |> snd |> set
 
     /// Extension methods to get single attribute in a cleaner way
     type MemberInfo with

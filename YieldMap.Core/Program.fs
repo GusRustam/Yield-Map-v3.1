@@ -52,11 +52,6 @@
 
     open EikonDesktopDataAPI
     
-    open YieldMap.Axis.Program
-    open YieldMap.Axis.Analytics
-    open YieldMap.Axis.Ansamble
-    
-    open YieldMap.Tools
 
 //    [<EntryPoint>]
     let main argv = 
