@@ -119,7 +119,7 @@ module MetaChains =
 
                                 let converted value = 
                                     match conv with
-                                    | Some(conv) -> 
+                                    | Some conv -> 
                                         logger.TraceF "Converting value %A to type %s" value p.PropertyType.Name
 
                                         let converter = 

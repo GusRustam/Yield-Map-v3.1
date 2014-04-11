@@ -14,15 +14,18 @@ module Requests =
     type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : int option }
         with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = None }
 
-    let private (|FirstLetter|) (str:string) = 
-        if String.IsNullOrEmpty(str) then String.Empty 
-        else string(str.[0]).ToUpper()
-
     (* Converters *)
     type Cnv = abstract member Convert : string -> obj
 
-    type BoolConverter() = interface Cnv with member self.Convert x = box (match x with FirstLetter "Y" -> true | _ -> false)
-    type NotNullConverter() = interface Cnv with member self.Convert x = if x.Trim() <> String.Empty then box x else null
+    type BoolConverter() = 
+        interface Cnv with 
+            member self.Convert x = 
+                box (string(x.[0]).ToUpper() = "Y")
+    
+    type NotNullConverter() = 
+        interface Cnv with 
+            member self.Convert x = 
+                if x.Trim() <> String.Empty then box x else failwith "String empty"
 
     type DateConverter() = 
         interface Cnv with
@@ -77,7 +80,7 @@ module Requests =
         static member extract<'T> () = 
             let def = typedefof<'T>
             match def.Attr<RequestAttribute>() with
-            | Some(x) -> 
+            | Some x -> 
                 let fields = 
                     def.GetProperties(BindingFlags.Instance ||| BindingFlags.Public)
                     |> Array.map (fun p -> p.Attr<FieldAttribute>())

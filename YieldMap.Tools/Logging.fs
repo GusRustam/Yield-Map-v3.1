@@ -38,21 +38,27 @@ module Logging =
 
     type Logger = 
         [<Conditional("TRACE")>] abstract member TraceEx : string -> exn -> unit
+        [<Conditional("TRACE")>] abstract member Trace : string -> unit
         [<Conditional("TRACE")>] abstract member TraceF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member DebugEx : string -> exn -> unit
+        [<Conditional("TRACE")>] abstract member Debug : string -> unit
         [<Conditional("DEBUG")>] abstract member DebugF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member InfoEx : string -> exn -> unit
+        [<Conditional("TRACE")>] abstract member Info : string -> unit
         [<Conditional("DEBUG")>] abstract member InfoF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member WarnEx : string -> exn -> unit
+        [<Conditional("TRACE")>] abstract member Warn : string -> unit
         [<Conditional("DEBUG")>] abstract member WarnF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member ErrorEx : string -> exn -> unit
+        [<Conditional("TRACE")>] abstract member Error : string -> unit
         [<Conditional("DEBUG")>] abstract member ErrorF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member FatalEx : string -> exn -> unit
+        [<Conditional("TRACE")>] abstract member Fatal : string -> unit
         [<Conditional("DEBUG")>] abstract member FatalF : StringFormat<'a, unit> -> 'a
 
     (* Logging sinks *)
@@ -130,21 +136,27 @@ module Logging =
                         new Logger with
                             member x.TraceEx message ex = crtEx LoggingLevel.Trace message ex
                             member x.TraceF format = kprintf (crt LoggingLevel.Trace) format 
+                            member x.Trace msg = crt LoggingLevel.Trace msg
 
                             member x.DebugEx message ex = crtEx LoggingLevel.Debug message ex
                             member x.DebugF format = kprintf (crt LoggingLevel.Debug) format 
+                            member x.Debug msg = crt LoggingLevel.Debug msg
 
                             member x.InfoEx message ex = crtEx LoggingLevel.Info message ex
                             member x.InfoF format = kprintf (crt LoggingLevel.Info) format 
+                            member x.Info msg = crt LoggingLevel.Info msg
 
                             member x.WarnEx message ex = crtEx LoggingLevel.Warn message ex
                             member x.WarnF format = kprintf (crt LoggingLevel.Warn) format 
+                            member x.Warn msg = crt LoggingLevel.Warn msg
 
                             member x.ErrorEx message ex = crtEx LoggingLevel.Error message ex
                             member x.ErrorF format = kprintf (crt LoggingLevel.Error) format 
+                            member x.Error msg = crt LoggingLevel.Error msg
 
                             member x.FatalEx message ex = crtEx LoggingLevel.Fatal message ex
-                            member x.FatalF format = kprintf (crt LoggingLevel.Fatal) format}
+                            member x.FatalF format = kprintf (crt LoggingLevel.Fatal) format
+                            member x.Fatal msg = crt LoggingLevel.Fatal msg}
 
                     loggers.Add(name, newLogger)
                     newLogger

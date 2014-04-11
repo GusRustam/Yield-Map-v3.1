@@ -1,5 +1,6 @@
 ﻿namespace YieldMap.Core.Application
 
+[<AutoOpen>]
 module Startup =
     open YieldMap.Loader
     open YieldMap.Loader.SdkFactory
@@ -13,7 +14,7 @@ module Startup =
 
     open System
 
-    let logger = LogFactory.create "Startup"
+    let private logger = LogFactory.create "Startup"
 
     [<StructuralComparison; StructuralEquality>] 
     type AppState = 
@@ -24,50 +25,89 @@ module Startup =
         | Disconnected 
         | Closed 
 
-    type Success = 
-        | Ok 
-        | Problem of string 
-        | Error of exn
+
+    // Notifications
+    type Failure = Problem of string | Error of exn
+    type Severity = Note | Warn | Evil
+    type StartupNotification = 
+        | Connection of Failure
+        | Database of Failure
+        | DatabaseReloading
+        | Message of Failure * Severity
+
 
     module private Loading = 
+        open YieldMap.Tools.Aux.Workflows.Attempt
+
         type private LoadSteps = LoadBonds | LoadIssueRatings | LoadIssuerRatings | LoadFrns
 
         type Steps() =
-            static let steps = [| LoadBonds; LoadIssueRatings; LoadIssuerRatings; LoadFrns |]
-        
-            static member count = (Array.length steps)-1 
+            static let steps = [ LoadBonds; LoadIssueRatings; LoadIssuerRatings; LoadFrns ]
+            
+            static let clearDatabase () = attempt { 
+                return () 
+            }
 
-            static member earlier step = 
-                let minStep = max 0 (step-1)
-                let maxStep = min minStep Steps.count
-                Connected :: [ for i in 0..maxStep -> Loaded i ]
+            static let loadBonds () = attempt { 
+                return () 
+            }
 
-            static member load step = 
-                // Todo dodo
-                try
-                    let answer = 
-                        match steps.[step] with
-                        | LoadBonds -> Success.Ok
-                        | LoadIssueRatings -> Success.Ok
-                        | LoadIssuerRatings -> Success.Ok
-                        | LoadFrns -> Success.Ok
-                    answer
-                with :? IndexOutOfRangeException as e -> Success.Error e
+            static let loadIssueRatings () = attempt { 
+                return () 
+            }
+
+            static let loadIssuerRatings () = attempt { 
+                return () 
+            }
+
+            static let loadFrns () = attempt { 
+                return () 
+            }
+
+            static let load step = attempt {
+                match step with
+                | LoadBonds -> do! loadBonds ()
+                | LoadIssueRatings -> do! loadIssueRatings ()
+                | LoadIssuerRatings -> do! loadIssuerRatings ()
+                | LoadFrns -> do! loadFrns ()
+            }
+
+            static member reload = 
+                let rec nextStep steps = attempt {
+                    match steps with
+                    | step :: rest -> 
+                        do! load step
+                        return! nextStep rest
+                    | [] -> return ()
+                }
+                let res = attempt {
+                    do! clearDatabase ()
+                    do! nextStep steps
+                }
+                let res = res |> Attempt.runAttempt
+                match res with None -> Some <| Problem "failed to load data" | _ -> None
+                // todo catch EF errors too
+                // todo create special kind of exception - ImportException - and catch it too
 
     open Loading
    
     type StateCommands = 
         | Connect of AppState AsyncReplyChannel
-        | Load of int * AppState AsyncReplyChannel
+        | Reload of AppState AsyncReplyChannel
         | Close of AppState AsyncReplyChannel
         | NotifyDisconnected of AppState AsyncReplyChannel
         static member channel = function
             | Connect channel -> channel
-            | Load (_, channel) -> channel
+            | Reload channel -> channel
             | Close channel -> channel
             | NotifyDisconnected channel -> channel
+        override x.ToString () = 
+            match x with
+                | Connect _ -> "Connect"
+                | Reload _ -> "Reload"
+                | Close _ -> "Close"
+                | NotifyDisconnected _ -> "NotifyDisconnected"
 
-    type StateChangeFeedback = AppState * Success
 
     let (|TimedOut|Established|Failed|) = function
         | Some response ->
@@ -77,15 +117,11 @@ module Startup =
         | None -> TimedOut
 
     let (|DoConnect|_|) state = function
-        | Connect channel when state |- [Started; Disconnected] -> Some ()
+        | Connect _ when state |- [Started; Disconnected] -> Some ()
         | _ -> None
 
-    let (|LoadStep|_|) state = function
-        | Load (step, channel) when state |- (Steps.earlier step) && step <= Steps.count -> Some step
-        | _ -> None
-
-    let (|LastStep|_|) state = function
-        | Load (step, channel) when state = Loaded Steps.count -> Some ()
+    let (|Reload|_|) state = function
+        | Reload _ when state |- [Connected; Initialized] -> Some ()
         | _ -> None
 
     /// Responsibilities: 
@@ -97,40 +133,32 @@ module Startup =
         let stateChanged = Event<_>()
         let notification = Event<_>()
 
-        do c.NewDay |> Observable.add (fun dt -> self.Reload ())
+        do c.NewDay |> Observable.add (fun _ -> self.Reload() |> Async.Ignore |> Async.Start) // Мне это нинравицо. Фсе пачиму?
    
-        let startupAgent = Agent.Start(fun inbox -> // maybe I should make loadingtools a param ???
+        let startupAgent = Agent.Start(fun inbox -> 
             let rec loop state = async {
                 let! command = inbox.Receive ()
                 let channel = StateCommands.channel command
                 let newState = 
                     match command with
                     | DoConnect state -> 
-                        let res = f.Connect () |> Async.WithTimeout (Some 10000) |> Async.RunSynchronously // todo timeout
+                        let res = f.Connect () |> Async.WithTimeout (Some 10000) |> Async.RunSynchronously // todo default timeout
                         match res with
                         | TimedOut -> 
-                            notification.Trigger (state, Problem "Connection timed out")
+                            notification.Trigger <| Connection (Problem "Connection timed out")
                             Disconnected
                         | Failed e ->
-                            notification.Trigger (state, Error e)
+                            notification.Trigger <| Connection (Error e)
                             Disconnected
                         | Established -> Connected
 
-                    | LoadStep state step -> 
-                        // perform Loading step!
-                        match Steps.load step with
-                        | Ok -> Loaded step
-                        | failure ->
-                            notification.Trigger (state, failure)
-                            if step = 0 then Connected else Loaded (step-1) // todo ???
-
-                    | LastStep state ->
-                        let step = Steps.count
-                        match Steps.load step with
-                        | Ok ->  Initialized 
-                        | failure ->
-                            notification.Trigger (state, failure)
-                            if step = 0 then Connected else Loaded (step-1) // todo ???
+                    | Reload state ->
+                        notification.Trigger DatabaseReloading
+                        match Steps.reload with
+                        | None ->  Initialized 
+                        | Some failure ->
+                            notification.Trigger <| Database failure
+                            Connected
 
                     | Close _ -> 
                         // todo teardown
@@ -141,7 +169,9 @@ module Startup =
                         Disconnected 
 
                     | _ -> // In any other case just stay in current state
-                        logger.WarnF "Invalid state %A for command %A" state command
+                        let msg = sprintf "Invalid command %s in state %A" (command.ToString()) state
+                        notification.Trigger <| Message (Problem msg, Note)
+                        logger.Warn msg
                         state 
 
                 channel.Reply newState          // answer directly
@@ -158,11 +188,6 @@ module Startup =
         member x.StateChanged = stateChanged.Publish
         member x.Notification = notification.Publish
 
-        member x.Initialze () = 
-            ()
-
-        member x.Reload () =
-            ()
-
-        member x.Shutdown () =
-            ()
+        member x.Reload () = startupAgent.PostAndAsyncReply Reload
+        member x.Initialze () = startupAgent.PostAndAsyncReply Connect
+        member x.Shutdown () = startupAgent.PostAndAsyncReply Close

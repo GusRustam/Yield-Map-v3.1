@@ -11,20 +11,12 @@ module WebServer =
         member val Field = String.Empty with get, set
         member val Value = String.Empty with get, set
         override x.ToString() = sprintf "<%s | %s | %s>" x.Ric x.Field x.Value
-        static member create ric field value = 
-            let res = ApiQuote()
-            res.Ric <- ric
-            res.Field <- field
-            res.Value <- value
-            res
+        static member create ric field value = ApiQuote(Ric = ric, Field = field, Value = value)
 
     type ApiQuotes() = 
         member val Quotes : ApiQuote array = Array.empty with get, set
         override x.ToString() = sprintf "%A" x.Quotes
-        static member create arr = 
-            let x = ApiQuotes()
-            x.Quotes <- arr
-            x
+        static member create arr = ApiQuotes(Quotes = arr)
         static member pack (q : ApiQuotes) = q |> JsonConvert.SerializeObject |> String.toBytes
         static member unpack b = JsonConvert.DeserializeObject<ApiQuotes>(String.fromBytes b)
         static member toRfv (apiQuotes : ApiQuotes) = 

@@ -76,6 +76,11 @@
     <Compile Include="IntegrationTesting.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\YieldMap.Core\YieldMap.Core.fsproj">
+      <Name>YieldMap.Core</Name>
+      <Project>{f19b076c-c552-46fa-88b0-3f33a96dfadc}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Database\YieldMap.Database.csproj">
       <Name>YieldMap.Database</Name>
       <Project>{21174b80-86bf-491f-9bf5-057d46a39d4c}</Project>

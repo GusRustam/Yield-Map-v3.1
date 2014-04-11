@@ -16,8 +16,10 @@ module Extensions =
     type Agent<'T> = MailboxProcessor<'T>
 
     let cross f a b = f b a
-    let inline (|-) item items = Set.contains item (set items)
-    let inline (-|) items item = Set.contains item (set items)
+
+    // Some operators
+    let inline (|-) item items = set items |> Set.contains item
+    let inline (-|) items item = item |- items
 
     (* Расширение встроенной функциональности *)
     module Array = 

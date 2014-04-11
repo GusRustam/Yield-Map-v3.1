@@ -261,11 +261,11 @@
         open System.Text
         open System.Threading
 
-        open YieldMap.Tools.Logging
         open YieldMap.Loader.LiveQuotes
         open YieldMap.Tools.Aux
         open YieldMap.Loader.WebServer
 
+        open YieldMap.Tools.Logging
         let logger = LogFactory.create "TestApiQuotes"
 
         [<Test>]
@@ -591,3 +591,39 @@
 
             let res = AsyncAttempt.runAttempt (request "0#RUAER=MM") None
             res |> should equal (Some true)
+
+    module StartupTests =
+        open YieldMap.Loader.Calendar
+        open YieldMap.Loader.MetaChains
+        open YieldMap.Loader.SdkFactory
+
+        open YieldMap.Core.Application
+
+        open YieldMap.Tools.Logging
+        let logger = LogFactory.create "TesStartupTeststApiQuotes"
+
+        [<Test>]
+        let ``1. Simple test on app startup`` () =
+            let dt = DateTime(2014,3,4)
+                
+            let f = MockFactory()
+            let c = MockCalendar dt
+            let m = MockChainMeta dt
+
+            let q = Startup(f, c, m)
+
+            q.StateChanged |> Observable.add (fun x -> logger.InfoF "State changed to %A" x)
+            q.Notification |> Observable.add (fun n -> logger.WarnF "Notification %A" n)
+
+            let state = q.Initialze() |> Async.RunSynchronously
+            logger.InfoF "After initialzie state is %A" state 
+
+            state |> should be (equal AppState.Connected)
+
+            let state = q.Initialze() |> Async.RunSynchronously
+            logger.InfoF "After second initialzie state is %A" state 
+            state |> should be (equal AppState.Connected)
+
+            let state = q.Reload() |> Async.RunSynchronously
+            logger.InfoF "After load state is %A" state 
+            state |> should be (equal AppState.Initialized)
