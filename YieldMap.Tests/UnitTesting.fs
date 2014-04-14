@@ -600,7 +600,15 @@
         open YieldMap.Core.Application
 
         open YieldMap.Tools.Logging
-        let logger = LogFactory.create "TesStartupTeststApiQuotes"
+        let logger = LogFactory.create "StartupTests"
+
+        // TEST ALL POSSIBLE SITUATIONS INCLUDING FAILURES DURING DATALOAD
+        // FOR THIS CASE I WILL HAVE TO MOCK MockChainMeta ???? Yep. See http://stackoverflow.com/a/2462672/1554463
+
+        // Also test tomorrow
+
+        // ANOZER KWESCHEN: SHOULD I BACKUP DA DATABASE? I REALLY DUNNO!!!
+        // I guess I should implement backup via import / export!
 
         [<Test>]
         let ``1. Simple test on app startup`` () =
@@ -618,12 +626,12 @@
             let state = q.Initialze() |> Async.RunSynchronously
             logger.InfoF "After initialzie state is %A" state 
 
-            state |> should be (equal AppState.Connected)
+            state |> should be (equal (Some AppState.Connected))
 
             let state = q.Initialze() |> Async.RunSynchronously
             logger.InfoF "After second initialzie state is %A" state 
-            state |> should be (equal AppState.Connected)
+            state |> should be (equal (Some AppState.Connected))
 
             let state = q.Reload() |> Async.RunSynchronously
             logger.InfoF "After load state is %A" state 
-            state |> should be (equal AppState.Initialized)
+            state |> should be (equal (Some AppState.Initialized))
