@@ -129,71 +129,74 @@ module Startup =
         do c.NewDay |> Observable.add (fun _ -> self.Reload() |> Async.Ignore |> Async.Start)
    
         let startupAgent = Agent.Start(fun inbox -> 
-            let rec started first = 
+            let rec started (channel : AppState AsyncReplyChannel Option) = 
                 async {
+                    match channel with 
+                    | Some c -> c.Reply Started 
+                    | _ -> ()
+
                     logger.Trace "started"
                     let! command = inbox.Receive ()
                     let channel = StateCommands.channel command
-                    if not first then channel.Reply Started 
                     match command with
                     | Connect _ -> 
                         let! res = f.Connect () |> Async.WithTimeout (Some 10000) // todo default timeout
                         match res with
                         | TimedOut -> 
                             notification.Trigger <| (Problem "Connection timed out", Severity.Warn)
-                            return! started false
+                            return! started (Some channel)
                         | Failed e ->
                             notification.Trigger <| (Error e, Severity.Warn)
-                            return! started false
-                        | Established -> return! connected ()
+                            return! started (Some channel)
+                        | Established -> return! connected channel
                     | Close _ -> return close channel
                     | _ -> 
                         do warn command Started
-                        return! started false
+                        return! started (Some channel)
                } 
-            and connected () = 
+            and connected (channel : AppState AsyncReplyChannel) = 
                 async {
+                    channel.Reply Connected
                     logger.Trace "connected"
                     let! command = inbox.Receive ()
                     let channel = StateCommands.channel command
-                    channel.Reply Connected
                     match command with
                     | Close _ -> return close channel
                     | Reload _ -> 
                         let! res = Steps.reload false
                         match res with // todo return! initializing Steps.reload
-                        | None ->  return! initialized () 
+                        | None ->  return! initialized channel
                         | Some failure ->
                             notification.Trigger <| (failure, Severity.Warn)
-                            return! connected ()
+                            return! connected channel
                     | NotifyDisconnected _ ->
                         notification.Trigger <| (Problem "Disconnected", Severity.Warn)
-                        return! started false
+                        return! started (Some channel)
                     | _ -> 
                         do warn command Connected
-                        return! connected ()
+                        return! connected channel
                 }            
-            and initialized () =
+            and initialized (channel : AppState AsyncReplyChannel) =
                 async {
+                    channel.Reply Initialized
                     logger.Trace "initialized"
                     let! command = inbox.Receive ()
                     let channel = StateCommands.channel command
-                    channel.Reply Initialized
                     match command with
                     | Close _ -> return close channel
                     | Reload _ -> 
                         let! res = Steps.reload true
                         match res with // todo return! initializing Steps.reload
-                        | None ->  return! initialized () 
+                        | None ->  return! initialized channel
                         | Some failure ->
                             notification.Trigger <| (failure, Severity.Warn)
-                            return! connected ()
+                            return! connected channel
                     | Connect _ -> 
                         // todo notify that ok
-                        return! initialized ()
+                        return! initialized channel
                     | NotifyDisconnected _ -> 
                         // todo notify that disconnected
-                        return! started false
+                        return! started (Some channel)
                 }
             and close channel = 
                 logger.Trace "close"
@@ -206,18 +209,18 @@ module Startup =
                 logger.Warn msg                
 
 
-            started true
+            started None
         )
 
         member x.StateChanged = stateChanged.Publish
         member x.Notification = notification.Publish
 
         member x.Initialze () = 
-            startupAgent.PostAndTryAsyncReply (Connect, 10000)
+            startupAgent.PostAndReply Connect
         member x.Reload () = 
-            startupAgent.PostAndTryAsyncReply (Reload, 10000)
+            startupAgent.PostAndAsyncReply Reload
         member x.Shutdown () = 
-            startupAgent.PostAndTryAsyncReply (Close, 10000)
+            startupAgent.PostAndAsyncReply Close
 
 //
 //    open System.Threading

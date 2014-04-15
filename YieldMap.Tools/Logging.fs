@@ -42,23 +42,23 @@ module Logging =
         [<Conditional("TRACE")>] abstract member TraceF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member DebugEx : string -> exn -> unit
-        [<Conditional("TRACE")>] abstract member Debug : string -> unit
+        [<Conditional("DEBUG")>] abstract member Debug : string -> unit
         [<Conditional("DEBUG")>] abstract member DebugF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member InfoEx : string -> exn -> unit
-        [<Conditional("TRACE")>] abstract member Info : string -> unit
+        [<Conditional("DEBUG")>] abstract member Info : string -> unit
         [<Conditional("DEBUG")>] abstract member InfoF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member WarnEx : string -> exn -> unit
-        [<Conditional("TRACE")>] abstract member Warn : string -> unit
+        [<Conditional("DEBUG")>] abstract member Warn : string -> unit
         [<Conditional("DEBUG")>] abstract member WarnF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member ErrorEx : string -> exn -> unit
-        [<Conditional("TRACE")>] abstract member Error : string -> unit
+        [<Conditional("DEBUG")>] abstract member Error : string -> unit
         [<Conditional("DEBUG")>] abstract member ErrorF : StringFormat<'a, unit> -> 'a
 
         [<Conditional("DEBUG")>] abstract member FatalEx : string -> exn -> unit
-        [<Conditional("TRACE")>] abstract member Fatal : string -> unit
+        [<Conditional("DEBUG")>] abstract member Fatal : string -> unit
         [<Conditional("DEBUG")>] abstract member FatalF : StringFormat<'a, unit> -> 'a
 
     (* Logging sinks *)

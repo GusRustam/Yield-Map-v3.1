@@ -621,17 +621,22 @@
             let q = Startup(f, c, m)
 
             q.StateChanged |> Observable.add (fun x -> logger.InfoF "State changed to %A" x)
-            q.Notification |> Observable.add (fun n -> logger.WarnF "Notification %A" n)
+            q.Notification |> Observable.add (fun n -> 
+                match n with
+                | f, s when s = Severity.Evil -> logger.ErrorF "Notification %A" f
+                | f, s when s = Severity.Warn -> logger.WarnF "Notification %A" f
+                | f, s -> logger.InfoF "Notification %A" f
+            )
 
-            let state = q.Initialze() |> Async.RunSynchronously
+            let state = q.Initialze() 
             logger.InfoF "After initialzie state is %A" state 
 
-            state |> should be (equal (Some AppState.Connected))
+            state |> should be (equal AppState.Connected)
 
-            let state = q.Initialze() |> Async.RunSynchronously
+            let state = q.Initialze() 
             logger.InfoF "After second initialzie state is %A" state 
-            state |> should be (equal (Some AppState.Connected))
+            state |> should be (equal AppState.Connected)
 
             let state = q.Reload() |> Async.RunSynchronously
             logger.InfoF "After load state is %A" state 
-            state |> should be (equal (Some AppState.Initialized))
+            state |> should be (equal AppState.Initialized)
