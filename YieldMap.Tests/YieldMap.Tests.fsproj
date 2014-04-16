@@ -70,7 +70,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common.fs" />
-    <Compile Include="UnitTesting.fs" />
+    <Compile Include="Unit.Startup.fs" />
+    <Compile Include="Unit.Others.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
     <Compile Include="IntegrationTesting.fs" />

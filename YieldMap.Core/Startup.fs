@@ -126,6 +126,7 @@ module Startup =
         let stateChanged = Event<_>()
         let notification = Event<_>()
 
+        // todo it is easy to implement some async `Verifier` which will send a message to ask user if he or she would like to reload data
         do c.NewDay |> Observable.add (fun _ -> self.Reload() |> Async.Ignore |> Async.Start)
    
         let startupAgent = Agent.Start(fun inbox -> 
@@ -208,7 +209,6 @@ module Startup =
                 notification.Trigger <| (Problem msg, Severity.Note)
                 logger.Warn msg                
 
-
             started None
         )
 
@@ -222,36 +222,176 @@ module Startup =
         member x.Shutdown () = 
             startupAgent.PostAndAsyncReply Close
 
-//
-//    open System.Threading
-//            and initializing operation = 
-//                async {
-//                    use token = new CancellationTokenSource ()
-//
-//                    //
-//                    let rec eventQueue () = 
-//                        async {
-//                            try
-//                                let! command = inbox.Receive ()
-//                                let channel = StateCommands.channel command
-//                                match command with
-//                                | Close _  | NotifyDisconnected _ -> 
-//                                    token.Cancel()
-//                                    return Ok
-//                                | Reload _ -> return! eventQueue ()
-//                                | Connect _ -> return! eventQueue ()
-//                            with :? ThreadInterruptedException -> 
-//                                return Ok
-//                        }
-//
-//                    let q = Async.StartAsTask(Async.Parallel [ eventQueue (); operation ], cancellationToken = token.Token)
-//                    q.Wait()
-//                    let res = q.Result
-//                    let res = res.[1]
-//                                        
-//                    match res with
-//                    | Ok -> return! initialized ()
-//                    | Failure f -> 
-//                        notification.Trigger <| (f, Severity.Warn)
-//                        return! connected ()
-//                }
+module AnotherStartup =
+    open System.Threading
+    open YieldMap.Tools.Aux
+    open YieldMap.Tools.Logging
+
+    let logger = LogFactory.create "Startup"
+
+    type State =
+        | Started 
+        | Connected
+        | Initialized
+        | Closed
+
+    type Status =
+        | State of State 
+        | NotResponding
+        override x.ToString () = 
+            match x with
+            | State state -> sprintf "State %A" state
+            | NotResponding -> "NotResponding"
+
+    type Commands = 
+        | Connect of State AsyncReplyChannel
+        | Reload of State AsyncReplyChannel
+        | Close of State AsyncReplyChannel
+        override x.ToString () = 
+            match x with
+            | Connect _ -> "Connect"
+            | Reload _ -> "Reload"
+            | Close _ -> "Close"
+
+    type Timeouts = {
+        load : int
+        connect : int
+        agent : int
+    }
+
+    let timeouts = { load = 25000; connect = 10000; agent = 2000 }
+    
+    let doLoad () = async {
+        logger.Info "doLoad() start"
+        do! Async.Sleep timeouts.load
+        logger.Info "doLoad() finish"
+        return ()
+    }
+
+    let doConnect () = async {
+        logger.Info "doConnect() start"
+        do! Async.Sleep timeouts.connect
+        logger.Info "doConnect() finish"
+        return ()
+    }
+
+    type Boxing() = 
+        let n = Event<_> ()
+        let s = Event<_> ()
+        let a = MailboxProcessor.Start (fun inbox ->
+
+            let rec started (channel : State AsyncReplyChannel option) = 
+                logger.Debug "[--> started ()]"
+                async {
+                    s.Trigger Started
+                    match channel with Some che -> che.Reply Started | None -> ()
+
+                    let! cmd = inbox.Receive ()
+                    logger.DebugF "[Started: message %s]" (cmd.ToString())
+                    match cmd with 
+                    | Connect channel -> 
+                        return! transitory (started << Some) doConnect connected channel
+                    | Reload channel -> 
+                        n.Trigger (Started, sprintf "Invalid command %s in state Started" (cmd.ToString()))
+                        return! started (Some channel)
+                    | Close channel -> return close channel
+                } 
+            and connected (channel : State AsyncReplyChannel) = 
+                logger.Debug "[--> connected ()]"
+                async {
+                    s.Trigger Connected
+                    channel.Reply Connected
+
+                    let! cmd = inbox.Receive ()
+                    logger.DebugF "[Connected: message %s]" (cmd.ToString())
+                    match cmd with 
+                    | Connect channel -> 
+                        n.Trigger (Connected, sprintf "Invalid command %s in state Connected" (cmd.ToString()))
+                        return! connected channel
+                    | Reload channel -> 
+                        logger.Debug "[Primary reload]"
+                        return! transitory connected doLoad initialized channel
+                    | Close channel -> return close channel
+                }
+            and initialized (channel : State AsyncReplyChannel) = 
+                logger.Debug "[--> initialized ()]"
+                async {
+                    s.Trigger Initialized
+                    channel.Reply Initialized
+                    let! cmd = inbox.Receive ()
+                    logger.DebugF "[Initialized: message %s]" (cmd.ToString())
+                    match cmd with 
+                        | Connect channel ->
+                            n.Trigger (Initialized, sprintf "Invalid command %s in state Initialized" (cmd.ToString()))
+                            return! initialized channel
+                        | Reload channel ->
+                            logger.Debug "[Secondary reload]"
+                            return! transitory initialized doLoad initialized channel
+                        | Close channel -> return close channel
+                }
+            and transitory fromState longOperation toState channel = 
+                logger.Debug "[--> initializing ()]"
+                let tokenSrc = new CancellationTokenSource ()
+
+                let closeRequested = ref false
+                let operationFinished = ref false
+
+                let operation = async {
+                    logger.Debug "[-- --> operation () STARTED]"
+                    let op = longOperation () |> Async.WithCancellation tokenSrc.Token
+                    let res =  op |> Async.RunSynchronously
+                    logger.Debug "[-- --> operation () FINISHED]"
+                    operationFinished := true
+                    match res with 
+                    | Some () -> 
+                        logger.Debug "[-- --> operation () SUCCESS]"
+                        return! toState channel
+                    | _ -> 
+                        logger.Debug "[-- --> operation () FAILED]"
+                        if !closeRequested then
+                            return close channel
+                        else return! fromState channel
+                }
+
+                let rec awaiter () = async {
+                    if !operationFinished then return ()
+
+                    logger.Debug "[-- --> awaiter ()]"
+                    let! cmd = inbox.Receive ()
+                    logger.DebugF "[Awaiter: message %s]" (cmd.ToString())
+                    match cmd with 
+                    | Connect channel | Reload channel -> 
+                        n.Trigger (Connected, sprintf "Invalid command %s in state Awaiter" (cmd.ToString()))
+                        channel.Reply Connected
+                        return! awaiter ()
+                    | Close channel -> 
+                        closeRequested := true
+                        tokenSrc.Cancel ()
+                        return close channel
+                }
+
+                let awt = awaiter () |> Async.WithCancellation tokenSrc.Token |> Async.Ignore
+
+                Async.Parallel [ operation; awt] |> Async.Ignore
+                
+            and close channel = 
+                logger.Debug "[--> closed ()]"
+                s.Trigger Closed
+                channel.Reply Closed
+
+            started None
+        )
+
+        let tryCommand command timeout = async {
+            let! answer = a.PostAndTryAsyncReply (command, timeout)
+            match answer with
+            | Some state -> return State state
+            | None -> return NotResponding
+        }        
+
+        member x.Notification = n.Publish
+        member x.StateChanged = n.Publish
+        
+        member x.Connect = tryCommand Commands.Connect (timeouts.connect + timeouts.agent)
+        member x.Reload = tryCommand Commands.Reload (timeouts.load + timeouts.agent)
+        member x.Close = tryCommand Commands.Close timeouts.agent

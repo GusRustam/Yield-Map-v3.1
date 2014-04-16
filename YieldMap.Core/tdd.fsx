@@ -41,7 +41,7 @@ module ``Working with mailbox`` =
                     match channel with Some che -> che.Reply Started | None -> ()
 
                     let! cmd = inbox.Receive ()
-                    printfn "Started: message %s" (cmd.ToString())
+                    printfn "[Started: message %s]" (cmd.ToString())
                     match cmd with 
                     | Connect channel -> 
                         do! Async.Sleep 500
@@ -57,15 +57,13 @@ module ``Working with mailbox`` =
                     channel.Reply Connected
 
                     let! cmd = inbox.Receive ()
-                    printfn "Connected: message %s" (cmd.ToString())
+                    printfn "[Connected: message %s]" (cmd.ToString())
                     match cmd with 
                     | Connect channel -> 
                         n.Trigger (Connected, sprintf "Invalid command %s in state Connected" (cmd.ToString()))
                         return! connected channel
                     | Reload channel -> 
                         printfn "[Primary reload]"
-//                        do! longDatabaseInitialization ()
-//                        return! initialized channel
                         return! initializing longDatabaseInitialization channel
                     | Close channel -> return close channel
                 }
@@ -74,7 +72,7 @@ module ``Working with mailbox`` =
                 async {
                     channel.Reply Initialized
                     let! cmd = inbox.Receive ()
-                    printfn "Initialized: message %s" (cmd.ToString())
+                    printfn "[Initialized: message %s]" (cmd.ToString())
                     match cmd with 
                         | Connect channel ->
                             n.Trigger (Initialized, sprintf "Invalid command %s in state Initialized" (cmd.ToString()))
@@ -82,41 +80,47 @@ module ``Working with mailbox`` =
                         | Reload channel ->
                             printfn "[Secondary reload]"
                             return! initializing longDatabaseInitialization channel
-//                            do! longDatabaseInitialization ()
-//                            return! initialized channel
                         | Close channel -> return close channel
                 }
             and initializing op channel = 
                 printfn "[--> initializing ()]"
                 let tokenSrc = new CancellationTokenSource ()
 
+                let closeRequested = ref false
+                let operationFinished = ref false
+
+
                 let operation = async {
                     printfn "[--|--> operation () STARTED]"
                     let! res =  op () |> Async.WithCancellation tokenSrc.Token
                     printfn "[--|--> operation () FINISHED]"
+                    operationFinished := true
                     match res with 
                     | Some () -> 
                         printfn "[--|--> operation () SUCCESS]"
                         return! initialized channel
                     | _ -> 
                         printfn "[--|--> operation () FAILED]"
-                        return! connected channel
+                        if !closeRequested then
+                            return close channel
+                        else return! connected channel
                 }
 
                 let rec awaiter () = async {
-                    try
-                        printfn "[--|--> awaiter ()]"
-                        let! cmd = inbox.Receive ()
-                        printfn "Awaiter: message %s" (cmd.ToString())
-                        match cmd with 
-                        | Connect channel | Reload channel -> 
-                            n.Trigger (Connected, sprintf "Invalid command %s in state Awaiter" (cmd.ToString()))
-                            channel.Reply Connected
-                            return! awaiter ()
-                        | Close channel -> 
-                            tokenSrc.Cancel ()
-                            return close channel
-                    with e -> printfn "%s" (e.ToString())
+                    if !operationFinished then return ()
+
+                    printfn "[--|--> awaiter ()]"
+                    let! cmd = inbox.Receive ()
+                    printfn "[Awaiter: message %s]" (cmd.ToString())
+                    match cmd with 
+                    | Connect channel | Reload channel -> 
+                        n.Trigger (Connected, sprintf "Invalid command %s in state Awaiter" (cmd.ToString()))
+                        channel.Reply Connected
+                        return! awaiter ()
+                    | Close channel -> 
+                        closeRequested := true
+                        tokenSrc.Cancel ()
+                        return close channel
                 }
 
                 let awt = awaiter () |> Async.WithCancellation tokenSrc.Token |> Async.Ignore
@@ -131,6 +135,7 @@ module ``Working with mailbox`` =
         )
 
         member x.N = n.Publish
+        member x.RunCommandSync p = a.PostAndReply p
         member x.RunCommand p = a.PostAndAsyncReply p
         member x.RunCommand (p, t) = a.PostAndTryAsyncReply (p, t)
 
@@ -141,15 +146,31 @@ module ``Working with mailbox`` =
             
             printfn "[%d sending Connect]" id 
             let! res = x.RunCommand Commands.Connect
-            printfn "[%d res in %A]" id res
+            printfn "[%d <==== %A]" id res
 
             printfn "[%d sending Reload]" id 
             let! res = x.RunCommand Commands.Reload
-            printfn "[%d res in %A]" id res
+            printfn "[%d <==== %A]" id res
 
             printfn "[%d sending Close]" id 
             let! res = x.RunCommand Commands.Close
-            printfn "[%d res in %A]" id res
+            printfn "[%d <==== %A]" id res
+    }
+
+    let flowSync id (x : Boxing) = async {
+        x.N |> Observable.add (fun (state, msg) -> printfn "[%A: %d -> %s]" state id msg)
+            
+        printfn "[%d sending Connect]" id 
+        let res = x.RunCommandSync Commands.Connect
+        printfn "[%d <==== %A]" id res
+
+        printfn "[%d sending Reload]" id 
+        let res = x.RunCommandSync Commands.Reload
+        printfn "[%d <==== %A]" id res
+
+        printfn "[%d sending Close]" id 
+        let res = x.RunCommandSync Commands.Close
+        printfn "[%d <==== %A]" id res
     }
 
     let flowT id (x : Boxing) T = 
@@ -158,15 +179,15 @@ module ``Working with mailbox`` =
             
             printfn "[%d ====> Connect]" id 
             let! res = x.RunCommand (Commands.Connect, T)
-            printfn "[%d res in %A]" id res
+            printfn "[%d <==== %A]" id res
 
             printfn "[%d ====> Reload]" id 
             let! res = x.RunCommand (Commands.Reload, T)
-            printfn "[%d res in %A]" id res
+            printfn "[%d <==== %A]" id res
 
             printfn "[%d ====> Close]" id 
             let! res = x.RunCommand (Commands.Close, T)
-            printfn "[%d res in %A]" id res
+            printfn "[%d <==== %A]" id res
         }
 
     let someTest () = 
@@ -181,7 +202,7 @@ module ``Working with mailbox`` =
         flow 2 x |> Async.Start
         Thread.Sleep 15000
 
-    let thirdTest () =
+    let ``Test with 2 parallel async reply NO timeout`` () =
         let x = Boxing ()
        
         let pFlow timeout id x = async {
@@ -191,7 +212,7 @@ module ``Working with mailbox`` =
 
         Async.Parallel [flow 1 x; pFlow 1000 2 x] |> Async.RunSynchronously
 
-    let fourthTest () =
+    let ``Test with 2 parallel async reply WITH timeout`` () =
         let x = Boxing ()
        
         let pFlowT pause id x T = async {
@@ -202,7 +223,31 @@ module ``Working with mailbox`` =
         let pause = 1000
         Async.Parallel [flowT 1 x timeout; pFlowT pause 2 x timeout] |> Async.RunSynchronously |> ignore
         printfn "[FINISHED]"
+
+    let ``Test with 2 parallel sync requests`` () =
+        let x = Boxing ()
+       
+        let pFlow pause id x = async {
+            do! Async.Sleep pause
+            return! flowSync id x
+        }
+
+        let timeout = 1000
+        let pause = 1000
+        Async.Parallel [flowSync 1 x; pFlow pause 2 x] |> Async.RunSynchronously |> ignore
+        printfn "[FINISHED]"
         
+    let ``Test with 3 parallel async reply WITH timeout`` () =
+        let x = Boxing ()
+       
+        let pFlowT pause id x T = async {
+            do! Async.Sleep pause
+            return! flowT id x T
+        }
+        let timeout = 1000
+        let pause = 500
+        Async.Parallel [flowT 1 x timeout; pFlowT pause 2 x timeout; pFlowT (pause + 10) 3 x timeout] |> Async.RunSynchronously |> ignore
+        printfn "[FINISHED]"
 
 open ``Working with mailbox``
-fourthTest ()
+``Test with 3 parallel async reply WITH timeout`` ()
