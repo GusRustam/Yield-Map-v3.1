@@ -257,9 +257,10 @@ module AnotherStartup =
         load : int
         connect : int
         agent : int
+        awaiter : int
     }
 
-    let timeouts = { load = 25000; connect = 10000; agent = 2000 }
+    let timeouts = { load = 5000; connect = 2000; agent = 1000; awaiter = 100 }
     
     let doLoad () = async {
         logger.Info "doLoad() start"
@@ -280,9 +281,15 @@ module AnotherStartup =
         let s = Event<_> ()
         let a = MailboxProcessor.Start (fun inbox ->
 
-            let rec started (channel : State AsyncReplyChannel option) = 
+            let rec started (channel : State AsyncReplyChannel option) cont = 
                 logger.Debug "[--> started ()]"
+
                 async {
+                    match cont with 
+                    | Some mthd -> 
+                        try mthd () with e -> logger.ErrorEx "Failed to run continuation" e 
+                    | None -> ()
+
                     s.Trigger Started
                     match channel with Some che -> che.Reply Started | None -> ()
 
@@ -293,29 +300,50 @@ module AnotherStartup =
                         return! transitory (started << Some) doConnect connected channel
                     | Reload channel -> 
                         n.Trigger (Started, sprintf "Invalid command %s in state Started" (cmd.ToString()))
-                        return! started (Some channel)
+                        return! started (Some channel) None
                     | Close channel -> return close channel
                 } 
-            and connected (channel : State AsyncReplyChannel) = 
+
+            and connected (channel : State AsyncReplyChannel) cont = 
                 logger.Debug "[--> connected ()]"
+
                 async {
+                    match cont with 
+                    | Some mthd -> 
+                        logger.Debug "[before cont]"
+                        try mthd () with e -> logger.ErrorEx "Failed to run continuation" e 
+                        logger.Debug "[after cont]"
+                    | None -> 
+                        logger.Debug "[no cont]"
+
+                    logger.Debug "[triggering]"
                     s.Trigger Connected
+                    logger.Debug "[replying]"
                     channel.Reply Connected
 
+                    logger.Debug "[recieving]"
                     let! cmd = inbox.Receive ()
+                    logger.Debug "[recieved]"
                     logger.DebugF "[Connected: message %s]" (cmd.ToString())
                     match cmd with 
                     | Connect channel -> 
                         n.Trigger (Connected, sprintf "Invalid command %s in state Connected" (cmd.ToString()))
-                        return! connected channel
+                        return! connected channel None
                     | Reload channel -> 
                         logger.Debug "[Primary reload]"
                         return! transitory connected doLoad initialized channel
                     | Close channel -> return close channel
                 }
-            and initialized (channel : State AsyncReplyChannel) = 
+
+            and initialized (channel : State AsyncReplyChannel) cont = 
                 logger.Debug "[--> initialized ()]"
+
                 async {
+                    match cont with 
+                    | Some mthd -> 
+                        try mthd () with e -> logger.ErrorEx "Failed to run continuation" e 
+                    | None -> ()
+
                     s.Trigger Initialized
                     channel.Reply Initialized
                     let! cmd = inbox.Receive ()
@@ -323,12 +351,13 @@ module AnotherStartup =
                     match cmd with 
                         | Connect channel ->
                             n.Trigger (Initialized, sprintf "Invalid command %s in state Initialized" (cmd.ToString()))
-                            return! initialized channel
+                            return! initialized channel None
                         | Reload channel ->
                             logger.Debug "[Secondary reload]"
                             return! transitory initialized doLoad initialized channel
                         | Close channel -> return close channel
                 }
+
             and transitory fromState longOperation toState channel = 
                 logger.Debug "[--> initializing ()]"
                 let tokenSrc = new CancellationTokenSource ()
@@ -338,26 +367,25 @@ module AnotherStartup =
 
                 let operation = async {
                     logger.Debug "[-- --> operation () STARTED]"
-                    let op = longOperation () |> Async.WithCancellation tokenSrc.Token
-                    let res =  op |> Async.RunSynchronously
+                    let! res =  longOperation () |> Async.WithCancellation tokenSrc.Token
                     logger.Debug "[-- --> operation () FINISHED]"
                     operationFinished := true
                     match res with 
                     | Some () -> 
                         logger.Debug "[-- --> operation () SUCCESS]"
-                        return! toState channel
+                        return! toState channel (Some tokenSrc.Cancel)
                     | _ -> 
                         logger.Debug "[-- --> operation () FAILED]"
                         if !closeRequested then
                             return close channel
-                        else return! fromState channel
+                        else return! fromState channel (Some tokenSrc.Cancel)
                 }
 
                 let rec awaiter () = async {
                     if !operationFinished then return ()
 
                     logger.Debug "[-- --> awaiter ()]"
-                    let! cmd = inbox.Receive ()
+                    let! cmd = inbox.Receive () 
                     logger.DebugF "[Awaiter: message %s]" (cmd.ToString())
                     match cmd with 
                     | Connect channel | Reload channel -> 
@@ -379,7 +407,7 @@ module AnotherStartup =
                 s.Trigger Closed
                 channel.Reply Closed
 
-            started None
+            started None None
         )
 
         let tryCommand command timeout = async {
