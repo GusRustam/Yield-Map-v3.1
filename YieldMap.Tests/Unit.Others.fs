@@ -361,8 +361,6 @@
             logger.InfoF "Da count is now %d" poo
             poo |> should equal count
 
-
-
         [<Test>]
         let ``Load and save data to raw db`` ()   = 
             MainEntities.SetVariable("PathToTheDatabase", Location.path)

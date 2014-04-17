@@ -112,7 +112,6 @@ module StartupTest =
             let! res = command2 "Reload" x.Reload
             res |> should be (equal (State Initialized))
 
-
             // main flow sleeps 5 seconds after reload, so here I am
             let! res = command2 "Connect" x.Connect 
             res |> should be (equal (State Initialized))

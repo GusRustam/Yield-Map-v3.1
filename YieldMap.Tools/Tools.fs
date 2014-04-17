@@ -135,6 +135,10 @@ module Extensions =
                     return Some res
                 }
 
+        static member map f work = async {
+            let! res = work
+            return f res
+        }
 [<AutoOpen>]
 module Workflows =
     open System

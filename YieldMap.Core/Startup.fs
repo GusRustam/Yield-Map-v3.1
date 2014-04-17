@@ -62,70 +62,87 @@ module private ExternalOperations =
 
     [<RequireQualifiedAccess>]
     module private Loading = 
+        open YieldMap.Database
+        open YieldMap.Tools.Location
+        open YieldMap.Tools.Logging
         open YieldMap.Tools.Aux.Workflows.Attempt
+
+        let private logger = LogFactory.create "Loading"
 
         type private LoadSteps = LoadBonds | LoadIssueRatings | LoadIssuerRatings | LoadFrns
 
         let private steps = [ LoadBonds; LoadIssueRatings; LoadIssuerRatings; LoadFrns ]
             
-        let private clearDatabase () = attempt { 
-            return () 
-        }
+        type private Loader () =
+            do MainEntities.SetVariable("PathToTheDatabase", Location.path)
+            let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
 
-        let private loadBonds () = attempt { 
-            return () 
-        }
-
-        let private loadIssueRatings () = attempt { 
-            return () 
-        }
-
-        let private loadIssuerRatings () = attempt { 
-            return () 
-        }
-
-        let private loadFrns () = attempt { 
-            return () 
-        }
-
-        let private load step = attempt {
-            match step with
-            | LoadBonds -> do! loadBonds ()
-            | LoadIssueRatings -> do! loadIssueRatings ()
-            | LoadIssuerRatings -> do! loadIssuerRatings ()
-            | LoadFrns -> do! loadFrns ()
-        }
-
-        let reload force = async {
-            logger.Trace "reload"
-            // todo check last update date. do not force reload
-            let rec nextStep steps = attempt {
-                match steps with
-                | step :: rest -> 
-                    do! load step
-                    return! nextStep rest
-                | [] -> return ()
+            member x.clearDatabase () = attempt { 
+                return () 
             }
-            let res = attempt {
-                do! clearDatabase ()
-                do! nextStep steps
+
+            member x.loadBonds () = attempt { 
+                return () 
             }
-            return 
-                match res |> Attempt.runAttempt with
-                | None ->  Success.Failure <| Problem "failed to load data" 
-                | _ -> Success.Ok
+
+            member x.loadIssueRatings () = attempt { 
+                return () 
+            }
+
+            member x.loadIssuerRatings () = attempt { 
+                return () 
+            }
+
+            member x.loadFrns () = attempt { 
+                return () 
+            }
+
+            member x.load step = attempt {
+                match step with
+                | LoadBonds -> do! x.loadBonds ()
+                | LoadIssueRatings -> do! x.loadIssueRatings ()
+                | LoadIssuerRatings -> do! x.loadIssuerRatings ()
+                | LoadFrns -> do! x.loadFrns ()
+            }
+
+            member x.reload force = async {
+                logger.Trace "reload"
+                // todo check last update date. do not force reload
+                let rec nextStep steps = attempt {
+                    match steps with
+                    | step :: rest -> 
+                        do! x.load step
+                        return! nextStep rest
+                    | [] -> return ()
+                }
+                let res = attempt {
+    //                do! backupDatabase ()
+                    do! x.clearDatabase ()
+                    do! nextStep steps
+                }
+                return 
+                    match res |> Attempt.runAttempt with
+                    | None ->  
+    //                    restoreDatabase ()
+                        Success.Failure <| Problem "failed to load data" 
+                    | _ -> Success.Ok
 
             // todo catch EF errors too
             // todo create special kind of exception - ImportException - and catch it too
         }
 
 
-    let load f = Loading.reload f
-    let connect f = Connecting.connect f
-
     // todo more advanced evaluation
     let expectedLoadTime = timeouts.load
     let expectedConnectTime = timeouts.connect
+
+    let private asSuccess timeout work = 
+        work 
+        >> Async.WithTimeout (Some timeout)
+        >> Async.map (function Some x -> x | None -> Failure Timeout)
+    
+    let load = Loading.reload |> asSuccess expectedLoadTime 
+    let connect = Connecting.connect |> asSuccess expectedConnectTime
 
 module AnotherStartup =
     open YieldMap.Loader
