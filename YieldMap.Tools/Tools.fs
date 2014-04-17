@@ -138,6 +138,13 @@ module Extensions =
 [<AutoOpen>]
 module Workflows =
     open System
+//
+//    module StatefulAttempt = 
+//        type StatefulAttempt<'S, 'T> = F of ('S -> 'S * 'T)
+//        
+//        let always v = F (fun s -> s, v)
+//        let runAttempt (F a) s  = a s
+
 
     module AsyncAttempt = 
         type AsyncAttempt<'T> = 
@@ -254,6 +261,8 @@ module Disposer =
 
     let private logger = LogFactory.create "Disposer"
 
+    // TODO INHERIT CriticalFinalizerObject 
+    
     [<AbstractClass>] 
     type Disposer() = 
         abstract member DisposeUnmanaged : unit -> unit
