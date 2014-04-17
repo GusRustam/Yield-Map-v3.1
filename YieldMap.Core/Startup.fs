@@ -2,16 +2,25 @@
 
 [<AutoOpen>]
 module Responses =
-    type Failure = Problem of string | Error of exn | Timeout
+    type private FailureStatic = Failure
+    and Failure = 
+        | Problem of string 
+        | Error of exn 
+        | Timeout
+        static member toString x = 
+            match x with
+            | Problem str -> sprintf "Problem %s" str
+            | Error e -> sprintf "Error %s" (e.ToString())
+            | Timeout -> "Timeout"
+        override x.ToString() = FailureStatic.toString x
+
     type Success = 
         | Ok 
         | Failure of Failure
         override x.ToString() = 
             match x with
             | Ok -> "Ok"
-            | Failure (Problem str) -> sprintf "Problem %s" str
-            | Failure (Error e) -> sprintf "Error %s" (e.ToString())
-            | Failure Timeout -> "Timeout"
+            | Failure x -> sprintf "Failure %s" <| x.ToString()
 
 [<AutoOpen>]
 module internal Timeouts =
