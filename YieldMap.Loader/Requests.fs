@@ -11,8 +11,8 @@ module Requests =
     open YieldMap.Tools.Settings
     open YieldMap.Tools.Aux
 
-    type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : int option }
-        with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = None }
+    type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : int }
+        with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = 0 }
 
     (* Converters *)
     type Cnv = abstract member Convert : string -> obj

@@ -40,16 +40,14 @@
         [<TestCase(0, 1, 39)>]
         [<TestCase(1, 1, 0)>]
         let ``Chains come up in parallel and if some fails, the other don't`` (t1 : int, t2 : int, cnt : int) =
-            let toSome t = if t <= 0 then None else Some t
-
-            logger.TraceF "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
+            logger.TraceF "Testing chain timeout %A -> %A -> %d" t1 t2 cnt
 
             let dt = DateTime(2014,3,4)
             let f = MockFactory() :> EikonFactory
             let l = MockChainMeta() :> ChainMetaLoader
             let chain name timeout = Dex2Tests.getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
-            let tasks = [ chain "0#RUTSY=MM" (toSome t1); chain "0#RUSOVB=MM" (toSome t2) ]
+            let tasks = [ chain "0#RUTSY=MM" t1; chain "0#RUSOVB=MM" t2 ]
             let data = tasks |> Async.Parallel |> Async.RunSynchronously |> Array.collect id
             printfn "%d : %A" (Array.length data) data
             data |> Array.length |> should equal cnt
@@ -323,7 +321,6 @@
         open YieldMap.Loader.SdkFactory
         
         open YieldMap.Tools.Aux
-        open YieldMap.Tools.Aux.Workflows.AsyncAttempt
         open YieldMap.Tools.Logging
         open YieldMap.Tools.Location
         
@@ -385,7 +382,7 @@
                     return [||]
             }
 
-            let saveBondDescrs (descrs : BondDescr list) = imperative {  
+            let saveBondDescrs (descrs : BondDescr list) = 
                 use ctx = new MainEntities(cnnStr)
 
                 descrs |> List.iter (fun item -> 
@@ -425,10 +422,9 @@
                         )
                     ctx.RawBonds.Add rawBond |> ignore
                 )
-                return ctx.SaveChanges () 
-            }
+                ctx.SaveChanges () 
 
-            let saveIssueRatings (ratings : IssueRatingData list ) = imperative {
+            let saveIssueRatings (ratings : IssueRatingData list ) = 
                 use ctx = new MainEntities(cnnStr)
                 ratings |> List.iter (fun item -> 
                     let bondId = query {
@@ -448,10 +444,9 @@
                             )
                         ctx.RawRatings.Add rawIssueRating |> ignore
                 )
-                return ctx.SaveChanges () 
-            }
+                ctx.SaveChanges () 
 
-            let saveIssuerRatings (ratings : IssuerRatingData list ) = imperative {
+            let saveIssuerRatings (ratings : IssuerRatingData list ) = 
                 use ctx = new MainEntities(cnnStr)
                 ratings |> List.iter (fun item -> 
                     let bondId = query {
@@ -471,10 +466,9 @@
                             )
                         ctx.RawRatings.Add rawIssueRating |> ignore
                 )
-                return ctx.SaveChanges () 
-            }
+                ctx.SaveChanges () 
 
-            let saveFrns (frns : FrnData list) = imperative {
+            let saveFrns (frns : FrnData list) = 
                 use ctx = new MainEntities(cnnStr)
                 frns |> List.iter (fun item -> 
                     let bondId = query {
@@ -495,8 +489,7 @@
                             )
                         ctx.RawFrnData.Add rawFrn |> ignore
                 )
-                return ctx.SaveChanges () 
-            }
+                ctx.SaveChanges () 
 
 //            let saveRicData (rics : RicData list) = imperative {
 //                use ctx = new MainEntities(cnnStr)
@@ -527,21 +520,24 @@
             let l = MockChainMeta(dt) :> ChainMetaLoader
 
             logger.TraceF "Before imperative"
-            let request chainName = imperative {
+
+            let condition c = if not c then failwith "Condition failed" 
+
+            let request chainName = async {
                 logger.TraceF "Before connection"
-                let! connected = Parallel <| connect f
+                let! connected =  connect f
                 condition (connected)
                 logger.TraceF "After connection"
 
-                let! rics = Parallel <| getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
+                let! rics = getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = 0 }
                 condition (Array.length rics <> 0)
                 logger.TraceF "After chain %s" chainName
                 
                 logger.InfoF "Loading BondDescr table"
-                let! meta = Parallel (l.LoadMetadata<BondDescr> rics None)
+                let! meta = l.LoadMetadata<BondDescr> rics
                 condition (Meta.isAnswer meta)
                 let descrs = Meta<BondDescr>.getAnswer meta
-                let! res = saveBondDescrs descrs
+                let res = saveBondDescrs descrs
                 res |> should equal (List.length descrs) // ezerisink eddid
 
 //                logger.InfoF "Loading CouponData table"
@@ -552,27 +548,27 @@
 //                let! res = saveCoupons coupons
 //                
                 logger.InfoF "Loading IssueRatingData table"
-                let! meta = Parallel (l.LoadMetadata<IssueRatingData> rics None)
+                let! meta = l.LoadMetadata<IssueRatingData> rics
                 condition (Meta.isAnswer meta)
                 let ratings = Meta<IssueRatingData>.getAnswer meta
                 logger.TraceF "IssueRatingData is %A" ratings
-                let! res = saveIssueRatings ratings
+                let res = saveIssueRatings ratings
                 res |> should equal (List.length ratings) // ezerisink eddid
                        
                 logger.InfoF "Loading IssuerRatingData table"
-                let! meta = Parallel (l.LoadMetadata<IssuerRatingData> rics None)
+                let! meta = l.LoadMetadata<IssuerRatingData> rics 
                 condition (Meta.isAnswer meta)
                 let ratings = Meta<IssuerRatingData>.getAnswer meta
                 logger.TraceF "IssuerRatingData is %A" ratings
-                let! res = saveIssuerRatings ratings
+                let res = saveIssuerRatings ratings
                 res |> should equal (List.length ratings) // ezerisink eddid
                 
                 logger.InfoF "Loading FrnData table"
-                let! meta = Parallel (l.LoadMetadata<FrnData> rics None)
+                let! meta = l.LoadMetadata<FrnData> rics
                 condition (Meta.isAnswer meta)
                 let frns = Meta<FrnData>.getAnswer meta
                 logger.TraceF "FrnData is %A" frns
-                let! res = saveFrns frns
+                let res = saveFrns frns
                 res |> should equal (List.length frns) // ezerisink eddid
 
                 // TODO LOAD ALL RICS FOR ONLY THOSE RICS WHICH ARE IN OPENED PORTFOLIO
@@ -583,11 +579,9 @@
 //                let ricData = Meta<RicData>.getAnswer meta
 //                logger.TraceF "RicData is %A" ricData
 //                let! res = saveRicData ricData
-                    
-                return true          
             }
 
-            let res = AsyncAttempt.runAttempt (request "0#RUAER=MM") None
+            let res = request "0#RUAER=MM"
             res |> should equal (Some true)
 
     

@@ -75,13 +75,12 @@
                     logger.ErrorF "...timeout"
                     Assert.Fail "Timeout"
                 
-                let toSome t = if t <= 0 then None else Some t
 
-                logger.TraceF "Testing chain timeout %A -> %A -> %d" (toSome t1) (toSome t2) cnt
+                logger.TraceF "Testing chain timeout %A -> %A -> %d" t1 t2 cnt
 
                 let chain name timeout = Dex2Tests.getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
-                let tasks = [ chain "0#RUTSY=MM" (toSome t1); chain "0#RUSOVB=MM" (toSome t2) ]
+                let tasks = [ chain "0#RUTSY=MM" t1; chain "0#RUSOVB=MM" t2 ]
                 
                 let data = tasks |> Async.Parallel |> Async.RunSynchronously |> Array.collect id
 

@@ -46,14 +46,14 @@ module Dex2Tests =
             logger.TraceF "Before chain %s" chainName
             // todo strange when feed is Q it just hangs, it doesn't report any error...
             // todo maybe I should always chech if the feed is alive via AdxRtSourceList???
-            let! data = getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = None }
+            let! data = getChain q { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = chainName; Timeout = 0 }
             logger.TraceF "After chain"
             if Array.length data <> 0 then
                 let success = ref true
                 logger.TraceF "Chain %A" data
 
                 logger.InfoF "Loading BondDescr table"
-                let! meta = q.LoadMetadata<BondDescr> data None
+                let! meta = q.LoadMetadata<BondDescr> data 
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
                 | Meta.Failed e -> 
@@ -61,7 +61,7 @@ module Dex2Tests =
                     success := false
 
                 logger.InfoF "Loading CouponData table"
-                let! meta = q.LoadMetadata<CouponData> data None
+                let! meta = q.LoadMetadata<CouponData> data 
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
                 | Meta.Failed e -> 
@@ -69,7 +69,7 @@ module Dex2Tests =
                     success := false
         
                 logger.InfoF "Loading IssueRatingData table"
-                let! meta = q.LoadMetadata<IssueRatingData> data None
+                let! meta = q.LoadMetadata<IssueRatingData> data 
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
                 | Meta.Failed e -> 
@@ -77,7 +77,7 @@ module Dex2Tests =
                     success := false
         
                 logger.InfoF "Loading IssuerRatingData table"
-                let! meta = q.LoadMetadata<IssuerRatingData> data None
+                let! meta = q.LoadMetadata<IssuerRatingData> data 
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
                 | Meta.Failed e -> 
@@ -85,7 +85,7 @@ module Dex2Tests =
                     success := false
 
                 logger.InfoF "Loading FrnData table"
-                let! meta = q.LoadMetadata<FrnData> data None
+                let! meta = q.LoadMetadata<FrnData> data 
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
                 | Meta.Failed e -> 
@@ -93,7 +93,7 @@ module Dex2Tests =
                     success := false
         
                 logger.InfoF "Loading RicData table"
-                let! meta = q.LoadMetadata<RicData> data None
+                let! meta = q.LoadMetadata<RicData> data 
                 match meta with
                 | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
                 | Meta.Failed e -> 

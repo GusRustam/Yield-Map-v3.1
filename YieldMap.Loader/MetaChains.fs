@@ -27,7 +27,7 @@ module MetaChains =
     /// Loads chains and metadata
     type ChainMetaLoader = 
         abstract member LoadChain : ChainRequest -> Async<Chain>
-        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : string array -> int option -> 'a Meta Async
+        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : rics:string array * ?timeout:int -> 'a Meta Async
 
     module private Watchers =
         /// Event wrapper of async call
@@ -170,7 +170,7 @@ module MetaChains =
                         | null -> return Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
                         | _ -> return Chain.Answer <| node.InnerText.Split('\t')
                     with e -> return Chain.Failed e
-                } |> Async.WithTimeoutEx setup.Timeout
+                } |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
@@ -224,7 +224,7 @@ module MetaChains =
                 
                         return! Async.AwaitEvent evts.Data
                     with :? COMException -> return Chain.Failed <| Exception "Not connected to Eikon"
-                } |> Async.WithTimeoutEx setup.Timeout
+                } |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
@@ -257,7 +257,7 @@ module MetaChains =
                     let setup = MetaRequest.extract<'a> ()
 
                     return! doMeta mgr setup
-                } |> Async.WithTimeoutEx timeout
+                } |> Async.WithTimeoutEx (Some timeout)
 
             async {
                 try return! workflow
@@ -273,7 +273,8 @@ module MetaChains =
 
         interface ChainMetaLoader with
             member x.LoadChain request = MockOperations.chain request (Some _today) 
-            member x.LoadMetadata rics timeout = MockOperations.meta rics (Some _today) timeout
+            member x.LoadMetadata (rics, ?timeout) = 
+                MockOperations.meta rics (Some _today) timeout
 
     /// Connection : Eikon;
     /// Today / LoadChain / LoadData : Real;
@@ -281,5 +282,8 @@ module MetaChains =
     type EikonChainMeta (factory:EikonFactory) =
         interface ChainMetaLoader with
             member x.LoadChain request = EikonOperations.chain (factory.CreateAdxRtChain ()) request
-            member x.LoadMetadata rics timeout = EikonOperations.meta (factory.CreateDex2Mgr ()) rics timeout
+            member x.LoadMetadata (rics, ?timeout) = 
+                match timeout with
+                | Some time -> EikonOperations.meta (factory.CreateDex2Mgr ()) rics time
+                | None -> EikonOperations.meta (factory.CreateDex2Mgr ()) rics 0
 

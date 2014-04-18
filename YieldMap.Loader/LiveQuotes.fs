@@ -292,7 +292,7 @@ module LiveQuotes =
 
             member x.OnQuotes = quotesEvent.Publish
 
-            member x.Fields (rics, ?timeout) = 
+            member x.Fields (rics, ?timeout) =
                 async {
                     try
                         let fields = _loader.CreateAdxRtList()

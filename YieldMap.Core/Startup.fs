@@ -63,6 +63,7 @@ module private ExternalOperations =
     [<RequireQualifiedAccess>]
     module private Loading = 
         open YieldMap.Database
+        open YieldMap.Loader.MetaChains
         open YieldMap.Tools.Location
         open YieldMap.Tools.Logging
         open YieldMap.Tools.Aux.Workflows.Attempt
@@ -73,63 +74,65 @@ module private ExternalOperations =
 
         let private steps = [ LoadBonds; LoadIssueRatings; LoadIssuerRatings; LoadFrns ]
             
-        type private Loader () =
-            do MainEntities.SetVariable("PathToTheDatabase", Location.path)
-            let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
+        MainEntities.SetVariable("PathToTheDatabase", Location.path)
+        let private cnnStr = MainEntities.GetConnectionString("TheMainEntities")
 
-            member x.clearDatabase () = attempt { 
-                return () 
-            }
+        let private clearDatabase () = ()
 
-            member x.loadBonds () = attempt { 
-                return () 
-            }
+        let private loadBonds () = ()
 
-            member x.loadIssueRatings () = attempt { 
-                return () 
-            }
+        let private loadIssueRatings () = ()
 
-            member x.loadIssuerRatings () = attempt { 
-                return () 
-            }
+        let private loadIssuerRatings () = ()
 
-            member x.loadFrns () = attempt { 
-                return () 
-            }
+        let private loadFrns () = ()
 
-            member x.load step = attempt {
-                match step with
-                | LoadBonds -> do! x.loadBonds ()
-                | LoadIssueRatings -> do! x.loadIssueRatings ()
-                | LoadIssuerRatings -> do! x.loadIssuerRatings ()
-                | LoadFrns -> do! x.loadFrns ()
-            }
+        let private backupDatabase () = ()
 
-            member x.reload force = async {
-                logger.Trace "reload"
-                // todo check last update date. do not force reload
-                let rec nextStep steps = attempt {
-                    match steps with
-                    | step :: rest -> 
-                        do! x.load step
-                        return! nextStep rest
-                    | [] -> return ()
-                }
-                let res = attempt {
-    //                do! backupDatabase ()
-                    do! x.clearDatabase ()
-                    do! nextStep steps
-                }
-                return 
-                    match res |> Attempt.runAttempt with
-                    | None ->  
-    //                    restoreDatabase ()
+        let private restoreDatabase () = ()
+
+        let private load = function
+            | LoadBonds -> loadBonds ()
+            | LoadIssueRatings -> loadIssueRatings ()
+            | LoadIssuerRatings -> loadIssuerRatings ()
+            | LoadFrns -> loadFrns ()
+
+        exception DbFailed
+       
+        let reload (m:ChainMetaLoader) force = async {
+            logger.Trace "reload"
+
+            // todo check last update date. do not force reload
+
+            let rec doLoad steps = 
+                match steps with
+                | step :: rest -> 
+                    load step
+                    doLoad rest
+                | [] -> ()
+
+            return
+                try
+                    backupDatabase ()
+                    clearDatabase ()
+                    doLoad steps
+            
+                    Success.Ok
+                with _ -> 
+                    try
+                        clearDatabase ()
+                        restoreDatabase ()
                         Success.Failure <| Problem "failed to load data" 
-                    | _ -> Success.Ok
+                    with _ -> 
+                        try
+                            clearDatabase ()
+                            Success.Failure <| Problem "failed to load data" 
+                        with _ ->
+                            Success.Failure <| Problem "database corrupted" 
+        }
 
             // todo catch EF errors too
             // todo create special kind of exception - ImportException - and catch it too
-        }
 
 
     // todo more advanced evaluation
@@ -139,9 +142,9 @@ module private ExternalOperations =
     let private asSuccess timeout work = 
         work 
         >> Async.WithTimeout (Some timeout)
-        >> Async.map (function Some x -> x | None -> Failure Timeout)
+        >> Async.Map (function Some x -> x | None -> Failure Timeout)
     
-    let load = Loading.reload |> asSuccess expectedLoadTime 
+    let load m = Loading.reload m |> asSuccess expectedLoadTime 
     let connect = Connecting.connect |> asSuccess expectedConnectTime
 
 module AnotherStartup =
@@ -226,7 +229,7 @@ module AnotherStartup =
                         return! connected channel 
                     | Reload channel -> 
                         logger.Debug "[Primary reload]"
-                        let! res = ExternalOperations.load true
+                        let! res = ExternalOperations.load m true
                         match res with
                         | Success.Failure f -> 
                             n.Trigger <| (Connected, f, Severity.Warn)
@@ -249,7 +252,7 @@ module AnotherStartup =
                         return! initialized channel 
                     | Reload channel ->
                         logger.Debug "[Secondary reload]"
-                        let! res = ExternalOperations.load true
+                        let! res = ExternalOperations.load m true
                         match res with
                         | Success.Failure f -> 
                             n.Trigger <| (Connected, f, Severity.Warn)

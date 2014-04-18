@@ -51,6 +51,10 @@
     <None Include="tdd.fsx" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Interop.AdfinXAnalyticsFunctions">
       <HintPath>C:\Users\Rustam Guseynov\AppData\Local\Thomson Reuters\TRD 6\Program\Interop.AdfinXAnalyticsFunctions.dll</HintPath>
     </Reference>
@@ -76,11 +80,18 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\YieldMap.Database\YieldMap.Database.csproj">
+      <Name>YieldMap.Database</Name>
+      <Project>{21174b80-86bf-491f-9bf5-057d46a39d4c}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Loader\YieldMap.Loader.fsproj">
       <Name>YieldMap.Loader</Name>
       <Project>{ef7a6217-b508-43b1-8012-e4a041e50108}</Project>
