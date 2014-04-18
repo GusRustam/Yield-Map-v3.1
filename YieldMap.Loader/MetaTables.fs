@@ -148,7 +148,7 @@ module MetaTables =
         [<Field(4, "EJV.X.ADF_MARGIN", typeof<SomeFloatConverter>)>]
         member val Margin : float Nullable = Nullable() with get, set
 
-        [<Field(5, "EJV.X.INDEX", typeof<NotNullConverter>)>]
+        [<Field(5, "EJV.X.INDEX", typeof<NotNullOrEmptyConverter>)>]
         member val IndexRic = String.Empty with get, set
 
         override x.ToString () = sprintf "<Cap %A / Floor %A / Freq %s / Margin %A / Index %s>" x.Cap x.Floor x.Frequency x.Margin x.IndexRic

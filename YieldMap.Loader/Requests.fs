@@ -15,36 +15,35 @@ module Requests =
         with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = 0 }
 
     (* Converters *)
-    type Cnv = abstract member Convert : string -> obj
+    type Cnv = abstract member Convert : string -> obj option
 
-    type BoolConverter() = 
+    type BoolConverter() = interface Cnv with member self.Convert x = Some <| box (string(x.[0]).ToUpper() = "Y")
+    type NotNullConverter() = interface Cnv with member self.Convert x = if x = null then None else Some <| box x 
+                
+    type NotNullOrEmptyConverter() = 
         interface Cnv with 
             member self.Convert x = 
-                box (string(x.[0]).ToUpper() = "Y")
-    
-    type NotNullConverter() = 
-        interface Cnv with 
-            member self.Convert x = 
-                if x.Trim() <> String.Empty then box x else failwith "String empty"
+                if x = null then None
+                elif x.Trim() <> String.Empty then Some <| box x 
+                else None
 
     type DateConverter() = 
         interface Cnv with
             member self.Convert x = 
-                let success, date = 
-                    DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
-                if success then date :> obj else x :> obj // чтобы работало и рейтеровскими данными и с моими
+                let success, date = DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
+                Some <| if success then box date else box x // чтобы работало и рейтеровскими данными и с моими
 
     type SomeFloatConverter() = 
         interface Cnv with
             member self.Convert x =
                 let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
-                if success then box num else null
+                if success then Some <| box num else None
 
     type SomeInt64Converter() = 
         interface Cnv with
             member self.Convert x =
                 let success, num = Int64.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
-                if success then box num else null
+                if success then Some <| box num else None
 
     (* Request attributes *) 
     type RequestAttribute = 

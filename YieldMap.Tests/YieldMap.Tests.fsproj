@@ -70,11 +70,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common.fs" />
+    <Compile Include="Unit.Subscription.fs" />
+    <Compile Include="Unit.Database.fs" />
     <Compile Include="Unit.Startup.fs" />
     <Compile Include="Unit.Others.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
     <Compile Include="IntegrationTesting.fs" />
+    <Compile Include="Unit.Api.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YieldMap.Core\YieldMap.Core.fsproj">

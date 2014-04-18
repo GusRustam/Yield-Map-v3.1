@@ -106,51 +106,6 @@ module Extensions =
         static member split delim (wut : string) = wut.Split(delim)
 
     type Async with
-//        static member WithTimeout (timeout : int option) operation = 
-//            match timeout with
-//            | Some(time) -> async { try return Async.RunSynchronously (operation, time) |> Some with :? TimeoutException -> return None }
-//            | _ -> async { return operation |> Async.RunSynchronously |> Some }
-//
-
-//
-//        static member WithCancellation (token : CancellationToken) operation = async {
-//            try
-//                let task = Async.StartAsTask (operation, cancellationToken = token)
-//                task.Wait ()
-//                return Some task.Result
-//            with :? TaskCanceledException | :? AggregateException -> return None
-//        }
-//
-//        static member AutoCancelled<'T> operation timeout = 
-//            let cancellableWork (tokenSource:CancellationTokenSource) = async {
-//                let task = Async.StartAsTask (operation, cancellationToken = tokenSource.Token)
-//                task.Wait ()
-//                return task.Result
-//            }
-//
-//            let awaiter (tokenSource:CancellationTokenSource) = async {
-//                do! Async.Sleep timeout
-//                tokenSource.Cancel ()
-//                return Unchecked.defaultof<'T>
-//            }
-//            
-//            async {
-//                use tokenSource = new CancellationTokenSource() 
-//                let! res = [cancellableWork tokenSource; awaiter tokenSource] |> Async.Parallel 
-//                return res.[0]
-//            }
-//
-//        static member WithTimeoutToken (timeout : int option) operation = 
-//            match timeout with
-//            | Some(time) -> 
-//                let tokenSource = new CancellationTokenSource (time)
-//                Async.WithCancellation tokenSource.Token operation
-//            | _ -> 
-//                async { 
-//                    let! res = operation
-//                    return Some res
-//                }
-
         // OLD TIMEOUT METHODS
         static member WithTimeout (timeout : int option) operation = 
             match timeout with
@@ -192,51 +147,6 @@ module Extensions =
 [<AutoOpen>]
 module Workflows =
     open System
-//
-//    module StatefulAttempt = 
-//        type StatefulAttempt<'S, 'T> = F of ('S -> 'S * 'T)
-//        
-//        let always v = F (fun s -> s, v)
-//        let runAttempt (F a) s  = a s
-
-
-//    module AsyncAttempt = 
-//        type AsyncAttempt<'T> = 
-//        | Parallel of 'T Async
-//        | Func of (unit -> 'T option)
-//        | Bool of bool
-//
-//        let always x = Func (fun () -> x)
-//
-//        let runAttempt (a : AsyncAttempt<'T>) timeout =
-//            match a with
-//            | Parallel call -> Some (call |> Async.WithTimeoutEx timeout |> Async.RunSynchronously) 
-//            | Func call -> call()
-//            | Bool b -> if b then Some Unchecked.defaultof<'T> else None
-//
-//        let fail = Func (fun () -> None) : AsyncAttempt<'T>
-//        let succeed x = always (Some x)
-//        let bind p rest timeout = match runAttempt p timeout with None -> fail | Some r -> (rest r)
-//        let delay f timeout = always (runAttempt <| f() <| timeout)
-//        let combine p1 p2 timeout = always (match runAttempt p1 timeout with None -> runAttempt p2 timeout | res -> res)
-//        let condition p guard timeout = always (match runAttempt p timeout with Some x when guard x -> Some x | _ -> None)
-//        let disposable (value : 'a when 'a :> IDisposable) func timeout =  always (try runAttempt (func value) timeout finally value.Dispose())
-//
-//        type AsyncAttemptBuilder(timeout) = 
-//            member b.Bind (p, rest) = bind p rest timeout
-//            member b.Delay f = delay f timeout
-//            member b.Return x = succeed x 
-//            member b.ReturnFrom (x : AsyncAttempt<'T>)  = x
-//            member b.Combine (p1 : AsyncAttempt<'T>, p2 : AsyncAttempt<'T>) = combine p1 p2 timeout
-//            member b.Zero () = fail
-//            member b.Using (x, f) = disposable x f timeout
-//
-//            [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
-//            member x.Condition (p, [<ProjectionParameter>] guard) = condition p guard timeout
-//
-//        let imperativeTimeout timeout = AsyncAttemptBuilder timeout
-//        let imperative = imperativeTimeout None
-
     module Attempt = 
         type Attempt<'T> = (unit -> 'T option)
 

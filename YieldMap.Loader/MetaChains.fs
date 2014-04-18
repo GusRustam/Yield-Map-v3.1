@@ -97,12 +97,24 @@ module MetaChains =
                     match p.Attr<FieldAttribute>() with
                     | Some(attr) -> Some(attr.Order, p.Name, attr.Converter)
                     | _ -> None)
+                |> Array.toList
 
             try
                 let minRow = data.GetLowerBound(0)
                 let maxRow = data.GetUpperBound(0)
                 let minCol = data.GetLowerBound(1)
                 let maxCol = data.GetUpperBound(1)
+
+                let getConverter (conv : Type) = 
+                    if converters.ContainsKey(conv) then converters.[conv] 
+                    else 
+                        let cnv = Activator.CreateInstance(conv) :?> Cnv
+                        lock converters (fun () -> try converters.Add (conv, cnv) with :? ArgumentException -> ())
+                        cnv
+
+                let convert (value:obj) conv = 
+                    let converter = getConverter conv
+                    try converter.Convert <| value.ToString() with _ -> None
 
                 let rec import acc n = 
                     if n > maxRow then
@@ -114,32 +126,34 @@ module MetaChains =
                             let res = new 'T() 
                             let t = typedefof<'T>
 
-                            for (num, name, conv) in fieldsInfo do
-                                let p = t.GetProperty name
+                            let rec importRow = function
+                                | (num, name, converter) :: rest ->
+                                    let p = t.GetProperty name
+                                    let value = row.[num-minCol]
+                                    
+                                    logger.TraceF "Converting value %A to type %s" value p.PropertyType.Name
 
-                                let converted value = 
-                                    match conv with
-                                    | Some conv -> 
-                                        logger.TraceF "Converting value %A to type %s" value p.PropertyType.Name
+                                    let convertedValue = 
+                                        match converter with
+                                        | Some conv -> try convert (value.ToString()) conv with _ -> None
+                                        | None -> Some value
 
-                                        let converter = 
-                                            if converters.ContainsKey(conv) then 
-                                                converters.[conv] 
-                                            else 
-                                                let cnv = Activator.CreateInstance(conv) :?> Cnv
-                                                lock converters (fun () -> try converters.Add (conv, cnv) with :? ArgumentException -> ())
-                                                cnv
+                                    match convertedValue with
+                                    | Some v -> 
+                                        p.SetValue(res, v) 
+                                        importRow rest
+                                    | None -> false
+                                | [] -> true
 
-                                        try converter.Convert <| value.ToString()
-                                        with _ -> value
-                                    | _ -> 
-                                        logger.TraceF "Value is %A" value
-                                        value
-                            
-                                p.SetValue(res, converted row.[num-minCol]) 
-                            import ([res] @ acc) (n+1)
+                            if importRow fieldsInfo then
+                                logger.Trace "Imported"
+                                import ([res] @ acc) (n+1)
+                            else 
+                                logger.Warn "Row import failed"
+                                import acc (n+1)
+
                         with e -> 
-                            logger.DebugF "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())
+                            logger.WarnF "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())
                             import acc (n+1)
             
                 Meta.Answer <| import [] minRow
