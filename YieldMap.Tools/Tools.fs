@@ -124,6 +124,7 @@ module Extensions =
             return task.Result
         }
 
+        // todo what does it return if cancelled?
         static member AutoCancelled<'T> timeout operation  = 
             if timeout > 0 then
                 let awaiter (tokenSource:CancellationTokenSource) = async {
@@ -135,7 +136,8 @@ module Extensions =
                 async {
                     use tokenSource = new CancellationTokenSource() 
                     let! res = [operation |> Async.WithCancelToken tokenSource.Token; awaiter tokenSource] |> Async.Parallel 
-                    return res.[0]
+                    let answer = if tokenSource.Token.IsCancellationRequested then res.[1] else res.[0]
+                    return answer
                 }
             else operation
             

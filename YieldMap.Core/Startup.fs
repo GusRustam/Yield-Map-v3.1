@@ -24,6 +24,7 @@ module Responses =
 
 [<AutoOpen>]
 module internal Timeouts =
+    // todo default timeouts
     type Timeouts = {
         load : int
         connect : int
@@ -52,7 +53,7 @@ module private ExternalOperations =
             | None -> TimedOut
 
         let connect (f:EikonFactory) = async { 
-            let! res = f.Connect () |> Async.WithTimeout (Some 10000) // todo default timeout
+            let! res = f.Connect () |> Async.WithTimeout (Some timeouts.connect) 
             return
                 match res with
                 | TimedOut -> Success.Failure Failure.Timeout
@@ -68,6 +69,8 @@ module private ExternalOperations =
         open YieldMap.Tools.Logging
         open YieldMap.Tools.Aux.Workflows.Attempt
 
+        open System.IO
+
         let private logger = LogFactory.create "Loading"
 
         type private LoadSteps = LoadBonds | LoadIssueRatings | LoadIssuerRatings | LoadFrns
@@ -77,7 +80,35 @@ module private ExternalOperations =
         MainEntities.SetVariable("PathToTheDatabase", Location.path)
         let private cnnStr = MainEntities.GetConnectionString("TheMainEntities")
 
-        let private clearDatabase () = ()
+        exception private DbException of Failure
+
+        let private backupDatabase () =
+            use ctx = new MainEntities (cnnStr)
+            let path = Path.Combine(Location.path, "main.bak")
+            try
+                if File.Exists(path) then File.Delete(path)
+                let sql = sprintf "BACKUP DATABASE main TO DISK='%s'" path
+                ctx.Database.ExecuteSqlCommand(sql) |> ignore
+                if not <| File.Exists(path) then raise <| DbException (Problem "No backup file found")
+            with
+                | :? DbException -> reraise ()
+                | e -> raise <| DbException (Error e)
+
+        let private restoreDatabase () = 
+            use ctx = new MainEntities (cnnStr)
+            let path = Path.Combine(Location.path, "main.bak")
+            try
+                if not <| File.Exists(path) then raise <| DbException (Problem "No restore file found")
+                let sql = sprintf "RESTORE DATABASE main FROM DISK='%s'" path
+                ctx.Database.ExecuteSqlCommand(sql) |> ignore
+                if File.Exists(path) then File.Delete(path)
+            with
+                | :? DbException -> reraise ()
+                | e -> raise <| DbException (Error e)
+
+        let private clearDatabase () = 
+            use ctx = new MainEntities (cnnStr)
+            ()
 
         let private loadBonds () = ()
 
@@ -86,10 +117,6 @@ module private ExternalOperations =
         let private loadIssuerRatings () = ()
 
         let private loadFrns () = ()
-
-        let private backupDatabase () = ()
-
-        let private restoreDatabase () = ()
 
         let private load = function
             | LoadBonds -> loadBonds ()
