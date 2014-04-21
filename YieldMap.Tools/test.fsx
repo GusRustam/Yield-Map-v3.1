@@ -4,110 +4,80 @@
 #r @"C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Tools\bin\debug\YieldMap.Tools.dll"
 #endif
 
-open System.Threading
-open YieldMap.Tools.Aux
+module Responses =
+    type private FailureStatic = Failure
+    and Failure = 
+        | Problem of string | Error of exn | Timeout
+        static member toString x = 
+            match x with
+            | Problem str -> sprintf "Problem %s" str
+            | Error e -> sprintf "Error %s" (e.ToString())
+            | Timeout -> "Timeout"
+        override x.ToString() = FailureStatic.toString x
 
-module ``Async extensions`` = 
-    ////////////////////////////////////////////////////
-    let someAsync () = async {
-        for i in 1..10 do 
-            do! Async.Sleep 100
-            printfn "Thread %d, Value %d" Thread.CurrentThread.ManagedThreadId i
-    }
-        
-    let testToken () = 
-        printfn "=============================================="
-        use token = new CancellationTokenSource ()
-        let cAsync = someAsync () |> Async.WithCancellation token.Token
-        cAsync |> Async.Ignore |> Async.Start 
-        Thread.Sleep 500
-        token.Cancel ()
-        Thread.Sleep 500
+    type Success<'T> = 
+        | Answer of 'T | Failure of Failure
+        override x.ToString() = 
+            match x with
+            | Answer res -> sprintf "Answer %A" <| res.ToString()
+            | Failure x -> sprintf "Failure %s" <| x.ToString()
 
+    type private E<'T> = unit -> Success<'T>
 
-    let testTimeout () =
-        printfn "=============================================="
-        let cAsync = someAsync () |> Async.WithTimeoutToken (Some 500)
-        cAsync |> Async.Ignore |> Async.Start 
-        Thread.Sleep 1000
+    let exec (comp : E<'T>) : Success<'T>  = comp () 
+    let private always y : E<'T> = fun () -> y
+    let private fail res = Failure res
+    let private bind expr comp = match exec expr with Failure f -> fail f | x -> comp x
+    let private combine expr1 expr2 = always (match exec expr1 with Failure f -> expr2 | res -> res)
+    let private tryFinally expr handler = try exec expr finally handler
+    let private tryWith expr catcher = try exec expr with e -> catcher e
 
-    ////////////////////////////////////////////////////
-    type Async with
-        static member AutoCancelled<'T> timeout operation  = 
-            let cancellableWork (tokenSource:CancellationTokenSource) = async {
-                let task = Async.StartAsTask (operation, cancellationToken = tokenSource.Token)
-                task.Wait ()
-                return task.Result
-            }
+    type SoBuilder() = 
+        member x.Delay expr = always <| exec expr
+        member x.Bind (expr, comp) = bind expr comp
+        member x.Return z = Answer z
+        member x.ReturnFrom expr = exec expr
+        member x.Combine (expr1, expr2) = combine expr1 expr2
+        member x.TryFinally (expr, handler) = tryFinally expr handler
+        member x.TryWith (expr, catcher) = tryWith expr catcher
+        member x.Zero () = Success<_>.Failure <| Problem "Condition failure"
 
-            let awaiter (tokenSource:CancellationTokenSource) = async {
-                do! Async.Sleep timeout
-                tokenSource.Cancel ()
-                return Unchecked.defaultof<'T>
-            }
-            
-            async {
-                use tokenSource = new CancellationTokenSource() 
-                let! res = [cancellableWork tokenSource; awaiter tokenSource] |> Async.Parallel 
-                return res.[0]
-            }
+    let success = SoBuilder()
 
-    let qqq = async {
-        printfn "qqq" 
-        try
-            do! Async.Sleep 1000
-            printfn "qqq bye" 
-        with e -> printfn "qqq err" 
-    }
+open Responses
 
-    let tst () = qqq |> Async.AutoCancelled 500 |> Async.RunSynchronously
-    ////////////////////////////////////////////////////
+let vova = success {
+    return true
+}
+let vova1 = exec vova
+printfn "%A" vova1
 
-    type Async with
-        static member WC (token : CancellationToken) operation = async {
-            let task = Async.StartAsTask (operation, cancellationToken = token)
-            task.Wait ()
-            return task.Result
-        }
+let dima = success {
+    if 1 > 2 then return 22
+}
+printfn "%A" dima
+let dima1 = exec dima
+printfn "%A" dima1
 
-    let testInternalCancellations () =
-        let iF id = async {
-            use! cancelHandler = Async.OnCancel(fun () -> printfn "Canceling IF%d" id)
+let zoo = success {
+    let! a = vova
+    return a
+}
+printfn "%A" zoo
+let zoo1 = exec zoo
+printfn "%A" zoo1
 
-            printfn "--> IF%d" id
-            try 
-                do! Async.Sleep 1000
-            with e -> printfn "IF%d exn %s" id (e.GetType().Name)
-            printfn "<-- IF%d" id
-        }
+let zoo2 = success {
+    let! a = dima
+    return a
+}
+printfn "%A" zoo2
+let zoo12 = exec zoo
+printfn "%A" zoo12
 
-
-        let generalFlow = async {
-            printfn "--> generalFlow"
-
-            use token = new CancellationTokenSource ()
-            let iF id = 
-                iF id 
-                |> Async.WC token.Token 
-                |> Async.Catch 
-                |> Async.map (function Choice1Of2 res -> Some res | _ -> None)
-            
-            [ iF 1; iF 2; iF 3 ] 
-            |> Async.Parallel 
-            |> Async.Ignore 
-            |> Async.Start
-
-            do! Async.Sleep 100
-            token.Cancel ()
-            printfn "<-- generalFlow"
-        }
-
-        [iF 4; generalFlow]  
-        |> Async.Parallel 
-        |> Async.Ignore
-        |> Async.RunSynchronously
-
-
-open ``Async extensions``
-
-testInternalCancellations ()
+let bobo = success {
+    return! vova
+}
+printfn "%A" bobo
+let bobo1 = exec bobo
+printfn "%A" bobo1

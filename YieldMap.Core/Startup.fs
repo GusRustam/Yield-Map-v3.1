@@ -4,9 +4,7 @@
 module Responses =
     type private FailureStatic = Failure
     and Failure = 
-        | Problem of string 
-        | Error of exn 
-        | Timeout
+        | Problem of string | Error of exn | Timeout
         static member toString x = 
             match x with
             | Problem str -> sprintf "Problem %s" str
@@ -15,11 +13,10 @@ module Responses =
         override x.ToString() = FailureStatic.toString x
 
     type Success = 
-        | Ok 
-        | Failure of Failure
+        Ok | Failure of Failure
         override x.ToString() = 
             match x with
-            | Ok -> "Ok"
+            | Ok -> "OK"
             | Failure x -> sprintf "Failure %s" <| x.ToString()
 
 [<AutoOpen>]
@@ -35,7 +32,7 @@ module internal Timeouts =
     let timeouts = { load = 5000; connect = 2000; agent = 1000; awaiter = 100 }
 
 [<RequireQualifiedAccess>]
-module private ExternalOperations =
+module ExternalOperations =
     open YieldMap.Loader.Requests
     open YieldMap.Loader.SdkFactory
     open YieldMap.Tools.Aux
@@ -61,8 +58,7 @@ module private ExternalOperations =
                 | Established -> Success.Ok
         }
 
-    [<RequireQualifiedAccess>]
-    module private Loading = 
+    module Loading = 
         open YieldMap.Database
         open YieldMap.Loader.MetaChains
         open YieldMap.Tools.Location
@@ -73,96 +69,106 @@ module private ExternalOperations =
 
         let private logger = LogFactory.create "Loading"
 
-        type private LoadSteps = LoadBonds | LoadIssueRatings | LoadIssuerRatings | LoadFrns
-
-        let private steps = [ LoadBonds; LoadIssueRatings; LoadIssuerRatings; LoadFrns ]
-            
-        MainEntities.SetVariable("PathToTheDatabase", Location.path)
+        do MainEntities.SetVariable("PathToTheDatabase", Location.path)
         let private cnnStr = MainEntities.GetConnectionString("TheMainEntities")
 
-        exception private DbException of Failure
+        exception DbException of Failure
 
-        let private backupDatabase () =
-            use ctx = new MainEntities (cnnStr)
-            let path = Path.Combine(Location.path, "main.bak")
-            try
-                if File.Exists(path) then File.Delete(path)
-                let sql = sprintf "BACKUP DATABASE main TO DISK='%s'" path
-                ctx.Database.ExecuteSqlCommand(sql) |> ignore
-                if not <| File.Exists(path) then raise <| DbException (Problem "No backup file found")
-            with
-                | :? DbException -> reraise ()
-                | e -> raise <| DbException (Error e)
+        type LoadingOperations =
+            abstract LoadChains : string list -> string list // chains to rics, todo some params if any
+            abstract LoadBonds : string list -> unit // todo some metatable
+            abstract LoadRatings : string list -> unit // todo some metatable
+            abstract LoadFrns : string list -> unit // todo some metatable
+            abstract LoadRics : string list -> unit // todo some metatable // todo use it externally
 
-        let private restoreDatabase () = 
-            use ctx = new MainEntities (cnnStr)
-            let path = Path.Combine(Location.path, "main.bak")
-            try
-                if not <| File.Exists(path) then raise <| DbException (Problem "No restore file found")
-                let sql = sprintf "RESTORE DATABASE main FROM DISK='%s'" path
-                ctx.Database.ExecuteSqlCommand(sql) |> ignore
-                if File.Exists(path) then File.Delete(path)
-            with
-                | :? DbException -> reraise ()
-                | e -> raise <| DbException (Error e)
+        // TODO IMPLEMENTS
+        type EikonLoadingOperations (m:ChainMetaLoader) =
+            interface LoadingOperations with
+                member x.LoadChains chains = []
+                member x.LoadBonds rics = ()
+                member x.LoadRatings rics = ()
+                member x.LoadFrns rics = ()
+                member x.LoadRics rics = ()
 
-        let private clearDatabase () = 
-            use ctx = new MainEntities (cnnStr)
-            ()
+        type SavingOperations = 
+            abstract Backup : unit -> unit
+            abstract Restore : unit -> unit
+            abstract Clear : unit -> unit
+            abstract NeedsReload : unit -> bool
+            abstract SaveBonds : unit -> unit
+            abstract SaveRatings : unit -> unit
+            abstract SaveFrns : unit -> unit
 
-        let private loadBonds () = ()
-
-        let private loadIssueRatings () = ()
-
-        let private loadIssuerRatings () = ()
-
-        let private loadFrns () = ()
-
-        let private load = function
-            | LoadBonds -> loadBonds ()
-            | LoadIssueRatings -> loadIssueRatings ()
-            | LoadIssuerRatings -> loadIssuerRatings ()
-            | LoadFrns -> loadFrns ()
-
-        exception DbFailed
-       
-        let reload (m:ChainMetaLoader) force = async {
-            logger.Trace "reload"
-
-            // todo check last update date. do not force reload
-
-            let rec doLoad steps = 
-                match steps with
-                | step :: rest -> 
-                    load step
-                    doLoad rest
-                | [] -> ()
-
-            return
-                try
-                    backupDatabase ()
-                    clearDatabase ()
-                    doLoad steps
-            
-                    Success.Ok
-                with _ -> 
+        type DbSavingOperations () = 
+            interface SavingOperations with
+                member x.Backup () =
+                    use ctx = new MainEntities (cnnStr)
+                    let path = Path.Combine(Location.path, "main.bak")
                     try
-                        clearDatabase ()
-                        restoreDatabase ()
-                        Success.Failure <| Problem "failed to load data" 
-                    with _ -> 
-                        try
-                            clearDatabase ()
-                            Success.Failure <| Problem "failed to load data" 
-                        with _ ->
-                            Success.Failure <| Problem "database corrupted" 
-        }
+                        if File.Exists(path) then File.Delete(path)
+                        let sql = sprintf "BACKUP DATABASE main TO DISK='%s'" path
+                        ctx.Database.ExecuteSqlCommand(sql) |> ignore
+                        if not <| File.Exists(path) then raise (DbException <| Problem "No backup file found")
+                    with e ->  raise (DbException <| Error e)
 
-            // todo catch EF errors too
-            // todo create special kind of exception - ImportException - and catch it too
+                member x.Restore () = 
+                    use ctx = new MainEntities (cnnStr)
+                    let path = Path.Combine(Location.path, "main.bak")
+                    try
+                        if not <| File.Exists(path) then raise <| DbException (Problem "No restore file found")
+                        let sql = sprintf "RESTORE DATABASE main FROM DISK='%s'" path
+                        ctx.Database.ExecuteSqlCommand(sql) |> ignore
+                        if File.Exists(path) then File.Delete(path)
+                    with
+                        | :? DbException -> reraise ()
+                        | e -> raise <| DbException (Error e)
+
+        let private saver = DbSavingOperations () :> SavingOperations
+        let private loader = EikonLoadingOperations () :> LoadingOperations
+
+        let rec reload (m:ChainMetaLoader) force = 
+            logger.Trace "reload ()"
+            async {
+                if force && reloadNecessary () || force then
+                    try
+                        saver.Backup ()
+                        saver.Clear ()
+                        return! load ()
+                    with :? DbException as e -> 
+                        logger.ErrorEx "Load failed" e
+                        return! loadFailed ()
+                else return Ok
+            }
+
+        and private load () = 
+            logger.Trace "load ()"
+            async {
+                try
+                    saver.SaveBonds ()
+                    saver.SaveFrns ()
+                    saver.SaveRatings ()
+                    return Ok
+                with :? DbException as e -> 
+                    logger.ErrorEx "Load failed" e
+                    return! loadFailed ()
+            }
+        and private reloadNecessary () = 
+            logger.Trace "reloadNecessary ()"
+            false
+        and private loadFailed () = 
+            logger.Trace "loadFailed ()"
+            async {
+                try 
+                    saver.Restore ()
+                    return Failure (Problem "Failed to reload data, restored successfully")
+                with e ->
+                    logger.ErrorEx "Failed to reload and restore data" e
+                    return Failure (Problem "Failed to reload and restore data")
+            }
 
 
-    // todo more advanced evaluation
+
+    // todo more advanced evaluation !!!
     let expectedLoadTime = timeouts.load
     let expectedConnectTime = timeouts.connect
 

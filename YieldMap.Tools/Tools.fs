@@ -152,12 +152,14 @@ module Workflows =
     module Attempt = 
         type Attempt<'T> = (unit -> 'T option)
 
+        let always x = (fun () -> x) : Attempt<'T>
+
         let runAttempt (a : Attempt<'T>) = a() 
-        let fail = (fun () -> None) : Attempt<'T>
-        let succeed x = (fun () -> Some(x)) : Attempt<'T>
-        let bind p rest = match runAttempt p with None -> fail | Some r -> (rest r)
-        let delay f = (fun () -> runAttempt (f())) : Attempt<'T>
-        let combine p1 p2 = (fun () -> match p1() with None -> p2() | res -> res)
+        let fail = always None
+        let succeed x = always <| Some x
+        let bind p rest = match runAttempt p with None -> fail | Some r -> rest r
+        let delay f = always <| runAttempt (f())
+        let combine p1 p2 = always (match runAttempt p1 with None -> runAttempt p2 | res -> res)
 
         type AttemptBuilder() = 
             member b.Bind(p, rest) = bind p rest
