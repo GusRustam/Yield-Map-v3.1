@@ -23,6 +23,10 @@ module Extensions =
     let inline (|-) item items = set items |> Set.contains item
     let inline (-|) items item = item |- items
 
+    let fst3 (a, _, _) = a
+    let snd3 (_, b, _) = b
+    let trd3 (_, _, c) = c
+
     (* Расширение встроенной функциональности *)
     module Array = 
         let first (arr: 'a array) = arr.[0]

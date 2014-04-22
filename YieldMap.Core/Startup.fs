@@ -61,9 +61,12 @@ module ExternalOperations =
     module Loading = 
         open YieldMap.Database
         open YieldMap.Loader.MetaChains
+        open YieldMap.Loader.MetaTables
+
+        open YieldMap.Tools.Aux
+        open YieldMap.Tools.Aux.Workflows.Attempt
         open YieldMap.Tools.Location
         open YieldMap.Tools.Logging
-        open YieldMap.Tools.Aux.Workflows.Attempt
 
         open System.IO
 
@@ -74,32 +77,25 @@ module ExternalOperations =
 
         exception DbException of Failure
 
-        type LoadingOperations =
-            abstract LoadChains : string list -> string list // chains to rics, todo some params if any
-            abstract LoadBonds : string list -> unit // todo some metatable
-            abstract LoadRatings : string list -> unit // todo some metatable
-            abstract LoadFrns : string list -> unit // todo some metatable
-            abstract LoadRics : string list -> unit // todo some metatable // todo use it externally
-
-        // TODO IMPLEMENTS
-        type EikonLoadingOperations (m:ChainMetaLoader) =
-            interface LoadingOperations with
-                member x.LoadChains chains = []
-                member x.LoadBonds rics = ()
-                member x.LoadRatings rics = ()
-                member x.LoadFrns rics = ()
-                member x.LoadRics rics = ()
+        let (|ChainAnswer|ChainFailure|) = function
+            | Choice1Of2 ch ->
+                match ch with 
+                | Chain.Answer a -> ChainAnswer a
+                | Chain.Failed u -> ChainFailure u
+            | Choice2Of2 ex -> ChainFailure ex
 
         type SavingOperations = 
             abstract Backup : unit -> unit
             abstract Restore : unit -> unit
             abstract Clear : unit -> unit
             abstract NeedsReload : unit -> bool
-            abstract SaveBonds : unit -> unit
-            abstract SaveRatings : unit -> unit
-            abstract SaveFrns : unit -> unit
+            abstract SaveBonds : BondDescr list -> unit
+            abstract SaveIssueRatings : IssueRatingData list -> unit
+            abstract SaveIssuerRatings : IssuerRatingData list -> unit
+            abstract SaveFrns : FrnData list -> unit
 
         type DbSavingOperations () = 
+            // TODO OTHER OPERATIONS!!!
             interface SavingOperations with
                 member x.Backup () =
                     use ctx = new MainEntities (cnnStr)
@@ -123,39 +119,123 @@ module ExternalOperations =
                         | :? DbException -> reraise ()
                         | e -> raise <| DbException (Error e)
 
-        let private saver = DbSavingOperations () :> SavingOperations
-        let private loader = EikonLoadingOperations () :> LoadingOperations
+                member x.Clear () = ()
+                member x.NeedsReload () = false
+                member x.SaveBonds bonds = ()
+                member x.SaveIssueRatings issue = ()
+                member x.SaveIssuerRatings issuer = ()
+                member x.SaveFrns frns = ()
 
-        let rec reload (m:ChainMetaLoader) force = 
+        let private saver = DbSavingOperations () :> SavingOperations
+
+        let loadChains (m:ChainMetaLoader) chains = async {
+            let names = chains |> List.map (fun r -> r.Ric) |> Array.ofList
+            let! results = 
+                chains 
+                |> List.map (fun request -> m.LoadChain request |> Async.Catch)
+                |> Async.Parallel
+            
+            let results = results |> Array.zip names
+
+            let rics = results |> Array.choose (fun (ric, res) -> match res with ChainAnswer a -> Some (ric, a) | _ -> None)
+            let fails = results |> Array.choose (fun (ric, res) -> match res with ChainFailure e -> Some (ric, e) | _ -> None)
+                    
+            // todo some better reporting
+            do fails |> Array.iter (fun (ric, e) -> logger.WarnF "Failed to load chain %s because of %s" ric (e.ToString()))
+            
+            return rics, fails
+        }
+
+        type Metabuilder () = 
+            member x.Bind (operation, rest) = 
+                async {
+                    let! res = operation
+                    match res with 
+                    | Meta.Answer a -> return! rest a
+                    | Meta.Failed e -> return Some e
+                }
+            member x.Return (res : unit option) = async { return res }
+            member x.Zero () = async { return None }
+
+        let meta = Metabuilder ()
+
+        let flow (m:ChainMetaLoader) rics = meta {
+            let! bonds = m.LoadMetadata<BondDescr> rics
+            saver.SaveBonds bonds
+                            
+            let! frns = m.LoadMetadata<FrnData> rics
+            saver.SaveFrns frns
+
+            let! issueRatings = m.LoadMetadata<IssueRatingData> rics
+            saver.SaveIssueRatings issueRatings
+                            
+            let! issuerRatings = m.LoadMetadata<IssuerRatingData> rics
+            saver.SaveIssuerRatings issuerRatings
+        }
+
+//        and private load (m:ChainMetaLoader) requests = 
+//            logger.Trace "load ()"
+//            async {
+//                try
+//                    let! ricsByChain, fails = loadChains m requests
+//                    let rics = ricsByChain |> Array.map snd |> Array.collect id
+//                    let! bonds = m.LoadMetadata<BondDescr> rics
+//                    match bonds with
+//                    | Meta.Answer bd -> 
+//                        saver.SaveBonds bd
+//                        let! frns = m.LoadMetadata<FrnData> rics
+//                        match frns with 
+//                        | Meta.Answer fn ->
+//                            saver.SaveFrns fn
+//                            let! issueRatings = m.LoadMetadata<IssueRatingData> rics
+//                            match issueRatings with
+//                            | Meta.Answer issue ->
+//                                saver.SaveIssueRatings issue
+//                                let! issuerRatings = m.LoadMetadata<IssuerRatingData> rics
+//                                match issuerRatings with
+//                                | Meta.Answer issuer ->
+//                                    saver.SaveIssuerRatings issuer
+//                                    return Ok
+//                                | Meta.Failed e -> return! loadFailed e
+//                            | Meta.Failed e -> return! loadFailed e
+//                        | Meta.Failed e -> return! loadFailed e
+//                    | Meta.Failed e -> return! loadFailed e
+//                with :? DbException as e -> 
+//                    logger.ErrorEx "Load failed" e
+//                    return! loadFailed e
+//            }
+   
+        let rec reload (m:ChainMetaLoader) chains force = // todo chains are chain requests
             logger.Trace "reload ()"
             async {
-                if force && reloadNecessary () || force then
+                if force && saver.NeedsReload() || force then
                     try
                         saver.Backup ()
                         saver.Clear ()
-                        return! load ()
+                        return! load m chains
                     with :? DbException as e -> 
                         logger.ErrorEx "Load failed" e
-                        return! loadFailed ()
+                        return! loadFailed e
                 else return Ok
             }
 
-        and private load () = 
+         and private load (m:ChainMetaLoader) requests = 
             logger.Trace "load ()"
             async {
                 try
-                    saver.SaveBonds ()
-                    saver.SaveFrns ()
-                    saver.SaveRatings ()
-                    return Ok
+                    let! ricsByChain, fails = loadChains m requests
+                    // todo throw fails
+                    let rics = ricsByChain |> Array.map snd |> Array.collect id
+                    
+                    let! res = flow m rics
+                    match res with 
+                    | Some e -> return! loadFailed e
+                    | None -> return Ok
                 with :? DbException as e -> 
                     logger.ErrorEx "Load failed" e
-                    return! loadFailed ()
+                    return! loadFailed e
             }
-        and private reloadNecessary () = 
-            logger.Trace "reloadNecessary ()"
-            false
-        and private loadFailed () = 
+        and private loadFailed (e:exn) = // todo e
             logger.Trace "loadFailed ()"
             async {
                 try 
@@ -166,8 +246,6 @@ module ExternalOperations =
                     return Failure (Problem "Failed to reload and restore data")
             }
 
-
-
     // todo more advanced evaluation !!!
     let expectedLoadTime = timeouts.load
     let expectedConnectTime = timeouts.connect
@@ -177,7 +255,7 @@ module ExternalOperations =
         >> Async.WithTimeout (Some timeout)
         >> Async.Map (function Some x -> x | None -> Failure Timeout)
     
-    let load m = Loading.reload m |> asSuccess expectedLoadTime 
+    let load m c = Loading.reload m c |> asSuccess expectedLoadTime 
     let connect = Connecting.connect |> asSuccess expectedConnectTime
 
 module AnotherStartup =
@@ -195,7 +273,6 @@ module AnotherStartup =
     open System.Threading
 
     let logger = LogFactory.create "Startup"
-
 
     type Severity = Note | Warn | Evil
     type State = Started | Connected | Initialized | Closed
@@ -262,7 +339,8 @@ module AnotherStartup =
                         return! connected channel 
                     | Reload channel -> 
                         logger.Debug "[Primary reload]"
-                        let! res = ExternalOperations.load m true
+                        let x = []                                                      // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        let! res = ExternalOperations.load m x true
                         match res with
                         | Success.Failure f -> 
                             n.Trigger <| (Connected, f, Severity.Warn)
@@ -285,7 +363,8 @@ module AnotherStartup =
                         return! initialized channel 
                     | Reload channel ->
                         logger.Debug "[Secondary reload]"
-                        let! res = ExternalOperations.load m true
+                        let x = []                                                      // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        let! res = ExternalOperations.load m x true
                         match res with
                         | Success.Failure f -> 
                             n.Trigger <| (Connected, f, Severity.Warn)
