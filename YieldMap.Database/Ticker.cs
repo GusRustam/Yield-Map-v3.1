@@ -12,16 +12,20 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefChain
+    public partial class Ticker
     {
-        public RefChain()
+        public Ticker()
         {
-            this.RefRicToChains = new HashSet<RefRicToChain>();
+            this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.Ticker1 = new HashSet<Ticker>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
+        public Nullable<long> id_ParentTicker { get; set; }
     
-        public virtual ICollection<RefRicToChain> RefRicToChains { get; set; }
+        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual ICollection<Ticker> Ticker1 { get; set; }
+        public virtual Ticker Ticker2 { get; set; }
     }
 }

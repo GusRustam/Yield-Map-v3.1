@@ -40,6 +40,8 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <ItemGroup>
+    <Compile Include="Responses.fs" />
+    <Compile Include="Notifier.fs" />
     <Compile Include="Portfolio.fs" />
     <Compile Include="Calculations.fs" />
     <Compile Include="Visual.fs" />

@@ -12,18 +12,20 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefCountry
+    public partial class Chain
     {
-        public RefCountry()
+        public Chain()
         {
-            this.RefBorrowers = new HashSet<RefBorrower>();
-            this.RefIssuers = new HashSet<RefIssuer>();
+            this.RicToChains = new HashSet<RicToChain>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
+        public Nullable<long> id_Feed { get; set; }
+        public Nullable<System.DateTime> Expanded { get; set; }
+        public string Params { get; set; }
     
-        public virtual ICollection<RefBorrower> RefBorrowers { get; set; }
-        public virtual ICollection<RefIssuer> RefIssuers { get; set; }
+        public virtual Feed Feed { get; set; }
+        public virtual ICollection<RicToChain> RicToChains { get; set; }
     }
 }

@@ -12,18 +12,22 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefIsin
+    public partial class Ric
     {
-        public RefIsin()
+        public Ric()
         {
-            this.RefRics = new HashSet<RefRic>();
             this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.RicToChains = new HashSet<RicToChain>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
+        public Nullable<long> Isin_id { get; set; }
+        public Nullable<long> Feed_id { get; set; }
     
-        public virtual ICollection<RefRic> RefRics { get; set; }
+        public virtual Feed Feed { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual Isin Isin { get; set; }
+        public virtual ICollection<RicToChain> RicToChains { get; set; }
     }
 }

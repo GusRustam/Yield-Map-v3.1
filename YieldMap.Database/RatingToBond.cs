@@ -12,16 +12,13 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefIndustry
+    public partial class RatingToBond
     {
-        public RefIndustry()
-        {
-            this.RefSubIndustries = new HashSet<RefSubIndustry>();
-        }
-    
         public long id { get; set; }
-        public string Name { get; set; }
+        public Nullable<long> id_Rating { get; set; }
+        public Nullable<long> id_Bond { get; set; }
     
-        public virtual ICollection<RefSubIndustry> RefSubIndustries { get; set; }
+        public virtual InstrumentBond InstrumentBond { get; set; }
+        public virtual Rating Rating { get; set; }
     }
 }

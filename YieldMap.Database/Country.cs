@@ -12,18 +12,18 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefCurrency
+    public partial class Country
     {
-        public RefCurrency()
+        public Country()
         {
-            this.InstrumentCustomBonds = new HashSet<InstrumentCustomBond>();
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.Borrowers = new HashSet<Borrower>();
+            this.Issuers = new HashSet<Issuer>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
     
-        public virtual ICollection<InstrumentCustomBond> InstrumentCustomBonds { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual ICollection<Borrower> Borrowers { get; set; }
+        public virtual ICollection<Issuer> Issuers { get; set; }
     }
 }

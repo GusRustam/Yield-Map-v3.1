@@ -12,20 +12,21 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefTicker
+    public partial class Feed
     {
-        public RefTicker()
+        public Feed()
         {
-            this.RefTicker1 = new HashSet<RefTicker>();
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.Chains = new HashSet<Chain>();
+            this.Isins = new HashSet<Isin>();
+            this.Rics = new HashSet<Ric>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
-        public Nullable<long> id_ParentTicker { get; set; }
+        public string Description { get; set; }
     
-        public virtual ICollection<RefTicker> RefTicker1 { get; set; }
-        public virtual RefTicker RefTicker2 { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual ICollection<Chain> Chains { get; set; }
+        public virtual ICollection<Isin> Isins { get; set; }
+        public virtual ICollection<Ric> Rics { get; set; }
     }
 }

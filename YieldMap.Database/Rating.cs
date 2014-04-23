@@ -12,11 +12,11 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefRating
+    public partial class Rating
     {
-        public RefRating()
+        public Rating()
         {
-            this.RefRatingToBonds = new HashSet<RefRatingToBond>();
+            this.RatingToBonds = new HashSet<RatingToBond>();
         }
     
         public long id { get; set; }
@@ -24,7 +24,7 @@ namespace YieldMap.Database
         public string Name { get; set; }
         public Nullable<long> id_RatingAgency { get; set; }
     
-        public virtual RefRatingAgency RefRatingAgency { get; set; }
-        public virtual ICollection<RefRatingToBond> RefRatingToBonds { get; set; }
+        public virtual RatingAgency RatingAgency { get; set; }
+        public virtual ICollection<RatingToBond> RatingToBonds { get; set; }
     }
 }

@@ -1,23 +1,5 @@
 ﻿namespace YieldMap.Core.Application
 
-[<AutoOpen>]
-module Responses =
-    type private FailureStatic = Failure
-    and Failure = 
-        | Problem of string | Error of exn | Timeout
-        static member toString x = 
-            match x with
-            | Problem str -> sprintf "Problem %s" str
-            | Error e -> sprintf "Error %s" (e.ToString())
-            | Timeout -> "Timeout"
-        override x.ToString() = FailureStatic.toString x
-
-    type Success = 
-        Ok | Failure of Failure
-        override x.ToString() = 
-            match x with
-            | Ok -> "OK"
-            | Failure x -> sprintf "Failure %s" <| x.ToString()
 
 [<AutoOpen>]
 module internal Timeouts =
@@ -33,6 +15,8 @@ module internal Timeouts =
 
 [<RequireQualifiedAccess>]
 module ExternalOperations =
+    open YieldMap.Core.Responses
+
     open YieldMap.Loader.Requests
     open YieldMap.Loader.SdkFactory
     open YieldMap.Tools.Aux
@@ -59,6 +43,8 @@ module ExternalOperations =
         }
 
     module Loading = 
+        open YieldMap.Core.Responses
+
         open YieldMap.Database
         open YieldMap.Loader.MetaChains
         open YieldMap.Loader.MetaTables
@@ -76,13 +62,6 @@ module ExternalOperations =
         let private cnnStr = MainEntities.GetConnectionString("TheMainEntities")
 
         exception DbException of Failure
-
-        let (|ChainAnswer|ChainFailure|) = function
-            | Choice1Of2 ch ->
-                match ch with 
-                | Chain.Answer a -> ChainAnswer a
-                | Chain.Failed u -> ChainFailure u
-            | Choice2Of2 ex -> ChainFailure ex
 
         type SavingOperations = 
             abstract Backup : unit -> unit
@@ -128,6 +107,13 @@ module ExternalOperations =
 
         let private saver = DbSavingOperations () :> SavingOperations
 
+        let (|ChainAnswer|ChainFailure|) = function
+            | Choice1Of2 ch ->
+                match ch with 
+                | Chain.Answer a -> ChainAnswer a
+                | Chain.Failed u -> ChainFailure u
+            | Choice2Of2 ex -> ChainFailure ex
+
         let loadChains (m:ChainMetaLoader) chains = async {
             let names = chains |> List.map (fun r -> r.Ric) |> Array.ofList
             let! results = 
@@ -159,7 +145,7 @@ module ExternalOperations =
 
         let meta = Metabuilder ()
 
-        let flow (m:ChainMetaLoader) rics = meta {
+        let loadAndSaveMetadata (m:ChainMetaLoader) rics = meta {
             let! bonds = m.LoadMetadata<BondDescr> rics
             saver.SaveBonds bonds
                             
@@ -172,38 +158,6 @@ module ExternalOperations =
             let! issuerRatings = m.LoadMetadata<IssuerRatingData> rics
             saver.SaveIssuerRatings issuerRatings
         }
-
-//        and private load (m:ChainMetaLoader) requests = 
-//            logger.Trace "load ()"
-//            async {
-//                try
-//                    let! ricsByChain, fails = loadChains m requests
-//                    let rics = ricsByChain |> Array.map snd |> Array.collect id
-//                    let! bonds = m.LoadMetadata<BondDescr> rics
-//                    match bonds with
-//                    | Meta.Answer bd -> 
-//                        saver.SaveBonds bd
-//                        let! frns = m.LoadMetadata<FrnData> rics
-//                        match frns with 
-//                        | Meta.Answer fn ->
-//                            saver.SaveFrns fn
-//                            let! issueRatings = m.LoadMetadata<IssueRatingData> rics
-//                            match issueRatings with
-//                            | Meta.Answer issue ->
-//                                saver.SaveIssueRatings issue
-//                                let! issuerRatings = m.LoadMetadata<IssuerRatingData> rics
-//                                match issuerRatings with
-//                                | Meta.Answer issuer ->
-//                                    saver.SaveIssuerRatings issuer
-//                                    return Ok
-//                                | Meta.Failed e -> return! loadFailed e
-//                            | Meta.Failed e -> return! loadFailed e
-//                        | Meta.Failed e -> return! loadFailed e
-//                    | Meta.Failed e -> return! loadFailed e
-//                with :? DbException as e -> 
-//                    logger.ErrorEx "Load failed" e
-//                    return! loadFailed e
-//            }
    
         let rec reload (m:ChainMetaLoader) chains force = // todo chains are chain requests
             logger.Trace "reload ()"
@@ -224,10 +178,10 @@ module ExternalOperations =
             async {
                 try
                     let! ricsByChain, fails = loadChains m requests
-                    // todo throw fails
+                    // todo throw "fails" somehow
                     let rics = ricsByChain |> Array.map snd |> Array.collect id
                     
-                    let! res = flow m rics
+                    let! res = loadAndSaveMetadata m rics
                     match res with 
                     | Some e -> return! loadFailed e
                     | None -> return Ok
@@ -259,6 +213,10 @@ module ExternalOperations =
     let connect = Connecting.connect |> asSuccess expectedConnectTime
 
 module AnotherStartup =
+    open YieldMap.Core.Notifier
+    open YieldMap.Core.Portfolio
+    open YieldMap.Core.Responses
+
     open YieldMap.Loader
     open YieldMap.Loader.SdkFactory
     open YieldMap.Loader.LiveQuotes
@@ -274,7 +232,6 @@ module AnotherStartup =
 
     let logger = LogFactory.create "Startup"
 
-    type Severity = Note | Warn | Evil
     type State = Started | Connected | Initialized | Closed
 
     type Status =
@@ -287,7 +244,7 @@ module AnotherStartup =
 
     type Commands = 
         | Connect of State AsyncReplyChannel
-        | Reload of State AsyncReplyChannel
+        | Reload of bool * State AsyncReplyChannel
         | Close of State AsyncReplyChannel
         override x.ToString () = 
             match x with
@@ -295,9 +252,15 @@ module AnotherStartup =
             | Reload _ -> "Reload"
             | Close _ -> "Close"
 
-    type Startup (f:EikonFactory, c:Calendar, m:ChainMetaLoader)  = 
-        let n = Event<_> ()
+    type Startup (f:EikonFactory, c:Calendar, m:ChainMetaLoader, p:PortfolioManager)  = 
         let s = Event<_> ()
+
+        do f.OnConnectionStatus |> Observable.add (fun state -> 
+            match state with 
+            | Connection.Failed e -> () 
+            | Connection.Connected -> ()) // TODO ON DISCONNECT / RECONNECT DO SOMETHING (IF NECESSARY :))
+
+        do c.NewDay |> Observable.add (fun dt -> ()) // TODO ON NEW DATE DO SOMETHING (ADD FORCE RELOAD COMMAND!!)
         
         let a = MailboxProcessor.Start (fun inbox ->
 
@@ -315,11 +278,11 @@ module AnotherStartup =
                         let! res = ExternalOperations.connect f
                         match res with
                         | Success.Failure f -> 
-                            n.Trigger <| (Started, f, Severity.Warn)
+                            Notifier.notify ("Startup", f, Severity.Warn)
                             return! started (Some channel)
                         | Success.Ok -> return! connected channel
-                    | Reload channel -> 
-                        n.Trigger (Started, Problem <| sprintf "Invalid command %s in state Started" (cmd.ToString()), Severity.Warn)
+                    | Reload (force, channel) -> 
+                        Notifier.notify ("Startup", Problem <| sprintf "Invalid command %s in state Started" (cmd.ToString()), Severity.Warn)
                         return! started (Some channel) 
                     | Close channel -> return close channel
                 } 
@@ -335,15 +298,15 @@ module AnotherStartup =
                     logger.DebugF "[Connected: message %s]" (cmd.ToString())
                     match cmd with 
                     | Connect channel -> 
-                        n.Trigger (Connected, Problem <| sprintf "Invalid command %s in state Connected" (cmd.ToString()), Severity.Warn)
+                        Notifier.notify ("Startup", Problem <| sprintf "Invalid command %s in state Connected" (cmd.ToString()), Severity.Warn)
                         return! connected channel 
-                    | Reload channel -> 
+                    | Reload (_, channel) -> // ignoring force parameter on primary loading
                         logger.Debug "[Primary reload]"
                         let x = []                                                      // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         let! res = ExternalOperations.load m x true
                         match res with
                         | Success.Failure f -> 
-                            n.Trigger <| (Connected, f, Severity.Warn)
+                            Notifier.notify ("Startup", f, Severity.Warn)
                             return! connected channel
                         | Success.Ok ->  return! initialized channel
                     | Close channel -> return close channel
@@ -359,15 +322,15 @@ module AnotherStartup =
                     logger.DebugF "[Initialized: message %s]" (cmd.ToString())
                     match cmd with 
                     | Connect channel ->
-                        n.Trigger (Initialized, Problem <| sprintf "Invalid command %s in state Initialized" (cmd.ToString()), Severity.Warn)
+                        Notifier.notify ("Startup", Problem <| sprintf "Invalid command %s in state Initialized" (cmd.ToString()), Severity.Warn)
                         return! initialized channel 
-                    | Reload channel ->
+                    | Reload (force, channel) ->
                         logger.Debug "[Secondary reload]"
                         let x = []                                                      // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        let! res = ExternalOperations.load m x true
+                        let! res = ExternalOperations.load m x force
                         match res with
                         | Success.Failure f -> 
-                            n.Trigger <| (Connected, f, Severity.Warn)
+                            Notifier.notify ("Startup", f, Severity.Warn)
                             return! connected channel
                         | Success.Ok ->  return! initialized channel
                     | Close channel -> return close channel
@@ -375,7 +338,7 @@ module AnotherStartup =
 
             and failed e = 
                 logger.Debug "[--> failed ()]"
-                n.Trigger (Closed, Error e, Severity.Evil)
+                Notifier.notify ("Startup", Error e, Severity.Evil)
                 s.Trigger Closed
 
             and close channel = 
@@ -398,9 +361,8 @@ module AnotherStartup =
             | None -> return NotResponding
         }        
 
-        member x.Notification = n.Publish
         member x.StateChanged = s.Publish
-        
+
         member x.Connect () = tryCommand Commands.Connect (ExternalOperations.expectedConnectTime + timeouts.agent)
-        member x.Reload () = tryCommand Commands.Reload (ExternalOperations.expectedLoadTime + timeouts.agent)
+        member x.Reload force = tryCommand (fun channel -> Commands.Reload (force, channel)) (ExternalOperations.expectedLoadTime + timeouts.agent)
         member x.Close () = tryCommand Commands.Close timeouts.agent

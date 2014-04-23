@@ -55,6 +55,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Borrower.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Chain.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Country.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Currency.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="Database.Context.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -70,15 +82,36 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Database.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Feed.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Industry.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="InstrumentBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="InstrumentCustomBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Isin.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Issuer.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="MainEntities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RawBond.cs">
+    <Compile Include="Rating.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="RatingAgency.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="RatingToBond.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="RawBondInfo.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="RawFrnData.cs">
@@ -87,52 +120,20 @@
     <Compile Include="RawRating.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="RefBorrower.cs">
+    <Compile Include="Ric.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="RefChain.cs">
+    <Compile Include="RicToChain.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="RefCountry.cs">
+    <Compile Include="Seniority.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="RefCurrency.cs">
+    <Compile Include="StoredProcedures\Refresh.cs" />
+    <Compile Include="SubIndustry.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="RefIndustry.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefInstrument.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefIsin.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefIssuer.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefRating.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefRatingAgency.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefRatingToBond.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefRic.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefRicToChain.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefSeniority.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefSubIndustry.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RefTicker.cs">
+    <Compile Include="Ticker.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
   </ItemGroup>
@@ -165,6 +166,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="main.db.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YieldMap.Tools\YieldMap.Tools.fsproj">
+      <Project>{41cf2e5f-752e-4e65-8773-ae7061242ba9}</Project>
+      <Name>YieldMap.Tools</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

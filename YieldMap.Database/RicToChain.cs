@@ -12,20 +12,13 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefRic
+    public partial class RicToChain
     {
-        public RefRic()
-        {
-            this.RefRicToChains = new HashSet<RefRicToChain>();
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
-        }
-    
         public long id { get; set; }
-        public string Name { get; set; }
-        public Nullable<long> Isin_id { get; set; }
+        public long Ric_id { get; set; }
+        public long Chain_id { get; set; }
     
-        public virtual RefIsin RefIsin { get; set; }
-        public virtual ICollection<RefRicToChain> RefRicToChains { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual Chain Chain { get; set; }
+        public virtual Ric Ric { get; set; }
     }
 }

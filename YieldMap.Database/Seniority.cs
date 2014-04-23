@@ -12,9 +12,9 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefInstrument
+    public partial class Seniority
     {
-        public RefInstrument()
+        public Seniority()
         {
             this.InstrumentBonds = new HashSet<InstrumentBond>();
         }

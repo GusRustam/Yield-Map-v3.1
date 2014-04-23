@@ -4,6 +4,86 @@
 --Database : C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Database\main.db
 
 
+CREATE TABLE Borrower (
+  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name        varchar(50) NOT NULL,
+  id_Country  integer NOT NULL,
+  /* Foreign keys */
+  FOREIGN KEY (id_Country)
+    REFERENCES Country(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
+);
+
+CREATE INDEX RefBorrower_Index01
+  ON Borrower
+  (id);
+
+CREATE INDEX RefBorrower_Index02
+  ON Borrower
+  (id);
+
+CREATE TABLE Chain (
+  id        integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name      varchar(50) NOT NULL UNIQUE,
+  id_Feed   integer,
+  Expanded  date,
+  /* Foreign keys */
+  FOREIGN KEY (id_Feed)
+    REFERENCES Feed(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
+);
+
+CREATE INDEX RefChain_Index01
+  ON Chain
+  (id);
+
+CREATE INDEX RefChain_Index02
+  ON Chain
+  (Name);
+
+CREATE TABLE Country (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50) NOT NULL UNIQUE
+);
+
+CREATE INDEX RefCountry_Index01
+  ON Country
+  (id);
+
+CREATE INDEX RefCountry_Index02
+  ON Country
+  (Name);
+
+CREATE TABLE Currency (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50)
+);
+
+CREATE INDEX RefCurrency_Index01
+  ON Currency
+  (id);
+
+CREATE TABLE Feed (
+  id           integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name         varchar(50),
+  Description  varchar(50)
+);
+
+CREATE TABLE Industry (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50) UNIQUE
+);
+
+CREATE INDEX RefIndustry_Index01
+  ON Industry
+  (id);
+
+CREATE INDEX RefIndustry_Index02
+  ON Industry
+  (Name);
+
 CREATE TABLE InstrumentBond (
   id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   id_Issuer       integer,
@@ -26,39 +106,39 @@ CREATE TABLE InstrumentBond (
   id_Seniority    integer,
   /* Foreign keys */
   FOREIGN KEY (id_Seniority)
-    REFERENCES RefSeniority(id)
+    REFERENCES Seniority(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Issuer)
-    REFERENCES RefIssuer(id)
+    REFERENCES Issuer(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Isin)
-    REFERENCES RefIsin(id)
+    REFERENCES Isin(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Ric)
-    REFERENCES RefRic(id)
+    REFERENCES Ric(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Ticker)
-    REFERENCES RefTicker(id)
+    REFERENCES Ticker(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_SubIndustry)
-    REFERENCES RefSubIndustry(id)
+    REFERENCES SubIndustry(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Type)
-    REFERENCES RefInstrument(id)
+    REFERENCES TypeOfInstrument(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Borrower)
-    REFERENCES RefBorrower(id)
+    REFERENCES Borrower(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Currency)
-    REFERENCES RefCurrency(id)
+    REFERENCES Currency(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
@@ -77,7 +157,7 @@ CREATE TABLE InstrumentCustomBond (
   Maturity       date,
   /* Foreign keys */
   FOREIGN KEY (id_Currency)
-    REFERENCES RefCurrency(id)
+    REFERENCES Currency(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
@@ -85,6 +165,88 @@ CREATE TABLE InstrumentCustomBond (
 CREATE INDEX InstrumentCustomBond_Index01
   ON InstrumentCustomBond
   (id);
+
+CREATE TABLE Isin (
+  id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name     varchar(50) NOT NULL UNIQUE,
+  id_Feed  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_Feed)
+    REFERENCES Feed(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
+);
+
+CREATE INDEX RefIsin_Index01
+  ON Isin
+  (id);
+
+CREATE INDEX RefIsin_Index02
+  ON Isin
+  (Name);
+
+CREATE TABLE Issuer (
+  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name        varchar(50) NOT NULL,
+  id_Country  integer NOT NULL,
+  /* Foreign keys */
+  FOREIGN KEY (id_Country)
+    REFERENCES Country(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
+);
+
+CREATE INDEX RefIssuer_Index01
+  ON Issuer
+  (id);
+
+CREATE TABLE Rating (
+  id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Value            integer NOT NULL,
+  Name             varchar(50) UNIQUE,
+  id_RatingAgency  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id)
+    REFERENCES RatingAgency(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
+);
+
+CREATE INDEX RefRating_Index01
+  ON Rating
+  (id);
+
+CREATE INDEX RefRating_Index02
+  ON Rating
+  (Name);
+
+CREATE TABLE RatingAgency (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50) NOT NULL UNIQUE
+);
+
+CREATE INDEX RefRatingAgency_Index01
+  ON RatingAgency
+  (id);
+
+CREATE INDEX RefRatingAgency_Index02
+  ON RatingAgency
+  (Name);
+
+CREATE TABLE RatingToBond (
+  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_Rating  integer,
+  id_Bond    integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_Bond)
+    REFERENCES InstrumentBond(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_Rating)
+    REFERENCES Rating(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT
+);
 
 CREATE TABLE RawBondInfo (
   id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -98,11 +260,11 @@ CREATE TABLE RawBondInfo (
   Maturity         date,
   Currency         varchar(50),
   ShortName        varchar(50),
-  IsCallable       bit,
-  IsPutable        bit,
-  IsFloater        bit,
-  IsConvertible    bit,
-  IsStraight       bit,
+  IsCallable       bit NOT NULL,
+  IsPutable        bit NOT NULL,
+  IsFloater        bit NOT NULL,
+  IsConvertible    bit NOT NULL,
+  IsStraight       bit NOT NULL,
   Ticker           varchar(50),
   Series           varchar(50),
   BorrowerCountry  varchar(50),
@@ -127,6 +289,7 @@ CREATE TABLE RawFrnData (
   Margin      float(50),
   "Index"     varchar(50),
   id_RawBond  integer,
+  Frequency   text,
   /* Foreign keys */
   FOREIGN KEY (id_RawBond)
     REFERENCES RawBondInfo(id)
@@ -156,240 +319,93 @@ CREATE INDEX RawRating_Index01
   ON RawRating
   (id);
 
-CREATE TABLE RefBorrower (
-  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name        varchar(50) NOT NULL,
-  id_Country  integer NOT NULL,
-  /* Foreign keys */
-  FOREIGN KEY (id_Country)
-    REFERENCES RefCountry(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
-);
-
-CREATE INDEX RefBorrower_Index01
-  ON RefBorrower
-  (id);
-
-CREATE INDEX RefBorrower_Index02
-  ON RefBorrower
-  (id);
-
-CREATE TABLE RefChain (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50) NOT NULL UNIQUE
-);
-
-CREATE INDEX RefChain_Index01
-  ON RefChain
-  (id);
-
-CREATE INDEX RefChain_Index02
-  ON RefChain
-  (Name);
-
-CREATE TABLE RefCountry (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50) NOT NULL UNIQUE
-);
-
-CREATE INDEX RefCountry_Index01
-  ON RefCountry
-  (id);
-
-CREATE INDEX RefCountry_Index02
-  ON RefCountry
-  (Name);
-
-CREATE TABLE RefCurrency (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50)
-);
-
-CREATE INDEX RefCurrency_Index01
-  ON RefCurrency
-  (id);
-
-CREATE TABLE RefIndustry (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50) UNIQUE
-);
-
-CREATE INDEX RefIndustry_Index01
-  ON RefIndustry
-  (id);
-
-CREATE INDEX RefIndustry_Index02
-  ON RefIndustry
-  (Name);
-
-CREATE TABLE RefInstrument (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50)
-);
-
-CREATE INDEX RefInstrument_Index01
-  ON RefInstrument
-  (id);
-
-CREATE TABLE RefIsin (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50) NOT NULL UNIQUE
-);
-
-CREATE INDEX RefIsin_Index01
-  ON RefIsin
-  (id);
-
-CREATE INDEX RefIsin_Index02
-  ON RefIsin
-  (Name);
-
-CREATE TABLE RefIssuer (
-  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name        varchar(50) NOT NULL,
-  id_Country  integer NOT NULL,
-  /* Foreign keys */
-  FOREIGN KEY (id_Country)
-    REFERENCES RefCountry(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
-);
-
-CREATE INDEX RefIssuer_Index01
-  ON RefIssuer
-  (id);
-
-CREATE TABLE RefRating (
-  id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Value            integer NOT NULL,
-  Name             varchar(50) UNIQUE,
-  id_RatingAgency  integer,
-  /* Foreign keys */
-  FOREIGN KEY (id)
-    REFERENCES RefRatingAgency(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
-);
-
-CREATE INDEX RefRating_Index01
-  ON RefRating
-  (id);
-
-CREATE INDEX RefRating_Index02
-  ON RefRating
-  (Name);
-
-CREATE TABLE RefRatingAgency (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50) NOT NULL UNIQUE
-);
-
-CREATE INDEX RefRatingAgency_Index01
-  ON RefRatingAgency
-  (id);
-
-CREATE INDEX RefRatingAgency_Index02
-  ON RefRatingAgency
-  (Name);
-
-CREATE TABLE RefRatingToBond (
-  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  id_Rating  integer,
-  id_Bond    integer,
-  /* Foreign keys */
-  FOREIGN KEY (id_Bond)
-    REFERENCES InstrumentBond(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_Rating)
-    REFERENCES RefRating(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
-);
-
-CREATE TABLE RefRic (
+CREATE TABLE Ric (
   id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name     varchar(50) NOT NULL,
   Isin_id  integer,
+  Feed_id  integer,
   /* Foreign keys */
+  FOREIGN KEY (Feed_id)
+    REFERENCES Feed(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
   FOREIGN KEY (Isin_id)
-    REFERENCES RefIsin(id)
+    REFERENCES Isin(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
 
 CREATE INDEX RefRic_Index01
-  ON RefRic
+  ON Ric
   (id);
 
-CREATE TABLE RefRicToChain (
+CREATE TABLE RicToChain (
   id        integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Ric_id    integer NOT NULL,
   Chain_id  integer NOT NULL,
   /* Foreign keys */
   FOREIGN KEY (Ric_id)
-    REFERENCES RefRic(id)
+    REFERENCES Ric(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (Chain_id)
-    REFERENCES RefChain(id)
+    REFERENCES Chain(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
 
 CREATE INDEX RefRicToChain_Index01
-  ON RefRicToChain
+  ON RicToChain
   (id);
 
-CREATE TABLE RefSeniority (
+CREATE TABLE Seniority (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name  varchar(50) NOT NULL UNIQUE
 );
 
 CREATE INDEX RefSeniority_Index01
-  ON RefSeniority
+  ON Seniority
   (id);
 
 CREATE INDEX RefSeniority_Index02
-  ON RefSeniority
+  ON Seniority
   (Name);
 
-CREATE TABLE RefSubIndustry (
+CREATE TABLE SubIndustry (
   id           integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name         varchar(50) NOT NULL UNIQUE,
   id_Industry  integer NOT NULL,
   /* Foreign keys */
   FOREIGN KEY (id_Industry)
-    REFERENCES RefIndustry(id)
+    REFERENCES Industry(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
 
 CREATE INDEX RefSubIndustry_Index01
-  ON RefSubIndustry
+  ON SubIndustry
   (id);
 
 CREATE INDEX RefSubIndustry_Index02
-  ON RefSubIndustry
+  ON SubIndustry
   (Name);
 
-CREATE TABLE RefTicker (
+CREATE TABLE Ticker (
   id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name             varchar(50) NOT NULL UNIQUE,
   id_ParentTicker  integer,
   /* Foreign keys */
   FOREIGN KEY (id_ParentTicker)
-    REFERENCES RefTicker(id)
+    REFERENCES Ticker(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
 
 CREATE INDEX RefTicker_Index01
-  ON RefTicker
+  ON Ticker
   (id);
 
 CREATE INDEX RefTicker_Index02
-  ON RefTicker
+  ON Ticker
   (Name);
 

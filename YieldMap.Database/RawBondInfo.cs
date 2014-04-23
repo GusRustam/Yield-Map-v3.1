@@ -12,9 +12,9 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RawBond
+    public partial class RawBondInfo
     {
-        public RawBond()
+        public RawBondInfo()
         {
             this.RawFrnDatas = new HashSet<RawFrnData>();
             this.RawRatings = new HashSet<RawRating>();

@@ -16,7 +16,7 @@ namespace YieldMap.Database
     {
         public InstrumentBond()
         {
-            this.RefRatingToBonds = new HashSet<RefRatingToBond>();
+            this.RatingToBonds = new HashSet<RatingToBond>();
         }
     
         public long id { get; set; }
@@ -38,16 +38,17 @@ namespace YieldMap.Database
         public Nullable<System.DateTime> Issue { get; set; }
         public Nullable<System.DateTime> Maturity { get; set; }
         public Nullable<long> id_Seniority { get; set; }
+        public Nullable<System.DateTime> NextOptionDate { get; set; }
+        public Nullable<System.DateTime> LastOptionDate { get; set; }
     
-        public virtual RefCurrency RefCurrency { get; set; }
-        public virtual RefBorrower RefBorrower { get; set; }
-        public virtual RefInstrument RefInstrument { get; set; }
-        public virtual RefSubIndustry RefSubIndustry { get; set; }
-        public virtual RefTicker RefTicker { get; set; }
-        public virtual RefRic RefRic { get; set; }
-        public virtual RefIsin RefIsin { get; set; }
-        public virtual RefIssuer RefIssuer { get; set; }
-        public virtual RefSeniority RefSeniority { get; set; }
-        public virtual ICollection<RefRatingToBond> RefRatingToBonds { get; set; }
+        public virtual Borrower Borrower { get; set; }
+        public virtual Currency Currency { get; set; }
+        public virtual Seniority Seniority { get; set; }
+        public virtual Issuer Issuer { get; set; }
+        public virtual Isin Isin { get; set; }
+        public virtual Ric Ric { get; set; }
+        public virtual Ticker Ticker { get; set; }
+        public virtual SubIndustry SubIndustry { get; set; }
+        public virtual ICollection<RatingToBond> RatingToBonds { get; set; }
     }
 }

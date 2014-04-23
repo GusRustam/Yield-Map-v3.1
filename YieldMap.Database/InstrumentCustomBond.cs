@@ -22,6 +22,6 @@ namespace YieldMap.Database
         public Nullable<System.DateTime> Issue { get; set; }
         public Nullable<System.DateTime> Maturity { get; set; }
     
-        public virtual RefCurrency RefCurrency { get; set; }
+        public virtual Currency Currency { get; set; }
     }
 }

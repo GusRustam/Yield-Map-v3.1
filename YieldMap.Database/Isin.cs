@@ -12,16 +12,20 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefSeniority
+    public partial class Isin
     {
-        public RefSeniority()
+        public Isin()
         {
             this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.Rics = new HashSet<Ric>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
+        public Nullable<long> id_Feed { get; set; }
     
+        public virtual Feed Feed { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual ICollection<Ric> Rics { get; set; }
     }
 }

@@ -12,13 +12,18 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefRatingToBond
+    public partial class SubIndustry
     {
-        public long id { get; set; }
-        public Nullable<long> id_Rating { get; set; }
-        public Nullable<long> id_Bond { get; set; }
+        public SubIndustry()
+        {
+            this.InstrumentBonds = new HashSet<InstrumentBond>();
+        }
     
-        public virtual InstrumentBond InstrumentBond { get; set; }
-        public virtual RefRating RefRating { get; set; }
+        public long id { get; set; }
+        public string Name { get; set; }
+        public long id_Industry { get; set; }
+    
+        public virtual Industry Industry { get; set; }
+        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }
 }

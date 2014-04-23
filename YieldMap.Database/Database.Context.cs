@@ -25,26 +25,26 @@ namespace YieldMap.Database
             throw new UnintentionalCodeFirstException();
         }
     
-        public DbSet<RawBond> RawBonds { get; set; }
-        public DbSet<RawFrnData> RawFrnData { get; set; }
-        public DbSet<RawRating> RawRatings { get; set; }
-        public DbSet<RefBorrower> RefBorrowers { get; set; }
-        public DbSet<RefChain> RefChains { get; set; }
-        public DbSet<RefCountry> RefCountries { get; set; }
-        public DbSet<RefCurrency> RefCurrencies { get; set; }
-        public DbSet<RefIndustry> RefIndustries { get; set; }
-        public DbSet<RefInstrument> RefInstruments { get; set; }
-        public DbSet<RefIsin> RefIsins { get; set; }
-        public DbSet<RefIssuer> RefIssuers { get; set; }
-        public DbSet<RefRating> RefRatings { get; set; }
-        public DbSet<RefRatingAgency> RefRatingAgencies { get; set; }
-        public DbSet<RefRic> RefRics { get; set; }
-        public DbSet<RefRicToChain> RefRicToChains { get; set; }
-        public DbSet<RefSeniority> RefSeniorities { get; set; }
-        public DbSet<RefSubIndustry> RefSubIndustries { get; set; }
-        public DbSet<RefTicker> RefTickers { get; set; }
-        public DbSet<InstrumentCustomBond> InstrumentCustomBonds { get; set; }
+        public DbSet<Borrower> Borrowers { get; set; }
+        public DbSet<Chain> Chains { get; set; }
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<Currency> Currencies { get; set; }
+        public DbSet<Feed> Feeds { get; set; }
+        public DbSet<Industry> Industries { get; set; }
         public DbSet<InstrumentBond> InstrumentBonds { get; set; }
-        public DbSet<RefRatingToBond> RefRatingToBonds { get; set; }
+        public DbSet<InstrumentCustomBond> InstrumentCustomBonds { get; set; }
+        public DbSet<Isin> Isins { get; set; }
+        public DbSet<Issuer> Issuers { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
+        public DbSet<RatingAgency> RatingAgencies { get; set; }
+        public DbSet<RatingToBond> RatingToBonds { get; set; }
+        public DbSet<RawBondInfo> RawBondInfoes { get; set; }
+        public DbSet<RawFrnData> RawFrnDatas { get; set; }
+        public DbSet<RawRating> RawRatings { get; set; }
+        public DbSet<Ric> Rics { get; set; }
+        public DbSet<RicToChain> RicToChains { get; set; }
+        public DbSet<Seniority> Seniorities { get; set; }
+        public DbSet<SubIndustry> SubIndustries { get; set; }
+        public DbSet<Ticker> Tickers { get; set; }
     }
 }

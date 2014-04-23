@@ -174,10 +174,8 @@ module Workflows =
             member b.Zero() = fail
 
             [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
-            member x.Condition (p, [<ProjectionParameter>] guard) = (fun () ->
-                match p() with
-                | Some x when guard x -> Some x
-                | _ -> None)
+            member x.Condition (p, [<ProjectionParameter>] guard) = 
+                always (match runAttempt p with Some x when guard x -> Some x | _ -> None)
       
         let attempt = AttemptBuilder()
 

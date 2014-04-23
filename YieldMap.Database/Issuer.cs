@@ -12,9 +12,9 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RefIssuer
+    public partial class Issuer
     {
-        public RefIssuer()
+        public Issuer()
         {
             this.InstrumentBonds = new HashSet<InstrumentBond>();
         }
@@ -23,7 +23,7 @@ namespace YieldMap.Database
         public string Name { get; set; }
         public long id_Country { get; set; }
     
-        public virtual RefCountry RefCountry { get; set; }
+        public virtual Country Country { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }
 }
