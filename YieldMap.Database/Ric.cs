@@ -17,7 +17,7 @@ namespace YieldMap.Database
         public Ric()
         {
             this.InstrumentBonds = new HashSet<InstrumentBond>();
-            this.RicToChains = new HashSet<RicToChain>();
+            this.Chains = new HashSet<Chain>();
         }
     
         public long id { get; set; }
@@ -28,6 +28,6 @@ namespace YieldMap.Database
         public virtual Feed Feed { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
         public virtual Isin Isin { get; set; }
-        public virtual ICollection<RicToChain> RicToChains { get; set; }
+        public virtual ICollection<Chain> Chains { get; set; }
     }
 }

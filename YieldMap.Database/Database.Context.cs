@@ -37,12 +37,10 @@ namespace YieldMap.Database
         public DbSet<Issuer> Issuers { get; set; }
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<RatingAgency> RatingAgencies { get; set; }
-        public DbSet<RatingToBond> RatingToBonds { get; set; }
         public DbSet<RawBondInfo> RawBondInfoes { get; set; }
         public DbSet<RawFrnData> RawFrnDatas { get; set; }
         public DbSet<RawRating> RawRatings { get; set; }
         public DbSet<Ric> Rics { get; set; }
-        public DbSet<RicToChain> RicToChains { get; set; }
         public DbSet<Seniority> Seniorities { get; set; }
         public DbSet<SubIndustry> SubIndustries { get; set; }
         public DbSet<Ticker> Tickers { get; set; }

@@ -18,12 +18,22 @@
           <EntitySet Name="Issuer" EntityType="mainModel.Store.Issuer" store:Type="Tables" />
           <EntitySet Name="Rating" EntityType="mainModel.Store.Rating" store:Type="Tables" />
           <EntitySet Name="RatingAgency" EntityType="mainModel.Store.RatingAgency" store:Type="Tables" />
-          <EntitySet Name="RatingToBond" EntityType="mainModel.Store.RatingToBond" store:Type="Tables" />
+          <EntitySet Name="RatingToBond" EntityType="mainModel.Store.RatingToBond" store:Type="Tables" store:Name="RatingToBond">
+            <DefiningQuery>SELECT 
+      [RatingToBond].[id_Rating] AS [id_Rating], 
+      [RatingToBond].[id_Bond] AS [id_Bond]
+      FROM [RatingToBond] AS [RatingToBond]</DefiningQuery>
+          </EntitySet>
           <EntitySet Name="RawBondInfo" EntityType="mainModel.Store.RawBondInfo" store:Type="Tables" />
           <EntitySet Name="RawFrnData" EntityType="mainModel.Store.RawFrnData" store:Type="Tables" />
           <EntitySet Name="RawRating" EntityType="mainModel.Store.RawRating" store:Type="Tables" />
           <EntitySet Name="Ric" EntityType="mainModel.Store.Ric" store:Type="Tables" />
-          <EntitySet Name="RicToChain" EntityType="mainModel.Store.RicToChain" store:Type="Tables" />
+          <EntitySet Name="RicToChain" EntityType="mainModel.Store.RicToChain" store:Type="Tables" store:Name="RicToChain">
+            <DefiningQuery>SELECT 
+      [RicToChain].[Ric_id] AS [Ric_id], 
+      [RicToChain].[Chain_id] AS [Chain_id]
+      FROM [RicToChain] AS [RicToChain]</DefiningQuery>
+          </EntitySet>
           <EntitySet Name="Seniority" EntityType="mainModel.Store.Seniority" store:Type="Tables" />
           <EntitySet Name="SubIndustry" EntityType="mainModel.Store.SubIndustry" store:Type="Tables" />
           <EntitySet Name="Ticker" EntityType="mainModel.Store.Ticker" store:Type="Tables" />
@@ -84,11 +94,11 @@
             <End Role="Rating" EntitySet="Rating" />
           </AssociationSet>
           <AssociationSet Name="FK_RatingToBond_0_0" Association="mainModel.Store.FK_RatingToBond_0_0">
-            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+            <End Role="Rating" EntitySet="Rating" />
             <End Role="RatingToBond" EntitySet="RatingToBond" />
           </AssociationSet>
           <AssociationSet Name="FK_RatingToBond_1_0" Association="mainModel.Store.FK_RatingToBond_1_0">
-            <End Role="Rating" EntitySet="Rating" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
             <End Role="RatingToBond" EntitySet="RatingToBond" />
           </AssociationSet>
           <AssociationSet Name="FK_RawFrnData_0_0" Association="mainModel.Store.FK_RawFrnData_0_0">
@@ -108,11 +118,11 @@
             <End Role="Ric" EntitySet="Ric" />
           </AssociationSet>
           <AssociationSet Name="FK_RicToChain_0_0" Association="mainModel.Store.FK_RicToChain_0_0">
-            <End Role="Ric" EntitySet="Ric" />
+            <End Role="Chain" EntitySet="Chain" />
             <End Role="RicToChain" EntitySet="RicToChain" />
           </AssociationSet>
           <AssociationSet Name="FK_RicToChain_1_0" Association="mainModel.Store.FK_RicToChain_1_0">
-            <End Role="Chain" EntitySet="Chain" />
+            <End Role="Ric" EntitySet="Ric" />
             <End Role="RicToChain" EntitySet="RicToChain" />
           </AssociationSet>
           <AssociationSet Name="FK_SubIndustry_0_0" Association="mainModel.Store.FK_SubIndustry_0_0">
@@ -241,13 +251,16 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
         </EntityType>
+        <!--Errors Found During Generation:
+      warning 6002: The table/view 'main.RatingToBond' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
+      -->
         <EntityType Name="RatingToBond">
           <Key>
-            <PropertyRef Name="id" />
+            <PropertyRef Name="id_Rating" />
+            <PropertyRef Name="id_Bond" />
           </Key>
-          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Rating" Type="integer" />
-          <Property Name="id_Bond" Type="integer" />
+          <Property Name="id_Rating" Type="integer" Nullable="false" />
+          <Property Name="id_Bond" Type="integer" Nullable="false" />
         </EntityType>
         <EntityType Name="RawBondInfo">
           <Key>
@@ -313,11 +326,14 @@
           <Property Name="Isin_id" Type="integer" />
           <Property Name="Feed_id" Type="integer" />
         </EntityType>
+        <!--Errors Found During Generation:
+      warning 6002: The table/view 'main.RicToChain' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
+      -->
         <EntityType Name="RicToChain">
           <Key>
-            <PropertyRef Name="id" />
+            <PropertyRef Name="Ric_id" />
+            <PropertyRef Name="Chain_id" />
           </Key>
-          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Ric_id" Type="integer" Nullable="false" />
           <Property Name="Chain_id" Type="integer" Nullable="false" />
         </EntityType>
@@ -513,19 +529,7 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_RatingToBond_0_0">
-          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="0..1" />
-          <End Role="RatingToBond" Type="mainModel.Store.RatingToBond" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="InstrumentBond">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="RatingToBond">
-              <PropertyRef Name="id_Bond" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_RatingToBond_1_0">
-          <End Role="Rating" Type="mainModel.Store.Rating" Multiplicity="0..1" />
+          <End Role="Rating" Type="mainModel.Store.Rating" Multiplicity="1" />
           <End Role="RatingToBond" Type="mainModel.Store.RatingToBond" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Rating">
@@ -533,6 +537,18 @@
             </Principal>
             <Dependent Role="RatingToBond">
               <PropertyRef Name="id_Rating" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RatingToBond_1_0">
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="1" />
+          <End Role="RatingToBond" Type="mainModel.Store.RatingToBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="InstrumentBond">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RatingToBond">
+              <PropertyRef Name="id_Bond" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -585,18 +601,6 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_RicToChain_0_0">
-          <End Role="Ric" Type="mainModel.Store.Ric" Multiplicity="1" />
-          <End Role="RicToChain" Type="mainModel.Store.RicToChain" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Ric">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="RicToChain">
-              <PropertyRef Name="Ric_id" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_RicToChain_1_0">
           <End Role="Chain" Type="mainModel.Store.Chain" Multiplicity="1" />
           <End Role="RicToChain" Type="mainModel.Store.RicToChain" Multiplicity="*" />
           <ReferentialConstraint>
@@ -605,6 +609,18 @@
             </Principal>
             <Dependent Role="RicToChain">
               <PropertyRef Name="Chain_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RicToChain_1_0">
+          <End Role="Ric" Type="mainModel.Store.Ric" Multiplicity="1" />
+          <End Role="RicToChain" Type="mainModel.Store.RicToChain" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ric">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="RicToChain">
+              <PropertyRef Name="Ric_id" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -649,12 +665,10 @@
           <EntitySet Name="Issuers" EntityType="mainModel.Issuer" />
           <EntitySet Name="Ratings" EntityType="mainModel.Rating" />
           <EntitySet Name="RatingAgencies" EntityType="mainModel.RatingAgency" />
-          <EntitySet Name="RatingToBonds" EntityType="mainModel.RatingToBond" />
           <EntitySet Name="RawBondInfoes" EntityType="mainModel.RawBondInfo" />
           <EntitySet Name="RawFrnDatas" EntityType="mainModel.RawFrnData" />
           <EntitySet Name="RawRatings" EntityType="mainModel.RawRating" />
           <EntitySet Name="Rics" EntityType="mainModel.Ric" />
-          <EntitySet Name="RicToChains" EntityType="mainModel.RicToChain" />
           <EntitySet Name="Seniorities" EntityType="mainModel.Seniority" />
           <EntitySet Name="SubIndustries" EntityType="mainModel.SubIndustry" />
           <EntitySet Name="Tickers" EntityType="mainModel.Ticker" />
@@ -669,10 +683,6 @@
           <AssociationSet Name="FK_Chain_0_0" Association="mainModel.FK_Chain_0_0">
             <End Role="Feed" EntitySet="Feeds" />
             <End Role="Chain" EntitySet="Chains" />
-          </AssociationSet>
-          <AssociationSet Name="FK_RicToChain_1_0" Association="mainModel.FK_RicToChain_1_0">
-            <End Role="Chain" EntitySet="Chains" />
-            <End Role="RicToChain" EntitySet="RicToChains" />
           </AssociationSet>
           <AssociationSet Name="FK_Issuer_0_0" Association="mainModel.FK_Issuer_0_0">
             <End Role="Country" EntitySet="Countries" />
@@ -722,10 +732,6 @@
             <End Role="SubIndustry" EntitySet="SubIndustries" />
             <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
           </AssociationSet>
-          <AssociationSet Name="FK_RatingToBond_0_0" Association="mainModel.FK_RatingToBond_0_0">
-            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
-            <End Role="RatingToBond" EntitySet="RatingToBonds" />
-          </AssociationSet>
           <AssociationSet Name="FK_Ric_1_0" Association="mainModel.FK_Ric_1_0">
             <End Role="Isin" EntitySet="Isins" />
             <End Role="Ric" EntitySet="Rics" />
@@ -733,10 +739,6 @@
           <AssociationSet Name="FK_Rating_0_0" Association="mainModel.FK_Rating_0_0">
             <End Role="RatingAgency" EntitySet="RatingAgencies" />
             <End Role="Rating" EntitySet="Ratings" />
-          </AssociationSet>
-          <AssociationSet Name="FK_RatingToBond_1_0" Association="mainModel.FK_RatingToBond_1_0">
-            <End Role="Rating" EntitySet="Ratings" />
-            <End Role="RatingToBond" EntitySet="RatingToBonds" />
           </AssociationSet>
           <AssociationSet Name="FK_RawFrnData_0_0" Association="mainModel.FK_RawFrnData_0_0">
             <End Role="RawBondInfo" EntitySet="RawBondInfoes" />
@@ -746,13 +748,17 @@
             <End Role="RawBondInfo" EntitySet="RawBondInfoes" />
             <End Role="RawRating" EntitySet="RawRatings" />
           </AssociationSet>
-          <AssociationSet Name="FK_RicToChain_0_0" Association="mainModel.FK_RicToChain_0_0">
-            <End Role="Ric" EntitySet="Rics" />
-            <End Role="RicToChain" EntitySet="RicToChains" />
-          </AssociationSet>
           <AssociationSet Name="FK_Ticker_0_0" Association="mainModel.FK_Ticker_0_0">
             <End Role="Ticker" EntitySet="Tickers" />
             <End Role="Ticker1" EntitySet="Tickers" />
+          </AssociationSet>
+          <AssociationSet Name="RicToChain" Association="mainModel.RicToChain">
+            <End Role="Chain" EntitySet="Chains" />
+            <End Role="Ric" EntitySet="Rics" />
+          </AssociationSet>
+          <AssociationSet Name="RatingToBond" Association="mainModel.RatingToBond">
+            <End Role="Rating" EntitySet="Ratings" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
           </AssociationSet>
         </EntityContainer>
         <EntityType Name="Borrower">
@@ -773,9 +779,9 @@
           <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="id_Feed" Type="Int64" />
           <NavigationProperty Name="Feed" Relationship="mainModel.FK_Chain_0_0" FromRole="Chain" ToRole="Feed" />
-          <NavigationProperty Name="RicToChains" Relationship="mainModel.FK_RicToChain_1_0" FromRole="Chain" ToRole="RicToChain" />
           <Property Type="DateTime" Name="Expanded" />
           <Property Type="String" Name="Params" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Rics" Relationship="mainModel.RicToChain" FromRole="Chain" ToRole="Ric" />
         </EntityType>
         <EntityType Name="Country">
           <Key>
@@ -845,9 +851,9 @@
           <NavigationProperty Name="Ric" Relationship="mainModel.FK_InstrumentBond_3_0" FromRole="InstrumentBond" ToRole="Ric" />
           <NavigationProperty Name="Ticker" Relationship="mainModel.FK_InstrumentBond_4_0" FromRole="InstrumentBond" ToRole="Ticker" />
           <NavigationProperty Name="SubIndustry" Relationship="mainModel.FK_InstrumentBond_5_0" FromRole="InstrumentBond" ToRole="SubIndustry" />
-          <NavigationProperty Name="RatingToBonds" Relationship="mainModel.FK_RatingToBond_0_0" FromRole="InstrumentBond" ToRole="RatingToBond" />
           <Property Type="DateTime" Name="NextOptionDate" />
           <Property Type="DateTime" Name="LastOptionDate" />
+          <NavigationProperty Name="Ratings" Relationship="mainModel.RatingToBond" FromRole="InstrumentBond" ToRole="Rating" />
         </EntityType>
         <EntityType Name="InstrumentCustomBond">
           <Key>
@@ -892,7 +898,7 @@
           <Property Name="Name" Type="String" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="id_RatingAgency" Type="Int64" />
           <NavigationProperty Name="RatingAgency" Relationship="mainModel.FK_Rating_0_0" FromRole="Rating" ToRole="RatingAgency" />
-          <NavigationProperty Name="RatingToBonds" Relationship="mainModel.FK_RatingToBond_1_0" FromRole="Rating" ToRole="RatingToBond" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.RatingToBond" FromRole="Rating" ToRole="InstrumentBond" />
         </EntityType>
         <EntityType Name="RatingAgency">
           <Key>
@@ -901,16 +907,6 @@
           <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
           <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
           <NavigationProperty Name="Rating" Relationship="mainModel.FK_Rating_0_0" FromRole="RatingAgency" ToRole="Rating" />
-        </EntityType>
-        <EntityType Name="RatingToBond">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
-          <Property Name="id_Rating" Type="Int64" />
-          <Property Name="id_Bond" Type="Int64" />
-          <NavigationProperty Name="InstrumentBond" Relationship="mainModel.FK_RatingToBond_0_0" FromRole="RatingToBond" ToRole="InstrumentBond" />
-          <NavigationProperty Name="Rating" Relationship="mainModel.FK_RatingToBond_1_0" FromRole="RatingToBond" ToRole="Rating" />
         </EntityType>
         <EntityType Name="RawBondInfo">
           <Key>
@@ -982,17 +978,7 @@
           <NavigationProperty Name="Feed" Relationship="mainModel.FK_Ric_0_0" FromRole="Ric" ToRole="Feed" />
           <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_3_0" FromRole="Ric" ToRole="InstrumentBond" />
           <NavigationProperty Name="Isin" Relationship="mainModel.FK_Ric_1_0" FromRole="Ric" ToRole="Isin" />
-          <NavigationProperty Name="RicToChains" Relationship="mainModel.FK_RicToChain_0_0" FromRole="Ric" ToRole="RicToChain" />
-        </EntityType>
-        <EntityType Name="RicToChain">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Name="id" Type="Int64" Nullable="false" p1:StoreGeneratedPattern="Identity" />
-          <Property Name="Ric_id" Type="Int64" Nullable="false" />
-          <Property Name="Chain_id" Type="Int64" Nullable="false" />
-          <NavigationProperty Name="Chain" Relationship="mainModel.FK_RicToChain_1_0" FromRole="RicToChain" ToRole="Chain" />
-          <NavigationProperty Name="Ric" Relationship="mainModel.FK_RicToChain_0_0" FromRole="RicToChain" ToRole="Ric" />
+          <NavigationProperty Name="Chains" Relationship="mainModel.RicToChain" FromRole="Ric" ToRole="Chain" />
         </EntityType>
         <EntityType Name="Seniority">
           <Key>
@@ -1056,18 +1042,6 @@
             </Principal>
             <Dependent Role="Chain">
               <PropertyRef Name="id_Feed" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_RicToChain_1_0">
-          <End Role="Chain" Type="mainModel.Chain" Multiplicity="1" />
-          <End Role="RicToChain" Type="mainModel.RicToChain" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Chain">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="RicToChain">
-              <PropertyRef Name="Chain_id" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1215,18 +1189,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_RatingToBond_0_0">
-          <End Role="InstrumentBond" Type="mainModel.InstrumentBond" Multiplicity="0..1" />
-          <End Role="RatingToBond" Type="mainModel.RatingToBond" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="InstrumentBond">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="RatingToBond">
-              <PropertyRef Name="id_Bond" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_Ric_1_0">
           <End Role="Isin" Type="mainModel.Isin" Multiplicity="0..1" />
           <End Role="Ric" Type="mainModel.Ric" Multiplicity="*" />
@@ -1248,18 +1210,6 @@
             </Principal>
             <Dependent Role="Rating">
               <PropertyRef Name="id" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_RatingToBond_1_0">
-          <End Role="Rating" Type="mainModel.Rating" Multiplicity="0..1" />
-          <End Role="RatingToBond" Type="mainModel.RatingToBond" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Rating">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="RatingToBond">
-              <PropertyRef Name="id_Rating" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1287,18 +1237,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_RicToChain_0_0">
-          <End Role="Ric" Type="mainModel.Ric" Multiplicity="1" />
-          <End Role="RicToChain" Type="mainModel.RicToChain" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Ric">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="RicToChain">
-              <PropertyRef Name="Ric_id" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_Ticker_0_0">
           <End Role="Ticker" Type="mainModel.Ticker" Multiplicity="0..1" />
           <End Role="Ticker1" Type="mainModel.Ticker" Multiplicity="*" />
@@ -1310,6 +1248,14 @@
               <PropertyRef Name="id_ParentTicker" />
             </Dependent>
           </ReferentialConstraint>
+        </Association>
+        <Association Name="RicToChain">
+          <End Type="mainModel.Chain" Role="Chain" Multiplicity="*" />
+          <End Type="mainModel.Ric" Role="Ric" Multiplicity="*" />
+        </Association>
+        <Association Name="RatingToBond">
+          <End Type="mainModel.Rating" Role="Rating" Multiplicity="*" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
         </Association>
       </Schema>
     </edmx:ConceptualModels>
@@ -1446,15 +1392,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="RatingToBonds">
-            <EntityTypeMapping TypeName="mainModel.RatingToBond">
-              <MappingFragment StoreEntitySet="RatingToBond">
-                <ScalarProperty Name="id" ColumnName="id" />
-                <ScalarProperty Name="id_Rating" ColumnName="id_Rating" />
-                <ScalarProperty Name="id_Bond" ColumnName="id_Bond" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="RawBondInfoes">
             <EntityTypeMapping TypeName="mainModel.RawBondInfo">
               <MappingFragment StoreEntitySet="RawBondInfo">
@@ -1523,15 +1460,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="RicToChains">
-            <EntityTypeMapping TypeName="mainModel.RicToChain">
-              <MappingFragment StoreEntitySet="RicToChain">
-                <ScalarProperty Name="id" ColumnName="id" />
-                <ScalarProperty Name="Ric_id" ColumnName="Ric_id" />
-                <ScalarProperty Name="Chain_id" ColumnName="Chain_id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Seniorities">
             <EntityTypeMapping TypeName="mainModel.Seniority">
               <MappingFragment StoreEntitySet="Seniority">
@@ -1558,6 +1486,22 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <AssociationSetMapping Name="RicToChain" TypeName="mainModel.RicToChain" StoreEntitySet="RicToChain">
+            <EndProperty Name="Ric">
+              <ScalarProperty Name="id" ColumnName="Ric_id" />
+            </EndProperty>
+            <EndProperty Name="Chain">
+              <ScalarProperty Name="id" ColumnName="Chain_id" />
+            </EndProperty>
+          </AssociationSetMapping>
+          <AssociationSetMapping Name="RatingToBond" TypeName="mainModel.RatingToBond" StoreEntitySet="RatingToBond">
+            <EndProperty Name="InstrumentBond">
+              <ScalarProperty Name="id" ColumnName="id_Bond" />
+            </EndProperty>
+            <EndProperty Name="Rating">
+              <ScalarProperty Name="id" ColumnName="id_Rating" />
+            </EndProperty>
+          </AssociationSetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

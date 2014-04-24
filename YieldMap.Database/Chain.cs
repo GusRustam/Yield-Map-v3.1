@@ -16,7 +16,7 @@ namespace YieldMap.Database
     {
         public Chain()
         {
-            this.RicToChains = new HashSet<RicToChain>();
+            this.Rics = new HashSet<Ric>();
         }
     
         public long id { get; set; }
@@ -26,6 +26,6 @@ namespace YieldMap.Database
         public string Params { get; set; }
     
         public virtual Feed Feed { get; set; }
-        public virtual ICollection<RicToChain> RicToChains { get; set; }
+        public virtual ICollection<Ric> Rics { get; set; }
     }
 }

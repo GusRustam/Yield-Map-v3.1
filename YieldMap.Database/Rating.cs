@@ -16,7 +16,7 @@ namespace YieldMap.Database
     {
         public Rating()
         {
-            this.RatingToBonds = new HashSet<RatingToBond>();
+            this.InstrumentBonds = new HashSet<InstrumentBond>();
         }
     
         public long id { get; set; }
@@ -25,6 +25,6 @@ namespace YieldMap.Database
         public Nullable<long> id_RatingAgency { get; set; }
     
         public virtual RatingAgency RatingAgency { get; set; }
-        public virtual ICollection<RatingToBond> RatingToBonds { get; set; }
+        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }
 }
