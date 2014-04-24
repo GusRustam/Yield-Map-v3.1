@@ -156,14 +156,12 @@ module Workflows =
     module Attempt = 
         type Attempt<'T> = (unit -> 'T option)
 
-        let always x = (fun () -> x) : Attempt<'T>
-
         let runAttempt (a : Attempt<'T>) = a() 
-        let fail = always None
-        let succeed x = always <| Some x
-        let bind p rest = match runAttempt p with None -> fail | Some r -> rest r
-        let delay f = always <| runAttempt (f())
-        let combine p1 p2 = always (match runAttempt p1 with None -> runAttempt p2 | res -> res)
+        let fail = (fun () -> None) : Attempt<'T>
+        let succeed x = (fun () -> Some(x)) : Attempt<'T>
+        let bind p rest = match runAttempt p with None -> fail | Some r -> (rest r)
+        let delay f = (fun () -> runAttempt (f())) : Attempt<'T>
+        let combine p1 p2 = (fun () -> match p1() with None -> p2() | res -> res)
 
         type AttemptBuilder() = 
             member b.Bind(p, rest) = bind p rest
@@ -174,8 +172,10 @@ module Workflows =
             member b.Zero() = fail
 
             [<CustomOperation("condition", MaintainsVariableSpaceUsingBind = true)>]
-            member x.Condition (p, [<ProjectionParameter>] guard) = 
-                always (match runAttempt p with Some x when guard x -> Some x | _ -> None)
+            member x.Condition (p, [<ProjectionParameter>] guard) = (fun () ->
+                match p() with
+                | Some x when guard x -> Some x
+                | _ -> None)
       
         let attempt = AttemptBuilder()
 

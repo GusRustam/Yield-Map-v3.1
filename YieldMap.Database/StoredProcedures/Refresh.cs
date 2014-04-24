@@ -15,7 +15,7 @@ namespace YieldMap.Database.StoredProcedures {
         public string Params;
     }
 
-    public static class Extensions {
+    static class Extensions {
         public static bool InRange(this DateTime pivot, DateTime what, int range) {
             return what - pivot <= TimeSpan.FromDays(range);
         }

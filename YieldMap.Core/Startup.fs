@@ -44,8 +44,10 @@ module ExternalOperations =
 
     module Loading = 
         open YieldMap.Core.Responses
+        open YieldMap.Core.Notifier
 
         open YieldMap.Database
+
         open YieldMap.Loader.MetaChains
         open YieldMap.Loader.MetaTables
 
@@ -115,10 +117,10 @@ module ExternalOperations =
             | Choice2Of2 ex -> ChainFailure ex
 
         let loadChains (m:ChainMetaLoader) chains = async {
-            let names = chains |> List.map (fun r -> r.Ric) |> Array.ofList
+            let names = chains |> Seq.map (fun r -> r.Ric) |> Array.ofSeq
             let! results = 
                 chains 
-                |> List.map (fun request -> m.LoadChain request |> Async.Catch)
+                |> Seq.map (fun request -> m.LoadChain request |> Async.Catch)
                 |> Async.Parallel
             
             let results = results |> Array.zip names
@@ -178,8 +180,13 @@ module ExternalOperations =
             async {
                 try
                     let! ricsByChain, fails = loadChains m requests
-                    // todo throw "fails" somehow
+                   
+                    fails |> Array.iter (fun (ric, e) -> 
+                        Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
+                    
                     let rics = ricsByChain |> Array.map snd |> Array.collect id
+                    // todo remove unnecessary rics, leave necessary rics
+                    // todo add up separate rics
                     
                     let! res = loadAndSaveMetadata m rics
                     match res with 
@@ -189,11 +196,12 @@ module ExternalOperations =
                     logger.ErrorEx "Load failed" e
                     return! loadFailed e
             }
-        and private loadFailed (e:exn) = // todo e
+        and private loadFailed (e:exn) = 
             logger.Trace "loadFailed ()"
             async {
                 try 
                     saver.Restore ()
+                    logger.ErrorEx "Failed to reload data, restored successfully" e
                     return Failure (Problem "Failed to reload data, restored successfully")
                 with e ->
                     logger.ErrorEx "Failed to reload and restore data" e
@@ -216,6 +224,8 @@ module AnotherStartup =
     open YieldMap.Core.Notifier
     open YieldMap.Core.Portfolio
     open YieldMap.Core.Responses
+    
+    open YieldMap.Database.StoredProcedures
 
     open YieldMap.Loader
     open YieldMap.Loader.SdkFactory
@@ -252,7 +262,7 @@ module AnotherStartup =
             | Reload _ -> "Reload"
             | Close _ -> "Close"
 
-    type Startup (f:EikonFactory, c:Calendar, m:ChainMetaLoader, p:PortfolioManager)  = 
+    type Startup (f:EikonFactory, c:Calendar, m:ChainMetaLoader) as this  = 
         let s = Event<_> ()
 
         do f.OnConnectionStatus |> Observable.add (fun state -> 
@@ -260,10 +270,7 @@ module AnotherStartup =
             | Connection.Failed e -> () 
             | Connection.Connected -> ()) // TODO ON DISCONNECT / RECONNECT DO SOMETHING (IF NECESSARY :))
 
-        do c.NewDay |> Observable.add (fun dt -> ()) // TODO ON NEW DATE DO SOMETHING (ADD FORCE RELOAD COMMAND!!)
-        
         let a = MailboxProcessor.Start (fun inbox ->
-
             let rec started (channel : State AsyncReplyChannel option) = 
                 logger.Debug "[--> started ()]"
 
@@ -273,7 +280,7 @@ module AnotherStartup =
 
                     let! cmd = inbox.Receive ()
                     logger.DebugF "[Started: message %s]" (cmd.ToString())
-                    match cmd with 
+                    match cmd with
                     | Connect channel -> 
                         let! res = ExternalOperations.connect f
                         match res with
@@ -285,7 +292,7 @@ module AnotherStartup =
                         Notifier.notify ("Startup", Problem <| sprintf "Invalid command %s in state Started" (cmd.ToString()), Severity.Warn)
                         return! started (Some channel) 
                     | Close channel -> return close channel
-                } 
+                }
 
             and connected (channel : State AsyncReplyChannel) = 
                 logger.Debug "[--> connected ()]"
@@ -302,8 +309,12 @@ module AnotherStartup =
                         return! connected channel 
                     | Reload (_, channel) -> // ignoring force parameter on primary loading
                         logger.Debug "[Primary reload]"
-                        let x = []                                                      // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        let! res = ExternalOperations.load m x true
+                        
+                        let y = 
+                            Refresh.ChainsToLoad 
+                            |> Seq.map (fun r -> { Ric = r.ChainRic; Feed = r.Feed; Mode = r.Params; Timeout = 0}) // todo timeout
+
+                        let! res = ExternalOperations.load m y true
                         match res with
                         | Success.Failure f -> 
                             Notifier.notify ("Startup", f, Severity.Warn)

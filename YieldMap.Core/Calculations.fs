@@ -85,7 +85,8 @@ module Calculations =
             let (success, res) = f str
             if not success then return! fail
             return res
-        }
+        } 
+         
         let getFloat str = getValue str Double.TryParse
         let getDecimal str = getValue str Decimal.TryParse
         let getInt str =  getValue str Int32.TryParse
