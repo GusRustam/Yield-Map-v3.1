@@ -12,20 +12,16 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class Ticker
+    public partial class Specimen
     {
-        public Ticker()
+        public Specimen()
         {
             this.InstrumentBonds = new HashSet<InstrumentBond>();
-            this.Child = new HashSet<Ticker>();
         }
     
         public long id { get; set; }
-        public string Name { get; set; }
-        public Nullable<long> id_ParentTicker { get; set; }
+        public string name { get; set; }
     
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
-        public virtual ICollection<Ticker> Child { get; set; }
-        public virtual Ticker Parent { get; set; }
     }
 }

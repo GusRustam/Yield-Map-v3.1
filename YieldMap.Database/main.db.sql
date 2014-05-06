@@ -28,6 +28,7 @@ CREATE TABLE Chain (
   Name      varchar(50) NOT NULL UNIQUE,
   id_Feed   integer,
   Expanded  date,
+  Params    varchar(50) NOT NULL,
   /* Foreign keys */
   FOREIGN KEY (id_Feed)
     REFERENCES Feed(id)
@@ -100,10 +101,12 @@ CREATE TABLE InstrumentBond (
   id_Ric          integer,
   id_Ticker       integer,
   id_SubIndustry  integer,
-  id_Type         integer,
+  id_Specimen     integer,
   Issue           date,
   Maturity        date,
   id_Seniority    integer,
+  NextCoupon      date,
+  Coupon          float(50),
   /* Foreign keys */
   FOREIGN KEY (id_Seniority)
     REFERENCES Seniority(id)
@@ -129,8 +132,8 @@ CREATE TABLE InstrumentBond (
     REFERENCES SubIndustry(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
-  FOREIGN KEY (id_Type)
-    REFERENCES TypeOfInstrument(id)
+  FOREIGN KEY (id_Specimen)
+    REFERENCES Specimen(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Borrower)
@@ -234,16 +237,15 @@ CREATE INDEX RefRatingAgency_Index02
   (Name);
 
 CREATE TABLE RatingToBond (
-  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  id_Rating  integer,
-  id_Bond    integer,
+  id_Rating  integer NOT NULL,
+  id_Bond    integer NOT NULL,
   /* Foreign keys */
-  FOREIGN KEY (id_Bond)
-    REFERENCES InstrumentBond(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
   FOREIGN KEY (id_Rating)
     REFERENCES Rating(id)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_Bond)
+    REFERENCES InstrumentBond(id)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
@@ -340,23 +342,18 @@ CREATE INDEX RefRic_Index01
   (id);
 
 CREATE TABLE RicToChain (
-  id        integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Ric_id    integer NOT NULL,
   Chain_id  integer NOT NULL,
   /* Foreign keys */
-  FOREIGN KEY (Ric_id)
-    REFERENCES Ric(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
   FOREIGN KEY (Chain_id)
     REFERENCES Chain(id)
     ON DELETE RESTRICT
+    ON UPDATE RESTRICT, 
+  FOREIGN KEY (Ric_id)
+    REFERENCES Ric(id)
+    ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
-
-CREATE INDEX RefRicToChain_Index01
-  ON RicToChain
-  (id);
 
 CREATE TABLE Seniority (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -370,6 +367,11 @@ CREATE INDEX RefSeniority_Index01
 CREATE INDEX RefSeniority_Index02
   ON Seniority
   (Name);
+
+CREATE TABLE Specimen (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  name  varchar(50) NOT NULL
+);
 
 CREATE TABLE SubIndustry (
   id           integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -408,4 +410,3 @@ CREATE INDEX RefTicker_Index01
 CREATE INDEX RefTicker_Index02
   ON Ticker
   (Name);
-

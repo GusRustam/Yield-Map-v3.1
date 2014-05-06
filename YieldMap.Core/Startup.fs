@@ -14,75 +14,6 @@ module internal Timeouts =
     let timeouts = { load = 5000; connect = 2000; agent = 1000; awaiter = 100 }
 
 [<AutoOpen>]
-module Saving = 
-    open YieldMap.Core.Responses
-    open YieldMap.Core.Notifier
-
-    open YieldMap.Database
-    open YieldMap.Database.StoredProcedures
-
-    open YieldMap.Loader.MetaChains
-
-    open YieldMap.Requests.MetaTables
-
-    open YieldMap.Tools.Aux
-    open YieldMap.Tools.Aux.Workflows.Attempt
-    open YieldMap.Tools.Location
-    open YieldMap.Tools.Logging
-
-    open System
-    open System.Collections.Generic
-    open System.IO
-
-    let private logger = LogFactory.create "Saving"
-
-    exception DbException of Failure
-
-    type SavingOperations = 
-        abstract Backup : unit -> unit
-        abstract Restore : unit -> unit
-        abstract Clear : unit -> unit
-        abstract NeedsReload : unit -> bool
-        abstract SaveBonds : BondDescr list -> unit
-        abstract SaveIssueRatings : IssueRatingData list -> unit
-        abstract SaveIssuerRatings : IssuerRatingData list -> unit
-        abstract SaveFrns : FrnData list -> unit
-
-    type DbSavingOperations (dt) = 
-        static do MainEntities.SetVariable("PathToTheDatabase", Location.path)
-        static let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
-
-        interface SavingOperations with
-            member x.Backup () =
-                use ctx = new MainEntities (cnnStr)
-                let path = Path.Combine(Location.path, "main.bak")
-                try
-                    if File.Exists(path) then File.Delete(path)
-                    let sql = sprintf "BACKUP DATABASE main TO DISK='%s'" path
-                    ctx.Database.ExecuteSqlCommand(sql) |> ignore
-                    if not <| File.Exists(path) then raise (DbException <| Problem "No backup file found")
-                with e ->  raise (DbException <| Error e)
-
-            member x.Restore () = 
-                use ctx = new MainEntities (cnnStr)
-                let path = Path.Combine(Location.path, "main.bak")
-                try
-                    if not <| File.Exists(path) then raise <| DbException (Problem "No restore file found")
-                    let sql = sprintf "RESTORE DATABASE main FROM DISK='%s'" path
-                    ctx.Database.ExecuteSqlCommand(sql) |> ignore
-                    if File.Exists(path) then File.Delete(path)
-                with
-                    | :? DbException -> reraise ()
-                    | e -> raise <| DbException (Error e)
-
-            member x.Clear () = ()
-            member x.NeedsReload () = (>) (Refresh.ChainsInNeed(dt) |> Seq.length) 0
-            member x.SaveBonds bonds = ()
-            member x.SaveIssueRatings issue = ()
-            member x.SaveIssuerRatings issuer = ()
-            member x.SaveFrns frns = ()
-
-[<AutoOpen>]
 module Package = 
     open YieldMap.Loader.SdkFactory
     open YieldMap.Loader.LiveQuotes
@@ -93,7 +24,7 @@ module Package =
 
     type Operations = {
         TodayFix : DateTime
-        Saver : SavingOperations
+//        Saver : SavingOperations
         Loader : ChainMetaLoader
         Factory : EikonFactory
         Calendar : Calendar
@@ -150,52 +81,6 @@ module ExternalOperations =
 
         let private logger = LogFactory.create "Loading"
 
-        exception DbException of Failure
-
-        type SavingOperations = 
-            abstract Backup : unit -> unit
-            abstract Restore : unit -> unit
-            abstract Clear : unit -> unit
-            abstract NeedsReload : unit -> bool
-            abstract SaveBonds : MetaTables.BondDescr list -> unit
-            abstract SaveIssueRatings : MetaTables.IssueRatingData list -> unit
-            abstract SaveIssuerRatings : MetaTables.IssuerRatingData list -> unit
-            abstract SaveFrns : MetaTables.FrnData list -> unit
-
-        type DbSavingOperations (dt) = 
-            static do MainEntities.SetVariable("PathToTheDatabase", Location.path)
-            static let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
-
-            interface SavingOperations with
-                member x.Backup () =
-                    use ctx = new MainEntities (cnnStr)
-                    let path = Path.Combine(Location.path, "main.bak")
-                    try
-                        if File.Exists(path) then File.Delete(path)
-                        let sql = sprintf "BACKUP DATABASE main TO DISK='%s'" path
-                        ctx.Database.ExecuteSqlCommand(sql) |> ignore
-                        if not <| File.Exists(path) then raise (DbException <| Problem "No backup file found")
-                    with e ->  raise (DbException <| Error e)
-
-                member x.Restore () = 
-                    use ctx = new MainEntities (cnnStr)
-                    let path = Path.Combine(Location.path, "main.bak")
-                    try
-                        if not <| File.Exists(path) then raise <| DbException (Problem "No restore file found")
-                        let sql = sprintf "RESTORE DATABASE main FROM DISK='%s'" path
-                        ctx.Database.ExecuteSqlCommand(sql) |> ignore
-                        if File.Exists(path) then File.Delete(path)
-                    with
-                        | :? DbException -> reraise ()
-                        | e -> raise <| DbException (Error e)
-
-                member x.NeedsReload () = Refresh.ChainsInNeed(dt) |> Seq.isEmpty
-                member x.Clear () = () // todo never used!
-                member x.SaveBonds bonds = bonds |> Seq.ofList |> Additions.SaveBonds
-                member x.SaveIssueRatings issue = ()
-                member x.SaveIssuerRatings issuer = ()
-                member x.SaveFrns frns = ()
-
         let (|ChainAnswer|ChainFailure|) = function
             | Choice1Of2 ch ->
                 match ch with 
@@ -235,33 +120,32 @@ module ExternalOperations =
         let meta = Metabuilder ()
 
         let loadAndSaveMetadata (s:Operations) rics = meta {
-            let loader, saver = s.Loader, s.Saver 
+            let loader = s.Loader
 
             let! bonds = loader.LoadMetadata<BondDescr> rics
-            saver.SaveBonds bonds
-                            
+            Additions.SaveBonds bonds
+
+            // TODO save chains
             let! frns = loader.LoadMetadata<FrnData> rics
-            saver.SaveFrns frns
+            Additions.SaveFrns frns
 
             let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
-            saver.SaveIssueRatings issueRatings
+            Additions.SaveIssueRatings issueRatings
                             
             let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
-            saver.SaveIssuerRatings issuerRatings
+            Additions.SaveIssuerRatings issuerRatings
         }
 
         let rec reload (s:Operations) chains force  = 
-            let loader, saver, dt = s.Loader, s.Saver, s.TodayFix
+            let loader, dt = s.Loader, s.TodayFix
 
             logger.Trace "reload ()"
-            let saver, loader, dt = s.Saver, s.Loader, s.TodayFix
             async {
-                if force || force && saver.NeedsReload()  then
+                if force || force && Refresh.NeedsReload()  then
                     try
-                        saver.Backup ()
-                        saver.Clear ()
+                        BackupRestore.Backup ()
                         return! load s chains
-                    with :? DbException as e -> 
+                    with e -> 
                         logger.ErrorEx "Load failed" e
                         return! loadFailed s e
                 else return Ok
@@ -277,6 +161,9 @@ module ExternalOperations =
                     fails |> Array.iter (fun (ric, e) -> 
                         Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
+                    // saving rics and chains
+                    ricsByChain |> Array.iter (fun (chain, rics) -> Additions.SaveChainRics(chain, rics))
+
                     // extracting rics
                     let chainRics = ricsByChain |> Array.map snd |> Array.collect id |> set
                     
@@ -295,8 +182,10 @@ module ExternalOperations =
                     let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                     match res with 
                     | Some e -> return! loadFailed s e
-                    | None -> return Ok
-                with :? DbException as e -> 
+                    | None -> 
+                        BackupRestore.Cleanup ()
+                        return Ok
+                with e -> 
                     logger.ErrorEx "Load failed" e
                     return! loadFailed s e
             }
@@ -305,7 +194,7 @@ module ExternalOperations =
             logger.Trace "loadFailed ()"
             async {
                 try 
-                    s.Saver.Restore ()
+                    BackupRestore.Restore ()
                     logger.ErrorEx "Failed to reload data, restored successfully" e
                     return Failure (Problem "Failed to reload data, restored successfully")
                 with e ->

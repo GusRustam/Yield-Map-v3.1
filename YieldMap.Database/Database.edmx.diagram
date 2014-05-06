@@ -23,7 +23,7 @@
         <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="7.125" PointY="6.375" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="13.75" PointY="11" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="7.25" PointY="17.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.Ticker" Width="1.5" PointX="10.75" PointY="20.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.Ticker" Width="1.5" PointX="10.375" PointY="20" IsExpanded="true" />
         <AssociationConnector Association="mainModel.FK_Borrower_0_0" ManuallyRouted="false" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_7_0" ManuallyRouted="false" />
         <AssociationConnector Association="mainModel.FK_Chain_0_0" ManuallyRouted="false" />
@@ -51,6 +51,8 @@
         <AssociationConnector Association="mainModel.FK_Ticker_0_0" ManuallyRouted="false" />
         <AssociationConnector Association="mainModel.RicToChain" />
         <AssociationConnector Association="mainModel.RatingToBond" />
+        <EntityTypeShape EntityType="mainModel.Specimen" Width="1.5" PointX="15.25" PointY="18" />
+        <AssociationConnector Association="mainModel.FK_InstrumentBond_6_0" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

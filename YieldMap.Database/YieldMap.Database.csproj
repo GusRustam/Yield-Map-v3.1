@@ -123,6 +123,13 @@
     <Compile Include="Seniority.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Specimen.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="StoredProcedures\Additions.cs" />
+    <Compile Include="StoredProcedures\BackupRestore.cs" />
+    <Compile Include="StoredProcedures\ChainsLogic.cs" />
+    <Compile Include="StoredProcedures\Mission.cs" />
     <Compile Include="StoredProcedures\Refresh.cs" />
     <Compile Include="SubIndustry.cs">
       <DependentUpon>Database.tt</DependentUpon>

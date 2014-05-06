@@ -35,6 +35,7 @@
       FROM [RicToChain] AS [RicToChain]</DefiningQuery>
           </EntitySet>
           <EntitySet Name="Seniority" EntityType="mainModel.Store.Seniority" store:Type="Tables" />
+          <EntitySet Name="Specimen" EntityType="mainModel.Store.Specimen" store:Type="Tables" />
           <EntitySet Name="SubIndustry" EntityType="mainModel.Store.SubIndustry" store:Type="Tables" />
           <EntitySet Name="Ticker" EntityType="mainModel.Store.Ticker" store:Type="Tables" />
           <AssociationSet Name="FK_Borrower_0_0" Association="mainModel.Store.FK_Borrower_0_0">
@@ -67,6 +68,10 @@
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_5_0" Association="mainModel.Store.FK_InstrumentBond_5_0">
             <End Role="SubIndustry" EntitySet="SubIndustry" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentBond_6_0" Association="mainModel.Store.FK_InstrumentBond_6_0">
+            <End Role="Specimen" EntitySet="Specimen" />
             <End Role="InstrumentBond" EntitySet="InstrumentBond" />
           </AssociationSet>
           <AssociationSet Name="FK_InstrumentBond_7_0" Association="mainModel.Store.FK_InstrumentBond_7_0">
@@ -200,12 +205,12 @@
           <Property Name="id_Ric" Type="integer" />
           <Property Name="id_Ticker" Type="integer" />
           <Property Name="id_SubIndustry" Type="integer" />
-          <Property Name="id_Type" Type="integer" />
+          <Property Name="id_Specimen" Type="integer" />
           <Property Name="Issue" Type="datetime" />
           <Property Name="Maturity" Type="datetime" />
           <Property Name="id_Seniority" Type="integer" />
-          <Property Name="NextOptionDate" Type="datetime" />
-          <Property Name="LastOptionDate" Type="datetime" />
+          <Property Name="NextCoupon" Type="datetime" />
+          <Property Name="Coupon" Type="real" />
         </EntityType>
         <EntityType Name="InstrumentCustomBond">
           <Key>
@@ -344,6 +349,13 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
         </EntityType>
+        <EntityType Name="Specimen">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="varchar" Nullable="false" MaxLength="50" />
+        </EntityType>
         <EntityType Name="SubIndustry">
           <Key>
             <PropertyRef Name="id" />
@@ -453,6 +465,18 @@
             </Principal>
             <Dependent Role="InstrumentBond">
               <PropertyRef Name="id_SubIndustry" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentBond_6_0">
+          <End Role="Specimen" Type="mainModel.Store.Specimen" Multiplicity="0..1" />
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Specimen">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Specimen" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -760,6 +784,11 @@
             <End Role="Rating" EntitySet="Ratings" />
             <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
           </AssociationSet>
+          <EntitySet Name="Specimens" EntityType="mainModel.Specimen" />
+          <AssociationSet Name="FK_InstrumentBond_6_0" Association="mainModel.FK_InstrumentBond_6_0">
+            <End Role="Specimen" EntitySet="Specimens" />
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="Borrower">
           <Key>
@@ -839,7 +868,6 @@
           <Property Name="id_Ric" Type="Int64" />
           <Property Name="id_Ticker" Type="Int64" />
           <Property Name="id_SubIndustry" Type="Int64" />
-          <Property Name="id_Type" Type="Int64" />
           <Property Name="Issue" Type="DateTime" />
           <Property Name="Maturity" Type="DateTime" />
           <Property Name="id_Seniority" Type="Int64" />
@@ -851,9 +879,11 @@
           <NavigationProperty Name="Ric" Relationship="mainModel.FK_InstrumentBond_3_0" FromRole="InstrumentBond" ToRole="Ric" />
           <NavigationProperty Name="Ticker" Relationship="mainModel.FK_InstrumentBond_4_0" FromRole="InstrumentBond" ToRole="Ticker" />
           <NavigationProperty Name="SubIndustry" Relationship="mainModel.FK_InstrumentBond_5_0" FromRole="InstrumentBond" ToRole="SubIndustry" />
-          <Property Type="DateTime" Name="NextOptionDate" />
-          <Property Type="DateTime" Name="LastOptionDate" />
           <NavigationProperty Name="Ratings" Relationship="mainModel.RatingToBond" FromRole="InstrumentBond" ToRole="Rating" />
+          <Property Type="Int64" Name="id_Specimen" />
+          <NavigationProperty Name="Specimen" Relationship="mainModel.FK_InstrumentBond_6_0" FromRole="InstrumentBond" ToRole="Specimen" />
+          <Property Type="DateTime" Name="NextCoupon" />
+          <Property Type="Double" Name="Coupon" />
         </EntityType>
         <EntityType Name="InstrumentCustomBond">
           <Key>
@@ -1006,8 +1036,8 @@
           <Property Name="Name" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
           <Property Name="id_ParentTicker" Type="Int64" />
           <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_4_0" FromRole="Ticker" ToRole="InstrumentBond" />
-          <NavigationProperty Name="Ticker1" Relationship="mainModel.FK_Ticker_0_0" FromRole="Ticker" ToRole="Ticker1" />
-          <NavigationProperty Name="Ticker2" Relationship="mainModel.FK_Ticker_0_0" FromRole="Ticker1" ToRole="Ticker" />
+          <NavigationProperty Name="Child" Relationship="mainModel.FK_Ticker_0_0" FromRole="Ticker" ToRole="Ticker1" />
+          <NavigationProperty Name="Parent" Relationship="mainModel.FK_Ticker_0_0" FromRole="Ticker1" ToRole="Ticker" />
         </EntityType>
         <Association Name="FK_Borrower_0_0">
           <End Role="Country" Type="mainModel.Country" Multiplicity="1" />
@@ -1257,6 +1287,26 @@
           <End Type="mainModel.Rating" Role="Rating" Multiplicity="*" />
           <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
         </Association>
+        <EntityType Name="Specimen">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="InstrumentBonds" Relationship="mainModel.FK_InstrumentBond_6_0" FromRole="Specimen" ToRole="InstrumentBond" />
+        </EntityType>
+        <Association Name="FK_InstrumentBond_6_0">
+          <End Type="mainModel.Specimen" Role="Specimen" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Specimen">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentBond">
+              <PropertyRef Name="id_Specimen" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1319,8 +1369,9 @@
           <EntitySetMapping Name="InstrumentBonds">
             <EntityTypeMapping TypeName="mainModel.InstrumentBond">
               <MappingFragment StoreEntitySet="InstrumentBond">
-                <ScalarProperty Name="LastOptionDate" ColumnName="LastOptionDate" />
-                <ScalarProperty Name="NextOptionDate" ColumnName="NextOptionDate" />
+                <ScalarProperty Name="Coupon" ColumnName="Coupon" />
+                <ScalarProperty Name="NextCoupon" ColumnName="NextCoupon" />
+                <ScalarProperty Name="id_Specimen" ColumnName="id_Specimen" />
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="id_Issuer" ColumnName="id_Issuer" />
                 <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
@@ -1336,7 +1387,6 @@
                 <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
                 <ScalarProperty Name="id_Ticker" ColumnName="id_Ticker" />
                 <ScalarProperty Name="id_SubIndustry" ColumnName="id_SubIndustry" />
-                <ScalarProperty Name="id_Type" ColumnName="id_Type" />
                 <ScalarProperty Name="Issue" ColumnName="Issue" />
                 <ScalarProperty Name="Maturity" ColumnName="Maturity" />
                 <ScalarProperty Name="id_Seniority" ColumnName="id_Seniority" />
@@ -1502,6 +1552,14 @@
               <ScalarProperty Name="id" ColumnName="id_Rating" />
             </EndProperty>
           </AssociationSetMapping>
+          <EntitySetMapping Name="Specimens">
+            <EntityTypeMapping TypeName="mainModel.Specimen">
+              <MappingFragment StoreEntitySet="Specimen">
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

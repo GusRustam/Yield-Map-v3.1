@@ -34,12 +34,12 @@ namespace YieldMap.Database
         public Nullable<long> id_Ric { get; set; }
         public Nullable<long> id_Ticker { get; set; }
         public Nullable<long> id_SubIndustry { get; set; }
-        public Nullable<long> id_Type { get; set; }
         public Nullable<System.DateTime> Issue { get; set; }
         public Nullable<System.DateTime> Maturity { get; set; }
         public Nullable<long> id_Seniority { get; set; }
-        public Nullable<System.DateTime> NextOptionDate { get; set; }
-        public Nullable<System.DateTime> LastOptionDate { get; set; }
+        public Nullable<long> id_Specimen { get; set; }
+        public Nullable<System.DateTime> NextCoupon { get; set; }
+        public Nullable<double> Coupon { get; set; }
     
         public virtual Borrower Borrower { get; set; }
         public virtual Currency Currency { get; set; }
@@ -50,5 +50,6 @@ namespace YieldMap.Database
         public virtual Ticker Ticker { get; set; }
         public virtual SubIndustry SubIndustry { get; set; }
         public virtual ICollection<Rating> Ratings { get; set; }
+        public virtual Specimen Specimen { get; set; }
     }
 }

@@ -44,5 +44,6 @@ namespace YieldMap.Database
         public DbSet<Seniority> Seniorities { get; set; }
         public DbSet<SubIndustry> SubIndustries { get; set; }
         public DbSet<Ticker> Tickers { get; set; }
+        public DbSet<Specimen> Specimens { get; set; }
     }
 }
