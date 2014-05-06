@@ -48,6 +48,6 @@ module Requests =
         | Failed of exn
         with 
             static member isAnswer (m : Meta<'T>) = match m with Answer _ -> true | _ -> false
-            static member getAnswer (Answer m) = m
+            static member getAnswer x = match x with Answer m -> m | _ -> failwith "No Answer"
 
     type Chain = Answer of string array | Failed of exn

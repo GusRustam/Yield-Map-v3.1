@@ -30,7 +30,7 @@ module MetaChains =
 
     /// Loads chains and metadata
     type ChainMetaLoader = 
-        abstract member LoadChain : ChainRequest -> Async<Chain>
+        abstract member LoadChain : ChainRequest -> Async<Chain * ChainRequest>
         abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : rics:string array * ?timeout:int -> 'a Meta Async
 
     module private Watchers =
@@ -188,11 +188,13 @@ module MetaChains =
                         | null -> return Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
                         | _ -> return Chain.Answer <| node.InnerText.Split('\t')
                     with e -> return Chain.Failed e
-                } |> Async.WithTimeoutEx (Some setup.Timeout)
+                } 
+                |> Async.Map (fun res -> (res, setup))
+                |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Chain.Failed e
+                with :? TimeoutException as e -> return (Chain.Failed e, setup)
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> rics date timeout = 
@@ -242,11 +244,13 @@ module MetaChains =
                 
                         return! Async.AwaitEvent evts.Data
                     with :? COMException -> return Chain.Failed <| Exception "Not connected to Eikon"
-                } |> Async.WithTimeoutEx (Some setup.Timeout)
+                } 
+                |> Async.Map (fun res -> (res, setup))
+                |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Chain.Failed e
+                with :? TimeoutException as e -> return (Chain.Failed e, setup)
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> (dex2 : Dex2Mgr) (rics:string array) timeout = 

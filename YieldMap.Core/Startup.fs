@@ -141,7 +141,7 @@ module ExternalOperations =
 
             logger.Trace "reload ()"
             async {
-                if force || force && Refresh.NeedsReload()  then
+                if force || force && Refresh.NeedsReload(s.TodayFix)  then
                     try
                         BackupRestore.Backup ()
                         return! load s chains

@@ -5,6 +5,10 @@ using YieldMap.Requests.MetaTables;
 using YieldMap.Tools.Location;
 
 namespace YieldMap.Database.StoredProcedures {
+    /// 
+    /// 
+    /// 
+    /// 
     public static class Additions {
         private static readonly string ConnStr;
         static Additions() {
@@ -12,34 +16,33 @@ namespace YieldMap.Database.StoredProcedures {
             ConnStr = MainEntities.GetConnectionString("TheMainEntities");
         }
 
-        public static void SaveChainRics(string chainRic, string[] rics, string feed, DateTime expanded, string prms) {
+        public static void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms) {
             using (var ctx = new MainEntities(ConnStr)) {
-                var theFeed = ctx.EnsureFeed(feed);
-                var chain = ctx.EnsureChain(chainRic, theFeed, expanded, prms);
+                var feed = ctx.EnsureFeed(feedName);
+                var chain = ctx.EnsureChain(chainRic, feed, expanded, prms);
+
+                var existingRics = new HashSet<string>(from r in chain.Rics select r.Name);
+                var newRics = new HashSet<string>(rics);
+                newRics.RemoveWhere(existingRics.Contains);
+
+                ctx.AddRics(chain, feed, newRics);
             }
         }
 
-        private static Feed EnsureFeed(this MainEntities ctx, string name) {
-            var feed = ctx.Feeds.FirstOrDefault(t => t.Name == name);
-            if (feed != null) return feed;
-
-            feed = ctx.Feeds.Add(new Feed { Name = name });
-            ctx.SaveChanges();
-            return feed;
-        }
-
-        private static Chain EnsureChain(this MainEntities ctx, string name, Feed feed, DateTime expanded, string prms) {
-            var chain = ctx.Chains.FirstOrDefault(t => t.Name == name);
-            if (chain != null) {
-                if (chain.Expanded != expanded) {
-                    chain.Expanded = expanded;
+        private static void AddRics(this MainEntities ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
+            foreach (var name in rics) {
+                var ric = ctx.Rics.FirstOrDefault(r => r.Name == name && r.Feed == feed);
+                if (ric == null) {
+                    ric = ctx.Rics.Add(new Ric { Name = name, Feed = feed });
                     ctx.SaveChanges();
                 }
-            } else {
-                chain = ctx.Chains.Add(new Chain {Name = name, Feed = feed, Expanded = expanded, Params = prms});
+
+                if (ric.Chains.Contains(chain))
+                    continue;
+
+                ric.Chains.Add(chain);
                 ctx.SaveChanges();
             }
-            return chain;
         }
 
         public static void SaveBonds(IEnumerable<MetaTables.BondDescr> bonds) {
@@ -69,32 +72,60 @@ namespace YieldMap.Database.StoredProcedures {
 
                         instrument.Issuer = ctx.EnsureIssuer(bond.IssuerName, issuerCountry);
                         instrument.Borrower = ctx.EnsureBorrower(bond.BorrowerName, borrowerCountry);
-
                         instrument.Currency = ctx.EnsureCurrency(bond.Currency);
                         instrument.Ticker = ctx.EnsureTicker(bond.Ticker, bond.ParentTicker);
                         instrument.Seniority = ctx.EnsureSeniority(bond.Seniority);
                         instrument.SubIndustry = ctx.EnsureIndustry(bond.Industry, bond.SubIndustry);
 
-                        instrument.Ric = ctx.EnsureRic(bond.Ric, bond.Isin);
+                        instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric); // there already must be some ric with feed!!!
                         
+                        var isin = ctx.EnsureIsin(bond.Isin, instrument.Ric);
+                        instrument.Isin = isin;
 
                         bondsToSave[bond.Ric] = instrument;
-                        // todo: Ric
-
                     } catch (Exception) {
                         // todo some reporting on errors
                     }
                     if (instrument != null)
                         ctx.InstrumentBonds.Add(instrument);
                 }
+                ctx.SaveChanges();
             }
         }
 
-        private static Ric EnsureRic(this MainEntities ctx, string ric, string isin) {
-            return null; // todo
+        private static Feed EnsureFeed(this MainEntities ctx, string name) {
+            var feed = ctx.Feeds.FirstOrDefault(t => t.Name == name);
+            if (feed != null)
+                return feed;
+
+            feed = ctx.Feeds.Add(new Feed { Name = name });
+            ctx.SaveChanges();
+            return feed;
         }
-        
-        
+
+        private static Chain EnsureChain(this MainEntities ctx, string name, Feed feed, DateTime expanded, string prms) {
+            var chain = ctx.Chains.FirstOrDefault(t => t.Name == name);
+            if (chain != null) {
+                if (chain.Expanded != expanded) {
+                    chain.Expanded = expanded;
+                    ctx.SaveChanges();
+                }
+            } else {
+                chain = ctx.Chains.Add(new Chain { Name = name, Feed = feed, Expanded = expanded, Params = prms });
+                ctx.SaveChanges();
+            }
+            return chain;
+        }
+
+        private static Isin EnsureIsin(this MainEntities ctx, string name, Ric ric) {
+            var isin = ctx.Isins.FirstOrDefault(i => i.Name == name && i.Feed == ric.Feed);
+            if (isin == null) {
+                isin = ctx.Isins.Add(new Isin { Name = name, Feed = ric.Feed });
+                ctx.SaveChanges();
+            }
+            return isin;
+        }
+
         private static SubIndustry EnsureIndustry(this MainEntities ctx, string ind, string sub) {
             var subIndustry = ctx.SubIndustries.FirstOrDefault(t => t.Name == sub);
             if (subIndustry != null) return subIndustry;
@@ -190,6 +221,5 @@ namespace YieldMap.Database.StoredProcedures {
 
             }
         }
-
     }
 }
