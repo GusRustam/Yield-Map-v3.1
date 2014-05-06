@@ -5,8 +5,9 @@ open NUnit.Framework
 open FsUnit
 
 module DbTests =
+    open YieldMap.Requests.MetaTables
+
     open YieldMap.Loader.Requests
-    open YieldMap.Loader.MetaTables
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
         
@@ -27,24 +28,24 @@ module DbTests =
 
         let cnt boo = query { for x in boo do select x; count }
 
-        let count = cnt ctx.RefChains
+        let count = cnt ctx.Chains
         logger.InfoF "Da count is %d" count
 
-        let c = RefChain()
+        let c = Chain()
         c.Name <- Guid.NewGuid().ToString()
-        let c = ctx.RefChains.Add c
+        let c = ctx.Chains.Add c
         logger.InfoF "First c is <%d; %s>" c.id c.Name
         ctx.SaveChanges() |> ignore
 
         logger.InfoF "Now c is <%d; %s>" c.id c.Name
-        let poo =  cnt ctx.RefChains
+        let poo =  cnt ctx.Chains
         logger.InfoF "Da count is now %d" poo
         poo |> should equal (count+1)
 
-        let c = ctx.RefChains.Remove (c)
+        let c = ctx.Chains.Remove (c)
         ctx.SaveChanges() |> ignore
         logger.InfoF "And now c is <%d; %s>" c.id c.Name
-        let poo =  cnt ctx.RefChains
+        let poo =  cnt ctx.Chains
         logger.InfoF "Da count is now %d" poo
         poo |> should equal count
 
@@ -82,7 +83,7 @@ module DbTests =
                 // hmmmmmm.... well, it is possible
                 // but maybe i will just delete those "Raw" tables ))
                 let rawBond =
-                    new RawBond ( 
+                    new RawBondInfo ( 
                         BondStructure = item.BondStructure,
                         RateStructure = item.RateStructure,
                         IssueSize = item.IssueSize,
@@ -110,7 +111,7 @@ module DbTests =
                         Instrument = item.Instrument,
                         Ric = item.Ric                                
                     )
-                ctx.RawBonds.Add rawBond |> ignore
+                ctx.RawBondInfoes.Add rawBond |> ignore
             )
             ctx.SaveChanges () 
 
@@ -118,7 +119,7 @@ module DbTests =
             use ctx = new MainEntities(cnnStr)
             ratings |> List.iter (fun item -> 
                 let bondId = query {
-                    for bond in ctx.RawBonds do
+                    for bond in ctx.RawBondInfoes do
                     where (bond.Ric = item.Ric)
                     select bond.id
                     exactlyOneOrDefault
@@ -140,7 +141,7 @@ module DbTests =
             use ctx = new MainEntities(cnnStr)
             ratings |> List.iter (fun item -> 
                 let bondId = query {
-                    for bond in ctx.RawBonds do
+                    for bond in ctx.RawBondInfoes do
                     where (bond.Ric = item.Ric)
                     select bond.id
                     exactlyOneOrDefault
@@ -162,7 +163,7 @@ module DbTests =
             use ctx = new MainEntities(cnnStr)
             frns |> List.iter (fun item -> 
                 let bondId = query {
-                    for bond in ctx.RawBonds do
+                    for bond in ctx.RawBondInfoes do
                     where (bond.Ric = item.Ric)
                     select bond.id
                     exactlyOneOrDefault
@@ -177,7 +178,7 @@ module DbTests =
                             Index = item.IndexRic,
                             id_RawBond = Nullable bondId
                         )
-                    ctx.RawFrnData.Add rawFrn |> ignore
+                    ctx.RawFrnDatas.Add rawFrn |> ignore
             )
             ctx.SaveChanges () 
 

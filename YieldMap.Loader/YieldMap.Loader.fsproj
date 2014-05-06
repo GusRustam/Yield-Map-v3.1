@@ -44,12 +44,11 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <ItemGroup>
-    <Compile Include="Calendar.fs" />
     <Compile Include="Requests.fs" />
+    <Compile Include="Calendar.fs" />
     <Compile Include="SdkFactory.fs" />
     <Compile Include="MetaChains.fs" />
     <Compile Include="WebServer.fs" />
-    <Compile Include="MetaTables.fs" />
     <Compile Include="LiveQuotes.fs" />
     <None Include="packages.config" />
   </ItemGroup>
@@ -78,6 +77,11 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
+    <ProjectReference Include="..\YieldMap.Requests\YieldMap.Requests.fsproj">
+      <Name>YieldMap.Requests</Name>
+      <Project>{e773f65f-d9dc-4420-9af5-d148780b531f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Tools\YieldMap.Tools.fsproj">
       <Name>YieldMap.Tools</Name>
       <Project>{41cf2e5f-752e-4e65-8773-ae7061242ba9}</Project>

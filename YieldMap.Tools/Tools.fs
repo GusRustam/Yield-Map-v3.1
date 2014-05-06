@@ -20,8 +20,10 @@ module Extensions =
     let cross f a b = f b a
 
     // Some operators
-    let inline (|-) item items = set items |> Set.contains item
-    let inline (-|) items item = item |- items
+    let inline ( |- ) item items = Set.contains item items // belongs
+    let inline ( -| ) items item = Set.contains item items // belongs reverse
+    let inline ( |* ) item items = not <| Set.contains item items // not belongs
+    let inline ( *| ) items item = not <| Set.contains item items // not belongs reverse
 
     let fst3 (a, _, _) = a
     let snd3 (_, b, _) = b

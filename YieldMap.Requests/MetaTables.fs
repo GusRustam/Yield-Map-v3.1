@@ -1,9 +1,10 @@
-﻿namespace YieldMap.Loader.MetaTables
+﻿namespace YieldMap.Requests.MetaTables
 
 [<AutoOpen>]
 module MetaTables = 
     open System
-    open YieldMap.Loader.Requests
+    open YieldMap.Requests.Tools.Attrs
+    open YieldMap.Requests.Tools.Converters
 
     [<Request("RH:In")>]
     type BondDescr() = 

@@ -6,22 +6,22 @@
     <edmx:Diagrams>
       <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="63">
         <EntityTypeShape EntityType="mainModel.Borrower" Width="1.5" PointX="13.125" PointY="13.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="10.75" PointY="7.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="10.75" PointY="4.625" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="15.75" PointY="14.5" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="6.875" PointY="14" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.Feed" Width="1.5" PointX="14.875" PointY="5.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.Feed" Width="1.5" PointX="15.875" PointY="5.625" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Industry" Width="1.5" PointX="4.875" PointY="18.125" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.InstrumentBond" Width="1.5" PointX="10.5" PointY="11.875" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.InstrumentCustomBond" Width="1.75" PointX="2" PointY="14.125" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="14.625" PointY="8.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="15.875" PointY="8.375" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Issuer" Width="1.5" PointX="13.125" PointY="15.625" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="4.5" PointY="10" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="2.375" PointY="10.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.RawBondInfo" Width="1.5" PointX="3.25" PointY="6.875" IsExpanded="false" />
-        <EntityTypeShape EntityType="mainModel.RawFrnData" Width="1.5" PointX="3.375" PointY="6" IsExpanded="false" />
-        <EntityTypeShape EntityType="mainModel.RawRating" Width="1.5" PointX="3.375" PointY="7.625" IsExpanded="false" />
-        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="6.375" PointY="5.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="13.375" PointY="19.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="4.375" PointY="11.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="1.125" PointY="10" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.RawBondInfo" Width="1.5" PointX="3.125" PointY="6.875" IsExpanded="false" />
+        <EntityTypeShape EntityType="mainModel.RawFrnData" Width="1.5" PointX="3.125" PointY="5.875" IsExpanded="false" />
+        <EntityTypeShape EntityType="mainModel.RawRating" Width="1.5" PointX="3.125" PointY="7.875" IsExpanded="false" />
+        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="7.125" PointY="6.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="13.75" PointY="11" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="7.25" PointY="17.375" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Ticker" Width="1.5" PointX="10.75" PointY="20.75" IsExpanded="true" />
         <AssociationConnector Association="mainModel.FK_Borrower_0_0" ManuallyRouted="false" />
@@ -33,10 +33,14 @@
         <AssociationConnector Association="mainModel.FK_Isin_0_0" ManuallyRouted="false" />
         <AssociationConnector Association="mainModel.FK_Ric_0_0" ManuallyRouted="false" />
         <AssociationConnector Association="mainModel.FK_SubIndustry_0_0" ManuallyRouted="false" />
-        <AssociationConnector Association="mainModel.FK_InstrumentBond_0_0" ManuallyRouted="false" />
+        <AssociationConnector Association="mainModel.FK_InstrumentBond_0_0" ManuallyRouted="false" ></AssociationConnector>
         <AssociationConnector Association="mainModel.FK_InstrumentBond_1_0" ManuallyRouted="false" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_2_0" ManuallyRouted="false" />
-        <AssociationConnector Association="mainModel.FK_InstrumentBond_3_0" ManuallyRouted="false" >
+        <AssociationConnector Association="mainModel.FK_InstrumentBond_3_0" ManuallyRouted="true" >
+          <ConnectorPoint PointX="8.2084570929968557" PointY="8.9321907552083317" />
+          <ConnectorPoint PointX="8.2084570929968557" PointY="10.233465442772005" />
+          <ConnectorPoint PointX="10.874755182308524" PointY="10.233465442772005" />
+          <ConnectorPoint PointX="10.874755182308524" PointY="11.875" />
         </AssociationConnector>
         <AssociationConnector Association="mainModel.FK_InstrumentBond_4_0" ManuallyRouted="false" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_5_0" ManuallyRouted="false" />
