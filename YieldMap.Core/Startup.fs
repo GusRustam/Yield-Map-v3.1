@@ -90,7 +90,7 @@ module ExternalOperations =
             | Choice2Of2 ex -> ChainFailure ex
 
         let loadChains (m:ChainMetaLoader) chains = async {
-            let names = chains |> Seq.map (fun r -> r.Ric) |> Array.ofSeq
+            let names = chains |> Array.map (fun r -> r.Ric)
             let! results = 
                 chains 
                 |> Seq.map (fun request -> m.LoadChain request |> Async.Catch  |> Async.Map (fun res -> res, request))
@@ -140,7 +140,7 @@ module ExternalOperations =
 
             logger.Trace "reload ()"
             async {
-                if force || force && Refresh.NeedsReload(s.TodayFix)  then
+                if force || force && Refresh.NeedsReload s.TodayFix then
                     try
                         BackupRestore.Backup ()
                         return! load s chains
@@ -312,7 +312,7 @@ module Startup =
                         
                             let chainRequests = 
                                 Refresh.ChainsInNeed c.Today
-                                |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
+                                |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
 
                             let! res = ExternalOperations.load q chainRequests true
                             match res with
@@ -345,7 +345,7 @@ module Startup =
 
                             let chainRequests = 
                                 Refresh.ChainsInNeed c.Today
-                                |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
+                                |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
 
                             let! res = ExternalOperations.load q chainRequests force
                             match res with

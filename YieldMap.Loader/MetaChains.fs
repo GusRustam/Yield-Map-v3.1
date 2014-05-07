@@ -223,7 +223,8 @@ module MetaChains =
                             let x = MetaParser.parse<'a> data
                             return x
                         else
-                            return Meta.Failed <| Exception ("No data")
+                            return Meta.Answer []
+                            //return Meta.Failed <| Exception ("No data")
                         
                     with e -> return Meta.Failed e
                 } |> Async.WithTimeoutEx timeout

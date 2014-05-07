@@ -9,14 +9,6 @@ namespace YieldMap.Database.StoredProcedures {
             return what - pivot <= TimeSpan.FromDays(range);
         }
 
-        public static bool NeedsRefresh(this Chain chain, DateTime today) {
-            return chain.Expanded.HasValue && chain.Expanded.Value < today;
-        }
-
-        public static bool NeedsRefresh(this InstrumentBond bond, DateTime today) {
-            return bond.NextCoupon.HasValue && bond.NextCoupon.Value.InRange(today, 7);  //todo why 7?
-        }
-
         public static HashSet<T> Add<T>(this HashSet<T> set, IEnumerable<T> items) {
             var res = set != null ? new HashSet<T>(set) : new HashSet<T>();
             items.ToList().ForEach(item => res.Add(item));
@@ -37,9 +29,17 @@ namespace YieldMap.Database.StoredProcedures {
             ConnStr = MainEntities.GetConnectionString("TheMainEntities");
         }
 
-        public static IEnumerable<Chain> ChainsInNeed(DateTime dt) {
+        private static bool NeedsRefresh(Chain chain, DateTime today) {
+            return chain.Expanded.HasValue && chain.Expanded.Value < today;
+        }
+
+        private static bool NeedsRefresh(this InstrumentBond bond, DateTime today) {
+            return bond.NextCoupon.HasValue && bond.NextCoupon.Value.InRange(today, 7);  //todo why 7?
+        }
+
+        public static Chain[] ChainsInNeed(DateTime dt) {
             using (var ctx = new MainEntities(ConnStr)) {
-                return from c in ctx.Chains where c.NeedsRefresh(dt) select c;
+                return ctx.Chains.ToList().Where(c => NeedsRefresh(c, dt)).ToArray();
             }
         }
 
@@ -54,26 +54,37 @@ namespace YieldMap.Database.StoredProcedures {
         /// </summary>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        public static IEnumerable<Ric> StaleBondRics(DateTime dt) {
+        public static Ric[] StaleBondRics(DateTime dt) {
             using (var ctx = new MainEntities(ConnStr)) {
-                return from b in ctx.InstrumentBonds where b.NeedsRefresh(dt) select b.Ric;
+                return ctx
+                    .InstrumentBonds
+                    .ToList()
+                    .Where(b => NeedsRefresh(b, dt))
+                    .Select(b => b.Ric)
+                    .ToArray();
             }
         }
 
-        public static IEnumerable<Ric> AllBondRics() {
+        public static Ric[] AllBondRics() {
             using (var ctx = new MainEntities(ConnStr)) {
-                return from b in ctx.InstrumentBonds select b.Ric;
+                return ctx
+                    .InstrumentBonds
+                    .ToList()
+                    .Select(b => b.Ric)
+                    .ToArray();
             }
         }
 
         /// <summary> Enumerates rics which belong to matured bonds </summary>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        public static IEnumerable<Ric> ObsoleteBondRics(DateTime dt) {
+        public static Ric[] ObsoleteBondRics(DateTime dt) {
             using (var ctx = new MainEntities(ConnStr)) {
-                return from b in ctx.InstrumentBonds 
-                       where b.Maturity.HasValue && b.Maturity.Value < dt 
-                       select b.Ric;
+                return ctx
+                    .InstrumentBonds
+                    .Where(b => b.Maturity.HasValue && b.Maturity.Value < dt)
+                    .Select(b => b.Ric)
+                    .ToArray();
             }
         }
     }
