@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Tests
+﻿namespace YieldMap.Tests.Unit
 
 open System
 

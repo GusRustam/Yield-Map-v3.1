@@ -11,7 +11,10 @@ module StartupTest =
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
 
-    open YieldMap.Core.Application.AnotherStartup
+    open YieldMap.Core.Application
+    open YieldMap.Core.Application.Startup
+    open YieldMap.Core.Notifier
+
     open YieldMap.Tools.Logging
 
     let logger = LogFactory.create "StartupTest"
@@ -20,14 +23,17 @@ module StartupTest =
     let ``Simple workflow`` () =
         let dt = DateTime(2014,3,4)
                 
-        let f = MockFactory()
-        let c = MockCalendar dt
-        let m = MockChainMeta dt
+        let zzz = {
+            Factory = MockFactory()
+            TodayFix = dt
+            Loader = MockChainMeta dt
+            Calendar = MockCalendar dt
+        }
 
-        let x = Startup(f, c, m)
+        let x = Startup zzz
 
         x.StateChanged |> Observable.add (fun state -> logger.InfoF " => %A" state)
-        x.Notification |> Observable.add (fun (state, fail, severity) -> 
+        Notifier.notification |> Observable.add (fun (state, fail, severity) -> 
             match severity with
             | Evil -> logger.ErrorF "MSG: @%A %s" state (fail.ToString())
             | Warn -> logger.TraceF "MSG: @%A %s" state (fail.ToString())
@@ -41,9 +47,9 @@ module StartupTest =
             res |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
-        command "Reload" x.Reload (State Initialized)
+        command "Reload" (fun () -> x.Reload true) (State Initialized)
         command "Connect" x.Connect (State Initialized)
-        command "Reload" x.Reload (State Initialized)
+        command "Reload" (fun () -> x.Reload true) (State Initialized)
         command "Close" x.Close (State Closed)
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
@@ -52,14 +58,17 @@ module StartupTest =
     let ``Parallel workflow`` () =
         let dt = DateTime(2014,3,4)
                 
-        let f = MockFactory()
-        let c = MockCalendar dt
-        let m = MockChainMeta dt
+        let zzz = {
+            Factory = MockFactory()
+            TodayFix = dt
+            Loader = MockChainMeta dt
+            Calendar = MockCalendar dt
+        }
 
-        let x = Startup(f, c, m)
+        let x = Startup zzz
 
         let currentState = ref Started
-        x.Notification |> Observable.add (fun (state, fail, severity) -> 
+        Notifier.notification |> Observable.add (fun (state, fail, severity) -> 
             match severity with
             | Evil -> logger.ErrorF "MSG: @%A %s" state (fail.ToString())
             | Warn -> logger.TraceF "MSG: @%A %s" state (fail.ToString())
@@ -82,13 +91,13 @@ module StartupTest =
             let! res = command "Connect" x.Connect 
             res |> should be (equal (State Connected))
 
-            let! res = command "Reload" x.Reload
+            let! res = command "Reload" (fun () -> x.Reload true)
             res |> should be (equal (State Initialized))
 
             let! res = command "Connect" x.Connect
             res |> should be (equal (State Initialized))
 
-            let! res = command "Reload" x.Reload
+            let! res = command "Reload" (fun () -> x.Reload true)
             res |> should be (equal (State Initialized))
 
             do! Async.Sleep 5000
@@ -109,7 +118,7 @@ module StartupTest =
             let! res = command2 "Connect" x.Connect 
             res |> should be (equal (State Connected))
 
-            let! res = command2 "Reload" x.Reload
+            let! res = command2 "Reload" (fun () -> x.Reload true)
             res |> should be (equal (State Initialized))
 
             // main flow sleeps 5 seconds after reload, so here I am

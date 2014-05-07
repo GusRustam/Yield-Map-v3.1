@@ -11,7 +11,7 @@ open NUnit.Framework
 open YieldMap.Loader.Requests
 open YieldMap.Loader.SdkFactory
 open YieldMap.Loader.MetaChains
-open YieldMap.Loader.MetaTables
+open YieldMap.Requests.MetaTables
 open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
 

@@ -30,7 +30,7 @@ module MetaChains =
 
     /// Loads chains and metadata
     type ChainMetaLoader = 
-        abstract member LoadChain : ChainRequest -> Async<Chain * ChainRequest>
+        abstract member LoadChain : ChainRequest -> Async<Chain>
         abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : rics:string array * ?timeout:int -> 'a Meta Async
 
     module private Watchers =
@@ -133,7 +133,10 @@ module MetaChains =
                             let rec importRow = function
                                 | (num, name, converter) :: rest ->
                                     let p = t.GetProperty name
-                                    let value = row.[num-minCol]
+                                    
+                                    // a kind of hack. It some item is out of bounds of returned array
+                                    // it is considered to be null
+                                    let value =  if num-minCol < Array.length row then row.[num-minCol] else null
                                     
                                     logger.TraceF "Converting value %A to type %s" value p.PropertyType.Name
 
@@ -189,12 +192,11 @@ module MetaChains =
                         | _ -> return Chain.Answer <| node.InnerText.Split('\t')
                     with e -> return Chain.Failed e
                 } 
-                |> Async.Map (fun res -> (res, setup))
                 |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return (Chain.Failed e, setup)
+                with :? TimeoutException as e -> return Chain.Failed e
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> rics date timeout = 
@@ -245,12 +247,11 @@ module MetaChains =
                         return! Async.AwaitEvent evts.Data
                     with :? COMException -> return Chain.Failed <| Exception "Not connected to Eikon"
                 } 
-                |> Async.Map (fun res -> (res, setup))
                 |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return (Chain.Failed e, setup)
+                with :? TimeoutException as e -> return Chain.Failed e
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> (dex2 : Dex2Mgr) (rics:string array) timeout = 

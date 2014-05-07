@@ -45,7 +45,28 @@ namespace YieldMap.Database.StoredProcedures {
             }
         }
 
-        public static void SaveBonds(IEnumerable<MetaTables.BondDescr> bonds) {
+        public static void DeleteBonds(HashSet<string> names) {
+            using (var ctx = new MainEntities(ConnStr)) {
+                var rics = from ric in ctx.Rics
+                           where names.Contains(ric.Name)
+                           select ric;
+
+                // todo DELETING CAREFULLY!!!
+
+            }
+        }
+
+        public static void SaveFrns(IEnumerable<MetaTables.FrnData> bonds) {
+        }
+
+        public static void SaveIssueRatings(IEnumerable<MetaTables.IssueRatingData> bonds) {
+        }
+
+        public static void SaveIssuerRatings(IEnumerable<MetaTables.IssuerRatingData> bonds) {
+        }
+
+        public static IEnumerable<Tuple<MetaTables.BondDescr, Exception>> SaveBonds(IEnumerable<MetaTables.BondDescr> bonds) {
+            var res = new List<Tuple<MetaTables.BondDescr, Exception>>();
             var theBonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
 
             var bondsToSave = new Dictionary<string, InstrumentBond>();
@@ -77,20 +98,21 @@ namespace YieldMap.Database.StoredProcedures {
                         instrument.Seniority = ctx.EnsureSeniority(bond.Seniority);
                         instrument.SubIndustry = ctx.EnsureIndustry(bond.Industry, bond.SubIndustry);
 
-                        instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric); // there already must be some ric with feed!!!
+                        instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric); // there already must be some ric with some feed!!!
                         
                         var isin = ctx.EnsureIsin(bond.Isin, instrument.Ric);
                         instrument.Isin = isin;
 
                         bondsToSave[bond.Ric] = instrument;
-                    } catch (Exception) {
-                        // todo some reporting on errors
+                    } catch (Exception e) {
+                        res.Add(Tuple.Create(bond, e));
                     }
                     if (instrument != null)
                         ctx.InstrumentBonds.Add(instrument);
                 }
                 ctx.SaveChanges();
             }
+            return res;
         }
 
         private static Feed EnsureFeed(this MainEntities ctx, string name) {
@@ -211,15 +233,5 @@ namespace YieldMap.Database.StoredProcedures {
             return country;
         }
 
-        public static void DeleteBonds(HashSet<string> names) {
-            using (var ctx = new MainEntities(ConnStr)) {
-                var rics = from ric in ctx.Rics
-                           where names.Contains(ric.Name)
-                           select ric;
-
-                // todo DELETING CAREFULLY!!!
-
-            }
-        }
     }
 }

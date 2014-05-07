@@ -12,6 +12,7 @@ module internal Timeouts =
     }
 
     let timeouts = { load = 5000; connect = 2000; agent = 1000; awaiter = 100 }
+//    let timeouts = { load = 1000000; connect = 1000000; agent = 1000000; awaiter = 1000000 }
 
 [<AutoOpen>]
 module Package = 
@@ -92,16 +93,15 @@ module ExternalOperations =
             let names = chains |> Seq.map (fun r -> r.Ric) |> Array.ofSeq
             let! results = 
                 chains 
-                |> Seq.map (fun request -> m.LoadChain request |> Async.Catch)
+                |> Seq.map (fun request -> m.LoadChain request |> Async.Catch  |> Async.Map (fun res -> res, request))
                 |> Async.Parallel
             
             let results = results |> Array.zip names
 
-            let rics = results |> Array.choose (fun (ric, res) -> match res with ChainAnswer a -> Some (ric, a) | _ -> None)
-            let fails = results |> Array.choose (fun (ric, res) -> match res with ChainFailure e -> Some (ric, e) | _ -> None)
+            let rics = results |> Array.choose (fun (ric, res) -> match res with (ChainAnswer a, req) -> Some (ric, a, req) | _ -> None)
+            let fails = results |> Array.choose (fun (ric, res) -> match res with (ChainFailure e, req) -> Some (ric, e, req) | _ -> None)
                     
-            // todo some better reporting
-            do fails |> Array.iter (fun (ric, e) -> logger.WarnF "Failed to load chain %s because of %s" ric (e.ToString()))
+            do fails |> Array.iter (fun (ric, e, _) -> logger.WarnF "Failed to load chain %s because of %s" ric (e.ToString()))
             
             return rics, fails
         }
@@ -123,9 +123,8 @@ module ExternalOperations =
             let loader = s.Loader
 
             let! bonds = loader.LoadMetadata<BondDescr> rics
-            Additions.SaveBonds bonds
+            let failures = Additions.SaveBonds bonds // todo do something with failures
 
-            // TODO save chains
             let! frns = loader.LoadMetadata<FrnData> rics
             Additions.SaveFrns frns
 
@@ -158,14 +157,14 @@ module ExternalOperations =
                     let! ricsByChain, fails = loadChains s.Loader requests
 
                     // reporting errors
-                    fails |> Array.iter (fun (ric, e) -> 
+                    fails |> Array.iter (fun (ric, e, _) -> 
                         Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
                     // saving rics and chains
-                    ricsByChain |> Array.iter (fun (chain, rics) -> Additions.SaveChainRics(chain, rics))
+                    ricsByChain |> Array.iter (fun (chain, rics, req) -> Additions.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode))
 
                     // extracting rics
-                    let chainRics = ricsByChain |> Array.map snd |> Array.collect id |> set
+                    let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set
                     
                     // now determine which rics to reload and refresh
                     let classified = ChainsLogic.Classify (s.TodayFix, chainRics |> Set.toArray)
@@ -175,8 +174,9 @@ module ExternalOperations =
                         (classified.[Mission.Obsolete].Length) 
                         (classified.[Mission.Keep].Length)
 
-                    // todo delete obsolete rics <- definitely a stored procedure // todo should I do a cleanup here?
-                    try Refresh.DeleteBonds <| HashSet<_>(classified.[Mission.Keep])
+                    // todo delete obsolete rics <- definitely a stored procedure 
+                    // todo should I do a cleanup here?
+                    try Additions.DeleteBonds <| HashSet<_>(classified.[Mission.Keep])
                     with e -> logger.ErrorEx "Failed to cleanup" e
                     
                     let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
@@ -202,7 +202,7 @@ module ExternalOperations =
                     return Failure (Problem "Failed to reload and restore data")
             }
 
-    // todo more advanced evaluation !!!
+    // todo more advanced loading time evaluation !!!
     let expectedLoadTime = timeouts.load
     let expectedConnectTime = timeouts.connect
 
@@ -214,7 +214,7 @@ module ExternalOperations =
     let load c f = asSuccess expectedLoadTime (Loading.reload c f)
     let connect = Connecting.connect |> asSuccess expectedConnectTime
 
-module AnotherStartup =
+module Startup =
     open YieldMap.Core.Notifier
     open YieldMap.Core.Portfolio
     open YieldMap.Core.Responses
@@ -307,18 +307,23 @@ module AnotherStartup =
                         Notifier.notify ("Startup", Problem <| sprintf "Invalid command %s in state Connected" (cmd.ToString()), Severity.Warn)
                         return! connected channel 
                     | Reload (_, channel) -> // ignoring force parameter on primary loading
-                        logger.Debug "[Primary reload]"
+                        try
+                            logger.Debug "[Primary reload]"
                         
-                        let y = 
-                            Refresh.ChainsInNeed c.Today 
-                            |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
+                            let chainRequests = 
+                                Refresh.ChainsInNeed c.Today
+                                |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
 
-                        let! res = ExternalOperations.load q y true
-                        match res with
-                        | Success.Failure f -> 
-                            Notifier.notify ("Startup", f, Severity.Warn)
+                            let! res = ExternalOperations.load q chainRequests true
+                            match res with
+                            | Success.Failure f -> 
+                                Notifier.notify ("Startup", f, Severity.Warn)
+                                return! connected channel
+                            | Success.Ok ->  return! initialized channel
+                        with e ->
+                            logger.ErrorEx "Primary reload failed" e
+                            Notifier.notify ("Startup", Error e, Severity.Warn)
                             return! connected channel
-                        | Success.Ok ->  return! initialized channel
                     | Close channel -> return close channel
                 }
 
@@ -335,14 +340,23 @@ module AnotherStartup =
                         Notifier.notify ("Startup", Problem <| sprintf "Invalid command %s in state Initialized" (cmd.ToString()), Severity.Warn)
                         return! initialized channel 
                     | Reload (force, channel) ->
-                        logger.Debug "[Secondary reload]"
-                        let x = []                                                      // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        let! res = ExternalOperations.load q x force
-                        match res with
-                        | Success.Failure f -> 
-                            Notifier.notify ("Startup", f, Severity.Warn)
+                        try
+                            logger.Debug "[Secondary reload]"
+
+                            let chainRequests = 
+                                Refresh.ChainsInNeed c.Today
+                                |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
+
+                            let! res = ExternalOperations.load q chainRequests force
+                            match res with
+                            | Success.Failure f -> 
+                                Notifier.notify ("Startup", f, Severity.Warn)
+                                return! connected channel
+                            | Success.Ok ->  return! initialized channel
+                        with e ->
+                            logger.ErrorEx "Secondary reload failed" e
+                            Notifier.notify ("Startup", Error e, Severity.Warn)
                             return! connected channel
-                        | Success.Ok ->  return! initialized channel
                     | Close channel -> return close channel
                 }
 

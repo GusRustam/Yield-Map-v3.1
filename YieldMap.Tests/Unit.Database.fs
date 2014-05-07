@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Tests
+﻿namespace YieldMap.Tests.Unit
 
 open System
 open NUnit.Framework
@@ -18,7 +18,7 @@ module DbTests =
     open YieldMap.Database
 
 
-    let logger = LogFactory.create "TestApiQuotes"
+    let logger = LogFactory.create "TestDb"
 
     [<Test>]
     let ``Reading and writing to Db works`` () = 
@@ -31,18 +31,17 @@ module DbTests =
         let count = cnt ctx.Chains
         logger.InfoF "Da count is %d" count
 
-        let c = Chain()
-        c.Name <- Guid.NewGuid().ToString()
-        let c = ctx.Chains.Add c
+        let c = Feed (Name = Guid.NewGuid().ToString())
+        let c = ctx.Feeds.Add c
         logger.InfoF "First c is <%d; %s>" c.id c.Name
         ctx.SaveChanges() |> ignore
 
         logger.InfoF "Now c is <%d; %s>" c.id c.Name
-        let poo =  cnt ctx.Chains
+        let poo =  cnt ctx.Feeds
         logger.InfoF "Da count is now %d" poo
         poo |> should equal (count+1)
 
-        let c = ctx.Chains.Remove (c)
+        let c = ctx.Feeds.Remove (c)
         ctx.SaveChanges() |> ignore
         logger.InfoF "And now c is <%d; %s>" c.id c.Name
         let poo =  cnt ctx.Chains
@@ -82,40 +81,42 @@ module DbTests =
                 // but then they will have to reference Loader.
                 // hmmmmmm.... well, it is possible
                 // but maybe i will just delete those "Raw" tables ))
-                let rawBond =
-                    new RawBondInfo ( 
-                        BondStructure = item.BondStructure,
-                        RateStructure = item.RateStructure,
-                        IssueSize = item.IssueSize,
-                        IssuerName = item.IssuerName,
-                        BorrowerName = item.BorrowerName,
-                        Coupon = item.Coupon,
-                        Issue = item.Issue,
-                        Maturity = item.Maturity,
-                        Currency = item.Currency,
-                        ShortName = item.ShortName,
-                        IsCallable = item.IsCallable,
-                        IsPutable = item.IsPutable,
-                        IsFloater = item.IsFloater,
-                        IsConvertible = item.IsConvertible,
-                        IsStraight = item.IsStraight,
-                        Ticker = item.Ticker,
-                        Series = item.Series,
-                        BorrowerCountry = item.BorrowerCountry,
-                        IssuerCountry = item.IssuerCountry,
-                        Isin = item.Isin,
-                        ParentTicker = item.ParentTicker,
-                        Seniority = item.Seniority,
-                        Industry = item.Industry,
-                        SubIndustry = item.SubIndustry,
-                        Instrument = item.Instrument,
-                        Ric = item.Ric                                
-                    )
-                ctx.RawBondInfoes.Add rawBond |> ignore
+                try
+                    let rawBond =
+                        new RawBondInfo ( 
+                            BondStructure = item.BondStructure,
+                            RateStructure = item.RateStructure,
+                            IssueSize = item.IssueSize,
+                            IssuerName = item.IssuerName,
+                            BorrowerName = item.BorrowerName,
+                            Coupon = item.Coupon,
+                            Issue = item.Issue,
+                            Maturity = item.Maturity,
+                            Currency = item.Currency,
+                            ShortName = item.ShortName,
+                            IsCallable = item.IsCallable,
+                            IsPutable = item.IsPutable,
+                            IsFloater = item.IsFloater,
+                            IsConvertible = item.IsConvertible,
+                            IsStraight = item.IsStraight,
+                            Ticker = item.Ticker,
+                            Series = item.Series,
+                            BorrowerCountry = item.BorrowerCountry,
+                            IssuerCountry = item.IssuerCountry,
+                            Isin = item.Isin,
+                            ParentTicker = item.ParentTicker,
+                            Seniority = item.Seniority,
+                            Industry = item.Industry,
+                            SubIndustry = item.SubIndustry,
+                            Instrument = item.Instrument,
+                            Ric = item.Ric                                
+                        )
+                    ctx.RawBondInfoes.Add rawBond |> ignore
+                with e -> logger.ErrorEx "Failed to add" e
             )
             ctx.SaveChanges () 
 
-        let saveIssueRatings (ratings : IssueRatingData list ) = 
+        let saveIssueRatings (ratings : IssueRatingData list) = 
             use ctx = new MainEntities(cnnStr)
             ratings |> List.iter (fun item -> 
                 let bondId = query {
@@ -137,7 +138,10 @@ module DbTests =
             )
             ctx.SaveChanges () 
 
-        let saveIssuerRatings (ratings : IssuerRatingData list ) = 
+        // I am mighty! I have a glow you cannot see. I have a heart as big as the
+        // moon, as warm as bathwater.
+
+        let saveIssuerRatings (ratings : IssuerRatingData list) = 
             use ctx = new MainEntities(cnnStr)
             ratings |> List.iter (fun item -> 
                 let bondId = query {

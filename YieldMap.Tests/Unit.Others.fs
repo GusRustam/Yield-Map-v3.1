@@ -14,8 +14,9 @@ module MetaChainsTests =
     open YieldMap.Loader.SdkFactory
     open YieldMap.Loader.Requests
     open YieldMap.Loader.MetaChains
-    open YieldMap.Loader.MetaTables
     open YieldMap.Loader.Calendar
+
+    open YieldMap.Requests.MetaTables
         
     open YieldMap.Tools.Logging
 
@@ -26,7 +27,7 @@ module MetaChainsTests =
         try
             let dt = DateTime(2014,3,4)
             let f = MockFactory() :> EikonFactory
-            let l = MockChainMeta() :> ChainMetaLoader
+            let l = MockChainMeta(dt) :> ChainMetaLoader
 
             globalThreshold := LoggingLevel.Debug
 

@@ -16,10 +16,10 @@
         <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="15.875" PointY="8.375" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Issuer" Width="1.5" PointX="13.125" PointY="15.625" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="4.375" PointY="11.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="1.125" PointY="10" IsExpanded="true" />
-        <EntityTypeShape EntityType="mainModel.RawBondInfo" Width="1.5" PointX="3.125" PointY="6.875" IsExpanded="false" />
-        <EntityTypeShape EntityType="mainModel.RawFrnData" Width="1.5" PointX="3.125" PointY="5.875" IsExpanded="false" />
-        <EntityTypeShape EntityType="mainModel.RawRating" Width="1.5" PointX="3.125" PointY="7.875" IsExpanded="false" />
+        <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="1.625" PointY="11.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.RawBondInfo" Width="1.5" PointX="1.25" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="mainModel.RawFrnData" Width="1.5" PointX="3.875" PointY="4.375" IsExpanded="false" />
+        <EntityTypeShape EntityType="mainModel.RawRating" Width="1.5" PointX="3.875" PointY="5.125" IsExpanded="false" />
         <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="7.125" PointY="6.375" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="13.75" PointY="11" IsExpanded="true" />
         <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="7.25" PointY="17.375" IsExpanded="true" />

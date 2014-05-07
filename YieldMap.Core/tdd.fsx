@@ -251,3 +251,40 @@ module ``Working with mailbox`` =
 
 open ``Working with mailbox``
 ``Test with 3 parallel async reply WITH timeout`` ()
+
+
+let startingBoard = [|[|1; 4; 7|];
+                        [|6; 3; 5|];
+                        [|0; 8; 2|]|]
+
+let goal = [|[|1; 2; 3|];
+                [|4; 5; 6|];
+                [|7; 8; 0|]|]
+
+
+let newpos (start : int[][]) (finish:int[][]) (i, j) = 
+    let rw = 
+        finish |> Array.fold (fun (found, y, x) row -> 
+            if found then (found, y, x)
+            else
+                match row |> Array.tryFindIndex ((=) start.[i].[j]) with 
+                | Some nX -> (true, y, nX) 
+                | None -> (false, y+1, x)
+        ) (false, 0, 0)
+    
+    match rw with
+    | (true, x, y) -> (x, y)
+    | _ -> failwith "Not found"
+
+
+let totalManhattenDistance board goal =
+    let manhattenDistance (x1, y1) (x2, y2) = abs(x1 - x2) + abs(y1 - y2)
+
+    board |> Array.mapi (fun i arr ->
+        arr |> Array.mapi (fun j v ->
+            let (i1, j1) = newpos board goal (i, j)
+            manhattenDistance (i, j) (i1, j1)
+        ) |> Array.sum
+    ) |> Array.sum 
+
+totalManhattenDistance startingBoard goal
