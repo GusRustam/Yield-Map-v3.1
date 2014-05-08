@@ -319,7 +319,7 @@ module Startup =
                             | Success.Failure f -> 
                                 Notifier.notify ("Startup", f, Severity.Warn)
                                 return! connected channel
-                            | Success.Ok ->  return! initialized channel
+                            | Success.Ok -> return! initialized channel
                         with e ->
                             logger.ErrorEx "Primary reload failed" e
                             Notifier.notify ("Startup", Error e, Severity.Warn)

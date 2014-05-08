@@ -220,11 +220,9 @@ module MetaChains =
                             let rows = Array.length items
                             let cols = Array.length items.[0]
                             let data = Array2D.init rows cols (fun r c -> box items.[r].[c])
-                            let x = MetaParser.parse<'a> data
-                            return x
+                            return MetaParser.parse<'a> data
                         else
                             return Meta.Answer []
-                            //return Meta.Failed <| Exception ("No data")
                         
                     with e -> return Meta.Failed e
                 } |> Async.WithTimeoutEx timeout
