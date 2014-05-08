@@ -312,7 +312,10 @@ module Startup =
                         
                             let chainRequests = 
                                 Refresh.ChainsInNeed c.Today
-                                |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}) // todo timeout
+                                |> Array.map (fun r -> 
+                                    let res = { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = 0}
+                                    res
+                                ) // todo timeout
 
                             let! res = ExternalOperations.load q chainRequests true
                             match res with

@@ -17,7 +17,10 @@ module StartupTest =
 
     open YieldMap.Database
 
+    open YieldMap.Tools.Location
     open YieldMap.Tools.Logging
+
+    open System.Data.Entity
 
     let logger = LogFactory.create "StartupTest"
     
@@ -59,10 +62,52 @@ module StartupTest =
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
+
+    MainEntities.SetVariable("PathToTheDatabase", Location.path)
+    let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
+
+    let rec clear (ctx:MainEntities) (table : 'a DbSet) =
+        let item = query { for x in table do 
+                            select x
+                            exactlyOneOrDefault }
+        if item <> null then
+            table.Remove item |> ignore
+            ctx.SaveChanges () |> ignore
+            clear ctx table
+                
+                
+    let initDb () = 
+        use ctx = new MainEntities(cnnStr)
+
+        clear ctx ctx.Feeds
+        clear ctx ctx.Chains
+
+        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
+        ctx.SaveChanges () |> ignore
+
+        ctx.Chains.Add <| Chain(Name = "0#RUAER=MM", Feed = idn, Params = "") |> ignore
+        ctx.SaveChanges () |> ignore
+
+    let checkData () =
+        use ctx = new MainEntities(cnnStr)
+        let cnt = query { for _ in ctx.Feeds do count }
+        cnt |> should be (equal 1)
+
+        let cnt = query { for _ in ctx.Chains do count }
+        cnt |> should be (equal 1)
+
+        let ch = query { for ch in ctx.Chains do 
+                         select ch 
+                         exactlyOne }
+
+        ch.Expanded.Value |> should be (equal <| DateTime(2014,5,8))
+
     [<TestCase>]
     let ``Startup with one chain`` () =
         let dt = DateTime(2014,5,8)
                 
+        initDb ()
+
         let x = Startup {
             Factory = MockFactory()
             TodayFix = dt
@@ -94,3 +139,9 @@ module StartupTest =
         command "Close" x.Close (State Closed)
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
+
+        checkData ()
+//
+//        clearDb ()
+//
+//        checkNoData()

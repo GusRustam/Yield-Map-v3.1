@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Validation;
 using System.Linq;
 using YieldMap.Requests.MetaTables;
 using YieldMap.Tools.Location;
@@ -31,17 +32,21 @@ namespace YieldMap.Database.StoredProcedures {
 
         private static void AddRics(this MainEntities ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
             foreach (var name in rics) {
-                var ric = ctx.Rics.FirstOrDefault(r => r.Name == name && r.Feed == feed);
-                if (ric == null) {
-                    ric = ctx.Rics.Add(new Ric { Name = name, Feed = feed });
+                try {
+                    var ric = ctx.Rics.FirstOrDefault(r => r.Name == name && r.Feed.id == feed.id);
+                    if (ric == null) {
+                        ric = ctx.Rics.Add(new Ric {Name = name, Feed = feed});
+                        ctx.SaveChanges();
+                    }
+
+                    if (ric.Chains.Contains(chain))
+                        continue;
+
+                    ric.Chains.Add(chain);
                     ctx.SaveChanges();
+                } catch (DbEntityValidationException e) {
+                    e = e;
                 }
-
-                if (ric.Chains.Contains(chain))
-                    continue;
-
-                ric.Chains.Add(chain);
-                ctx.SaveChanges();
             }
         }
 

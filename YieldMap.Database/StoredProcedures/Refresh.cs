@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Objects;
 using System.Linq;
 using YieldMap.Tools.Location;
 
@@ -30,7 +32,7 @@ namespace YieldMap.Database.StoredProcedures {
         }
 
         private static bool NeedsRefresh(Chain chain, DateTime today) {
-            return chain.Expanded.HasValue && chain.Expanded.Value < today;
+            return chain.Expanded.HasValue && chain.Expanded.Value < today || !chain.Expanded.HasValue;
         }
 
         private static bool NeedsRefresh(this InstrumentBond bond, DateTime today) {
@@ -39,7 +41,17 @@ namespace YieldMap.Database.StoredProcedures {
 
         public static Chain[] ChainsInNeed(DateTime dt) {
             using (var ctx = new MainEntities(ConnStr)) {
-                return ctx.Chains.ToList().Where(c => NeedsRefresh(c, dt)).ToArray();
+                var res = ctx
+                    .Chains
+                    .ToList()
+                    .Where(c => NeedsRefresh(c, dt))
+                    .Select(x => new Chain {
+                        Name = x.Name, 
+                        Expanded = x.Expanded, 
+                        Feed = x.Feed == null ? null : new Feed {Name = x.Feed.Name}
+                    })
+                    .ToArray();
+                return res;
             }
         }
 
@@ -56,9 +68,7 @@ namespace YieldMap.Database.StoredProcedures {
         /// <returns>IEnumerable of Rics</returns>
         public static Ric[] StaleBondRics(DateTime dt) {
             using (var ctx = new MainEntities(ConnStr)) {
-                return ctx
-                    .InstrumentBonds
-                    .ToList()
+                return ctx.InstrumentBonds.ToList()
                     .Where(b => NeedsRefresh(b, dt))
                     .Select(b => b.Ric)
                     .ToArray();
@@ -67,9 +77,7 @@ namespace YieldMap.Database.StoredProcedures {
 
         public static Ric[] AllBondRics() {
             using (var ctx = new MainEntities(ConnStr)) {
-                return ctx
-                    .InstrumentBonds
-                    .ToList()
+                return ctx.InstrumentBonds.ToList()
                     .Select(b => b.Ric)
                     .ToArray();
             }
@@ -80,8 +88,7 @@ namespace YieldMap.Database.StoredProcedures {
         /// <returns>IEnumerable of Rics</returns>
         public static Ric[] ObsoleteBondRics(DateTime dt) {
             using (var ctx = new MainEntities(ConnStr)) {
-                return ctx
-                    .InstrumentBonds
+                return ctx.InstrumentBonds.ToList()
                     .Where(b => b.Maturity.HasValue && b.Maturity.Value < dt)
                     .Select(b => b.Ric)
                     .ToArray();
