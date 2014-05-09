@@ -81,6 +81,8 @@ module StartupTest =
 
         clear ctx ctx.Feeds
         clear ctx ctx.Chains
+        clear ctx ctx.Rics
+        clear ctx ctx.RicToChains
 
         let idn = ctx.Feeds.Add <| Feed(Name = "Q")
         ctx.SaveChanges () |> ignore
@@ -89,12 +91,14 @@ module StartupTest =
         ctx.SaveChanges () |> ignore
 
     let checkData () =
+        let cnt (table : 'a DbSet) = 
+            query { for x in table do 
+                    select x
+                    count }
+        
         use ctx = new MainEntities(cnnStr)
-        let cnt = query { for _ in ctx.Feeds do count }
-        cnt |> should be (equal 1)
-
-        let cnt = query { for _ in ctx.Chains do count }
-        cnt |> should be (equal 1)
+        cnt ctx.Feeds |> should be (equal 1)
+        cnt ctx.Chains |> should be (equal 1)
 
         let ch = query { for ch in ctx.Chains do 
                          select ch 

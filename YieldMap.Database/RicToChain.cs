@@ -12,20 +12,13 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class Chain
+    public partial class RicToChain
     {
-        public Chain()
-        {
-            this.RicToChains = new HashSet<RicToChain>();
-        }
-    
         public long id { get; set; }
-        public string Name { get; set; }
-        public Nullable<long> id_Feed { get; set; }
-        public Nullable<System.DateTime> Expanded { get; set; }
-        public string Params { get; set; }
+        public Nullable<long> Ric_id { get; set; }
+        public Nullable<long> Chain_id { get; set; }
     
-        public virtual Feed Feed { get; set; }
-        public virtual ICollection<RicToChain> RicToChains { get; set; }
+        public virtual Chain Chain { get; set; }
+        public virtual Ric Ric { get; set; }
     }
 }

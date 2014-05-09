@@ -26,7 +26,6 @@ namespace YieldMap.Database
         }
     
         public DbSet<Borrower> Borrowers { get; set; }
-        public DbSet<Chain> Chains { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Feed> Feeds { get; set; }
@@ -40,10 +39,12 @@ namespace YieldMap.Database
         public DbSet<RawBondInfo> RawBondInfoes { get; set; }
         public DbSet<RawFrnData> RawFrnDatas { get; set; }
         public DbSet<RawRating> RawRatings { get; set; }
-        public DbSet<Ric> Rics { get; set; }
         public DbSet<Seniority> Seniorities { get; set; }
         public DbSet<SubIndustry> SubIndustries { get; set; }
         public DbSet<Ticker> Tickers { get; set; }
         public DbSet<Specimen> Specimens { get; set; }
+        public DbSet<Chain> Chains { get; set; }
+        public DbSet<Ric> Rics { get; set; }
+        public DbSet<RicToChain> RicToChains { get; set; }
     }
 }

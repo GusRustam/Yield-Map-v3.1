@@ -35,7 +35,9 @@ namespace YieldMap.Database.StoredProcedures {
             var existingNames = new HashSet<string>(existing.Select(ric => ric.Name));
             var toRleoadNames = new HashSet<string>(toReload.Select(ric => ric.Name));
 
-            var newRics = existingNames.Remove(chainRics);
+            var hsChainRics = new HashSet<string>(chainRics);
+
+            var newRics = hsChainRics.Remove(existingNames);
             toRleoadNames = toRleoadNames.Add(newRics);
 
             res[Mission.Obsolete] = obsolete.Select(ric => ric.Name).ToArray();

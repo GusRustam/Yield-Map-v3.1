@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Linq;
+using System.Reflection.Emit;
 using YieldMap.Requests.MetaTables;
 using YieldMap.Tools.Location;
+using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures {
     /// 
@@ -12,6 +15,7 @@ namespace YieldMap.Database.StoredProcedures {
     /// 
     public static class Additions {
         private static readonly string ConnStr;
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions");
         static Additions() {
             MainEntities.SetVariable("PathToTheDatabase", Location.path);
             ConnStr = MainEntities.GetConnectionString("TheMainEntities");
@@ -22,12 +26,22 @@ namespace YieldMap.Database.StoredProcedures {
                 var feed = ctx.EnsureFeed(feedName);
                 var chain = ctx.EnsureChain(chainRic, feed, expanded, prms);
 
-                var existingRics = new HashSet<string>(from r in chain.Rics select r.Name);
+                var existingRics = ctx.RicsByChain(chain);
                 var newRics = new HashSet<string>(rics);
                 newRics.RemoveWhere(existingRics.Contains);
-
+                
                 ctx.AddRics(chain, feed, newRics);
             }
+        }
+
+        private static void ConnectRicToChain(this MainEntities ctx, Ric ric, Chain chain) {
+            if (ric.RicToChains.Any(rtc => rtc.Chain_id == chain.id)) return;
+            ctx.RicToChains.Add(new RicToChain {Ric = ric, Chain = chain});
+            ctx.SaveChanges();
+        }
+
+        private static IEnumerable<string> RicsByChain(this MainEntities ctx, Chain chain) {
+            return ctx.RicToChains.Where(rtc => rtc.Chain_id == chain.id).Select(rtc => rtc.Ric.Name).ToArray();
         }
 
         private static void AddRics(this MainEntities ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
@@ -36,16 +50,13 @@ namespace YieldMap.Database.StoredProcedures {
                     var ric = ctx.Rics.FirstOrDefault(r => r.Name == name && r.Feed.id == feed.id);
                     if (ric == null) {
                         ric = ctx.Rics.Add(new Ric {Name = name, Feed = feed});
-                        ctx.SaveChanges();
                     }
 
-                    if (ric.Chains.Contains(chain))
-                        continue;
-
-                    ric.Chains.Add(chain);
-                    ctx.SaveChanges();
+                    ctx.ConnectRicToChain(ric, chain);
                 } catch (DbEntityValidationException e) {
-                    e = e;
+                    Logger.ErrorEx("Invalid op", e);
+                } catch (DbUpdateException e) {
+                    Logger.ErrorEx("Failed to update", e);
                 }
             }
         }
@@ -74,7 +85,6 @@ namespace YieldMap.Database.StoredProcedures {
             var res = new List<Tuple<MetaTables.BondDescr, Exception>>();
             var theBonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
 
-            var bondsToSave = new Dictionary<string, InstrumentBond>();
             using (var ctx = new MainEntities(ConnStr)) {
                 foreach (var bond in theBonds) {
                     InstrumentBond instrument = null;
@@ -107,8 +117,6 @@ namespace YieldMap.Database.StoredProcedures {
                         
                         var isin = ctx.EnsureIsin(bond.Isin, instrument.Ric);
                         instrument.Isin = isin;
-
-                        bondsToSave[bond.Ric] = instrument;
                     } catch (Exception e) {
                         res.Add(Tuple.Create(bond, e));
                     }

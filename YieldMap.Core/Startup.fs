@@ -11,7 +11,7 @@ module internal Timeouts =
         awaiter : int
     }
 
-    let timeouts = { load = 5000; connect = 2000; agent = 1000; awaiter = 100 }
+    let timeouts = { load = 25000; connect = 2000; agent = 1000; awaiter = 100 }
 //    let timeouts = { load = 1000000; connect = 1000000; agent = 1000000; awaiter = 1000000 }
 
 [<AutoOpen>]

@@ -120,6 +120,9 @@
     <Compile Include="Ric.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="RicToChain.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="Seniority.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>

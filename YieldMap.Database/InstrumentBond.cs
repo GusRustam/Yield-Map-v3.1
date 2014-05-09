@@ -46,10 +46,10 @@ namespace YieldMap.Database
         public virtual Seniority Seniority { get; set; }
         public virtual Issuer Issuer { get; set; }
         public virtual Isin Isin { get; set; }
-        public virtual Ric Ric { get; set; }
         public virtual Ticker Ticker { get; set; }
         public virtual SubIndustry SubIndustry { get; set; }
         public virtual ICollection<Rating> Ratings { get; set; }
         public virtual Specimen Specimen { get; set; }
+        public virtual Ric Ric { get; set; }
     }
 }
