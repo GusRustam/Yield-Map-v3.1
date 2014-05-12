@@ -8,10 +8,13 @@ open EikonDesktopDataAPI
 
 open NUnit.Framework
 
-open YieldMap.Loader.Requests
 open YieldMap.Loader.SdkFactory
 open YieldMap.Loader.MetaChains
+
 open YieldMap.Requests.MetaTables
+open YieldMap.Requests.Requests
+open YieldMap.Requests.Responses
+
 open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
 
@@ -22,10 +25,10 @@ module Dex2Tests =
         logger.TraceF "Connection request sent"
         let! connectRes = q.Connect()
         match connectRes with
-        | Connection.Connected -> 
+        | Answer _ -> 
             logger.TraceF "Connected"
             return true
-        | Connection.Failed e -> 
+        | Failure e -> 
             logger.TraceF "Failed to connect %s" (e.ToString())
             return false
     }
@@ -33,9 +36,9 @@ module Dex2Tests =
     let getChain (q:ChainMetaLoader) request = async {
         let! chain = q.LoadChain request
         match chain with
-        | Chain.Answer data -> return data
-        | Chain.Failed e -> 
-            logger.TraceF "Failed to load chain: %s" e.Message
+        | Answer data -> return data
+        | Failure e -> 
+            logger.TraceF "Failed to load chain: %A" (e.ToString())
             return [||]
     }
 
@@ -55,48 +58,48 @@ module Dex2Tests =
                 logger.InfoF "Loading BondDescr table"
                 let! meta = q.LoadMetadata<BondDescr> data 
                 match meta with
-                | Meta.Answer metaData -> logger.TraceF "BondDescr is %A" metaData
-                | Meta.Failed e -> 
+                | Answer metaData -> logger.TraceF "BondDescr is %A" metaData
+                | Failure e -> 
                     logger.ErrorF "Failed to load BondDescr: %s" (e.ToString())
                     success := false
 
                 logger.InfoF "Loading CouponData table"
                 let! meta = q.LoadMetadata<CouponData> data 
                 match meta with
-                | Meta.Answer metaData -> logger.TraceF "CouponData is %A" metaData
-                | Meta.Failed e -> 
+                | Answer metaData -> logger.TraceF "CouponData is %A" metaData
+                | Failure e -> 
                     logger.ErrorF "Failed to load CouponData: %s" (e.ToString())
                     success := false
         
                 logger.InfoF "Loading IssueRatingData table"
                 let! meta = q.LoadMetadata<IssueRatingData> data 
                 match meta with
-                | Meta.Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
-                | Meta.Failed e -> 
+                | Answer metaData -> logger.TraceF "IssueRatingData is %A" metaData
+                | Failure e -> 
                     logger.ErrorF "Failed to load IssueRatingData: %s" (e.ToString())
                     success := false
         
                 logger.InfoF "Loading IssuerRatingData table"
                 let! meta = q.LoadMetadata<IssuerRatingData> data 
                 match meta with
-                | Meta.Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
-                | Meta.Failed e -> 
+                | Answer metaData -> logger.TraceF "IssuerRatingData is %A" metaData
+                | Failure e -> 
                     logger.ErrorF "Failed to load IssuerRatingData: %s" (e.ToString())
                     success := false
 
                 logger.InfoF "Loading FrnData table"
                 let! meta = q.LoadMetadata<FrnData> data 
                 match meta with
-                | Meta.Answer metaData -> logger.TraceF "FrnData is %A" metaData
-                | Meta.Failed e -> 
+                | Answer metaData -> logger.TraceF "FrnData is %A" metaData
+                | Failure e -> 
                     logger.ErrorF "Failed to load FrnData: %s" (e.ToString())
                     success := false
         
                 logger.InfoF "Loading RicData table"
                 let! meta = q.LoadMetadata<RicData> data 
                 match meta with
-                | Meta.Answer metaData -> logger.TraceF "RicData is %A" metaData
-                | Meta.Failed e -> 
+                | Answer metaData -> logger.TraceF "RicData is %A" metaData
+                | Failure e -> 
                     logger.ErrorF "Failed to load RicData: %s" (e.ToString())
                     success := false
         

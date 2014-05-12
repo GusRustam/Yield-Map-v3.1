@@ -18,6 +18,8 @@ module Responses =
             match x with
             | Answer x -> sprintf "Answer %A" x
             | Failure e -> sprintf "Failure %s" <| e.ToString()
+        static member isAnswer (x : _ Tweet) = match x with Answer _ -> true | _ -> false
+        static member getAnswer (x : _ Tweet) = match x with Answer z -> z | _ -> failwith "No answer"
 
     type Ping = unit Tweet
 

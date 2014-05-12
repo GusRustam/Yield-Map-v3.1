@@ -62,15 +62,9 @@ module Startup =
         let m = q.Loader
         let dt = c.Today
 
-        let reload = LoadAndSave () :> Operation<_,_>
+        let reload = LoadAndSave q :> Operation<_,_>
         let connect = EstablishConnection f :> Operation<_,_>
         let shutdown = Shutdown () :> Operation<_,_>
-
-        do f.OnConnectionStatus |> Observable.add (fun state -> 
-            match state with 
-            | Ok -> ()
-            | Ping.Failure e -> () 
-        ) // TODO ON DISCONNECT / RECONNECT DO SOMETHING (IF NECESSARY :))
 
         let a = MailboxProcessor.Start (fun inbox ->
             let rec started (channel : State AsyncReplyChannel option) = 

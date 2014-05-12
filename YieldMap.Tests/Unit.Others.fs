@@ -10,9 +10,8 @@ open NUnit.Framework
 open FsUnit
 
 module MetaChainsTests = 
-    open YieldMap.Loader.Requests
     open YieldMap.Loader.SdkFactory
-    open YieldMap.Loader.Requests
+    open YieldMap.Requests.Requests
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.Calendar
 

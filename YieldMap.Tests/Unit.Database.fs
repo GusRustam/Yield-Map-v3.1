@@ -7,9 +7,12 @@ open FsUnit
 module DbTests =
     open YieldMap.Requests.MetaTables
 
-    open YieldMap.Loader.Requests
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
+
+    open YieldMap.Requests
+    open YieldMap.Requests.MetaTables
+    open YieldMap.Requests.Responses
         
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Logging
@@ -57,8 +60,8 @@ module DbTests =
             logger.TraceF "Connection request sent"
             let! connectRes = q.Connect()
             match connectRes with
-            | Connection.Connected -> return true
-            | Connection.Failed e -> 
+            | Answer _ -> return true
+            | Failure e -> 
                 logger.TraceF "Failed to connect %s" (e.ToString())
                 return false
         }
@@ -66,9 +69,9 @@ module DbTests =
         let getChain (q:ChainMetaLoader) request = async {
             let! chain = q.LoadChain request
             match chain with
-            | Chain.Answer data -> return data
-            | Chain.Failed e -> 
-                logger.TraceF "Failed to load chain: %s" e.Message
+            | Answer data -> return data
+            | Failure e -> 
+                logger.TraceF "Failed to load chain: %A" (e.ToString())
                 return [||]
         }
 
@@ -230,8 +233,8 @@ module DbTests =
                 
             logger.InfoF "Loading BondDescr table"
             let! meta = l.LoadMetadata<BondDescr> rics
-            condition (Meta.isAnswer meta)
-            let descrs = Meta<BondDescr>.getAnswer meta
+            condition (Ping.isAnswer meta)
+            let descrs = Tweet<BondDescr>.getAnswer meta
             let res = saveBondDescrs descrs
             res |> should equal (List.length descrs) // ezerisink eddid
 
@@ -244,24 +247,24 @@ module DbTests =
 //                
             logger.InfoF "Loading IssueRatingData table"
             let! meta = l.LoadMetadata<IssueRatingData> rics
-            condition (Meta.isAnswer meta)
-            let ratings = Meta<IssueRatingData>.getAnswer meta
+            condition (Ping.isAnswer meta)
+            let ratings = Tweet<IssueRatingData>.getAnswer meta
             logger.TraceF "IssueRatingData is %A" ratings
             let res = saveIssueRatings ratings
             res |> should equal (List.length ratings) // ezerisink eddid
                        
             logger.InfoF "Loading IssuerRatingData table"
             let! meta = l.LoadMetadata<IssuerRatingData> rics 
-            condition (Meta.isAnswer meta)
-            let ratings = Meta<IssuerRatingData>.getAnswer meta
+            condition (Ping.isAnswer meta)
+            let ratings = Tweet<IssuerRatingData>.getAnswer meta
             logger.TraceF "IssuerRatingData is %A" ratings
             let res = saveIssuerRatings ratings
             res |> should equal (List.length ratings) // ezerisink eddid
                 
             logger.InfoF "Loading FrnData table"
             let! meta = l.LoadMetadata<FrnData> rics
-            condition (Meta.isAnswer meta)
-            let frns = Meta<FrnData>.getAnswer meta
+            condition (Ping.isAnswer meta)
+            let frns = Tweet<FrnData>.getAnswer meta
             logger.TraceF "FrnData is %A" frns
             let res = saveFrns frns
             res |> should equal (List.length frns) // ezerisink eddid

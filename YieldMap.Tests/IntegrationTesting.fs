@@ -17,7 +17,9 @@
         open YieldMap.Loader.LiveQuotes
         open YieldMap.Loader.SdkFactory
         open YieldMap.Loader.MetaChains
-        open YieldMap.Loader.Requests
+        
+        open YieldMap.Requests.Requests
+        open YieldMap.Requests.Responses
         
         open YieldMap.Requests.MetaTables
         

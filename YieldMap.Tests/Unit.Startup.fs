@@ -12,6 +12,7 @@ module StartupTest =
     open YieldMap.Loader.SdkFactory
 
     open YieldMap.Core.Application
+    open YieldMap.Core.Application.Operations
     open YieldMap.Core.Application.Startup
     open YieldMap.Core.Notifier
 
@@ -45,7 +46,7 @@ module StartupTest =
                 | Warn -> logger.TraceF
                 | Note -> logger.InfoF
 
-            m  "MSG: @%A %s" state (fail.ToString())
+            m "MSG: @%A %s" state (fail.ToString())
         )
 
         let command cmd func state = 

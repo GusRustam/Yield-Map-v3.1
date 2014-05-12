@@ -159,12 +159,12 @@ module Operations =
                     return Ping.Failure (Problem "Failed to reload and restore data")
             }
 
-    type LoadAndSave () = 
+        let estimate () = 100000 // 100 seconds is a great estimation m'lord
+
+    type LoadAndSave (s:Drivers) = 
         interface Operation<LoadAndSaveRequest, unit> with
-            member x.Estimate () = 0
-            member x.Execute (r, ?t) = async { 
-                return Answer () 
-            }
+            member x.Estimate () = Loading.estimate ()
+            member x.Execute (r, ?t) = Loading.reload s r.Chains r.Force
 
     type EstablishConnection (f:EikonFactory) = 
         interface Operation<unit, unit> with
