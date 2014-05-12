@@ -1,21 +1,20 @@
-﻿namespace YieldMap.Loader.Requests
+﻿namespace YieldMap.Requests
 
 [<AutoOpen>]
 module Requests =
+
     open EikonDesktopDataAPI
 
     open System
     open System.Globalization
     open System.Reflection
 
+    open YieldMap.Requests.Attributes
     open YieldMap.Requests.MetaTables
-    open YieldMap.Requests.Tools.Attrs
-
-    open YieldMap.Tools.Settings
-    open YieldMap.Tools.Aux
+    open YieldMap.Requests
+    open YieldMap.Requests.Responses
 
     type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : int }
-        with static member create ric = { Feed = (!globalSettings).source.defaultFeed; Mode = ""; Ric = ric; Timeout = 0 }
 
     /// Parameters to make a request
     type MetaRequest = {
@@ -37,17 +36,8 @@ module Requests =
                 {Request = x.Request; Display = x.Display;  Fields = fields}
             | None -> failwith "Invalid setup, no RequestAttribute"
 
-    type Connection = Connected | Failed of exn
-        with static member parse (e:EEikonStatus) = 
-                match e with
-                | EEikonStatus.Connected -> Connected
-                | _ -> Failed <| exn (e.ToString())
-
-    type Meta<'T> = 
-        | Answer of 'T list 
-        | Failed of exn
-        with 
-            static member isAnswer (m : Meta<'T>) = match m with Answer _ -> true | _ -> false
-            static member getAnswer x = match x with Answer m -> m | _ -> failwith "No Answer"
-
-    type Chain = Answer of string array | Failed of exn
+    module Connection = 
+        let parse (e:EEikonStatus) =
+            match e with
+            | EEikonStatus.Connected -> Ping.Answer ()
+            | _ -> Ping.Failure <| Failure.Problem (e.ToString())

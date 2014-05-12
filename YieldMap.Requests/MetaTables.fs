@@ -3,8 +3,8 @@
 [<AutoOpen>]
 module MetaTables = 
     open System
-    open YieldMap.Requests.Tools.Attrs
-    open YieldMap.Requests.Tools.Converters
+    open YieldMap.Requests.Attributes
+    open YieldMap.Requests.Converters
 
     [<Request("RH:In")>]
     type BondDescr() = 

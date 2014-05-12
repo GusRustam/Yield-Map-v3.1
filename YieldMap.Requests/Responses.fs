@@ -1,0 +1,35 @@
+﻿namespace YieldMap.Requests
+
+module Responses =
+    type private FailureStatic = Failure
+    and Failure = 
+        | Problem of string | Error of exn | Timeout
+        static member toString x = 
+            match x with
+            | Problem str -> sprintf "Problem %s" str
+            | Error e -> sprintf "Error %s" (e.ToString())
+            | Timeout -> "Timeout"
+        override x.ToString() = FailureStatic.toString x
+
+
+    type 'T Tweet = 
+        Answer of 'T | Failure of Failure
+        override x.ToString() = 
+            match x with
+            | Answer x -> sprintf "Answer %A" x
+            | Failure e -> sprintf "Failure %s" <| e.ToString()
+
+    type Ping = unit Tweet
+
+    type TweetBuilder () = 
+        member x.Bind (operation, rest) = 
+            async {
+                let! res = operation
+                match res with 
+                | Answer a -> return! rest a
+                | Failure e -> return Some e
+            }
+        member x.Return (res : unit option) = async { return res }
+        member x.Zero () = async { return None }
+
+    let tweet = TweetBuilder ()

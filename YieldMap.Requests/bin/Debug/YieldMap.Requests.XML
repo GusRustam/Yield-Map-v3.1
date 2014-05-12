@@ -41,6 +41,117 @@
 <member name="">
 
 </member>
+<member name="T:YieldMap.Requests.Attributes">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:YieldMap.Requests.Converters">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:YieldMap.Requests.Extensions">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
 <member name="">
 
 </member>
@@ -494,8 +605,15 @@
 <member name="">
 
 </member>
-<member name="">
-
+<member name="M:YieldMap.Requests.Requests.MetaRequest.extract``1">
+<summary>
+ Creates MetaSetup object and some structure to parse and store data into T easily 
+</summary>
+</member>
+<member name="T:YieldMap.Requests.Requests.MetaRequest">
+<summary>
+ Parameters to make a request
+</summary>
 </member>
 <member name="">
 
@@ -515,46 +633,10 @@
 <member name="">
 
 </member>
-<member name="">
+<member name="T:YieldMap.Requests.Requests.Connection">
 
 </member>
-<member name="">
-
-</member>
-<member name="T:YieldMap.Requests.Tools.Attrs">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
-
-</member>
-<member name="">
+<member name="T:YieldMap.Requests.Requests">
 
 </member>
 <member name="">
@@ -584,7 +666,34 @@
 <member name="">
 
 </member>
-<member name="T:YieldMap.Requests.Tools.Converters">
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:YieldMap.Requests.Responses">
 
 </member>
 </members>

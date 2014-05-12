@@ -65,12 +65,6 @@ module Extensions =
         let keys m = m |> Map.toList |> List.unzip |> fst |> set
         let values m = m |> Map.toList |> List.unzip |> snd |> set
 
-    /// Extension methods to get single attribute in a cleaner way
-    type MemberInfo with
-        member self.Attr<'T when 'T :> Attribute> () = 
-            try Some(self.GetCustomAttribute(typedefof<'T>, false) :?> 'T) 
-            with _ -> None
-
     type Object with
         member self.Serialize() = 
             let formatter = BinaryFormatter()

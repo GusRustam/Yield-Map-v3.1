@@ -2,7 +2,7 @@
 
 [<AutoOpen; RequireQualifiedAccess>]
 module Notifier = 
-    open YieldMap.Core.Responses
+    open YieldMap.Requests.Responses
     type Severity = Note | Warn | Evil
 
     let private n = Event<string * Failure * Severity> ()

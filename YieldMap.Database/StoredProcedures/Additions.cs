@@ -113,7 +113,8 @@ namespace YieldMap.Database.StoredProcedures {
                         instrument.Seniority = ctx.EnsureSeniority(bond.Seniority);
                         instrument.SubIndustry = ctx.EnsureIndustry(bond.Industry, bond.SubIndustry);
 
-                        instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric); // there already must be some ric with some feed!!!
+                        // CONSTRAINT: there already must be some ric with some feed!!!
+                        instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric); 
                         
                         var isin = ctx.EnsureIsin(bond.Isin, instrument.Ric);
                         instrument.Isin = isin;

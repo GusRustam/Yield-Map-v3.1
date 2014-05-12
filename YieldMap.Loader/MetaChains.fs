@@ -15,38 +15,40 @@ module MetaChains =
     open ThomsonReuters.Interop.RTX
     
     open YieldMap.Loader.Calendar
-    open YieldMap.Loader.Requests
     open YieldMap.Loader.SdkFactory
     
+    open YieldMap.Requests
+    open YieldMap.Requests.Responses
+    open YieldMap.Requests.Converters
+    open YieldMap.Requests.Attributes
     open YieldMap.Requests.MetaTables
-    open YieldMap.Requests.Tools.Attrs
-    open YieldMap.Requests.Tools.Converters
 
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Logging
     open YieldMap.Tools.Location
 
-    let private logger = LogFactory.create "SdkFactory"
+    let private logger = LogFactory.create "MetaChains"
 
     /// Loads chains and metadata
     type ChainMetaLoader = 
-        abstract member LoadChain : ChainRequest -> Async<Chain>
-        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> : rics:string array * ?timeout:int -> 'a Meta Async
+        abstract member LoadChain : ChainRequest -> string [] Tweet Async
+        abstract member LoadMetadata<'a when 'a : (new : unit -> 'a)> 
+            : rics:string array * ?timeout:int -> 'a list Tweet Async
 
     module private Watchers =
         /// Event wrapper of async call
-        type RawMeta = Data of obj[,] | Failed of string
+        type RawMeta = obj[,] Tweet // Data of obj[,] | Failed of string
 
         type Meta<'T when 'T : (new : unit -> 'T)> (loader:RData) =
             let dataEvent = new Event<_>()
             do loader.add_OnUpdate (
                 fun (status:DEX2_DataStatus) _ -> 
                     match status with 
-                    | DEX2_DataStatus.DE_DS_PARTIAL                           -> () // ??
-                    | DEX2_DataStatus.DE_DS_FULL when loader.Data = null      -> dataEvent.Trigger <| Failed("No data")
-                    | DEX2_DataStatus.DE_DS_FULL when (loader.Data :? obj[,]) -> dataEvent.Trigger <| Data(loader.Data :?> obj[,])
-                    | DEX2_DataStatus.DE_DS_FULL                              -> dataEvent.Trigger <| Failed("Invalid data format")
-                    | _                                                       -> dataEvent.Trigger <| Failed(status.ToString())
+                    | DEX2_DataStatus.DE_DS_PARTIAL                           -> failwith "Unexpected partial data"
+                    | DEX2_DataStatus.DE_DS_FULL when loader.Data = null      -> dataEvent.Trigger (RawMeta.Failure <| Problem "No data")
+                    | DEX2_DataStatus.DE_DS_FULL when (loader.Data :? obj[,]) -> dataEvent.Trigger (RawMeta.Answer (loader.Data :?> obj[,]))
+                    | DEX2_DataStatus.DE_DS_FULL                              -> dataEvent.Trigger (RawMeta.Failure <| Problem "Invalid data format")
+                    | _                                                       -> dataEvent.Trigger (RawMeta.Failure <| Problem (status.ToString()))
             )
             member self.Data = dataEvent.Publish
 
@@ -65,11 +67,11 @@ module MetaChains =
                             result.[index-min] <- data.GetValue(index).ToString()
                         
                         let result = Array.filter (not << String.IsNullOrEmpty) result
-                        Chain.Answer(result)
+                        Tweet.Answer result
                     else 
-                        Chain.Failed(Exception("Invalid data format"))
+                        Tweet.Failure (Failure.Problem "Invalid data format")
                 with e -> 
-                    Chain.Failed(Exception(sprintf "Failed to parse chain, error is %s" <| e.ToString()))
+                    Tweet.Failure (Failure.Error e)
 
             do chain.add_OnUpdate (
                 fun status -> 
@@ -77,7 +79,7 @@ module MetaChains =
                     match status with 
                     | RT_DataStatus.RT_DS_FULL -> dataEvent.Trigger <| parseData chain.Data
                     | RT_DataStatus.RT_DS_PARTIAL -> () // todo logging
-                    | _ -> dataEvent.Trigger <| Chain.Failed(Exception("Invalid ric"))
+                    | _ -> dataEvent.Trigger <| Tweet.Failure (Failure.Problem "Invalid ric")
             )
 
             do chain.add_OnStatusChange (
@@ -85,7 +87,7 @@ module MetaChains =
                     logger.TraceF "Status changed -> %s" (status.ToString())
                     match status with
                     | RT_SourceStatus.RT_SOURCE_UP -> ()
-                    | _ -> dataEvent.Trigger <| Chain.Failed(Exception(sprintf "Invalid feed %s" chain.Source))
+                    | _ -> dataEvent.Trigger <| Tweet.Failure (Failure.Problem (sprintf "Invalid feed %s" chain.Source))
             )
 
             member x.Data = dataEvent.Publish
@@ -163,8 +165,8 @@ module MetaChains =
                             logger.WarnF "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())
                             import acc (n+1)
             
-                Meta.Answer <| import [] minRow
-            with e -> Meta.Failed(e)
+                Tweet.Answer <| import [] minRow
+            with e -> Tweet.Failure (Failure.Error e)
 
     module private MockOperations = 
         let private metaPath<'a> (date : DateTime option) = 
@@ -188,15 +190,15 @@ module MetaChains =
                         xDoc.Load(path)
                         let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
                         match node with
-                        | null -> return Chain.Failed <| Exception(sprintf "No chain %s in DB" setup.Ric)
-                        | _ -> return Chain.Answer <| node.InnerText.Split('\t')
-                    with e -> return Chain.Failed e
+                        | null -> return Failure <| Problem (sprintf "No chain %s in DB" setup.Ric)
+                        | _ -> return Answer <| node.InnerText.Split('\t')
+                    with e -> return Failure (Error e)
                 } 
                 |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Chain.Failed e
+                with :? TimeoutException as e -> return Failure Timeout
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> rics date timeout = 
@@ -222,14 +224,14 @@ module MetaChains =
                             let data = Array2D.init rows cols (fun r c -> box items.[r].[c])
                             return MetaParser.parse<'a> data
                         else
-                            return Meta.Answer []
+                            return Answer []
                         
-                    with e -> return Meta.Failed e
+                    with e -> return Failure (Error e)
                 } |> Async.WithTimeoutEx timeout
 
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Meta.Failed e
+                with :? TimeoutException as e -> return Failure Timeout
             }
 
     module private EikonOperations = 
@@ -244,13 +246,13 @@ module MetaChains =
                         adxRtChain.RequestChain()
                 
                         return! Async.AwaitEvent evts.Data
-                    with :? COMException -> return Chain.Failed <| Exception "Not connected to Eikon"
+                    with :? COMException -> return Failure (Problem "Not connected to Eikon")
                 } 
                 |> Async.WithTimeoutEx (Some setup.Timeout)
             
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Chain.Failed e
+                with :? TimeoutException as e -> return Failure Timeout
             }
 
         let meta<'a when 'a : (new : unit -> 'a)> (dex2 : Dex2Mgr) (rics:string array) timeout = 
@@ -266,9 +268,9 @@ module MetaChains =
                     mgr.Subscribe(false)
                     let! data = Async.AwaitEvent evts.Data
                     match data with
-                    | Watchers.Data arr -> return MetaParser.parse<'a> arr
-                    | Watchers.Failed e -> return Meta.Failed <| Exception(e)
-                with :? COMException -> return Meta.Failed <| Exception "Not connected to Eikon"
+                    | Answer arr -> return MetaParser.parse<'a> arr
+                    | Failure e -> return Failure e
+                with :? COMException -> return Failure (Problem "Not connected to Eikon")
             }
 
             let workflow = 
@@ -283,9 +285,8 @@ module MetaChains =
 
             async {
                 try return! workflow
-                with :? TimeoutException as e -> return Meta.Failed e
+                with :? TimeoutException as e -> return Failure Timeout
             }
-
 
     /// Connection : timeout;
     /// Today / LoadChain / LoadData : mock;
@@ -294,9 +295,16 @@ module MetaChains =
         new () = MockChainMeta(defaultCalendar.Now)
 
         interface ChainMetaLoader with
-            member x.LoadChain request = MockOperations.chain request (Some _today) 
+            member x.LoadChain request =
+                async {
+                    try return! MockOperations.chain request (Some _today) 
+                    with e -> return Failure (Error e)
+                }
             member x.LoadMetadata (rics, ?timeout) = 
-                MockOperations.meta rics (Some _today) timeout
+                async {
+                    try return! MockOperations.meta rics (Some _today) timeout
+                    with e -> return Failure (Error e)
+                }
 
     /// Connection : Eikon;
     /// Today / LoadChain / LoadData : Real;
@@ -305,7 +313,11 @@ module MetaChains =
         interface ChainMetaLoader with
             member x.LoadChain request = EikonOperations.chain (factory.CreateAdxRtChain ()) request
             member x.LoadMetadata (rics, ?timeout) = 
-                match timeout with
-                | Some time -> EikonOperations.meta (factory.CreateDex2Mgr ()) rics time
-                | None -> EikonOperations.meta (factory.CreateDex2Mgr ()) rics 0
-
+                async {
+                    try
+                        return!
+                            match timeout with
+                            | Some time -> EikonOperations.meta (factory.CreateDex2Mgr ()) rics time
+                            | None -> EikonOperations.meta (factory.CreateDex2Mgr ()) rics 0
+                    with e -> return Failure (Error e)
+                }

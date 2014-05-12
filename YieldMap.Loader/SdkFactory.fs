@@ -8,8 +8,10 @@ module SdkFactory =
     open EikonDesktopDataAPI
     open ThomsonReuters.Interop.RTX
     
-    open YieldMap.Loader.Requests
+    open YieldMap.Requests
+    open YieldMap.Requests.Responses
     open YieldMap.Tools.Logging
+    open YieldMap.Tools.Aux
     
     let private logger = LogFactory.create "SdkFactory"
 
@@ -26,10 +28,12 @@ module SdkFactory =
             let res = eikon.Initialize()
             Async.AwaitEvent watcher.StatusChanged
 
+    type q = member x.foo (?z) = z
+
     /// 
     type EikonFactory = 
-        abstract OnConnectionStatus : Connection IEvent
-        abstract Connect : unit -> Async<Connection>
+        abstract OnConnectionStatus : Ping IEvent
+        abstract Connect : ?t:int -> Ping Async
         abstract CreateAdxBondModule : unit -> AdxBondModule
         abstract CreateAdxRtChain : unit -> AdxRtChain
         abstract CreateAdxRtList : unit -> AdxRtList
@@ -43,22 +47,31 @@ module SdkFactory =
         new (_eikon) = OuterFactory(_eikon)
         interface EikonFactory with
             member x.OnConnectionStatus = connStatus.Publish
-            member x.Connect () = EikonOperations.connect _eikon
+            member x.Connect ?timeout = 
+                async {
+                    let! res = EikonOperations.connect _eikon |> Async.WithTimeout timeout
+                    return match res with Some ans -> ans | None -> Ping.Failure Timeout
+                }
             member x.CreateAdxBondModule () = _eikon.CreateAdxBondModule() :?> AdxBondModule
             member x.CreateAdxRtChain () = _eikon.CreateAdxRtChain() :?> AdxRtChain
             member x.CreateAdxRtList () = _eikon.CreateAdxRtList() :?> AdxRtList
             member x.CreateDex2Mgr () = _eikon.CreateDex2Mgr() :?> Dex2Mgr
+
+    let private doConnect (connStatus : Ping Event) timeout = async { 
+        match timeout with
+        | Some n when n < 500 -> return Ping.Failure Timeout
+        | _ -> 
+            do! Async.Sleep(500) 
+            connStatus.Trigger <| Ping.Answer ()
+            return Ping.Answer ()
+    }
 
     type InnerFactory()  =
         // todo How to determine if Eikon itself has lost connection or is in local mode or whatever?
         let connStatus = new Event<_>()
         interface EikonFactory with
             member x.OnConnectionStatus = connStatus.Publish
-            member x.Connect () = async { 
-                do! Async.Sleep(500) 
-                connStatus.Trigger Connected
-                return Connected
-            }
+            member x.Connect ?timeout = doConnect connStatus timeout
             member x.CreateAdxBondModule () = AdxBondModuleClass() :> AdxBondModule
             member x.CreateAdxRtChain () = AdxRtChainClass() :> AdxRtChain
             member x.CreateAdxRtList () = AdxRtListClass() :> AdxRtList
@@ -67,15 +80,11 @@ module SdkFactory =
     type MockFactory()  =
         let connStatus = new Event<_>()
         
-        member x.Disconnect () = exn("Failed") |> Connection.Failed |> connStatus.Trigger
+        member x.Disconnect () = connStatus.Trigger <| Ping.Failure (Failure.Problem "Disconnected")
 
         interface EikonFactory with
             member x.OnConnectionStatus = connStatus.Publish
-            member x.Connect () = async {
-                do! Async.Sleep(500) 
-                connStatus.Trigger Connected
-                return Connected
-            }
+            member x.Connect ?timeout = doConnect connStatus timeout
             member x.CreateAdxBondModule () = null
             member x.CreateAdxRtChain () = null
             member x.CreateAdxRtList () = null
