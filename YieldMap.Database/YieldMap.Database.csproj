@@ -61,6 +61,7 @@
     <Compile Include="Chain.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="DbConn.cs" />
     <Compile Include="Country.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -129,7 +130,8 @@
     <Compile Include="Specimen.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="StoredProcedures\Additions.cs" />
+    <Compile Include="StoredProcedures\Additions\InstrumentsBonds.cs" />
+    <Compile Include="StoredProcedures\Additions\ChainRics.cs" />
     <Compile Include="StoredProcedures\BackupRestore.cs" />
     <Compile Include="StoredProcedures\ChainsLogic.cs" />
     <Compile Include="StoredProcedures\Mission.cs" />
@@ -140,6 +142,7 @@
     <Compile Include="Ticker.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Tools.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.Config" />

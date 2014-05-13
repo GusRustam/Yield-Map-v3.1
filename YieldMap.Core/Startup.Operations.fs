@@ -77,19 +77,21 @@ module Operations =
         }
 
         let loadAndSaveMetadata (s:Drivers) rics = tweet {
+            use db = new Additions.InstrumentsBonds ()
+            
             let loader = s.Loader
-
+            
             let! bonds = loader.LoadMetadata<BondDescr> rics
-            let failures = Additions.SaveBonds bonds // todo do something with failures
+            let failures = db.SaveBonds bonds // todo do something with failures
 
             let! frns = loader.LoadMetadata<FrnData> rics
-            Additions.SaveFrns frns
+            db.SaveFrns frns
 
             let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
-            Additions.SaveIssueRatings issueRatings
+            db.SaveIssueRatings issueRatings
                             
             let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
-            Additions.SaveIssuerRatings issuerRatings
+            db.SaveIssuerRatings issuerRatings
         }
 
         let rec reload (s:Drivers) chains force  = 
@@ -118,7 +120,10 @@ module Operations =
                         Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
                     // saving rics and chains
-                    ricsByChain |> Array.iter (fun (chain, rics, req) -> Additions.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode))
+                    ricsByChain |> Array.iter (fun (chain, rics, req) -> 
+                        use db = new Additions.ChainRics ()
+                        db.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode)
+                    )
 
                     // extracting rics
                     let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set
@@ -133,8 +138,10 @@ module Operations =
 
                     // todo delete obsolete rics <- definitely a stored procedure 
                     // todo should I do a cleanup here?
-                    try Additions.DeleteBonds <| HashSet<_>(classified.[Mission.Keep])
-                    with e -> logger.ErrorEx "Failed to cleanup" e
+
+                    // TODODODODO!
+//                    try Additions.DeleteBonds <| HashSet<_>(classified.[Mission.Keep])
+//                    with e -> logger.ErrorEx "Failed to cleanup" e
                     
                     let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                     match res with 

@@ -88,7 +88,9 @@ module StartupTest =
         let idn = ctx.Feeds.Add <| Feed(Name = "Q")
         ctx.SaveChanges () |> ignore
 
-        ctx.Chains.Add <| Chain(Name = "0#RUAER=MM", Feed = idn, Params = "") |> ignore
+//        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", Feed = idn, Params = "") |> ignore
+//        ctx.Chains.Add <| Chain(Name = "0#RUAER=MM", Feed = idn, Params = "") |> ignore
+        ctx.Chains.Add <| Chain(Name = "0#RUTSY=MM", Feed = idn, Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
     let checkData () =
@@ -146,7 +148,3 @@ module StartupTest =
         command "Connect" x.Connect NotResponding
 
         checkData ()
-//
-//        clearDb ()
-//
-//        checkNoData()

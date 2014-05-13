@@ -187,15 +187,12 @@ module MetaChains =
                         let xDoc = XmlDocument()
                         let path = Path.Combine(Location.path, chainPath date)
                         logger.TraceF "The path to load chains is %s" path
-                        xDoc.Load(path)
+                        xDoc.Load path
                         let node = xDoc.SelectSingleNode(sprintf "/chains/chain[@name='%s']" setup.Ric)
                         match node with
                         | null -> return Failure <| Problem (sprintf "No chain %s in DB" setup.Ric)
                         | _ -> 
-                            let res = 
-                                node.InnerText.Split('\t')
-                                |> Array.filter (not << String.IsNullOrWhiteSpace)
-
+                            let res = node.InnerText.Split('\t') |> Array.filter (not << String.IsNullOrWhiteSpace)
                             return Answer res
                     with e -> return Failure (Error e)
                 } 

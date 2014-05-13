@@ -34,4 +34,10 @@ module Responses =
         member x.Return (res : unit option) = async { return res }
         member x.Zero () = async { return None }
 
+        // 'T * ('T -> M<'U>) -> M<'U> when 'U :> IDisposable
+        member x.Using (disposable, body) = async {
+            use d = disposable
+            return! body d
+        }
+
     let tweet = TweetBuilder ()
