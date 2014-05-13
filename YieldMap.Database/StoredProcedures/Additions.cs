@@ -30,6 +30,7 @@ namespace YieldMap.Database.StoredProcedures {
                 newRics.RemoveWhere(existingRics.Contains);
                 
                 ctx.AddRics(chain, feed, newRics);
+                ctx.SaveChanges();
             }
         }
 
@@ -46,10 +47,8 @@ namespace YieldMap.Database.StoredProcedures {
         private static void AddRics(this MainEntities ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
             foreach (var name in rics) {
                 try {
-                    var ric = ctx.Rics.FirstOrDefault(r => r.Name == name && r.Feed.id == feed.id);
-                    if (ric == null) {
-                        ric = ctx.Rics.Add(new Ric {Name = name, Feed = feed});
-                    }
+                    var ric = ctx.Rics.FirstOrDefault(r => r.Name == name && r.Feed.id == feed.id) ??
+                              ctx.Rics.Add(new Ric {Name = name, Feed = feed});
 
                     ctx.ConnectRicToChain(ric, chain);
                 } catch (DbEntityValidationException e) {
@@ -153,7 +152,7 @@ namespace YieldMap.Database.StoredProcedures {
         }
 
         private static Isin EnsureIsin(this MainEntities ctx, string name, Ric ric) {
-            var isin = ctx.Isins.FirstOrDefault(i => i.Name == name && i.Feed == ric.Feed);
+            var isin = ctx.Isins.FirstOrDefault(i => i.Name == name && i.id_Feed == ric.Feed_id);
             if (isin == null) {
                 isin = ctx.Isins.Add(new Isin { Name = name, Feed = ric.Feed });
                 ctx.SaveChanges();
@@ -183,13 +182,20 @@ namespace YieldMap.Database.StoredProcedures {
             return pt;
         }
 
-        private static Ticker EnsureTicker(this MainEntities ctx, string child, string parent) {
+        private static Ticker EnsureTicker(this MainEntities ctx, string child, string p) {
+            // There was situation when child and parent names were same. 
+            // In this case parent is ignored
+            var parent = p == child ? null : p; 
+            
             Ticker ch;
             if (String.IsNullOrEmpty(parent)) {
+                // Looking for ticker with no parent
                 ch = ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent == null);
-                if (ch != null) return ch;
+                if (ch != null) return ch; // found? return it
 
-                ch = ctx.Tickers.Add(new Ticker {Name = child});
+                // Okay then. Maybe there's another ticker with same name but with some parent?
+                ch = ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent != null) ??
+                     ctx.Tickers.Add(new Ticker {Name = child}); // Still no? Then create it.
             } else {
                 var pt = ctx.EnsureParentTicker(parent);
                 ch = ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent != null && t.Parent.Name == parent);

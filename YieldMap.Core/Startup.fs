@@ -148,7 +148,6 @@ module Startup =
             and doReload t force channel = 
                 async {
                     try
-                        
                         let chainRequests = 
                             Refresh.ChainsInNeed c.Today
                             |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 

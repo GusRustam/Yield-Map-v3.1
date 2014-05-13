@@ -46,7 +46,7 @@ module StartupTest =
                 | Warn -> logger.TraceF
                 | Note -> logger.InfoF
 
-            m "MSG: @%A %s" state (fail.ToString())
+            m "MSG: @%A %s" state <| fail.ToString()
         )
 
         let command cmd func state = 
@@ -58,7 +58,7 @@ module StartupTest =
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload true) (State Initialized)
         command "Connect" x.Connect (State Initialized)
-        command "Reload" (fun () -> x.Reload true) (State Initialized)
+        command "Reload" (fun () -> x.Reload (true, 1000000000)) (State Initialized) // NOW IT IS INFINITE HENCE I CAN TEST IT
         command "Close" x.Close (State Closed)
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
@@ -138,7 +138,7 @@ module StartupTest =
             res |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload true) (State Initialized)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         command "Connect" x.Connect (State Initialized)
         command "Reload" (fun () -> x.Reload true) (State Initialized)
         command "Close" x.Close (State Closed)
