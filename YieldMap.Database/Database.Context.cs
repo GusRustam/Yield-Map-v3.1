@@ -25,7 +25,6 @@ namespace YieldMap.Database
             throw new UnintentionalCodeFirstException();
         }
     
-        public DbSet<Borrower> Borrowers { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Feed> Feeds { get; set; }
@@ -33,7 +32,6 @@ namespace YieldMap.Database
         public DbSet<InstrumentBond> InstrumentBonds { get; set; }
         public DbSet<InstrumentCustomBond> InstrumentCustomBonds { get; set; }
         public DbSet<Isin> Isins { get; set; }
-        public DbSet<Issuer> Issuers { get; set; }
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<RatingAgency> RatingAgencies { get; set; }
         public DbSet<RawBondInfo> RawBondInfoes { get; set; }
@@ -46,5 +44,7 @@ namespace YieldMap.Database
         public DbSet<Chain> Chains { get; set; }
         public DbSet<Ric> Rics { get; set; }
         public DbSet<RicToChain> RicToChains { get; set; }
+        public DbSet<Borrower> Borrowers { get; set; }
+        public DbSet<Issuer> Issuers { get; set; }
     }
 }

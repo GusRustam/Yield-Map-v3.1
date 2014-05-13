@@ -32,7 +32,13 @@ namespace YieldMap.Database.StoredProcedures {
             
             var keep = existing.Remove(toReload).Remove(obsolete);
 
-            var existingNames = new HashSet<string>(existing.Select(ric => ric.Name));
+            IEnumerable<string> collection = null;
+            try {
+                collection = existing.Select(ric => ric.Name);
+            } catch (NullReferenceException e) {
+                Console.WriteLine(e);
+            }
+            var existingNames = new HashSet<string>(collection);
             var toRleoadNames = new HashSet<string>(toReload.Select(ric => ric.Name));
 
             var hsChainRics = new HashSet<string>(chainRics);

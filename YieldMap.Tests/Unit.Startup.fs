@@ -77,7 +77,7 @@ module StartupTest =
             clear ctx table
                 
                 
-    let initDb () = 
+    let initDb chains = 
         use ctx = new MainEntities(cnnStr)
 
         clear ctx ctx.Feeds
@@ -88,9 +88,8 @@ module StartupTest =
         let idn = ctx.Feeds.Add <| Feed(Name = "Q")
         ctx.SaveChanges () |> ignore
 
-//        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", Feed = idn, Params = "") |> ignore
-//        ctx.Chains.Add <| Chain(Name = "0#RUAER=MM", Feed = idn, Params = "") |> ignore
-        ctx.Chains.Add <| Chain(Name = "0#RUTSY=MM", Feed = idn, Params = "") |> ignore
+        chains |> Array.iter (fun name -> ctx.Chains.Add <| Chain(Name = name, Feed = idn, Params = "") |> ignore)
+
         ctx.SaveChanges () |> ignore
 
     let checkData () =
@@ -109,11 +108,15 @@ module StartupTest =
 
         ch.Expanded.Value |> should be (equal <| DateTime(2014,5,8))
 
-    [<TestCase>]
-    let ``Startup with one chain`` () =
+        
+//    [<TestCase([|"0#RUAER=MM"|])>]
+//    [<TestCase([|"0#RUTSY=MM"|])>]
+    [<TestCase([|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|])>]
+//    [<TestCase([|"0#RUAER=MM"; "0#RUAER=MM"|])>]
+    let ``Startup with one chain`` prms =
         let dt = DateTime(2014,5,8)
                 
-        initDb ()
+        initDb prms
 
         let x = Startup {
             Factory = MockFactory()
