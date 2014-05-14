@@ -39,8 +39,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             }
         }
 
-        
-
         private Feed EnsureFeed(MainEntities ctx, string name) {
             if (_feeds.ContainsKey(name)) 
                 return _feeds[name];

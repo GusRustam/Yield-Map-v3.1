@@ -32,7 +32,19 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             var res = new List<Tuple<MetaTables.BondDescr, Exception>>();
             var theBonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
 
+            // A kind of performance optimization.
             using (var ctx = new MainEntities(DbConn.ConnectionString)) {
+                try {
+                    ctx.Configuration.AutoDetectChangesEnabled = false;
+                    foreach (var bond in theBonds) {
+                        var ric = ctx.Rics.First(r => r.Name == bond.Ric);
+                        EnsureIsin(ctx, ric, bond.Isin);
+                    }
+                    ctx.SaveChanges();
+                } finally {
+                    ctx.Configuration.AutoDetectChangesEnabled = true;
+                }
+
                 foreach (var bond in theBonds) {
                     InstrumentBond instrument = null;
                     var failed = false;
@@ -65,8 +77,8 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
                         // CONSTRAINT: there already must be some ric with some feed!!!
                         instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
-                        
-                        instrument.Isin = EnsureIsin(ctx, bond.Isin, instrument.Ric);
+                        instrument.Isin = instrument.Ric.Isin;
+
                     } catch (Exception e) {
                         failed = true;
                         res.Add(Tuple.Create(bond, e));
@@ -80,8 +92,22 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     Logger.Report(e);
                     throw;
                 }
+
             }
             return res;
+        }
+
+        private static void EnsureIsin(MainEntities ctx, Ric ric, string name) {
+            if (String.IsNullOrWhiteSpace(name)) return;
+
+            var isin = ctx.Isins.FirstOrDefault(i => i.Name == name);
+            if (isin != null) {
+                if (isin.Feed == null)
+                    isin.Feed = ric.Feed;
+            } else {
+                isin = ctx.Isins.Add(new Isin { Name = name, Feed = ric.Feed });
+            }
+            ric.Isin = isin;
         }
 
         private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();
@@ -90,7 +116,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private readonly Dictionary<string, Issuer> _issuers = new Dictionary<string, Issuer>();
         private readonly Dictionary<string, Country> _countries = new Dictionary<string, Country>();
         private readonly Dictionary<string, Ticker> _tickers = new Dictionary<string, Ticker>();
-        private readonly Dictionary<string, Isin> _isins = new Dictionary<string, Isin>();
         private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
         private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
@@ -103,25 +128,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             _seniorities.Clear();
             _tickers.Clear();
             _currencies.Clear();
-            _isins.Clear();
             _industries.Clear();
             _subIndustries.Clear();
             _specimens.Clear();
-        }
-
-        private Isin EnsureIsin(MainEntities ctx, string name, Ric ric) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-            
-            var isin = _isins.ContainsKey(name) ? _isins[name] :
-                            ctx.Isins.FirstOrDefault(i => i.Name == name) ??
-                            ctx.Isins.Add(new Isin { Name = name });
-            
-            isin.Feed = ric.Feed;
-            ric.Isin = isin;
-
-            _isins[name] = isin;
-            return isin;
         }
 
         private SubIndustry EnsureSubIndustry(MainEntities ctx, string ind, string sub) {
