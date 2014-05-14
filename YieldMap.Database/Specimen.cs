@@ -21,7 +21,13 @@ namespace YieldMap.Database
     
         public long id { get; set; }
         public string name { get; set; }
-    
+    	public Specimen ToPocoSimple() {
+    	    return new Specimen {
+    			id = this.id,
+    			name = this.name,
+    		};
+    	}
+    		
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Objects;
 using System.Linq;
 using YieldMap.Tools.Location;
 
@@ -70,16 +68,19 @@ namespace YieldMap.Database.StoredProcedures {
             using (var ctx = new MainEntities(ConnStr)) {
                 return ctx.InstrumentBonds.ToList()
                     .Where(b => NeedsRefresh(b, dt))
-                    .Select(b => b.Ric)
+                    .Select(b => b.Ric.ToPocoSimple())
                     .ToArray();
             }
         }
 
         public static Ric[] AllBondRics() {
             using (var ctx = new MainEntities(ConnStr)) {
-                return ctx.InstrumentBonds.ToList()
-                    .Select(b => b.Ric)
-                    .ToArray();
+                if (ctx.InstrumentBonds.Any())
+                    return ctx.InstrumentBonds.ToList()
+                        .Where(b => b.Ric != null)
+                        .Select(b => b.Ric.ToPocoSimple())
+                        .ToArray();
+                return new Ric[] {};
             }
         }
 
@@ -90,7 +91,7 @@ namespace YieldMap.Database.StoredProcedures {
             using (var ctx = new MainEntities(ConnStr)) {
                 return ctx.InstrumentBonds.ToList()
                     .Where(b => b.Maturity.HasValue && b.Maturity.Value < dt)
-                    .Select(b => b.Ric)
+                    .Select(b => b.Ric.ToPocoSimple())
                     .ToArray();
             }
         }

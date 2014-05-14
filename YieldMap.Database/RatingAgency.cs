@@ -16,7 +16,13 @@ namespace YieldMap.Database
     {
         public long id { get; set; }
         public string Name { get; set; }
-    
+    	public RatingAgency ToPocoSimple() {
+    	    return new RatingAgency {
+    			id = this.id,
+    			Name = this.Name,
+    		};
+    	}
+    		
         public virtual Rating Rating { get; set; }
     }
 }

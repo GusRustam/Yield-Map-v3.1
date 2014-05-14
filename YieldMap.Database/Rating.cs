@@ -23,7 +23,15 @@ namespace YieldMap.Database
         public long Value { get; set; }
         public string Name { get; set; }
         public Nullable<long> id_RatingAgency { get; set; }
-    
+    	public Rating ToPocoSimple() {
+    	    return new Rating {
+    			id = this.id,
+    			Value = this.Value,
+    			Name = this.Name,
+    			id_RatingAgency = this.id_RatingAgency,
+    		};
+    	}
+    		
         public virtual RatingAgency RatingAgency { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }

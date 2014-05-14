@@ -17,7 +17,14 @@ namespace YieldMap.Database
         public long id { get; set; }
         public Nullable<long> Ric_id { get; set; }
         public Nullable<long> Chain_id { get; set; }
-    
+    	public RicToChain ToPocoSimple() {
+    	    return new RicToChain {
+    			id = this.id,
+    			Ric_id = this.Ric_id,
+    			Chain_id = this.Chain_id,
+    		};
+    	}
+    		
         public virtual Chain Chain { get; set; }
         public virtual Ric Ric { get; set; }
     }

@@ -47,7 +47,38 @@ namespace YieldMap.Database
         public string SubIndustry { get; set; }
         public string Instrument { get; set; }
         public string Ric { get; set; }
-    
+    	public RawBondInfo ToPocoSimple() {
+    	    return new RawBondInfo {
+    			id = this.id,
+    			BondStructure = this.BondStructure,
+    			RateStructure = this.RateStructure,
+    			IssueSize = this.IssueSize,
+    			IssuerName = this.IssuerName,
+    			BorrowerName = this.BorrowerName,
+    			Coupon = this.Coupon,
+    			Issue = this.Issue,
+    			Maturity = this.Maturity,
+    			Currency = this.Currency,
+    			ShortName = this.ShortName,
+    			IsCallable = this.IsCallable,
+    			IsPutable = this.IsPutable,
+    			IsFloater = this.IsFloater,
+    			IsConvertible = this.IsConvertible,
+    			IsStraight = this.IsStraight,
+    			Ticker = this.Ticker,
+    			Series = this.Series,
+    			BorrowerCountry = this.BorrowerCountry,
+    			IssuerCountry = this.IssuerCountry,
+    			Isin = this.Isin,
+    			ParentTicker = this.ParentTicker,
+    			Seniority = this.Seniority,
+    			Industry = this.Industry,
+    			SubIndustry = this.SubIndustry,
+    			Instrument = this.Instrument,
+    			Ric = this.Ric,
+    		};
+    	}
+    		
         public virtual ICollection<RawFrnData> RawFrnDatas { get; set; }
         public virtual ICollection<RawRating> RawRatings { get; set; }
     }

@@ -21,7 +21,18 @@ namespace YieldMap.Database
         public string Index { get; set; }
         public Nullable<long> id_RawBond { get; set; }
         public string Frequency { get; set; }
-    
+    	public RawFrnData ToPocoSimple() {
+    	    return new RawFrnData {
+    			id = this.id,
+    			Cap = this.Cap,
+    			Floor = this.Floor,
+    			Margin = this.Margin,
+    			Index = this.Index,
+    			id_RawBond = this.id_RawBond,
+    			Frequency = this.Frequency,
+    		};
+    	}
+    		
         public virtual RawBondInfo RawBondInfo { get; set; }
     }
 }

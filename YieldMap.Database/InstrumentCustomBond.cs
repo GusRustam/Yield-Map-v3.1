@@ -21,7 +21,18 @@ namespace YieldMap.Database
         public Nullable<long> id_Currency { get; set; }
         public Nullable<System.DateTime> Issue { get; set; }
         public Nullable<System.DateTime> Maturity { get; set; }
-    
+    	public InstrumentCustomBond ToPocoSimple() {
+    	    return new InstrumentCustomBond {
+    			id = this.id,
+    			Name = this.Name,
+    			BondStructure = this.BondStructure,
+    			RateStructure = this.RateStructure,
+    			id_Currency = this.id_Currency,
+    			Issue = this.Issue,
+    			Maturity = this.Maturity,
+    		};
+    	}
+    		
         public virtual Currency Currency { get; set; }
     }
 }

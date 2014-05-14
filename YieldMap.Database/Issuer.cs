@@ -22,7 +22,14 @@ namespace YieldMap.Database
         public long id { get; set; }
         public string Name { get; set; }
         public long id_Country { get; set; }
-    
+    	public Issuer ToPocoSimple() {
+    	    return new Issuer {
+    			id = this.id,
+    			Name = this.Name,
+    			id_Country = this.id_Country,
+    		};
+    	}
+    		
         public virtual Country Country { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }

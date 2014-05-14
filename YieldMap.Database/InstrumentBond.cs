@@ -40,7 +40,32 @@ namespace YieldMap.Database
         public Nullable<long> id_Specimen { get; set; }
         public Nullable<System.DateTime> NextCoupon { get; set; }
         public Nullable<double> Coupon { get; set; }
-    
+    	public InstrumentBond ToPocoSimple() {
+    	    return new InstrumentBond {
+    			id = this.id,
+    			id_Issuer = this.id_Issuer,
+    			id_Borrower = this.id_Borrower,
+    			id_Currency = this.id_Currency,
+    			BondStructure = this.BondStructure,
+    			RateStructure = this.RateStructure,
+    			IssueSize = this.IssueSize,
+    			Name = this.Name,
+    			IsCallable = this.IsCallable,
+    			IsPutable = this.IsPutable,
+    			Series = this.Series,
+    			id_Isin = this.id_Isin,
+    			id_Ric = this.id_Ric,
+    			id_Ticker = this.id_Ticker,
+    			id_SubIndustry = this.id_SubIndustry,
+    			Issue = this.Issue,
+    			Maturity = this.Maturity,
+    			id_Seniority = this.id_Seniority,
+    			id_Specimen = this.id_Specimen,
+    			NextCoupon = this.NextCoupon,
+    			Coupon = this.Coupon,
+    		};
+    	}
+    		
         public virtual Currency Currency { get; set; }
         public virtual Seniority Seniority { get; set; }
         public virtual Isin Isin { get; set; }

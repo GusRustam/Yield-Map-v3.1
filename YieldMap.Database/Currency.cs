@@ -22,7 +22,13 @@ namespace YieldMap.Database
     
         public long id { get; set; }
         public string Name { get; set; }
-    
+    	public Currency ToPocoSimple() {
+    	    return new Currency {
+    			id = this.id,
+    			Name = this.Name,
+    		};
+    	}
+    		
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
         public virtual ICollection<InstrumentCustomBond> InstrumentCustomBonds { get; set; }
     }

@@ -35,6 +35,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             using (var ctx = new MainEntities(DbConn.ConnectionString)) {
                 foreach (var bond in theBonds) {
                     InstrumentBond instrument = null;
+                    var failed = false;
                     try {
                         instrument = new InstrumentBond {
                             BondStructure = bond.BondStructure,
@@ -59,16 +60,18 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                         instrument.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
                         instrument.Seniority = EnsureSeniority(ctx, bond.Seniority);
                         instrument.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
+                        instrument.Specimen = EnsureSpecimen(ctx, bond.Instrument);
 
                         // CONSTRAINT: there already must be some ric with some feed!!!
                         instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
+                        Logger.Info(string.Format("Adding bond with ric {0}, its id is {1}", bond.Ric, instrument.Ric.id));
 
                         instrument.Isin = EnsureIsin(ctx, bond.Isin, instrument.Ric);
                     } catch (Exception e) {
+                        failed = true;
                         res.Add(Tuple.Create(bond, e));
                     }
-                    if (instrument != null)
-                        ctx.InstrumentBonds.Add(instrument);
+                    if (!failed) ctx.InstrumentBonds.Add(instrument);
                 }
 
                 try {
@@ -81,6 +84,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             return res;
         }
 
+
         private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();
         private readonly Dictionary<string, Currency> _currencies = new Dictionary<string, Currency>();
         private readonly Dictionary<string, Borrower> _borrowers = new Dictionary<string, Borrower>();
@@ -90,6 +94,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private readonly Dictionary<string, Isin> _isins = new Dictionary<string, Isin>();
         private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
+        private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
 
         public void Dispose() {
             // don't drop that durka durk
@@ -102,6 +107,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             _isins.Clear();
             _industries.Clear();
             _subIndustries.Clear();
+            _specimens.Clear();
         }
 
         private Isin EnsureIsin(MainEntities ctx, string name, Ric ric) {
@@ -125,6 +131,17 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             
             _subIndustries[sub] = subIndustry;
             return subIndustry;
+        }
+
+        private Specimen EnsureSpecimen(MainEntities ctx, string name) {
+            if (_specimens.ContainsKey(name))
+                return _specimens[name];
+
+            var pt = ctx.Specimens.FirstOrDefault(t => t.name == name) ??
+                     ctx.Specimens.Add(new Specimen { name = name });
+
+            _specimens[name] = pt;
+            return pt;
         }
 
         private Industry EnsureIndustry(MainEntities ctx, string ind) {

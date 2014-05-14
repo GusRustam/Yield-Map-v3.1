@@ -22,7 +22,14 @@ namespace YieldMap.Database
         public long id { get; set; }
         public string Name { get; set; }
         public long id_Industry { get; set; }
-    
+    	public SubIndustry ToPocoSimple() {
+    	    return new SubIndustry {
+    			id = this.id,
+    			Name = this.Name,
+    			id_Industry = this.id_Industry,
+    		};
+    	}
+    		
         public virtual Industry Industry { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }

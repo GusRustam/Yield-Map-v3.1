@@ -72,6 +72,17 @@ foreach (var entity in typeMapper.GetItemsToGenerate<EntityType>(itemCollection)
     <#=codeStringGenerator.Property(edmProperty)#>
 <#
         }
+		#>
+	public <#=code.Escape(entity)#> ToPocoSimple() {
+	    return new <#=code.Escape(entity)#> {
+<#
+		foreach(var edmProperty in simpleProperties) { #>
+			<#=edmProperty.Name#> = this.<#=edmProperty.Name#>,
+<#		}
+#>
+		};
+	}
+		<#
     }
 
     if (complexProperties.Any())

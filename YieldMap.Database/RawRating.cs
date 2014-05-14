@@ -20,7 +20,17 @@ namespace YieldMap.Database
         public string Source { get; set; }
         public Nullable<bool> Issue { get; set; }
         public Nullable<long> id_RawBond { get; set; }
-    
+    	public RawRating ToPocoSimple() {
+    	    return new RawRating {
+    			id = this.id,
+    			Date = this.Date,
+    			Rating = this.Rating,
+    			Source = this.Source,
+    			Issue = this.Issue,
+    			id_RawBond = this.id_RawBond,
+    		};
+    	}
+    		
         public virtual RawBondInfo RawBondInfo { get; set; }
     }
 }

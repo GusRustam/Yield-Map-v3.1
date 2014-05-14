@@ -92,7 +92,7 @@ module StartupTest =
 
         ctx.SaveChanges () |> ignore
 
-    let checkData () =
+    let checkData numChains =
         let cnt (table : 'a DbSet) = 
             query { for x in table do 
                     select x
@@ -100,7 +100,7 @@ module StartupTest =
         
         use ctx = new MainEntities(cnnStr)
         cnt ctx.Feeds |> should be (equal 1)
-        cnt ctx.Chains |> should be (equal 1)
+        cnt ctx.Chains |> should be (equal numChains)
 
         let ch = query { for ch in ctx.Chains do 
                          select ch 
@@ -111,7 +111,7 @@ module StartupTest =
         
 //    [<TestCase([|"0#RUAER=MM"|])>]
 //    [<TestCase([|"0#RUTSY=MM"|])>]
-    [<TestCase([|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|])>]
+    [<TestCase([|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|])>] // why 307 rics in RUCORP???
 //    [<TestCase([|"0#RUAER=MM"; "0#RUAER=MM"|])>]
     let ``Startup with one chain`` prms =
         let dt = DateTime(2014,5,8)
@@ -150,4 +150,4 @@ module StartupTest =
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        checkData ()
+        checkData (Array.length prms)

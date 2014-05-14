@@ -21,7 +21,13 @@ namespace YieldMap.Database
     
         public long id { get; set; }
         public string Name { get; set; }
-    
+    	public Seniority ToPocoSimple() {
+    	    return new Seniority {
+    			id = this.id,
+    			Name = this.Name,
+    		};
+    	}
+    		
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
     }
 }

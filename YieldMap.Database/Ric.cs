@@ -24,7 +24,15 @@ namespace YieldMap.Database
         public string Name { get; set; }
         public Nullable<long> Isin_id { get; set; }
         public Nullable<long> Feed_id { get; set; }
-    
+    	public Ric ToPocoSimple() {
+    	    return new Ric {
+    			id = this.id,
+    			Name = this.Name,
+    			Isin_id = this.Isin_id,
+    			Feed_id = this.Feed_id,
+    		};
+    	}
+    		
         public virtual Feed Feed { get; set; }
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
         public virtual Isin Isin { get; set; }

@@ -24,7 +24,16 @@ namespace YieldMap.Database
         public Nullable<long> id_Feed { get; set; }
         public Nullable<System.DateTime> Expanded { get; set; }
         public string Params { get; set; }
-    
+    	public Chain ToPocoSimple() {
+    	    return new Chain {
+    			id = this.id,
+    			Name = this.Name,
+    			id_Feed = this.id_Feed,
+    			Expanded = this.Expanded,
+    			Params = this.Params,
+    		};
+    	}
+    		
         public virtual Feed Feed { get; set; }
         public virtual ICollection<RicToChain> RicToChains { get; set; }
     }

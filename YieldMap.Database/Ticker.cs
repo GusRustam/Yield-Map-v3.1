@@ -23,7 +23,14 @@ namespace YieldMap.Database
         public long id { get; set; }
         public string Name { get; set; }
         public Nullable<long> id_ParentTicker { get; set; }
-    
+    	public Ticker ToPocoSimple() {
+    	    return new Ticker {
+    			id = this.id,
+    			Name = this.Name,
+    			id_ParentTicker = this.id_ParentTicker,
+    		};
+    	}
+    		
         public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
         public virtual ICollection<Ticker> Child { get; set; }
         public virtual Ticker Parent { get; set; }
