@@ -65,8 +65,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
                         // CONSTRAINT: there already must be some ric with some feed!!!
                         instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
-                        Logger.Info(string.Format("Adding bond with ric {0}, its id is {1}", bond.Ric, instrument.Ric.id));
-
+                        
                         instrument.Isin = EnsureIsin(ctx, bond.Isin, instrument.Ric);
                     } catch (Exception e) {
                         failed = true;
@@ -84,7 +83,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             }
             return res;
         }
-
 
         private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();
         private readonly Dictionary<string, Currency> _currencies = new Dictionary<string, Currency>();
@@ -112,16 +110,24 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Isin EnsureIsin(MainEntities ctx, string name, Ric ric) {
+            if (String.IsNullOrWhiteSpace(name))
+                return null;
+            
             var isin = _isins.ContainsKey(name) ? _isins[name] :
                             ctx.Isins.FirstOrDefault(i => i.Name == name) ??
                             ctx.Isins.Add(new Isin { Name = name });
             
             isin.Feed = ric.Feed;
+            ric.Isin = isin;
+
             _isins[name] = isin;
             return isin;
         }
 
         private SubIndustry EnsureSubIndustry(MainEntities ctx, string ind, string sub) {
+            if (String.IsNullOrWhiteSpace(ind))
+                return null;
+            
             var industry = EnsureIndustry(ctx, ind);
 
             var subIndustry = _subIndustries.ContainsKey(sub) ?_subIndustries[sub] :
@@ -135,6 +141,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Specimen EnsureSpecimen(MainEntities ctx, string name) {
+            if (String.IsNullOrWhiteSpace(name))
+                return null;
+            
             if (_specimens.ContainsKey(name))
                 return _specimens[name];
 
@@ -145,14 +154,17 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             return pt;
         }
 
-        private Industry EnsureIndustry(MainEntities ctx, string ind) {
-            if (_industries.ContainsKey(ind))
-                return _industries[ind];
+        private Industry EnsureIndustry(MainEntities ctx, string name) {
+            if (String.IsNullOrWhiteSpace(name))
+                return null;
 
-            var industry = ctx.Industries.FirstOrDefault(t => t.Name == ind) ??
-                           ctx.Industries.Add(new Industry {Name = ind});
+            if (_industries.ContainsKey(name))
+                return _industries[name];
 
-            _industries[ind] = industry;
+            var industry = ctx.Industries.FirstOrDefault(t => t.Name == name) ??
+                           ctx.Industries.Add(new Industry {Name = name});
+
+            _industries[name] = industry;
             return industry;
         }
 
@@ -168,6 +180,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Ticker EnsureTicker(MainEntities ctx, string child, string parent) {
+            if (String.IsNullOrWhiteSpace(child))
+                return null;
+            
             // There was situation when child and parent names were same. 
             // In this case parent is ignored
             var parentName = parent == child ? String.Empty : parent;
@@ -205,6 +220,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Currency EnsureCurrency(MainEntities ctx, string name) {
+            if (String.IsNullOrWhiteSpace(name))
+                return null;
+
             if (_currencies.ContainsKey(name))
                 return _currencies[name];
             var currency = ctx.Currencies.FirstOrDefault(b => b.Name == name);
@@ -219,6 +237,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Borrower EnsureBorrower(MainEntities ctx, string name, Country country) {
+            if (String.IsNullOrWhiteSpace(name))
+                return null;
+
             if (_borrowers.ContainsKey(name))
                 return _borrowers[name];
             
@@ -234,6 +255,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Issuer EnsureIssuer(MainEntities ctx, string name, Country country) {
+            if (String.IsNullOrWhiteSpace(name))
+                return null;
+
             if (_issuers.ContainsKey(name))
                 return _issuers[name];
             var issuer = ctx.Issuers.FirstOrDefault(b => b.Name == name);
@@ -248,6 +272,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Country EnsureCountry(MainEntities ctx, string name) {
+            if (String.IsNullOrWhiteSpace(name)) 
+                return null;
+
             if (_countries.ContainsKey(name)) return _countries[name];
 
             var country = ctx.Countries.FirstOrDefault(c => c.Name == name);

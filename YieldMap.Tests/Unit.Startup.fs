@@ -109,8 +109,8 @@ module StartupTest =
 
         
 //    [<TestCase([|"0#RUAER=MM"|])>]
-//    [<TestCase([|"0#RUTSY=MM"|])>]
-    [<TestCase([|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|])>] // why 307 rics in RUCORP???
+    [<TestCase([|"0#RUTSY=MM"|])>]
+//    [<TestCase([|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|])>] // why 307 rics in RUCORP???
 //    [<TestCase([|"0#RUAER=MM"; "0#RUAER=MM"|])>]
     let ``Startup with one chain`` prms =
         let dt = DateTime(2014,5,8)
