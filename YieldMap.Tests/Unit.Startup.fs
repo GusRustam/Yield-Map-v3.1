@@ -92,7 +92,7 @@ module StartupTest =
 
         ctx.SaveChanges () |> ignore
 
-    let checkData numChains =
+    let checkData numChains dt =
         let cnt (table : 'a DbSet) = 
             query { for x in table do 
                     select x
@@ -105,13 +105,26 @@ module StartupTest =
         let ch = query { for ch in ctx.Chains do 
                          select ch } // todo not exactly one ))
 
-        ch |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal <| DateTime(2014,5,8)))
+        ch |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal dt))
 
-        
-//    [<TestCase([|"0#RUAER=MM"|])>]
-    [<TestCase([|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|])>] // why 307 rics in RUCORP???
-    let ``Startup with one chain`` prms =
-        let dt = DateTime(2014,5,8)
+    type x = {
+        chains : string array
+        date : DateTime
+    }
+
+    let boo = seq {
+//        yield { chains = [|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|]; date = DateTime(2014,5,8) }
+        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) }
+//        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) } // ; "0#RUEUROS=" // ; "0#RUCORP=MM"; "0#RUTSY=MM"
+    }
+
+    // todo full cleanup!!!
+    // todo reload overnight
+
+    [<Test>]
+    [<TestCaseSource("boo")>]
+    let ``Startup with one chain`` xxx =
+        let { date = dt; chains = prms } = xxx
         
         globalThreshold := LoggingLevel.Info
 
@@ -144,9 +157,11 @@ module StartupTest =
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         command "Connect" x.Connect (State Initialized)
+
+        logger.Error " =============== SECOND RELOAD ====================="
         command "Reload" (fun () -> x.Reload true) (State Initialized)
         command "Close" x.Close (State Closed)
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        checkData (Array.length prms)
+        checkData (Array.length prms) dt

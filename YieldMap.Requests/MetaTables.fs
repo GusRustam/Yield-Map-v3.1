@@ -89,7 +89,7 @@ module MetaTables =
         [<Field(26, "EJV.C.InstrumentTypeDescription")>]
         member val Instrument = String.Empty with get, set
 
-        [<Field(27, "EJV.C.NextCouponDate")>]
+        [<Field(27, "EJV.C.NextPayDate", typeof<DateConverter>)>]
         member val NextCoupon : DateTime Nullable = Nullable() with get, set
         
         override self.ToString() = self.ShortName

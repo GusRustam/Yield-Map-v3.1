@@ -178,6 +178,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private Seniority EnsureSeniority(MainEntities ctx, string name) {
+            if (String.IsNullOrWhiteSpace(name))
+                return null;
+
             if (_seniorities.ContainsKey(name))
                 return _seniorities[name];
 

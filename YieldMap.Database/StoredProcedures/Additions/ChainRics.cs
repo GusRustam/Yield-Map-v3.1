@@ -68,20 +68,24 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private void AddRics(MainEntities ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
             foreach (var name in rics) {
                 try {
-                    var ric = _rics.ContainsKey(name) ? _rics[name] :
-                                    ctx.Rics.FirstOrDefault(r => r.Name == name) ??
-                                    ctx.Rics.Add(new Ric { Name = name });
+                    ctx.Configuration.AutoDetectChangesEnabled = false;
+                    var ric = _rics.ContainsKey(name)
+                        ? _rics[name]
+                        : ctx.Rics.FirstOrDefault(r => r.Name == name) ??
+                          ctx.Rics.Add(new Ric {Name = name});
 
                     ric.Feed = feed;
                     _rics[name] = ric;
 
                     if (ric.RicToChains.All(rtc => rtc.Chain != chain))
-                        ctx.RicToChains.Add(new RicToChain { Ric = ric, Chain = chain });
+                        ctx.RicToChains.Add(new RicToChain {Ric = ric, Chain = chain});
 
                 } catch (DbEntityValidationException e) {
                     Logger.ErrorEx("Invalid op", e);
                 } catch (DbUpdateException e) {
                     Logger.ErrorEx("Failed to update", e);
+                } finally {
+                    ctx.Configuration.AutoDetectChangesEnabled = true;
                 }
             }
         }

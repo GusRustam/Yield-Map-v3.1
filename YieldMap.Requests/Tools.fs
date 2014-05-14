@@ -21,7 +21,7 @@ module Converters =
         interface Cnv with
             member self.Convert x = 
                 let success, date = DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
-                Some <| if success then box date else box x // чтобы работало и рейтеровскими данными и с моими
+                Some <| if success then box date else null
 
     type SomeFloatConverter() = 
         interface Cnv with
