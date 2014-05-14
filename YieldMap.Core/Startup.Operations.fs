@@ -82,8 +82,9 @@ module Operations =
             let loader = s.Loader
             
             let! bonds = loader.LoadMetadata<BondDescr> rics
-            let failures = db.SaveBonds bonds // todo do something with failures
-
+            let failures = db.SaveBonds bonds
+            failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
+             
             let! frns = loader.LoadMetadata<FrnData> rics
             db.SaveFrns frns
 
@@ -99,7 +100,8 @@ module Operations =
 
             logger.Trace "reload ()"
             async {
-                if force || force && Refresh.NeedsReload s.TodayFix then
+                use refresh = new Refresh ()
+                if force || force && refresh.NeedsReload s.TodayFix then
                     try
                         BackupRestore.Backup ()
                         return! load s chains

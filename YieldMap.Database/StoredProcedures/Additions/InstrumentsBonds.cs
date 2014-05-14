@@ -47,6 +47,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                             Series = bond.Series,
                             Issue = bond.Issue,
                             Maturity = bond.Maturity,
+                            Coupon = bond.Coupon,
                             NextCoupon = bond.NextCoupon
                         };
 
@@ -178,8 +179,11 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 ch = _tickers[child];
                 ch.Parent = pt;
             } else {
-                ch = ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent == pt) ??
-                     ctx.Tickers.Add(new Ticker {Name = child, Parent = pt});
+                ch = (pt == null 
+                        ? ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent == null) 
+                        : ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent != null && t.Parent.Name == pt.Name)) 
+                     ?? ctx.Tickers.Add(new Ticker {Name = child, Parent = pt});
+
                 _tickers[child] = ch; // store
             }
 

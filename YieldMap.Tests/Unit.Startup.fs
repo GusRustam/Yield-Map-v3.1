@@ -103,10 +103,9 @@ module StartupTest =
         cnt ctx.Chains |> should be (equal numChains)
 
         let ch = query { for ch in ctx.Chains do 
-                         select ch 
-                         exactlyOne }
+                         select ch } // todo not exactly one ))
 
-        ch.Expanded.Value |> should be (equal <| DateTime(2014,5,8))
+        ch |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal <| DateTime(2014,5,8)))
 
         
 //    [<TestCase([|"0#RUAER=MM"|])>]

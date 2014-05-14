@@ -148,8 +148,10 @@ module Startup =
             and doReload t force channel = 
                 async {
                     try
+                        use refresh = new Refresh()
+
                         let chainRequests = 
-                            Refresh.ChainsInNeed c.Today
+                            refresh.ChainsInNeed c.Today
                             |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
 
                         let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)

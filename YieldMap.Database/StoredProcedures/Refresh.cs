@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using YieldMap.Tools.Location;
 
 namespace YieldMap.Database.StoredProcedures {
-    static class Extensions {
+    internal static class Extensions {
         public static bool InRange(this DateTime pivot, DateTime what, int range) {
             return what - pivot <= TimeSpan.FromDays(range);
         }
@@ -22,38 +21,28 @@ namespace YieldMap.Database.StoredProcedures {
         }
     }
 
-    public static class Refresh {
-        private static readonly string ConnStr;
-        static Refresh() {
-            MainEntities.SetVariable("PathToTheDatabase", Location.path);
-            ConnStr = MainEntities.GetConnectionString("TheMainEntities");
-        }
-
+    public class Refresh : IDisposable {
+        private readonly MainEntities _context = new MainEntities(DbConn.ConnectionString);
+        
         private static bool NeedsRefresh(Chain chain, DateTime today) {
             return chain.Expanded.HasValue && chain.Expanded.Value < today || !chain.Expanded.HasValue;
         }
 
-        private static bool NeedsRefresh(this InstrumentBond bond, DateTime today) {
+        private static bool NeedsRefresh(InstrumentBond bond, DateTime today) {
             return bond.NextCoupon.HasValue && bond.NextCoupon.Value.InRange(today, 7);  //todo why 7?
         }
 
-        public static Chain[] ChainsInNeed(DateTime dt) {
-            using (var ctx = new MainEntities(ConnStr)) {
-                var res = ctx
-                    .Chains
-                    .ToList()
-                    .Where(c => NeedsRefresh(c, dt))
-                    .Select(x => new Chain {
-                        Name = x.Name, 
-                        Expanded = x.Expanded, 
-                        Feed = x.Feed == null ? null : new Feed {Name = x.Feed.Name}
-                    })
-                    .ToArray();
-                return res;
-            }
+        public Chain[] ChainsInNeed(DateTime dt) {
+            return (from c in _context.Chains.ToList() 
+                    where NeedsRefresh(c, dt)
+                    select new Chain {
+                        Name = c.Name, 
+                        Expanded = c.Expanded, 
+                        Feed = c.Feed == null ? null : new Feed {Name = c.Feed.Name}
+                    }).ToArray();
         }
 
-        public static bool NeedsReload(DateTime dt) {
+        public bool NeedsReload(DateTime dt) {
             return ChainsInNeed(dt).Any();
         }
 
@@ -64,36 +53,32 @@ namespace YieldMap.Database.StoredProcedures {
         /// </summary>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        public static Ric[] StaleBondRics(DateTime dt) {
-            using (var ctx = new MainEntities(ConnStr)) {
-                return ctx.InstrumentBonds.ToList()
-                    .Where(b => NeedsRefresh(b, dt))
+        public Ric[] StaleBondRics(DateTime dt) {
+                return _context.InstrumentBonds.ToList()
+                    .Where(b => b.Ric != null && NeedsRefresh(b, dt))
                     .Select(b => b.Ric.ToPocoSimple())
                     .ToArray();
-            }
         }
 
-        public static Ric[] AllBondRics() {
-            using (var ctx = new MainEntities(ConnStr)) {
-                if (ctx.InstrumentBonds.Any())
-                    return ctx.InstrumentBonds.ToList()
-                        .Where(b => b.Ric != null)
-                        .Select(b => b.Ric.ToPocoSimple())
-                        .ToArray();
-                return new Ric[] {};
-            }
+        public Ric[] AllBondRics() {
+            return _context.InstrumentBonds.ToList()
+                    .Where(b => b.Ric != null)
+                    .Select(b => b.Ric.ToPocoSimple())
+                    .ToArray();
         }
 
         /// <summary> Enumerates rics which belong to matured bonds </summary>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        public static Ric[] ObsoleteBondRics(DateTime dt) {
-            using (var ctx = new MainEntities(ConnStr)) {
-                return ctx.InstrumentBonds.ToList()
-                    .Where(b => b.Maturity.HasValue && b.Maturity.Value < dt)
+        public Ric[] ObsoleteBondRics(DateTime dt) {
+            return _context.InstrumentBonds.ToList()
+                    .Where(b => b.Ric != null && b.Maturity.HasValue && b.Maturity.Value < dt)
                     .Select(b => b.Ric.ToPocoSimple())
                     .ToArray();
-            }
+        }
+
+        public void Dispose() {
+            _context.Dispose();
         }
     }
 }
