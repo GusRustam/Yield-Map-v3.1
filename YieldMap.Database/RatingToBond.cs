@@ -12,25 +12,20 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RawRating
+    public partial class RatingToBond
     {
         public long id { get; set; }
-        public Nullable<System.DateTime> Date { get; set; }
-        public string Rating { get; set; }
-        public string Source { get; set; }
-        public Nullable<bool> Issue { get; set; }
-        public Nullable<long> id_RawBond { get; set; }
-    	public RawRating ToPocoSimple() {
-    	    return new RawRating {
+        public long id_Rating { get; set; }
+        public Nullable<long> id_Bond { get; set; }
+    	public RatingToBond ToPocoSimple() {
+    	    return new RatingToBond {
     			id = this.id,
-    			Date = this.Date,
-    			Rating = this.Rating,
-    			Source = this.Source,
-    			Issue = this.Issue,
-    			id_RawBond = this.id_RawBond,
+    			id_Rating = this.id_Rating,
+    			id_Bond = this.id_Bond,
     		};
     	}
     		
-        public virtual RawBondInfo RawBondInfo { get; set; }
+        public virtual InstrumentBond InstrumentBond { get; set; }
+        public virtual Rating Rating { get; set; }
     }
 }

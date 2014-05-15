@@ -16,7 +16,7 @@ namespace YieldMap.Database
     {
         public InstrumentBond()
         {
-            this.Ratings = new HashSet<Rating>();
+            this.RatingToBonds = new HashSet<RatingToBond>();
         }
     
         public long id { get; set; }
@@ -34,10 +34,10 @@ namespace YieldMap.Database
         public Nullable<long> id_Ric { get; set; }
         public Nullable<long> id_Ticker { get; set; }
         public Nullable<long> id_SubIndustry { get; set; }
+        public Nullable<long> id_Specimen { get; set; }
         public Nullable<System.DateTime> Issue { get; set; }
         public Nullable<System.DateTime> Maturity { get; set; }
         public Nullable<long> id_Seniority { get; set; }
-        public Nullable<long> id_Specimen { get; set; }
         public Nullable<System.DateTime> NextCoupon { get; set; }
         public Nullable<double> Coupon { get; set; }
     	public InstrumentBond ToPocoSimple() {
@@ -57,24 +57,24 @@ namespace YieldMap.Database
     			id_Ric = this.id_Ric,
     			id_Ticker = this.id_Ticker,
     			id_SubIndustry = this.id_SubIndustry,
+    			id_Specimen = this.id_Specimen,
     			Issue = this.Issue,
     			Maturity = this.Maturity,
     			id_Seniority = this.id_Seniority,
-    			id_Specimen = this.id_Specimen,
     			NextCoupon = this.NextCoupon,
     			Coupon = this.Coupon,
     		};
     	}
     		
+        public virtual Borrower Borrower { get; set; }
         public virtual Currency Currency { get; set; }
         public virtual Seniority Seniority { get; set; }
+        public virtual Issuer Issuer { get; set; }
         public virtual Isin Isin { get; set; }
+        public virtual Ric Ric { get; set; }
         public virtual Ticker Ticker { get; set; }
         public virtual SubIndustry SubIndustry { get; set; }
-        public virtual ICollection<Rating> Ratings { get; set; }
         public virtual Specimen Specimen { get; set; }
-        public virtual Ric Ric { get; set; }
-        public virtual Borrower Borrower { get; set; }
-        public virtual Issuer Issuer { get; set; }
+        public virtual ICollection<RatingToBond> RatingToBonds { get; set; }
     }
 }

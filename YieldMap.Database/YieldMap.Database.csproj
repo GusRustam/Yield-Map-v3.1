@@ -109,13 +109,7 @@
     <Compile Include="RatingAgency.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="RawBondInfo.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RawFrnData.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RawRating.cs">
+    <Compile Include="RatingToBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Ric.cs">

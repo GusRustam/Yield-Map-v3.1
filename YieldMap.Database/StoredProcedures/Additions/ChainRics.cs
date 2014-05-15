@@ -32,8 +32,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     AddRics(ctx, chain, feed, newRics);
                     ctx.SaveChanges();
                 } catch (DbEntityValidationException e) {
-                    Logger.ErrorEx("Failed to save", e);
-                    Logger.Report(e);
+                    Logger.Report("Failed to save", e);
                     throw;
                 }
             }

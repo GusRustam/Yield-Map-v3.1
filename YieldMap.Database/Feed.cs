@@ -16,8 +16,8 @@ namespace YieldMap.Database
     {
         public Feed()
         {
-            this.Isins = new HashSet<Isin>();
             this.Chains = new HashSet<Chain>();
+            this.Isins = new HashSet<Isin>();
             this.Rics = new HashSet<Ric>();
         }
     
@@ -32,8 +32,8 @@ namespace YieldMap.Database
     		};
     	}
     		
-        public virtual ICollection<Isin> Isins { get; set; }
         public virtual ICollection<Chain> Chains { get; set; }
+        public virtual ICollection<Isin> Isins { get; set; }
         public virtual ICollection<Ric> Rics { get; set; }
     }
 }

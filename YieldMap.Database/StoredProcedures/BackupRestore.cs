@@ -4,23 +4,13 @@ using YieldMap.Tools.Location;
 
 namespace YieldMap.Database.StoredProcedures {
     public static class BackupRestore {
-        private static readonly string ConnStr;
+        private static readonly string DbFile = Path.Combine(Location.path, "main.db");
         private static readonly string BackupFile = Path.Combine(Location.path, "main.bak");
 
-        static BackupRestore() {
-            MainEntities.SetVariable("PathToTheDatabase", Location.path);
-            ConnStr = MainEntities.GetConnectionString("TheMainEntities");
-        }
 
         public static void Backup() {
             Cleanup();
-            //using (var ctx = new MainEntities(ConnStr)) {
-            //    var sql = String.Format("BACKUP DATABASE main TO DISK='{0}'", BackupFile);
-                
-            //    ctx.Database.ExecuteSqlCommand(sql);
-            //}
-            //if (!File.Exists(BackupFile))
-            //    throw new InvalidOperationException("No backup file found");
+            File.Copy(DbFile, BackupFile);
         }
 
         public static void Cleanup() {
@@ -28,12 +18,8 @@ namespace YieldMap.Database.StoredProcedures {
         }
 
         public static void Restore() {
-            //if (!File.Exists(BackupFile)) 
-            //    throw new InvalidOperationException("No backup file found");
-            //using (var ctx = new MainEntities(ConnStr)) {
-            //    var sql = String.Format("RESTORE DATABASE main FROM DISK='{0}'", BackupFile);
-            //    ctx.Database.ExecuteSqlCommand(sql);
-            //}
+            if (File.Exists(DbFile)) File.Delete(DbFile);
+            File.Copy(BackupFile, DbFile);
             Cleanup();
         }
     }

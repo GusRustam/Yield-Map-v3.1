@@ -89,7 +89,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 try {
                     ctx.SaveChanges();
                 } catch (DbEntityValidationException e) {
-                    Logger.Report(e);
+                    Logger.Report("Saving bonds", e);
                     throw;
                 }
 
