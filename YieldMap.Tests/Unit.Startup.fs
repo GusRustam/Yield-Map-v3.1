@@ -112,12 +112,10 @@ module StartupTest =
     }
 
     let boo = seq {
-//        yield { chains = [|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|]; date = DateTime(2014,5,8) }
-        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) }
-//        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) } // ; "0#RUEUROS=" // ; "0#RUCORP=MM"; "0#RUTSY=MM"
+        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) } // date = DateTime(2014,5,8) }
+        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) } // ; "0#RUEUROS="
     }
-
-    // todo full cleanup!!!
+    
     // todo reload overnight
 
     [<Test>]
