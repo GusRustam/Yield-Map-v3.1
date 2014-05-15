@@ -3,7 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace YieldMap.Database.StoredProcedures {
-    public class Set<T> {
+    internal static class Extensions {
+        public static HashSet<T> Add<T>(this HashSet<T> set, IEnumerable<T> items) {
+            var res = set != null ? new HashSet<T>(set) : new HashSet<T>();
+            items.ToList().ForEach(item => res.Add(item));
+            return res;
+        }
+
+        public static HashSet<T> Remove<T>(this HashSet<T> set, IEnumerable<T> items) {
+            var res = set != null ? new HashSet<T>(set) : new HashSet<T>();
+            items.ToList().ForEach(item => res.Remove(item));
+            return res;
+        }
+    }
+
+    internal class Set<T> {
         public static readonly Set<T> Empty = new Set<T>();
         private readonly HashSet<T> _data;
 

@@ -1,26 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace YieldMap.Database.StoredProcedures {
-    internal static class Extensions {
-        public static bool InRange(this DateTime pivot, DateTime what, int range) {
-            return what - pivot <= TimeSpan.FromDays(range);
-        }
-
-        public static HashSet<T> Add<T>(this HashSet<T> set, IEnumerable<T> items) {
-            var res = set != null ? new HashSet<T>(set) : new HashSet<T>();
-            items.ToList().ForEach(item => res.Add(item));
-            return res;
-        }
-
-        public static HashSet<T> Remove<T>(this HashSet<T> set, IEnumerable<T> items) {
-            var res = set != null ? new HashSet<T>(set) : new HashSet<T>();
-            items.ToList().ForEach(item => res.Remove(item));
-            return res;
-        }
-    }
-
     public class Refresh : IDisposable {
         private readonly MainEntities _context = new MainEntities(DbConn.ConnectionString);
         
@@ -29,7 +10,10 @@ namespace YieldMap.Database.StoredProcedures {
         }
 
         private static bool NeedsRefresh(InstrumentBond bond, DateTime today) {
-            return bond.NextCoupon.HasValue && bond.NextCoupon.Value.InRange(today, 7);  //todo why 7?
+            if (!bond.NextCoupon.HasValue) return false;
+            
+            var nextCoupon = bond.NextCoupon.Value;
+            return nextCoupon < today + TimeSpan.FromDays(7);
         }
 
         public Chain[] ChainsInNeed(DateTime dt) {

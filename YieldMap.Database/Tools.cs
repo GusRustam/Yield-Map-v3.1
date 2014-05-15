@@ -4,7 +4,8 @@ using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database {
     public static class Tools {
-        public static void Report(this Logging.Logger logger, DbEntityValidationException e) {
+        public static void Report(this Logging.Logger logger, string msg, DbEntityValidationException e) {
+            logger.Error(msg);
             foreach (var eve in e.EntityValidationErrors) {
                 logger.Error(
                     String.Format(

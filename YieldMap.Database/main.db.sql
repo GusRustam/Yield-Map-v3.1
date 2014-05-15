@@ -6,7 +6,7 @@
 
 CREATE TABLE Borrower (
   id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name        varchar(50) NOT NULL,
+  Name        varchar(255) NOT NULL,
   id_Country  integer NOT NULL,
   /* Foreign keys */
   FOREIGN KEY (id_Country)
@@ -190,7 +190,7 @@ CREATE INDEX RefIsin_Index02
 
 CREATE TABLE Issuer (
   id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name        varchar(50) NOT NULL,
+  Name        varchar(255) NOT NULL,
   id_Country  integer NOT NULL,
   /* Foreign keys */
   FOREIGN KEY (id_Country)
@@ -342,8 +342,9 @@ CREATE INDEX RefRic_Index01
   (id);
 
 CREATE TABLE RicToChain (
-  Ric_id    integer NOT NULL,
-  Chain_id  integer NOT NULL,
+  id        integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Ric_id    integer,
+  Chain_id  integer,
   /* Foreign keys */
   FOREIGN KEY (Chain_id)
     REFERENCES Chain(id)
@@ -354,6 +355,10 @@ CREATE TABLE RicToChain (
     ON DELETE RESTRICT
     ON UPDATE RESTRICT
 );
+
+CREATE UNIQUE INDEX RicToChain_Index01
+  ON RicToChain
+  (Chain_id, Ric_id);
 
 CREATE TABLE Seniority (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -410,3 +415,4 @@ CREATE INDEX RefTicker_Index01
 CREATE INDEX RefTicker_Index02
   ON Ticker
   (Name);
+
