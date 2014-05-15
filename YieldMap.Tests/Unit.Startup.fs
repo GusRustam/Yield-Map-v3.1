@@ -22,6 +22,7 @@ module StartupTest =
     open YieldMap.Tools.Logging
 
     open System.Data.Entity
+    open System.Linq
 
     let logger = LogFactory.create "StartupTest"
     
@@ -68,9 +69,8 @@ module StartupTest =
     let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
 
     let rec clear (ctx:MainEntities) (table : 'a DbSet) =
-        let item = query { for x in table do 
-                            select x
-                            exactlyOneOrDefault }
+        let items = query { for x in table do select x }
+        let item = items.ToList().FirstOrDefault()
         if item <> null then
             table.Remove item |> ignore
             ctx.SaveChanges () |> ignore
@@ -78,18 +78,17 @@ module StartupTest =
                 
                 
     let initDb chains = 
-        use ctx = new MainEntities(cnnStr)
+        use eraser = new Eraser ()
 
-        clear ctx ctx.Feeds
-        clear ctx ctx.Chains
-        clear ctx ctx.Rics
-        clear ctx ctx.RicToChains
-
+        eraser.DeleteChains ()
+        eraser.DeleteBonds ()
+        eraser.DeleteFeeds ()
+        
+        use ctx = new MainEntities (DbConn.ConnectionString)
         let idn = ctx.Feeds.Add <| Feed(Name = "Q")
         ctx.SaveChanges () |> ignore
 
         chains |> Array.iter (fun name -> ctx.Chains.Add <| Chain(Name = name, Feed = idn, Params = "") |> ignore)
-
         ctx.SaveChanges () |> ignore
 
     let checkData numChains dt =
@@ -114,8 +113,8 @@ module StartupTest =
 
     let boo = seq {
 //        yield { chains = [|"0#RUAER=MM"; "0#RUCORP=MM"; "0#RUTSY=MM"|]; date = DateTime(2014,5,8) }
-//        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) }
-        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) } // ; "0#RUEUROS=" // ; "0#RUCORP=MM"; "0#RUTSY=MM"
+        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) }
+//        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) } // ; "0#RUEUROS=" // ; "0#RUCORP=MM"; "0#RUTSY=MM"
     }
 
     // todo full cleanup!!!

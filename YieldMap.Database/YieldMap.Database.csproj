@@ -83,6 +83,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Database.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Eraser.cs" />
     <Compile Include="Feed.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
