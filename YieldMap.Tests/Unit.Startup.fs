@@ -17,6 +17,8 @@ module StartupTest =
     open YieldMap.Core.Notifier
 
     open YieldMap.Database
+    open YieldMap.Database.Access
+    open YieldMap.Database.StoredProcedures 
 
     open YieldMap.Tools.Location
     open YieldMap.Tools.Logging
@@ -68,28 +70,8 @@ module StartupTest =
     MainEntities.SetVariable("PathToTheDatabase", Location.path)
     let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
 
-    let rec clear (ctx:MainEntities) (table : 'a DbSet) =
-        let items = query { for x in table do select x }
-        let item = items.ToList().FirstOrDefault()
-        if item <> null then
-            table.Remove item |> ignore
-            ctx.SaveChanges () |> ignore
-            clear ctx table
-                
-                
-    let initDb chains = 
-        use eraser = new Eraser ()
 
-        eraser.DeleteChains ()
-        eraser.DeleteBonds ()
-        eraser.DeleteFeeds ()
-        
-        use ctx = new MainEntities (DbConn.ConnectionString)
-        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
-        ctx.SaveChanges () |> ignore
-
-        chains |> Array.iter (fun name -> ctx.Chains.Add <| Chain(Name = name, Feed = idn, Params = "") |> ignore)
-        ctx.SaveChanges () |> ignore
+    (* ========================= ============================= *)
 
     let checkData numChains dt =
         let cnt (table : 'a DbSet) = 
@@ -101,32 +83,40 @@ module StartupTest =
         cnt ctx.Feeds |> should be (equal 1)
         cnt ctx.Chains |> should be (equal numChains)
 
-        let ch = query { for ch in ctx.Chains do 
-                         select ch } // todo not exactly one ))
+        ctx.Chains |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal dt))
 
-        ch |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal dt))
-
-    type x = {
+    type StartupTestParams = {
         chains : string array
         date : DateTime
     }
 
-    let boo = seq {
-        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) } // date = DateTime(2014,5,8) }
-        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) } // ; "0#RUEUROS="
+    let paramsForStartup = seq {
+        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) }
+        yield { chains = [|"0#RUEUROS="|]; date = DateTime(2014,5,14) }
+//        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) }
     }
-    
-    // todo reload overnight
 
     [<Test>]
-    [<TestCaseSource("boo")>]
+    [<TestCaseSource("paramsForStartup")>]
     let ``Startup with one chain`` xxx =
         let { date = dt; chains = prms } = xxx
         
-        globalThreshold := LoggingLevel.Info
+        globalThreshold := LoggingLevel.Debug
 
-        initDb prms
+        // Cleaning up db
+        let eraser = new Eraser ()
+        eraser.DeleteChains ()
+        eraser.DeleteBonds ()
+        eraser.DeleteFeeds ()
 
+        use ctx = DbConn.CreateContext ()
+        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
+        ctx.SaveChanges () |> ignore
+
+        prms |> Array.iter (fun name -> ctx.Chains.Add <| Chain(Name = name, Feed = idn, Params = "") |> ignore)
+        ctx.SaveChanges () |> ignore
+
+        // Preparing
         let x = Startup {
             Factory = MockFactory()
             TodayFix = dt
@@ -162,3 +152,5 @@ module StartupTest =
         command "Connect" x.Connect NotResponding
 
         checkData (Array.length prms) dt
+       
+    // todo reload on overnight

@@ -55,13 +55,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Access\AccessToDb.cs" />
     <Compile Include="Borrower.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Chain.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="DbConn.cs" />
+    <Compile Include="Access\DbConn.cs" />
     <Compile Include="Country.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -83,7 +84,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Database.edmx</DependentUpon>
     </Compile>
-    <Compile Include="Eraser.cs" />
+    <Compile Include="StoredProcedures\Eraser.cs" />
     <Compile Include="Feed.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>

@@ -145,26 +145,26 @@ module Startup =
                     return close channel
                 }
 
-            and doReload t force channel = 
-                async {
-                    try
-                        use refresh = new Refresh()
+            and doReload t force channel = async {
+                try
+                    let refresh = new Refresh()
 
-                        let chainRequests = 
-                            refresh.ChainsInNeed c.Today
-                            |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
+                    let chainRequests = 
+                        refresh.ChainsInNeed c.Today
+                        |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
+                    
 
-                        let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
-                        match res with
-                        | Tweet.Failure f -> 
-                            Notifier.notify ("Startup", f, Severity.Warn)
-                            return! connected channel
-                        | Tweet.Answer _ -> return! initialized channel
-                    with e ->
-                        logger.ErrorEx "Primary reload failed" e
-                        Notifier.notify ("Startup", Error e, Severity.Warn)
+                    let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
+                    match res with
+                    | Tweet.Failure f -> 
+                        Notifier.notify ("Startup", f, Severity.Warn)
                         return! connected channel
-                }
+                    | Tweet.Answer _ -> return! initialized channel
+                with e ->
+                    logger.ErrorEx "Primary reload failed" e
+                    Notifier.notify ("Startup", Error e, Severity.Warn)
+                    return! connected channel
+            }
 
             // MAIN
             async {

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
+using YieldMap.Database.Access;
 
 namespace YieldMap.Database.StoredProcedures {
-    public class Refresh : IDisposable {
-        private readonly MainEntities _context = new MainEntities(DbConn.ConnectionString);
-        
+    public class Refresh : AccessToDb {
         private static bool NeedsRefresh(Chain chain, DateTime today) {
             return chain.Expanded.HasValue && chain.Expanded.Value < today || !chain.Expanded.HasValue;
         }
@@ -17,7 +16,7 @@ namespace YieldMap.Database.StoredProcedures {
         }
 
         public Chain[] ChainsInNeed(DateTime dt) {
-            return (from c in _context.Chains.ToList() 
+            return (from c in Context.Chains.ToList() 
                     where NeedsRefresh(c, dt)
                     select new Chain {
                         Name = c.Name, 
@@ -38,14 +37,14 @@ namespace YieldMap.Database.StoredProcedures {
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
         public Ric[] StaleBondRics(DateTime dt) {
-                return _context.InstrumentBonds.ToList()
+                return Context.InstrumentBonds.ToList()
                     .Where(b => b.Ric != null && NeedsRefresh(b, dt))
                     .Select(b => b.Ric.ToPocoSimple())
                     .ToArray();
         }
 
         public Ric[] AllBondRics() {
-            return _context.InstrumentBonds.ToList()
+            return Context.InstrumentBonds.ToList()
                     .Where(b => b.Ric != null)
                     .Select(b => b.Ric.ToPocoSimple())
                     .ToArray();
@@ -55,14 +54,10 @@ namespace YieldMap.Database.StoredProcedures {
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
         public Ric[] ObsoleteBondRics(DateTime dt) {
-            return _context.InstrumentBonds.ToList()
+            return Context.InstrumentBonds.ToList()
                     .Where(b => b.Ric != null && b.Maturity.HasValue && b.Maturity.Value < dt)
                     .Select(b => b.Ric.ToPocoSimple())
                     .ToArray();
-        }
-
-        public void Dispose() {
-            _context.Dispose();
         }
     }
 }

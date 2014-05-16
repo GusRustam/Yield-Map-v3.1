@@ -76,32 +76,35 @@ module Operations =
             return rics, fails
         }
 
-        let loadAndSaveMetadata (s:Drivers) rics = tweet {
-            use db = new Additions.InstrumentsBonds ()
+        let loadAndSaveMetadata (s:Drivers) rics =
+            tweet {
+                let loader = s.Loader
             
-            let loader = s.Loader
-            
-            let! bonds = loader.LoadMetadata<BondDescr> rics
-            let failures = db.SaveBonds bonds
-            failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
-             
-            let! frns = loader.LoadMetadata<FrnData> rics
-            db.SaveFrns frns
+                let! bonds = loader.LoadMetadata<BondDescr> rics
 
-            let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
-            db.SaveIssueRatings issueRatings
+                use db = new Additions.InstrumentsBonds ()
+
+                let failures = db.SaveBonds bonds
+                failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
+             
+                let! frns = loader.LoadMetadata<FrnData> rics
+                db.SaveFrns frns
+
+                let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
+                db.SaveIssueRatings issueRatings
                             
-            let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
-            db.SaveIssuerRatings issuerRatings
-        }
+                let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
+                db.SaveIssuerRatings issuerRatings
+            }
 
         let rec reload (s:Drivers) chains force  = 
             let loader, dt = s.Loader, s.TodayFix
 
-            logger.Trace "reload ()"
+            let refresh = new Refresh ()
+            let needsReload = refresh.NeedsReload s.TodayFix
+
             async {
-                use refresh = new Refresh ()
-                if force || force && refresh.NeedsReload s.TodayFix then
+                if force || force && needsReload then
                     try
                         BackupRestore.Backup ()
                         return! load s chains
@@ -110,6 +113,7 @@ module Operations =
                         return! loadFailed s (Error e)
                 else return Answer ()
             }
+
 
          and private load (s:Drivers) requests = 
             logger.Trace "load ()"
@@ -121,11 +125,10 @@ module Operations =
                     fails |> Array.iter (fun (ric, e, _) -> 
                         Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
+                    use db = new Additions.ChainRics ()
+
                     // saving rics and chains
-                    ricsByChain |> Array.iter (fun (chain, rics, req) -> 
-                        use db = new Additions.ChainRics ()
-                        db.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode)
-                    )
+                    ricsByChain |> Array.iter (fun (chain, rics, req) -> db.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode))
 
                     // extracting rics
                     let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set

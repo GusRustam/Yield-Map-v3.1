@@ -3,38 +3,39 @@ using System.Collections.Generic;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Linq;
+using YieldMap.Database.Access;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public class ChainRics : IDisposable {
+    public class ChainRics : AccessToDb, IDisposable {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.ChainRics");
 
         private readonly Dictionary<string, Ric> _rics = new Dictionary<string, Ric>();
         private readonly Dictionary<string, Feed> _feeds = new Dictionary<string, Feed>();
         private readonly Dictionary<string, Chain> _chains = new Dictionary<string, Chain>();
-        
-        public void Dispose() {
+
+        void IDisposable.Dispose() {
+            Logger.Info("ChainRics.Dispose()");
             _feeds.Clear();
             _chains.Clear();
         }
 
         public void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms) {
             if (prms == null) prms = string.Empty;
-            using (var ctx = new MainEntities(DbConn.ConnectionString)) {
-                try {
-                    var feed = EnsureFeed(ctx, feedName);
-                    var chain = EnsureChain(ctx, chainRic, feed, expanded, prms);
 
-                    var existingRics = ctx.RicToChains.Where(rtc => rtc.Chain_id == chain.id).Select(rtc => rtc.Ric.Name).ToArray();
-                    var newRics = new HashSet<string>(rics);
-                    newRics.RemoveWhere(existingRics.Contains);
+            try {
+                var feed = EnsureFeed(Context, feedName);
+                var chain = EnsureChain(Context, chainRic, feed, expanded, prms);
 
-                    AddRics(ctx, chain, feed, newRics);
-                    ctx.SaveChanges();
-                } catch (DbEntityValidationException e) {
-                    Logger.Report("Failed to save", e);
-                    throw;
-                }
+                var existingRics = Context.RicToChains.Where(rtc => rtc.Chain_id == chain.id).Select(rtc => rtc.Ric.Name).ToArray();
+                var newRics = new HashSet<string>(rics);
+                newRics.RemoveWhere(existingRics.Contains);
+
+                AddRics(Context, chain, feed, newRics);
+                Context.SaveChanges();
+            } catch (DbEntityValidationException e) {
+                Logger.Report("Failed to save", e);
+                throw;
             }
         }
 

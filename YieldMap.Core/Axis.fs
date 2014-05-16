@@ -184,9 +184,7 @@
             static member asList x = 
                 [(Bid, x.Bid); (Ask, x.Ask); (Last, x.Last); (Vwap, x.Vwap); (Close, x.Close); (Mid, x.Mid); (Custom, x.Custom)]
 
-            static member toList x = 
-                Quotes.asList x 
-                |> List.choose (function q, Some(d) -> Some(q, d) | _ -> None )
+            static member toList x = Quotes.asList x |> List.choose (function q, Some(d) -> Some(q, d) | _ -> None )
 
             static member toList (q1, q2) = 
                 (Quotes.asList q1, Quotes.asList q2) ||> List.zip

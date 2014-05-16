@@ -26,7 +26,8 @@ namespace YieldMap.Database {
                 (current, variable) => current.Replace(@"${" + variable.Key + "}", variable.Value));
         }
 
-        public MainEntities(string nameOrConnectionString) : base(nameOrConnectionString) {
+        public MainEntities(string nameOrConnectionString)
+            : base(nameOrConnectionString) {
             Debug.Print(nameOrConnectionString);
         }
     }

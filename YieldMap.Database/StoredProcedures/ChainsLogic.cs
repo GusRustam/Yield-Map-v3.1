@@ -136,18 +136,18 @@ namespace YieldMap.Database.StoredProcedures {
         public static Dictionary<Mission, string[]> Classify(DateTime dt, string[] chainRics) {
             var res = new Dictionary<Mission, string[]>();
 
-            using (var r = new Refresh()) {
-                var existing = new Set<String>(r.AllBondRics().Select(x => x.Name));
-                var obsolete = new Set<String>(r.ObsoleteBondRics(dt).Select(x => x.Name));
-                var toReload = new Set<String>(r.StaleBondRics(dt).Select(x => x.Name));
-                var incoming = new Set<String>(chainRics);
+            var r = new Refresh();
 
-                res[Mission.ToReload] = (incoming - existing + toReload).ToArray();
-                res[Mission.Obsolete] = obsolete.ToArray();
-                res[Mission.Keep] = (existing - obsolete - toReload).ToArray();
+            var existing = new Set<String>(r.AllBondRics().Select(x => x.Name));
+            var obsolete = new Set<String>(r.ObsoleteBondRics(dt).Select(x => x.Name));
+            var toReload = new Set<String>(r.StaleBondRics(dt).Select(x => x.Name));
+            var incoming = new Set<String>(chainRics);
 
-                return res;
-            }
+            res[Mission.ToReload] = (incoming - existing + toReload).ToArray();
+            res[Mission.Obsolete] = obsolete.ToArray();
+            res[Mission.Keep] = (existing - obsolete - toReload).ToArray();
+
+            return res;
         }
     }
 }

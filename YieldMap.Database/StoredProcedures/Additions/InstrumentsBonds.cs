@@ -2,21 +2,12 @@
 using System.Collections.Generic;
 using System.Data.Entity.Validation;
 using System.Linq;
+using YieldMap.Database.Access;
 using YieldMap.Requests.MetaTables;
-//public void DeleteBonds(HashSet<string> names) {
-//    using (var ctx = new MainEntities(DbConn.ConnectionString)) {
-//        var rics = from ric in ctx.Rics
-//                   where names.Contains(ric.Name)
-//                   select ric;
-
-//        // todo DELETING CAREFULLY!!!
-
-//    }
-//}
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public class InstrumentsBonds : IDisposable {
+    public class InstrumentsBonds : AccessToDb, IDisposable {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.InstrumentsBonds");
 
         public void SaveFrns(IEnumerable<MetaTables.FrnData> bonds) {
@@ -33,61 +24,59 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             var theBonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
 
             // A kind of performance optimization.
-            using (var ctx = new MainEntities(DbConn.ConnectionString)) {
-                try {
-                    ctx.Configuration.AutoDetectChangesEnabled = false;
-                    foreach (var bond in theBonds) {
-                        var ric = ctx.Rics.First(r => r.Name == bond.Ric);
-                        EnsureIsin(ctx, ric, bond.Isin);
-                    }
-                    ctx.SaveChanges();
-                } finally {
-                    ctx.Configuration.AutoDetectChangesEnabled = true;
-                }
-
+            try {
+                Context.Configuration.AutoDetectChangesEnabled = false;
                 foreach (var bond in theBonds) {
-                    InstrumentBond instrument = null;
-                    var failed = false;
-                    try {
-                        instrument = new InstrumentBond {
-                            BondStructure = bond.BondStructure,
-                            RateStructure = bond.RateStructure,
-                            IssueSize = bond.IssueSize,
-                            Name = bond.ShortName,
-                            IsCallable = bond.IsCallable,
-                            IsPutable = bond.IsPutable,
-                            Series = bond.Series,
-                            Issue = bond.Issue,
-                            Maturity = bond.Maturity,
-                            Coupon = bond.Coupon,
-                            NextCoupon = bond.NextCoupon
-                        };
-
-                        // Handling issuer, borrower and their countries
-                        var issuerCountry = EnsureCountry(ctx, bond.IssuerCountry);
-                        var borrowerCountry = EnsureCountry(ctx, bond.BorrowerCountry);
-
-                        instrument.Issuer = EnsureIssuer(ctx, bond.IssuerName, issuerCountry);
-                        instrument.Borrower = EnsureBorrower(ctx, bond.BorrowerName, borrowerCountry);
-                        instrument.Currency = EnsureCurrency(ctx, bond.Currency);
-                        instrument.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
-                        instrument.Seniority = EnsureSeniority(ctx, bond.Seniority);
-                        instrument.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
-                        instrument.Specimen = EnsureSpecimen(ctx, bond.Instrument);
-
-                        // CONSTRAINT: there already must be some ric with some feed!!!
-                        instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
-                        instrument.Isin = instrument.Ric.Isin;
-
-                    } catch (Exception e) {
-                        failed = true;
-                        res.Add(Tuple.Create(bond, e));
-                    }
-                    if (!failed) ctx.InstrumentBonds.Add(instrument);
+                    var ric = Context.Rics.First(r => r.Name == bond.Ric);
+                    EnsureIsin(Context, ric, bond.Isin);
                 }
+                Context.SaveChanges();
+            } finally {
+                Context.Configuration.AutoDetectChangesEnabled = true;
+            }
+
+            foreach (var bond in theBonds) {
+                InstrumentBond instrument = null;
+                var failed = false;
+                try {
+                    instrument = new InstrumentBond {
+                        BondStructure = bond.BondStructure,
+                        RateStructure = bond.RateStructure,
+                        IssueSize = bond.IssueSize,
+                        Name = bond.ShortName,
+                        IsCallable = bond.IsCallable,
+                        IsPutable = bond.IsPutable,
+                        Series = bond.Series,
+                        Issue = bond.Issue,
+                        Maturity = bond.Maturity,
+                        Coupon = bond.Coupon,
+                        NextCoupon = bond.NextCoupon
+                    };
+
+                    // Handling issuer, borrower and their countries
+                    var issuerCountry = EnsureCountry(Context, bond.IssuerCountry);
+                    var borrowerCountry = EnsureCountry(Context, bond.BorrowerCountry);
+
+                    instrument.Issuer = EnsureIssuer(Context, bond.IssuerName, issuerCountry);
+                    instrument.Borrower = EnsureBorrower(Context, bond.BorrowerName, borrowerCountry);
+                    instrument.Currency = EnsureCurrency(Context, bond.Currency);
+                    instrument.Ticker = EnsureTicker(Context, bond.Ticker, bond.ParentTicker);
+                    instrument.Seniority = EnsureSeniority(Context, bond.Seniority);
+                    instrument.SubIndustry = EnsureSubIndustry(Context, bond.Industry, bond.SubIndustry);
+                    instrument.Specimen = EnsureSpecimen(Context, bond.Instrument);
+
+                    // CONSTRAINT: there already must be some ric with some feed!!!
+                    instrument.Ric = Context.Rics.First(r => r.Name == bond.Ric);
+                    instrument.Isin = instrument.Ric.Isin;
+
+                } catch (Exception e) {
+                    failed = true;
+                    res.Add(Tuple.Create(bond, e));
+                }
+                if (!failed) Context.InstrumentBonds.Add(instrument);
 
                 try {
-                    ctx.SaveChanges();
+                    Context.SaveChanges();
                 } catch (DbEntityValidationException e) {
                     Logger.Report("Saving bonds", e);
                     throw;
@@ -120,7 +109,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
         private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
 
-        public void Dispose() {
+        void IDisposable.Dispose() {
             // don't drop that durka durk
             _countries.Clear();
             _borrowers.Clear();
