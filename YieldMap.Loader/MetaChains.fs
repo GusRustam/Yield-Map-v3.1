@@ -120,7 +120,7 @@ module MetaChains =
 
                 let convert (value:obj) conv = 
                     let converter = getConverter conv
-                    try converter.Convert <| value.ToString() with _ -> None
+                    try converter.Convert <| value.ToString() with _ -> Invalid
 
                 let rec import acc n = 
                     if n > maxRow then
@@ -140,18 +140,21 @@ module MetaChains =
                                     // it is considered to be null
                                     let value =  if num-minCol < Array.length row then row.[num-minCol] else null
                                     
-                                    logger.TraceF "Converting value %A to type %s" value p.PropertyType.Name
+                                    logger.TraceF "Converting value %A field %s to type %s" value p.Name p.PropertyType.Name
 
                                     let convertedValue = 
                                         match converter with
-                                        | Some conv -> try convert (value.ToString()) conv with _ -> None
-                                        | None -> Some value
+                                        | Some conv -> convert (value.ToString()) conv
+                                        | None -> Product value
 
                                     match convertedValue with
-                                    | Some v -> 
+                                    | Product v -> 
                                         p.SetValue(res, v) 
                                         importRow rest
-                                    | None -> false
+                                    | Empty ->
+                                        p.SetValue(res, null) 
+                                        importRow rest
+                                    | Invalid -> false
                                 | [] -> true
 
                             if importRow fieldsInfo then

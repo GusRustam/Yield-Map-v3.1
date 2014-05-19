@@ -4,36 +4,44 @@ module Converters =
     open System
     open System.Globalization
 
-    (* Converters *)
-    type Cnv = abstract member Convert : string -> obj option
+    type Refinement = Invalid | Empty | Product of obj
 
-    type BoolConverter() = interface Cnv with member self.Convert x = Some <| box (string(x.[0]).ToUpper() = "Y")
-    type NotNullConverter() = interface Cnv with member self.Convert x = if x = null then None else Some <| box x 
+    (* Converters *)
+    type Cnv = abstract member Convert : string -> Refinement
+
+    type RequiredBoolConverter() = interface Cnv with member self.Convert x = Product <| box (string(x.[0]).ToUpper() = "Y")
+    type RequiredConverter() = interface Cnv with member self.Convert x = if x = null then Invalid else Product <| box x 
                 
-    type NotNullOrEmptyConverter() = 
+    type RequeredStringConverter() = 
         interface Cnv with 
             member self.Convert x = 
-                if x = null then None
-                elif x.Trim() <> String.Empty then Some <| box x 
-                else None
+                if x = null then Invalid
+                elif x.Trim() <> String.Empty then Product <| box x 
+                else Invalid
 
-    type DateConverter() = 
+    type OptionalDateConverter() = 
         interface Cnv with
             member self.Convert x = 
                 let success, date = DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
-                Some <| if success then box date else null
+                if success then Product <| box date else Empty
 
-    type SomeFloatConverter() = 
+    type RequiredFloatConverter() = 
         interface Cnv with
             member self.Convert x =
                 let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
-                if success then Some <| box num else None
+                if success then Product <| box num else Invalid
 
-    type SomeInt64Converter() = 
+    type OptionalFloatConverter() = 
+        interface Cnv with
+            member self.Convert x =
+                let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
+                if success then Product <| box num else Empty
+
+    type OptionalInt64Converter() = 
         interface Cnv with
             member self.Convert x =
                 let success, num = Int64.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
-                if success then Some <| box num else None
+                if success then Product <| box num else Empty
 
 [<AutoOpen>]
 module Extensions =

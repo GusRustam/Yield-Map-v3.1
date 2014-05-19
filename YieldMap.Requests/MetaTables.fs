@@ -20,7 +20,7 @@ module MetaTables =
         [<Field(3, "EJV.C.Description")>] 
         member val Description = String.Empty with get, set
 
-        [<Field(4, "EJV.C.OriginalAmountIssued", typeof<SomeInt64Converter>)>] 
+        [<Field(4, "EJV.C.OriginalAmountIssued", typeof<OptionalInt64Converter>)>] 
         member val IssueSize : int64 Nullable = Nullable() with get, set
 
         [<Field(5, "EJV.C.IssuerName")>] 
@@ -29,13 +29,13 @@ module MetaTables =
         [<Field(6, "EJV.C.BorrowerName")>] 
         member val BorrowerName = String.Empty with get, set
 
-        [<Field(7, "EJV.X.ADF_Coupon", typeof<SomeFloatConverter>)>] 
+        [<Field(7, "EJV.X.ADF_Coupon", typeof<OptionalFloatConverter>)>] 
         member val Coupon : float Nullable = Nullable() with get, set
 
-        [<Field(8, "EJV.C.IssueDate", typeof<DateConverter>)>] 
+        [<Field(8, "EJV.C.IssueDate", typeof<OptionalDateConverter>)>] 
         member val Issue : DateTime Nullable = Nullable() with get, set
 
-        [<Field(9, "EJV.C.MaturityDate", typeof<DateConverter>)>] 
+        [<Field(9, "EJV.C.MaturityDate", typeof<OptionalDateConverter>)>] 
         member val Maturity : DateTime Nullable = Nullable() with get, set
 
         [<Field(10, "EJV.C.Currency")>] 
@@ -44,19 +44,19 @@ module MetaTables =
         [<Field(11, "EJV.C.ShortName")>] 
         member val ShortName = String.Empty with get, set
 
-        [<Field(12, "EJV.C.IsCallable", typeof<BoolConverter>)>] 
+        [<Field(12, "EJV.C.IsCallable", typeof<RequiredBoolConverter>)>] 
         member val IsCallable = false with get, set
 
-        [<Field(13, "EJV.C.IsPutable", typeof<BoolConverter>)>] 
+        [<Field(13, "EJV.C.IsPutable", typeof<RequiredBoolConverter>)>] 
         member val IsPutable = false with get, set
 
-        [<Field(14, "EJV.C.IsFloater", typeof<BoolConverter>)>] 
+        [<Field(14, "EJV.C.IsFloater", typeof<RequiredBoolConverter>)>] 
         member val IsFloater = false with get, set
 
-        [<Field(15, "EJV.C.IsConvertible", typeof<BoolConverter>)>] 
+        [<Field(15, "EJV.C.IsConvertible", typeof<RequiredBoolConverter>)>] 
         member val IsConvertible = false with get, set
 
-        [<Field(16, "EJV.C.IsStraight", typeof<BoolConverter>)>] 
+        [<Field(16, "EJV.C.IsStraight", typeof<RequiredBoolConverter>)>] 
         member val IsStraight = false with get, set
 
         [<Field(17, "EJV.C.Ticker")>] 
@@ -89,7 +89,7 @@ module MetaTables =
         [<Field(26, "EJV.C.InstrumentTypeDescription")>]
         member val Instrument = String.Empty with get, set
 
-        [<Field(27, "EJV.C.NextPayDate", typeof<DateConverter>)>]
+        [<Field(27, "EJV.C.NextPayDate", typeof<OptionalDateConverter>)>]
         member val NextCoupon : DateTime Nullable = Nullable() with get, set
         
         override self.ToString() = self.ShortName
@@ -99,10 +99,10 @@ module MetaTables =
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1, "", typeof<DateConverter>)>]
+        [<Field(1, "", typeof<OptionalDateConverter>)>]
         member val Date : DateTime Nullable = Nullable() with get, set
 
-        [<Field(2, "EJV.C.CouponRate", typeof<SomeFloatConverter>)>]
+        [<Field(2, "EJV.C.CouponRate", typeof<RequiredFloatConverter>)>]
         member val Rate = 0.0 with get, set
 
         override self.ToString() = sprintf "%s %A %f" self.Ric self.Date self.Rate
@@ -112,10 +112,10 @@ module MetaTables =
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1, "EJV.IR.Rating", typeof<NotNullConverter>)>]
+        [<Field(1, "EJV.IR.Rating", typeof<RequiredConverter>)>]
         member val Rating = String.Empty with get, set
 
-        [<Field(2, "EJV.IR.RatingDate", typeof<DateConverter>)>]
+        [<Field(2, "EJV.IR.RatingDate", typeof<OptionalDateConverter>)>]
         member val RatingDate : DateTime Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.IR.RatingSourceCode")>]
@@ -126,10 +126,10 @@ module MetaTables =
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1, "EJV.GR.Rating", typeof<NotNullConverter>)>]
+        [<Field(1, "EJV.GR.Rating", typeof<RequiredConverter>)>]
         member val Rating = String.Empty with get, set
 
-        [<Field(2, "EJV.GR.RatingDate", typeof<DateConverter>)>]
+        [<Field(2, "EJV.GR.RatingDate", typeof<OptionalDateConverter>)>]
         member val RatingDate : DateTime Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.GR.RatingSourceCode")>]
@@ -140,19 +140,19 @@ module MetaTables =
         [<Field(0)>]
         member val Ric = String.Empty with get, set
 
-        [<Field(1, "EJV.X.FRNFLOOR", typeof<SomeFloatConverter>)>]
+        [<Field(1, "EJV.X.FRNFLOOR", typeof<OptionalFloatConverter>)>]
         member val Floor : float Nullable = Nullable() with get, set
 
-        [<Field(2, "EJV.X.FRNCAP", typeof<SomeFloatConverter>)>]
+        [<Field(2, "EJV.X.FRNCAP", typeof<OptionalFloatConverter>)>]
         member val Cap : float Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.X.FREQ")>]
         member val Frequency = String.Empty with get, set
 
-        [<Field(4, "EJV.X.ADF_MARGIN", typeof<SomeFloatConverter>)>]
+        [<Field(4, "EJV.X.ADF_MARGIN", typeof<OptionalFloatConverter>)>]
         member val Margin : float Nullable = Nullable() with get, set
 
-        [<Field(5, "EJV.X.INDEX", typeof<NotNullOrEmptyConverter>)>]
+        [<Field(5, "EJV.X.INDEX", typeof<RequeredStringConverter>)>]
         member val IndexRic = String.Empty with get, set
 
         override x.ToString () = sprintf "<Cap %A / Floor %A / Freq %s / Margin %A / Index %s>" x.Cap x.Floor x.Frequency x.Margin x.IndexRic
@@ -165,5 +165,5 @@ module MetaTables =
         [<Field(1)>]
         member val Contributor = String.Empty with get, set
 
-        [<Field(2, "EJV.C.RICS", typeof<NotNullConverter>)>]
+        [<Field(2, "EJV.C.RICS", typeof<RequeredStringConverter>)>]
         member val ContributedRic = String.Empty with get, set

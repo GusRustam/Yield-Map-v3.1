@@ -266,7 +266,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Duplicate isin leave no RIC unlinked`` () =
+    let ``Duplicate Isin leave no RIC unlinked`` () =
         let dt = DateTime(2014,5,14) 
         
         globalThreshold := LoggingLevel.Debug
@@ -291,6 +291,64 @@ module StartupTest =
         ctx.SaveChanges () |> ignore
 
         ctx.Chains.Add <| Chain(Name = "0#RUEUROS=", Feed = idn, Params = "") |> ignore
+        ctx.SaveChanges () |> ignore
+
+        // Preparing
+        let x = Startup {
+            Factory = MockFactory()
+            TodayFix = dt
+            Loader = MockChainMeta dt
+            Calendar = MockCalendar dt
+        }
+
+        let command cmd func state = 
+            logger.InfoF "===> %s " cmd
+            let res = func () |> Async.RunSynchronously  
+            logger.InfoF " <=== %s : %s " cmd (res.ToString())
+            res |> should be (equal state)
+
+        command "Connect" x.Connect (State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+        command "Connect" x.Connect (State Initialized)
+
+        use ctx = DbConn.CreateContext()
+
+        let unattachedRics = query {
+            for n in ctx.Rics do
+            where (n.Isin = null)
+            count
+        }
+
+        unattachedRics |> should be (equal 0)
+
+
+    (* ========================= ============================= *)
+    [<Test>]
+    let ``Strange US30`` () =
+        let dt = DateTime(2014,5,14) 
+        
+        globalThreshold := LoggingLevel.Trace
+
+        // Cleaning up db
+        let eraser = new Eraser ()
+        eraser.DeleteChains ()
+        eraser.DeleteBonds ()
+        eraser.DeleteFeeds ()
+        eraser.DeleteIsins ()
+        eraser.DeleteRics ()
+
+        // Checking cleanup
+        use ctx = DbConn.CreateContext()
+        cnt ctx.Feeds |> should be (equal 0)
+        cnt ctx.Chains |> should be (equal 0)
+        cnt ctx.Rics |> should be (equal 0)
+        cnt ctx.Isins |> should be (equal 0)
+
+        use ctx = DbConn.CreateContext ()
+        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
+        ctx.SaveChanges () |> ignore
+
+        ctx.Chains.Add <| Chain(Name = "0#US30YSTRIP=PX", Feed = idn, Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
         // Preparing
