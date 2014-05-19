@@ -26,6 +26,8 @@ module StartupTest =
     open System.Data.Entity
     open System.Linq
 
+    open Clutch.Diagnostics.EntityFramework
+
     let logger = LogFactory.create "StartupTest"
     
     [<TestCase>]
@@ -85,20 +87,32 @@ module StartupTest =
 
         ctx.Chains |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal dt))
 
-    type StartupTestParams = {
-        chains : string array
-        date : DateTime
-    }
+    type StartupTestParams = 
+        {
+            chains : string array
+            date : DateTime
+        }
+        with override x.ToString () = sprintf "%s : %A" (x.date.ToString("dd/MM/yy")) x.chains
 
-    let paramsForStartup = seq {
-        yield { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) }
-        yield { chains = [|"0#RUEUROS="|]; date = DateTime(2014,5,14) }
+    let paramsForStartup = [
+        { chains = [|"0#RUAER=MM"|]; date = DateTime(2014,5,14) }
+        { chains = [|"0#RUEUROS="|]; date = DateTime(2014,5,14) }
 //        yield { chains = [|"0#RUCORP=MM"; "0#RUTSY=MM"; "0#RUAER=MM"|]; date = DateTime(2014,5,14) }
-    }
+    ]
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
     let ``Startup with one chain`` xxx =
+
+        let str (z : TimeSpan Nullable) = 
+            if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
+            else "N/A"
+             
+        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        
+        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
+
         let { date = dt; chains = prms } = xxx
         
         globalThreshold := LoggingLevel.Debug
@@ -108,6 +122,7 @@ module StartupTest =
         eraser.DeleteChains ()
         eraser.DeleteBonds ()
         eraser.DeleteFeeds ()
+        eraser.DeleteIsins ()
 
         use ctx = DbConn.CreateContext ()
         let idn = ctx.Feeds.Add <| Feed(Name = "Q")

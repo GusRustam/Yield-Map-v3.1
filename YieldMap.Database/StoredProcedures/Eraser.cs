@@ -26,11 +26,26 @@ namespace YieldMap.Database.StoredProcedures {
             try {
                 Context.Configuration.AutoDetectChangesEnabled = false;
                 var feeds = Context.Feeds.ToList().Where(feed => selector(feed)).ToList();
-                foreach (var feed in feeds)  Context.Feeds.Remove(feed);
+                foreach (var feed in feeds) Context.Feeds.Remove(feed);
                 Context.SaveChanges();
             } finally {
                 Context.Configuration.AutoDetectChangesEnabled = true;
             }
+        }
+
+        public void DeleteIsins(Func<Isin, bool> selector = null) {
+            if (selector == null)
+                selector = x => true;
+
+            try {
+                Context.Configuration.AutoDetectChangesEnabled = false;
+                var isins = Context.Isins.ToList().Where(isin => selector(isin)).ToList();
+                foreach (var isin in isins)
+                    Context.Isins.Remove(isin);
+                Context.SaveChanges();
+            } finally {
+                Context.Configuration.AutoDetectChangesEnabled = true;
+            }            
         }
 
         public void DeleteChains(Func<Chain, bool> selector = null) {

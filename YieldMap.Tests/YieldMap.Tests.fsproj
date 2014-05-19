@@ -32,6 +32,14 @@
     <DocumentationFile>bin\Release\Tests.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Clutch">
+      <HintPath>..\packages\Clutch.1.0.4607.26442\lib\net40\Clutch.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Clutch.Diagnostics.EntityFramework">
+      <HintPath>..\packages\Clutch.Diagnostics.EntityFramework.1.0.5186.27187\lib\net40\Clutch.Diagnostics.EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="EntityFramework">
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
       <Private>True</Private>

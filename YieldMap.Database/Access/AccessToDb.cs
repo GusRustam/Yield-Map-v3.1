@@ -9,6 +9,5 @@ namespace YieldMap.Database.Access {
         protected AccessToDb() {
             Context = DbConn.CreateContext();
         }
-
     }
 }

@@ -4,26 +4,26 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="94">
-        <EntityTypeShape EntityType="mainModel.Borrower" Width="1.5" PointX="9.4644174992406818" PointY="6.450489032292035" />
-        <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="5.1505020284794742" PointY="31.809653624803598" />
-        <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="0.080381199754952087" PointY="4.8561137043200961" />
-        <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="8.6823616366285652" PointY="5.4290194834717642" />
-        <EntityTypeShape EntityType="mainModel.Feed" Width="1.5" PointX="8.3157294300923716" PointY="13.251391640515715" />
-        <EntityTypeShape EntityType="mainModel.Industry" Width="1.5" PointX="0.69399113426636494" PointY="27.660178555017421" />
-        <EntityTypeShape EntityType="mainModel.InstrumentBond" Width="1.5" PointX="0.04204953277579021" PointY="8.8286893855913959" />
-        <EntityTypeShape EntityType="mainModel.InstrumentCustomBond" Width="1.5" PointX="10.271250401749857" PointY="10.823220436844611" />
-        <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="9.921841989234947" PointY="27.84373579725797" />
-        <EntityTypeShape EntityType="mainModel.Issuer" Width="1.5" PointX="11.348791451821473" PointY="9.8110290215402038" />
-        <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="8.1396612004095985" PointY="13.071068918831212" />
-        <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="7.733439694965929" PointY="24.185850109991549" />
-        <EntityTypeShape EntityType="mainModel.RatingToBond" Width="1.5" PointX="11.101614525123321" PointY="9.4268984093456059" />
-        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="6.7837711436598429" PointY="17.710671924851216" />
-        <EntityTypeShape EntityType="mainModel.RicToChain" Width="1.5" PointX="8.1844887697065651" PointY="8.1948382594598641" />
-        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="10.824300197336962" PointY="10.384339397020796" />
-        <EntityTypeShape EntityType="mainModel.Specimen" Width="1.5" PointX="1.7179085229141211" PointY="12.258432081089556" />
-        <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="7.6529324928545082" PointY="12.28958133435323" />
-        <EntityTypeShape EntityType="mainModel.Ticker" Width="4.625" PointX="3" PointY="85.5" />
+      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="60">
+        <EntityTypeShape EntityType="mainModel.Borrower" Width="1.5" PointX="14.125" PointY="9.25" />
+        <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="17.625" PointY="26.625" />
+        <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="15.125" PointY="6.75" />
+        <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="12.25" PointY="12.375" />
+        <EntityTypeShape EntityType="mainModel.Feed" Width="1.5" PointX="18.875" PointY="20.375" />
+        <EntityTypeShape EntityType="mainModel.Industry" Width="1.5" PointX="7.875" PointY="21.25" />
+        <EntityTypeShape EntityType="mainModel.InstrumentBond" Width="1.5" PointX="15.125" PointY="12.125" />
+        <EntityTypeShape EntityType="mainModel.InstrumentCustomBond" Width="1.5" PointX="4.125" PointY="8.75" />
+        <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="16.375" PointY="20.125" />
+        <EntityTypeShape EntityType="mainModel.Issuer" Width="1.5" PointX="16" PointY="9.375" />
+        <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="5.75" PointY="17.25" />
+        <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="5.75" PointY="15.25" />
+        <EntityTypeShape EntityType="mainModel.RatingToBond" Width="1.5" PointX="8.5" PointY="17.5" />
+        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="13.375" PointY="23.5" />
+        <EntityTypeShape EntityType="mainModel.RicToChain" Width="1.5" PointX="14.375" PointY="26.75" />
+        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="17" PointY="12.5" />
+        <EntityTypeShape EntityType="mainModel.Specimen" Width="1.5" PointX="17" PointY="16.875" />
+        <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="10.625" PointY="20.625" />
+        <EntityTypeShape EntityType="mainModel.Ticker" Width="1.75" PointX="11" PointY="15" />
         <AssociationConnector Association="mainModel.FK_Borrower_0_0" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_7_0" />
         <AssociationConnector Association="mainModel.FK_Chain_0_0" />

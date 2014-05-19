@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Entity.Validation;
 using System.Linq;
 using YieldMap.Database.Access;
@@ -26,11 +27,19 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             // A kind of performance optimization.
             try {
                 Context.Configuration.AutoDetectChangesEnabled = false;
+                var isins = new HashSet<string>();
                 foreach (var bond in theBonds) {
                     var ric = Context.Rics.First(r => r.Name == bond.Ric);
-                    EnsureIsin(Context, ric, bond.Isin);
+                    if (!isins.Contains(bond.Isin)) { // !!! duplicates kill the database!
+                        EnsureIsin(Context, ric, bond.Isin);
+                        isins.Add(bond.Isin);
+                    } else {
+                        Logger.Warn(string.Format("Duplicate ISIN {0}", bond.Isin));
+                    }
                 }
                 Context.SaveChanges();
+            } catch (DataException e) {
+                Logger.ErrorEx("Saving isings failed", e);
             } finally {
                 Context.Configuration.AutoDetectChangesEnabled = true;
             }
@@ -78,7 +87,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 try {
                     Context.SaveChanges();
                 } catch (DbEntityValidationException e) {
-                    Logger.Report("Saving bonds", e);
+                    Logger.Report("Saving bonds failed", e);
                     throw;
                 }
 
@@ -87,7 +96,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private static void EnsureIsin(MainEntities ctx, Ric ric, string name) {
-            if (String.IsNullOrWhiteSpace(name)) return;
+            if (String.IsNullOrWhiteSpace(name)) return ;
 
             var isin = ctx.Isins.FirstOrDefault(i => i.Name == name);
             if (isin != null) {
