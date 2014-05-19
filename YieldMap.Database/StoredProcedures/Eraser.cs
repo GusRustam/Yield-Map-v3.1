@@ -66,5 +66,25 @@ namespace YieldMap.Database.StoredProcedures {
                 Context.Configuration.AutoDetectChangesEnabled = true;
             }
         }
+
+        public void DeleteRics(Func<Ric, bool> selector = null) {
+            if (selector == null)
+                selector = x => true;
+            try {
+                Context.Configuration.AutoDetectChangesEnabled = false;
+                var rics = Context.Rics.ToList().Where(ric => selector(ric)).ToList();
+
+                foreach (var ric in rics) {
+                    var r = ric;
+                    var links = Context.RicToChains.ToList().Where(link => link.Ric_id == r.id).ToList();
+                    foreach (var link in links)
+                        Context.RicToChains.Remove(link);
+                    Context.Rics.Remove(ric);
+                }
+                Context.SaveChanges();
+            } finally {
+                Context.Configuration.AutoDetectChangesEnabled = true;
+            }
+        }
     }
 }

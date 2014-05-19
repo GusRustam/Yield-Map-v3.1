@@ -66,6 +66,8 @@ module Startup =
         let connect = EstablishConnection f :> Operation<_,_>
         let shutdown = Shutdown () :> Operation<_,_>
 
+        let mutable shut = false
+
         let a = MailboxProcessor.Start (fun inbox ->
             let rec started (channel : State AsyncReplyChannel option) = 
                 logger.Debug "[--> started ()]"
@@ -137,6 +139,7 @@ module Startup =
                 logger.Debug "[--> closed ()]"
                 s.Trigger Closed
                 channel.Reply Closed
+                shut <- true
 
             and doClose t channel = 
                 async {
@@ -145,26 +148,27 @@ module Startup =
                     return close channel
                 }
 
-            and doReload t force channel = async {
-                try
-                    let refresh = new Refresh()
+            and doReload t force channel = 
+                async {
+                    try
+                        let refresh = new Refresh()
 
-                    let chainRequests = 
-                        refresh.ChainsInNeed c.Today
-                        |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
+                        let chainRequests = 
+                            refresh.ChainsInNeed c.Today
+                            |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
                     
 
-                    let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
-                    match res with
-                    | Tweet.Failure f -> 
-                        Notifier.notify ("Startup", f, Severity.Warn)
+                        let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
+                        match res with
+                        | Tweet.Failure f -> 
+                            Notifier.notify ("Startup", f, Severity.Warn)
+                            return! connected channel
+                        | Tweet.Answer _ -> return! initialized channel
+                    with e ->
+                        logger.ErrorEx "Primary reload failed" e
+                        Notifier.notify ("Startup", Error e, Severity.Warn)
                         return! connected channel
-                    | Tweet.Answer _ -> return! initialized channel
-                with e ->
-                    logger.ErrorEx "Primary reload failed" e
-                    Notifier.notify ("Startup", Error e, Severity.Warn)
-                    return! connected channel
-            }
+                }
 
             // MAIN
             async {
@@ -184,17 +188,20 @@ module Startup =
         }        
 
         let addon = 1000 // additional agent's wait time
+        
+        // if server is down, set standard feedback timeout, otherwise use given timeout
+        let shutdownTimeout t = if shut then Some addon else t 
 
         member x.StateChanged = s.Publish
 
         member x.Connect (?t : int) = 
-            let timeout = Operation.estimate connect t
+            let timeout = shutdownTimeout t |> Operation.estimate connect
             tryCommand (fun channel -> Commands.Connect (timeout, channel)) (timeout + addon)
 
         member x.Reload (force, ?t : int) = 
-            let timeout = Operation.estimate reload t
+            let timeout = shutdownTimeout t |> Operation.estimate reload
             tryCommand (fun channel -> Commands.Reload (timeout, force, channel)) (timeout + addon)
         
         member x.Close (?t : int) = 
-            let timeout = Operation.estimate shutdown t
+            let timeout = shutdownTimeout t |> Operation.estimate shutdown
             tryCommand (fun channel -> Commands.Close (timeout, channel)) (timeout + addon)

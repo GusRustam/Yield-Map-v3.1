@@ -27,14 +27,15 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             // A kind of performance optimization.
             try {
                 Context.Configuration.AutoDetectChangesEnabled = false;
-                var isins = new HashSet<string>();
+                var isins = new Dictionary<string, Isin>();
                 foreach (var bond in theBonds) {
                     var ric = Context.Rics.First(r => r.Name == bond.Ric);
-                    if (!isins.Contains(bond.Isin)) { // !!! duplicates kill the database!
-                        EnsureIsin(Context, ric, bond.Isin);
-                        isins.Add(bond.Isin);
+                    if (!isins.ContainsKey(bond.Isin)) { 
+                        var isin = EnsureIsin(Context, ric, bond.Isin);
+                        isins.Add(bond.Isin, isin);
                     } else {
                         Logger.Warn(string.Format("Duplicate ISIN {0}", bond.Isin));
+                        if (ric.Isin == null) ric.Isin = isins[bond.Isin];
                     }
                 }
                 Context.SaveChanges();
@@ -95,8 +96,8 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             return res;
         }
 
-        private static void EnsureIsin(MainEntities ctx, Ric ric, string name) {
-            if (String.IsNullOrWhiteSpace(name)) return ;
+        private static Isin EnsureIsin(MainEntities ctx, Ric ric, string name) {
+            if (String.IsNullOrWhiteSpace(name)) return null;
 
             var isin = ctx.Isins.FirstOrDefault(i => i.Name == name);
             if (isin != null) {
@@ -106,6 +107,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 isin = ctx.Isins.Add(new Isin { Name = name, Feed = ric.Feed });
             }
             ric.Isin = isin;
+            return isin;
         }
 
         private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();

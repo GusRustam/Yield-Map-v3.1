@@ -68,8 +68,15 @@ module Operations =
             
             let results = results |> Array.zip names
 
-            let rics = results |> Array.choose (fun (ric, res) -> match res with (Answer a, req) -> Some (ric, a, req) | _ -> None)
-            let fails = results |> Array.choose (fun (ric, res) -> match res with (Failure e, req) -> Some (ric, e, req) | _ -> None)
+            let rics = results |> Array.map (fun (chainRic, res) -> 
+                match res with 
+                | (Answer rics, req) -> (chainRic, rics, req) 
+                | (_, req) -> (chainRic, [||], req))
+
+            let fails = results |> Array.choose (fun (chainRic, res) -> 
+                match res with 
+                | (Failure e, req) -> Some (chainRic, e, req) 
+                | _ -> None)
                     
             do fails |> Array.iter (fun (ric, e, _) -> logger.WarnF "Failed to load chain %s because of %s" ric (e.ToString()))
             
