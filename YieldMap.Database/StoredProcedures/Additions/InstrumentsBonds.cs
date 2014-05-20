@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Validation;
+using System.Globalization;
 using System.Linq;
 using YieldMap.Database.Access;
 using YieldMap.Requests.MetaTables;
@@ -20,9 +21,10 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         public void SaveIssuerRatings(IEnumerable<MetaTables.IssuerRatingData> bonds) {
         }
 
-        public IEnumerable<Tuple<MetaTables.BondDescr, Exception>> SaveBonds(IEnumerable<MetaTables.BondDescr> bonds) {
+        public IEnumerable<Tuple<MetaTables.BondDescr, Exception>> SaveBonds(IEnumerable<MetaTables.BondDescr> bonds, bool useEf = false) {
             var res = new List<Tuple<MetaTables.BondDescr, Exception>>();
             var theBonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
+
 
             // A kind of performance optimization.
             try {
@@ -45,6 +47,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 Context.Configuration.AutoDetectChangesEnabled = true;
             }
 
+            var bondsToBeAdded = new Dictionary<string, InstrumentBond>();
             foreach (var bond in theBonds) {
                 InstrumentBond instrument = null;
                 var failed = false;
@@ -83,16 +86,106 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     failed = true;
                     res.Add(Tuple.Create(bond, e));
                 }
-                if (!failed) Context.InstrumentBonds.Add(instrument);
-
+                if (!failed) {
+                    if (!useEf) bondsToBeAdded.Add(instrument.Ric.Name, instrument); // NO ADDING OV BOND ITSELF HERE
+                    else Context.InstrumentBonds.Add(instrument);
+                }
                 try {
                     Context.SaveChanges();
                 } catch (DbEntityValidationException e) {
                     Logger.Report("Saving bonds failed", e);
                     throw;
                 }
-
             }
+
+            //CREATE TABLE InstrumentBond (
+            // id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+            // id_Issuer       integer,
+            // id_Borrower     integer,
+            // id_Currency     integer,
+            // BondStructure   text,
+            // RateStructure   text,
+            // IssueSize       integer,
+            // Name            varchar(50) NOT NULL,
+            // IsCallable      bit,
+            // IsPutable       bit,
+            // Series          varchar(50),
+            // id_Isin         integer,
+            // id_Ric          integer,
+            // id_Ticker       integer,
+            // id_SubIndustry  integer,
+            // id_Specimen     integer,
+            // Issue           date,
+            // Maturity        date,
+            // id_Seniority    integer,
+            // NextCoupon      date,
+            // Coupon          float(50)
+
+            if (!useEf) {
+                var bondsList = bondsToBeAdded.Values.ToList();
+                var length = bondsList.Count();
+                var iteration = 0;
+                bool finished;
+
+                do {
+                    var minRange = iteration*500;
+                    finished = minRange + 500 > length;
+                    var maxRange = (finished ? length : minRange + 500) - 1;
+
+                    var subList = bondsList.GetRange(minRange, maxRange - minRange + 1);
+                    var sql =
+                            subList.Aggregate(
+                                "INSERT INTO InstrumentBond(" +
+                                "id_Issuer, id_Borrower, id_Currency, id_Isin, id_Ric, id_ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
+                                "BondStructure, RateStructure, IssueSize, Name, IsCallable, IsPutable, Series, Issue, Maturity, NextCoupon, Coupon" +
+                                ") VALUES",
+                                (current, i) => {
+                                    if (String.IsNullOrWhiteSpace(i.BondStructure))
+                                        return current;
+
+                                    var issueSize = i.IssueSize.HasValue ? i.IssueSize.Value : -1;
+                                    var name = i.Name.Replace("''", "\"").Replace("'", "\"");
+                                    var series = i.Series.Replace("''", "\"").Replace("'", "\"");
+                                    var isCallable = i.IsCallable.HasValue && i.IsCallable.Value ? 1 : 0;
+                                    var isPutable = i.IsPutable.HasValue && i.IsPutable.Value ? 1 : 0;
+
+                                    var issue = i.Issue.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Issue.Value.ToLocalTime()) : "NULL";
+                                    var maturity = i.Maturity.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Maturity.Value.ToLocalTime()) : "NULL";
+                                    var nextCoupon = i.NextCoupon.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.NextCoupon.Value.ToLocalTime()) : "NULL";
+                                    var coupon = i.Coupon.HasValue ? String.Format("'{0}'", i.Coupon.Value) : "0";
+
+                                    var idIssuer = i.Issuer != null ? i.Issuer.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idBorrower = i.Borrower != null ? i.Borrower.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idCurrency = i.Currency != null ? i.Currency.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idIsin = i.Isin != null ? i.Isin.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idTicker = i.Ticker != null ? i.Ticker.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idSubIndustry = i.SubIndustry != null ? i.SubIndustry.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idSpecimen = i.Specimen != null ? i.Specimen.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idSeniority = i.Seniority != null ? i.Seniority.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                                    var idRic = i.Ric != null ? i.Ric.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+
+                                    return current +
+                                        String.Format(
+                                            "(" +
+                                                "{0}, {1}, {2}, {3}, {19}, {4}, {5}, {6}, {7}, " +
+                                                "'{8}', '{9}', {10}, '{11}', {12}, {13}, '{14}', " +
+                                                "{15}, {16}, {17}, {18}" +
+                                            "), ",
+                                            idIssuer, idBorrower, idCurrency, idIsin, idTicker, idSubIndustry, idSpecimen,
+                                            idSeniority,
+                                            i.BondStructure, i.RateStructure, issueSize, name, isCallable, isPutable, series,
+                                            issue, maturity, nextCoupon, coupon, idRic);
+                                });
+
+                    sql = sql.Substring(0, sql.Length - 2);
+                    Logger.Info(String.Format("Sql is {0}", sql));
+
+                    Context.Database.ExecuteSqlCommand(sql);
+                    iteration = iteration + 1;
+                } while (!finished);
+                
+            }
+            Context.Dispose();
             return res;
         }
 

@@ -29,6 +29,9 @@ module Ops =
         }
         with override x.ToString () = sprintf "%s : %A" (x.date.ToString("dd/MM/yy")) x.chains
 
+    let str (z : TimeSpan Nullable) = 
+        if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
+        else "N/A"
 
 module StartupTest = 
     open Ops
@@ -115,12 +118,7 @@ module StartupTest =
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
-    let ``Startup with one chain`` xxx =
-
-        let str (z : TimeSpan Nullable) = 
-            if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
-            else "N/A"
-             
+    let ``Startup with one chain`` xxx =             
         let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
         let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
         
@@ -327,7 +325,7 @@ module StartupTest =
     let ``Strange US30`` () =
         let dt = DateTime(2014,5,14) 
         
-        globalThreshold := LoggingLevel.Trace
+        globalThreshold := LoggingLevel.Debug
 
         // Cleaning up db
         let eraser = new Eraser ()
@@ -379,11 +377,100 @@ module StartupTest =
 
         let unattachedRics = unattachedRics.ToArray()
 
-        // RIC US912834NP9=PX exists in chains 
+        // RIC US912834NP9=PX exists in chains, but doesn't exist in bond database for some reason. And that's ok
         unattachedRics |> Array.length |> should be (equal 1)
 
         let loser = unattachedRics.[0]
         loser.Isin |> should be (equal "US912834NP9=PX")
 
+    open YieldMap.Tools.Aux
 
-    // todo reload on overnight
+    (* ========================= ============================= *)
+    [<Test>]
+    let ``RUCORP overnight`` () =
+//        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
+//        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
+//        
+//        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
+
+
+        globalThreshold := LoggingLevel.Debug
+
+        // Cleaning up db
+        let eraser = new Eraser ()
+        eraser.DeleteChains ()
+        eraser.DeleteBonds ()
+        eraser.DeleteFeeds ()
+        eraser.DeleteIsins ()
+        eraser.DeleteRics ()
+
+        // Checking cleanup
+        use ctx = DbConn.CreateContext()
+        cnt ctx.Feeds |> should be (equal 0)
+        cnt ctx.Chains |> should be (equal 0)
+        cnt ctx.Rics |> should be (equal 0)
+        cnt ctx.Isins |> should be (equal 0)
+
+        use ctx = DbConn.CreateContext ()
+        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
+        ctx.SaveChanges () |> ignore
+
+        ctx.Chains.Add <| Chain(Name = "0#RUSOVB=MM", Feed = idn, Params = "") |> ignore
+        ctx.SaveChanges () |> ignore
+
+        // Preparing
+        let dt = DateTime(2014,5,14,23,0,0)
+        use c = new UpdateableCalendar (dt)
+        let clndr = c :> Calendar
+
+        let x = Startup {
+            Factory = MockFactory()
+            TodayFix = dt
+            Loader = MockChainMeta dt
+            Calendar = clndr
+        }
+
+        let command cmd func state = 
+            logger.InfoF "===> %s " cmd
+            let res = func () |> Async.RunSynchronously  
+            logger.InfoF " <=== %s : %s " cmd (res.ToString())
+            res |> should be (equal state)
+
+        command "Connect" x.Connect (State Connected)
+        logger.Info "Reloading"
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+        logger.Info "Reloaded"
+
+        // todo secure proprtions
+        let proportions = 
+            ChainsLogic.Classify(dt, [||]) 
+            |> Map.fromDict
+            |> Map.map (fun _ -> Array.length)
+
+        logger.InfoF "%A" proportions
+//
+//        let e = Event<_> ()
+//        let ep = e.Publish
+//
+//        logger.Info "Setting time"
+//        let dt = DateTime(2014,5,14,23,59,55)
+//        c.SetTime dt
+//
+//        // now wait 5 secs until tomorrow
+//        logger.Info "Adding handler time"
+//        clndr.NewDay |> Observable.add (fun dt ->
+//            logger.Info "Reloading2"
+//            command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+//            logger.Info "Reloaded2"
+//            let proportions = ChainsLogic.Classify(dt, [||]) |> Map.fromDict
+//            logger.InfoF "%A" proportions
+//            e.Trigger ()
+//        )
+//
+//        let newDay = 
+//            Async.AwaitEvent clndr.NewDay 
+//            |> Async.WithTimeout (Some 10) 
+//            |> Async.RunSynchronously
+//        newDay |> Option.isNone |> should be (equal false)
+//
+//        Async.AwaitEvent ep |> Async.RunSynchronously
