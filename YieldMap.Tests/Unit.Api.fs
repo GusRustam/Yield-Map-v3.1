@@ -15,7 +15,7 @@ module TestWebServer =
     open YieldMap.Loader.WebServer
     open YieldMap.Tools.Aux
 
-    let logger = LogFactory.create "TestWebServer"
+    let logger = LogFactory.create "UnitTests.TestWebServer"
 
     [<Test>]
     let ``Web server starts, responds and stops`` () = 
@@ -74,7 +74,7 @@ module TestApiQuotes =
     open YieldMap.Loader.WebServer
 
     open YieldMap.Tools.Logging
-    let logger = LogFactory.create "TestApiQuotes"
+    let logger = LogFactory.create "UnitTests.TestApiQuotes"
 
     [<Test>]
     let ``I recieve quotes I sent`` () = 

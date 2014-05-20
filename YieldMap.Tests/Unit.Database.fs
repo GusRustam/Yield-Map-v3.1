@@ -21,7 +21,7 @@ module DbTests =
     open YieldMap.Database
 
 
-    let logger = LogFactory.create "TestDb"
+    let logger = LogFactory.create "UnitTests.TestDb"
 
     [<Test>]
     let ``Reading and writing to Db works`` () = 

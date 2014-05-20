@@ -89,6 +89,7 @@
     <Compile Include="IntegrationTesting.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
+    <Compile Include="Unit.Calendar.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YieldMap.Core\YieldMap.Core.fsproj">

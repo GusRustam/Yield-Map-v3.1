@@ -9,7 +9,7 @@ module MockSubscriptionTest =
     open YieldMap.Tools.Logging
     open YieldMap.Loader.LiveQuotes
 
-    let logger = LogFactory.create "LiveQuotesTest"
+    let logger = LogFactory.create "UnitTests.LiveQuotesTest"
 
     [<Test>]
     let ``I receive quotes I'm subscribed`` () =

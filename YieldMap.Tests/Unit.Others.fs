@@ -51,17 +51,3 @@ module MetaChainsTests =
         let data = tasks |> Async.Parallel |> Async.RunSynchronously |> Array.collect id
         printfn "%d : %A" (Array.length data) data
         data |> Array.length |> should equal cnt
-
-    [<Test>]
-    let ``Tomorrow event happens in mock calendar`` () =
-        let always x = fun _ -> x
-        let count = ref 0
-
-        let clndr = Calendar.MockCalendar(DateTime(2010, 1, 31, 23, 59, 55)) :> Calendar
-            
-        clndr.NewDay |> Observable.map (always 1) |> Observable.scan (+) 0 |> Observable.add (fun x -> count := x)
-        clndr.NewDay |> Observable.add (fun dt -> logger.InfoF "Ping!!! %A" dt)
-
-        Async.AwaitEvent clndr.NewDay |> Async.Ignore |> Async.Start
-        Async.Sleep(10000) |> Async.RunSynchronously
-        !count |> should equal 1

@@ -40,11 +40,48 @@ module Calendar =
     type MockCalendar(dt : DateTime) as this = 
         let _begin = DateTime.Now
         let dateChanged = Event<DateTime>()
+
         do DateChangeTrigger.waitForTomorrow dateChanged this |> Async.Start
         
         interface Calendar with
             member x.NewDay = dateChanged.Publish
             member x.Now = dt + (DateTime.Now - _begin)
             member x.Today = (x :> Calendar).Now.Date
+
+    open System.Threading
+    open YieldMap.Tools.Aux
+
+    type UpdateableCalendar(dt : DateTime) as this = 
+        let dateChanged = Event<DateTime>()
+        let locker = obj ()
+
+        let mutable _begin = DateTime.Now
+        let mutable _pivot = dt
+        let mutable token = new CancellationTokenSource()
+
+        let startWaitTom () = 
+            DateChangeTrigger.waitForTomorrow dateChanged this 
+            |> Async.WithCancelToken token.Token 
+            |> Async.Start
+
+        do startWaitTom ()
+        
+        interface Calendar with
+            member x.NewDay = dateChanged.Publish
+            member x.Now = _pivot + (DateTime.Now - _begin)
+            member x.Today = (x :> Calendar).Now.Date
+
+        interface IDisposable with
+            member x.Dispose () = token.Dispose ()
+
+        member x.SetTime dt =
+            lock locker (fun () -> 
+                token.Cancel ()
+                token.Dispose ()
+                _pivot <- dt
+                _begin <- DateTime.Now
+                token <- new CancellationTokenSource ()
+                startWaitTom ()
+            )
 
     let defaultCalendar = RealCalendar() :> Calendar

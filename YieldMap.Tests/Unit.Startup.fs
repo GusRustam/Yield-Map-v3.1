@@ -54,7 +54,7 @@ module StartupTest =
 
     open Clutch.Diagnostics.EntityFramework
 
-    let logger = LogFactory.create "StartupTest"
+    let logger = LogFactory.create "UnitTests.StartupTest"
     
     (* ========================= ============================= *)
 
@@ -374,10 +374,16 @@ module StartupTest =
         let unattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
-            count
+            select n
         }
 
-        unattachedRics |> should be (equal 0)
+        let unattachedRics = unattachedRics.ToArray()
+
+        // RIC US912834NP9=PX exists in chains 
+        unattachedRics |> Array.length |> should be (equal 1)
+
+        let loser = unattachedRics.[0]
+        loser.Isin |> should be (equal "US912834NP9=PX")
 
 
     // todo reload on overnight
