@@ -196,12 +196,15 @@ module Startup =
 
         member x.Connect (?t : int) = 
             let timeout = shutdownTimeout t |> Operation.estimate connect
+            logger.TraceF "Connect timeout is %d" timeout
             tryCommand (fun channel -> Commands.Connect (timeout, channel)) (timeout + addon)
 
         member x.Reload (force, ?t : int) = 
             let timeout = shutdownTimeout t |> Operation.estimate reload
+            logger.TraceF "Reload timeout is %d" timeout
             tryCommand (fun channel -> Commands.Reload (timeout, force, channel)) (timeout + addon)
         
         member x.Close (?t : int) = 
             let timeout = shutdownTimeout t |> Operation.estimate shutdown
+            logger.TraceF "Close timeout is %d" timeout
             tryCommand (fun channel -> Commands.Close (timeout, channel)) (timeout + addon)

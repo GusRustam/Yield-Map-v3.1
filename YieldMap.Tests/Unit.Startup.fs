@@ -312,8 +312,7 @@ module StartupTest =
             res |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
-        command "Connect" x.Connect (State Initialized)
+        command "Reload" (fun () -> x.Reload true) (State Initialized)
 
         use ctx = DbConn.CreateContext()
 
@@ -499,7 +498,6 @@ module StartupTest =
             awaitForReload
                 |> Async.Catch
                 |> Async.RunSynchronously
-
 
         let ec = 
             match errorCount with
