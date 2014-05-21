@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity.Validation;
+using System.Linq;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database {
@@ -87,6 +88,22 @@ namespace YieldMap.Database {
                 foreach (var ve in eve.ValidationErrors)
                     logger.Error(String.Format("- Property: [{0}], Error: [{1}]", ve.PropertyName, ve.ErrorMessage));
             }
+        }
+
+        public static void ChunkedForEach<T>(this IEnumerable<T> items, Action<IEnumerable<T>> action, int chunkSize) {
+            var list = items.ToList();
+            var length = list.Count();
+            var iteration = 0;
+            bool finished;
+            
+            do {
+                var minRange = iteration * chunkSize;
+                finished = minRange + chunkSize > length;
+                var maxRange = (finished ? length : minRange + chunkSize) - 1;
+                action(list.GetRange(minRange, maxRange - minRange + 1));
+                iteration = iteration + 1;
+            } while (!finished);
+
         }
     }
 }

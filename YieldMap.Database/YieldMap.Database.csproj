@@ -84,6 +84,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Database.edmx</DependentUpon>
     </Compile>
+    <Compile Include="InstrumentFrn.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="StoredProcedures\Eraser.cs" />
     <Compile Include="Feed.cs">
       <DependentUpon>Database.tt</DependentUpon>

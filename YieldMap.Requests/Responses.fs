@@ -40,4 +40,15 @@ module Responses =
             return! body d
         }
 
+//        member x.Combine (a, b) = async {
+//            let! res = a
+//            match res with 
+//            | Answer a -> return! b 
+//            | Failure e -> return Some e
+//        }
+//
+//        member x.Delay (a) = async {
+//            return! a
+//        }
+
     let tweet = TweetBuilder ()

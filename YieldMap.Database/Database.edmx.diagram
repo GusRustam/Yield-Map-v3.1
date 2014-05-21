@@ -8,11 +8,11 @@
         <EntityTypeShape EntityType="mainModel.Borrower" Width="1.5" PointX="14.125" PointY="9.25" />
         <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="17.625" PointY="26.625" />
         <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="15.125" PointY="6.75" />
-        <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="12.25" PointY="12.375" />
+        <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="8.625" PointY="10.625" />
         <EntityTypeShape EntityType="mainModel.Feed" Width="1.5" PointX="18.875" PointY="20.375" />
         <EntityTypeShape EntityType="mainModel.Industry" Width="1.5" PointX="7.875" PointY="21.25" />
         <EntityTypeShape EntityType="mainModel.InstrumentBond" Width="1.5" PointX="15.125" PointY="12.125" />
-        <EntityTypeShape EntityType="mainModel.InstrumentCustomBond" Width="1.5" PointX="4.125" PointY="8.75" />
+        <EntityTypeShape EntityType="mainModel.InstrumentCustomBond" Width="2.125" PointX="4.625" PointY="9.875" />
         <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="16.375" PointY="20.125" />
         <EntityTypeShape EntityType="mainModel.Issuer" Width="1.5" PointX="16" PointY="9.375" />
         <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="5.75" PointY="17.25" />
@@ -47,6 +47,8 @@
         <AssociationConnector Association="mainModel.FK_RatingToBond_1_0" />
         <AssociationConnector Association="mainModel.FK_RicToChain_1_0" />
         <AssociationConnector Association="mainModel.FK_Ticker_0_0" />
+        <EntityTypeShape EntityType="mainModel.InstrumentFrn" Width="1.5" PointX="11.75" PointY="11.5" />
+        <AssociationConnector Association="mainModel.FK_InstrumentFrn_0_0" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

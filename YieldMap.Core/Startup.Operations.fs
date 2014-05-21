@@ -86,16 +86,18 @@ module Operations =
         let loadAndSaveMetadata (s:Drivers) rics =
             tweet {
                 let loader = s.Loader
+                
+                use db = new Additions.InstrumentsBonds ()
             
                 let! bonds = loader.LoadMetadata<BondDescr> rics
-
-                use db = new Additions.InstrumentsBonds ()
-
-                let failures = db.SaveBonds bonds
+                let failures = db.SaveBonds bonds |> List.ofSeq
+//                if List.length failures > 0 then logger.Error "Bond errors:"
                 failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
              
                 let! frns = loader.LoadMetadata<FrnData> rics
-                db.SaveFrns frns
+                let failures = db.SaveFrns frns
+//                if List.length failures > 0 then logger.Error "Frn errors:"
+                failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
 
                 let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
                 db.SaveIssueRatings issueRatings

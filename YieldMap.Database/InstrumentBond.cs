@@ -17,6 +17,7 @@ namespace YieldMap.Database
         public InstrumentBond()
         {
             this.RatingToBonds = new HashSet<RatingToBond>();
+            this.InstrumentFrns = new HashSet<InstrumentFrn>();
         }
     
         public long id { get; set; }
@@ -76,5 +77,6 @@ namespace YieldMap.Database
         public virtual SubIndustry SubIndustry { get; set; }
         public virtual Specimen Specimen { get; set; }
         public virtual ICollection<RatingToBond> RatingToBonds { get; set; }
+        public virtual ICollection<InstrumentFrn> InstrumentFrns { get; set; }
     }
 }

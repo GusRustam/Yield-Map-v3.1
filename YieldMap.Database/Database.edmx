@@ -14,6 +14,7 @@
           <EntitySet Name="Industry" EntityType="mainModel.Store.Industry" store:Type="Tables" />
           <EntitySet Name="InstrumentBond" EntityType="mainModel.Store.InstrumentBond" store:Type="Tables" />
           <EntitySet Name="InstrumentCustomBond" EntityType="mainModel.Store.InstrumentCustomBond" store:Type="Tables" />
+          <EntitySet Name="InstrumentFrn" EntityType="mainModel.Store.InstrumentFrn" store:Type="Tables" />
           <EntitySet Name="Isin" EntityType="mainModel.Store.Isin" store:Type="Tables" />
           <EntitySet Name="Issuer" EntityType="mainModel.Store.Issuer" store:Type="Tables" />
           <EntitySet Name="Rating" EntityType="mainModel.Store.Rating" store:Type="Tables" />
@@ -72,6 +73,10 @@
           <AssociationSet Name="FK_InstrumentCustomBond_0_0" Association="mainModel.Store.FK_InstrumentCustomBond_0_0">
             <End Role="Currency" EntitySet="Currency" />
             <End Role="InstrumentCustomBond" EntitySet="InstrumentCustomBond" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InstrumentFrn_0_0" Association="mainModel.Store.FK_InstrumentFrn_0_0">
+            <End Role="InstrumentBond" EntitySet="InstrumentBond" />
+            <End Role="InstrumentFrn" EntitySet="InstrumentFrn" />
           </AssociationSet>
           <AssociationSet Name="FK_Isin_0_0" Association="mainModel.Store.FK_Isin_0_0">
             <End Role="Feed" EntitySet="Feed" />
@@ -202,6 +207,18 @@
           <Property Name="id_Currency" Type="integer" />
           <Property Name="Issue" Type="datetime" />
           <Property Name="Maturity" Type="datetime" />
+        </EntityType>
+        <EntityType Name="InstrumentFrn">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Cap" Type="real" />
+          <Property Name="Floor" Type="real" />
+          <Property Name="Frequency" Type="varchar" MaxLength="50" />
+          <Property Name="Margin" Type="real" />
+          <Property Name="Index" Type="varchar" MaxLength="50" />
+          <Property Name="id_Bond" Type="integer" />
         </EntityType>
         <EntityType Name="Isin">
           <Key>
@@ -431,6 +448,18 @@
             </Principal>
             <Dependent Role="InstrumentCustomBond">
               <PropertyRef Name="id_Currency" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InstrumentFrn_0_0">
+          <End Role="InstrumentBond" Type="mainModel.Store.InstrumentBond" Multiplicity="0..1" />
+          <End Role="InstrumentFrn" Type="mainModel.Store.InstrumentFrn" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="InstrumentBond">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentFrn">
+              <PropertyRef Name="id_Bond" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -682,6 +711,11 @@
             <End Role="Ticker" EntitySet="Tickers" />
             <End Role="Ticker1" EntitySet="Tickers" />
           </AssociationSet>
+          <EntitySet Name="InstrumentFrns" EntityType="mainModel.InstrumentFrn" />
+          <AssociationSet Name="FK_InstrumentFrn_0_0" Association="mainModel.FK_InstrumentFrn_0_0">
+            <End Role="InstrumentBond" EntitySet="InstrumentBonds" />
+            <End Role="InstrumentFrn" EntitySet="InstrumentFrns" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="Borrower">
           <Key>
@@ -777,6 +811,7 @@
           <NavigationProperty Name="SubIndustry" Relationship="mainModel.FK_InstrumentBond_5_0" FromRole="InstrumentBond" ToRole="SubIndustry" />
           <NavigationProperty Name="Specimen" Relationship="mainModel.FK_InstrumentBond_6_0" FromRole="InstrumentBond" ToRole="Specimen" />
           <NavigationProperty Name="RatingToBonds" Relationship="mainModel.FK_RatingToBond_0_0" FromRole="InstrumentBond" ToRole="RatingToBond" />
+          <NavigationProperty Name="InstrumentFrns" Relationship="mainModel.FK_InstrumentFrn_0_0" FromRole="InstrumentBond" ToRole="InstrumentFrn" />
         </EntityType>
         <EntityType Name="InstrumentCustomBond">
           <Key>
@@ -1177,6 +1212,31 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="InstrumentFrn">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Double" Name="Cap" />
+          <Property Type="Double" Name="Floor" />
+          <Property Type="String" Name="Frequency" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Double" Name="Margin" />
+          <Property Type="String" Name="Index" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_Bond" />
+          <NavigationProperty Name="InstrumentBond" Relationship="mainModel.FK_InstrumentFrn_0_0" FromRole="InstrumentFrn" ToRole="InstrumentBond" />
+        </EntityType>
+        <Association Name="FK_InstrumentFrn_0_0">
+          <End Type="mainModel.InstrumentBond" Role="InstrumentBond" Multiplicity="0..1" />
+          <End Type="mainModel.InstrumentFrn" Role="InstrumentFrn" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="InstrumentBond">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="InstrumentFrn">
+              <PropertyRef Name="id_Bond" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1370,6 +1430,19 @@
               <MappingFragment StoreEntitySet="Ticker">
                 <ScalarProperty Name="id_ParentTicker" ColumnName="id_ParentTicker" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="InstrumentFrns">
+            <EntityTypeMapping TypeName="mainModel.InstrumentFrn">
+              <MappingFragment StoreEntitySet="InstrumentFrn">
+                <ScalarProperty Name="id_Bond" ColumnName="id_Bond" />
+                <ScalarProperty Name="Index" ColumnName="Index" />
+                <ScalarProperty Name="Margin" ColumnName="Margin" />
+                <ScalarProperty Name="Frequency" ColumnName="Frequency" />
+                <ScalarProperty Name="Floor" ColumnName="Floor" />
+                <ScalarProperty Name="Cap" ColumnName="Cap" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>

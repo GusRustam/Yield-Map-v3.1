@@ -12,7 +12,45 @@ namespace YieldMap.Database.StoredProcedures.Additions {
     public class InstrumentsBonds : AccessToDb, IDisposable {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.InstrumentsBonds");
 
-        public void SaveFrns(IEnumerable<MetaTables.FrnData> bonds) {
+        public IEnumerable<Tuple<MetaTables.FrnData, Exception>> SaveFrns(IEnumerable<MetaTables.FrnData> bonds, bool useEf = false) {
+            var res = new List<Tuple<MetaTables.FrnData, Exception>>();
+            var bondsToBeAdded = new Dictionary<string, InstrumentFrn>();
+            foreach (var bond in bonds) {
+                InstrumentFrn instrument = null;
+                var failed = false;
+                try {
+                    instrument = new InstrumentFrn {
+                        Cap = bond.Cap,
+                        Floor = bond.Floor,
+                        Frequency = bond.Frequency,
+                        Index = bond.IndexRic, // TODO SPECIAL TABLE INSTRUMENT_INDEX WITH INFO ON FIELDS AND SO ON!!!
+                        Margin = bond.Margin,
+                        InstrumentBond = Context.InstrumentBonds.First(b => b.Ric != null && b.Ric.Name == bond.Ric)
+                    };
+                } catch (Exception e) {
+                    failed = true;
+                    res.Add(Tuple.Create(bond, e));
+                }
+                if (!failed) {
+                    if (!useEf) bondsToBeAdded.Add(bond.Ric, instrument);
+                    else Context.InstrumentFrns.Add(instrument);
+                }
+                try {
+                    Context.SaveChanges();
+                } catch (DbEntityValidationException e) {
+                    Logger.Report("Saving bonds failed", e);
+                    throw;
+                }
+            }
+
+            if (!useEf && bondsToBeAdded.Any())
+                bondsToBeAdded.Values.ChunkedForEach(x => {
+                    var sql = BulkInsertInstrumentFrn(x);
+                    //sql = sql.Substring(0, sql.Length - 2);
+                    Logger.Info(String.Format("Sql is {0}", sql));
+                    Context.Database.ExecuteSqlCommand(sql);
+                }, 500);
+            return res;
         }
 
         public void SaveIssueRatings(IEnumerable<MetaTables.IssueRatingData> bonds) {
@@ -24,7 +62,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         public IEnumerable<Tuple<MetaTables.BondDescr, Exception>> SaveBonds(IEnumerable<MetaTables.BondDescr> bonds, bool useEf = false) {
             var res = new List<Tuple<MetaTables.BondDescr, Exception>>();
             var theBonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
-
 
             // A kind of performance optimization.
             try {
@@ -87,7 +124,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     res.Add(Tuple.Create(bond, e));
                 }
                 if (!failed) {
-                    if (!useEf) bondsToBeAdded.Add(instrument.Ric.Name, instrument); // NO ADDING OV BOND ITSELF HERE
+                    if (!useEf) bondsToBeAdded.Add(instrument.Ric.Name, instrument);
                     else Context.InstrumentBonds.Add(instrument);
                 }
                 try {
@@ -98,94 +135,77 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 }
             }
 
-            //CREATE TABLE InstrumentBond (
-            // id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-            // id_Issuer       integer,
-            // id_Borrower     integer,
-            // id_Currency     integer,
-            // BondStructure   text,
-            // RateStructure   text,
-            // IssueSize       integer,
-            // Name            varchar(50) NOT NULL,
-            // IsCallable      bit,
-            // IsPutable       bit,
-            // Series          varchar(50),
-            // id_Isin         integer,
-            // id_Ric          integer,
-            // id_Ticker       integer,
-            // id_SubIndustry  integer,
-            // id_Specimen     integer,
-            // Issue           date,
-            // Maturity        date,
-            // id_Seniority    integer,
-            // NextCoupon      date,
-            // Coupon          float(50)
-
-            if (!useEf) {
-                var bondsList = bondsToBeAdded.Values.ToList();
-                var length = bondsList.Count();
-                var iteration = 0;
-                bool finished;
-
-                do {
-                    var minRange = iteration*500;
-                    finished = minRange + 500 > length;
-                    var maxRange = (finished ? length : minRange + 500) - 1;
-
-                    var subList = bondsList.GetRange(minRange, maxRange - minRange + 1);
-                    var sql =
-                            subList.Aggregate(
-                                "INSERT INTO InstrumentBond(" +
-                                "id_Issuer, id_Borrower, id_Currency, id_Isin, id_Ric, id_ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
-                                "BondStructure, RateStructure, IssueSize, Name, IsCallable, IsPutable, Series, Issue, Maturity, NextCoupon, Coupon" +
-                                ") VALUES",
-                                (current, i) => {
-                                    if (String.IsNullOrWhiteSpace(i.BondStructure))
-                                        return current;
-
-                                    var issueSize = i.IssueSize.HasValue ? i.IssueSize.Value : -1;
-                                    var name = i.Name.Replace("''", "\"").Replace("'", "\"");
-                                    var series = i.Series.Replace("''", "\"").Replace("'", "\"");
-                                    var isCallable = i.IsCallable.HasValue && i.IsCallable.Value ? 1 : 0;
-                                    var isPutable = i.IsPutable.HasValue && i.IsPutable.Value ? 1 : 0;
-
-                                    var issue = i.Issue.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Issue.Value.ToLocalTime()) : "NULL";
-                                    var maturity = i.Maturity.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Maturity.Value.ToLocalTime()) : "NULL";
-                                    var nextCoupon = i.NextCoupon.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.NextCoupon.Value.ToLocalTime()) : "NULL";
-                                    var coupon = i.Coupon.HasValue ? String.Format("'{0}'", i.Coupon.Value) : "0";
-
-                                    var idIssuer = i.Issuer != null ? i.Issuer.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idBorrower = i.Borrower != null ? i.Borrower.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idCurrency = i.Currency != null ? i.Currency.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idIsin = i.Isin != null ? i.Isin.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idTicker = i.Ticker != null ? i.Ticker.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idSubIndustry = i.SubIndustry != null ? i.SubIndustry.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idSpecimen = i.Specimen != null ? i.Specimen.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idSeniority = i.Seniority != null ? i.Seniority.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                                    var idRic = i.Ric != null ? i.Ric.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-
-                                    return current +
-                                        String.Format(
-                                            "(" +
-                                                "{0}, {1}, {2}, {3}, {19}, {4}, {5}, {6}, {7}, " +
-                                                "'{8}', '{9}', {10}, '{11}', {12}, {13}, '{14}', " +
-                                                "{15}, {16}, {17}, {18}" +
-                                            "), ",
-                                            idIssuer, idBorrower, idCurrency, idIsin, idTicker, idSubIndustry, idSpecimen,
-                                            idSeniority,
-                                            i.BondStructure, i.RateStructure, issueSize, name, isCallable, isPutable, series,
-                                            issue, maturity, nextCoupon, coupon, idRic);
-                                });
-
+            if (!useEf && bondsToBeAdded.Any())
+                bondsToBeAdded.Values.ChunkedForEach(x => {
+                    var sql = BulkInsertInstrumentBond(x);
                     sql = sql.Substring(0, sql.Length - 2);
                     Logger.Info(String.Format("Sql is {0}", sql));
-
                     Context.Database.ExecuteSqlCommand(sql);
-                    iteration = iteration + 1;
-                } while (!finished);
-                
-            }
+                }, 500);
+
             return res;
+        }
+
+        private static string BulkInsertInstrumentBond(IEnumerable<InstrumentBond> bonds) {
+            return bonds.Aggregate(
+                "INSERT INTO InstrumentBond(" +
+                "id_Issuer, id_Borrower, id_Currency, id_Isin, id_Ric, id_ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
+                "BondStructure, RateStructure, IssueSize, Name, IsCallable, IsPutable, Series, Issue, Maturity, NextCoupon, Coupon" +
+                ") VALUES",
+                (current, i) => {
+                    if (String.IsNullOrWhiteSpace(i.BondStructure))
+                        return current;
+
+                    var issueSize = i.IssueSize.HasValue ? i.IssueSize.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var name = i.Name.Replace("''", "\"").Replace("'", "\"");
+                    var series = i.Series.Replace("''", "\"").Replace("'", "\"");
+                    var isCallable = i.IsCallable.HasValue && i.IsCallable.Value ? 1 : 0;
+                    var isPutable = i.IsPutable.HasValue && i.IsPutable.Value ? 1 : 0;
+
+                    var issue = i.Issue.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Issue.Value.ToLocalTime()) : "NULL";
+                    var maturity = i.Maturity.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Maturity.Value.ToLocalTime()) : "NULL";
+                    var nextCoupon = i.NextCoupon.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.NextCoupon.Value.ToLocalTime()) : "NULL";
+                    var coupon = i.Coupon.HasValue ? String.Format("'{0}'", i.Coupon.Value) : "0";
+
+                    var idIssuer = i.Issuer != null ? i.Issuer.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idBorrower = i.Borrower != null ? i.Borrower.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idCurrency = i.Currency != null ? i.Currency.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idIsin = i.Isin != null ? i.Isin.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idTicker = i.Ticker != null ? i.Ticker.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idSubIndustry = i.SubIndustry != null ? i.SubIndustry.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idSpecimen = i.Specimen != null ? i.Specimen.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idSeniority = i.Seniority != null ? i.Seniority.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idRic = i.Ric != null ? i.Ric.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+
+                    return current +
+                           String.Format(
+                               "(" +
+                               "{0}, {1}, {2}, {3}, {19}, {4}, {5}, {6}, {7}, " +
+                               "'{8}', '{9}', {10}, '{11}', {12}, {13}, '{14}', " +
+                               "{15}, {16}, {17}, {18}" +
+                               "), ",
+                               idIssuer, idBorrower, idCurrency, idIsin, idTicker, idSubIndustry, idSpecimen,
+                               idSeniority,
+                               i.BondStructure, i.RateStructure, issueSize, name, isCallable, isPutable, series,
+                               issue, maturity, nextCoupon, coupon, idRic);
+                });
+        }
+
+        private static string BulkInsertInstrumentFrn(IEnumerable<InstrumentFrn> bonds) {
+            var res =  bonds.Aggregate(
+                "INSERT INTO InstrumentFrn(" +
+                    "id_Bond, Cap, Floor, Frequency, Margin, Index" +
+                ") SELECT ",
+                (current, i) => {
+                    var idBond = i.InstrumentBond != null ? i.InstrumentBond.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+
+                    var cap = i.Cap.HasValue ? "'" + i.Cap.Value.ToString(CultureInfo.InvariantCulture) + "'": "NULL";
+                    var floor = i.Floor.HasValue ? "'" + i.Floor.Value.ToString(CultureInfo.InvariantCulture) + "'" : "NULL";
+                    var margin = i.Margin.HasValue ? "'" + i.Margin.Value.ToString(CultureInfo.InvariantCulture) + "'" : "NULL";
+                    
+                    return current + String.Format("{0}, {1}, {2}, '{3}', {4}, '{5}' UNION SELECT ", idBond, cap, floor, i.Frequency, margin, i.Index);
+                });
+            return res.Substring(0, res.Length - " UNION SELECT ".Length);
         }
 
         private static Isin EnsureIsin(MainEntities ctx, Ric ric, string name) {
