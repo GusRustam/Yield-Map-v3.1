@@ -194,7 +194,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private static string BulkInsertInstrumentFrn(IEnumerable<InstrumentFrn> bonds) {
             var res =  bonds.Aggregate(
                 "INSERT INTO InstrumentFrn(" +
-                    "id_Bond, Cap, Floor, Frequency, Margin, Index" +
+                    "id_Bond, Cap, Floor, Frequency, Margin, \"Index\"" +
                 ") SELECT ",
                 (current, i) => {
                     var idBond = i.InstrumentBond != null ? i.InstrumentBond.id.ToString(CultureInfo.InvariantCulture) : "NULL";
