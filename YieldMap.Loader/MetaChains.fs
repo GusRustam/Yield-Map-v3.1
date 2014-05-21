@@ -296,18 +296,16 @@ module MetaChains =
     /// Connection : timeout;
     /// Today / LoadChain / LoadData : mock;
     /// Adfin calcs : null
-    type MockChainMeta(_today) =
-        new () = MockChainMeta(defaultCalendar.Now)
-
+    type MockChainMeta(c:Calendar) =
         interface ChainMetaLoader with
             member x.LoadChain request =
                 async {
-                    try return! MockOperations.chain request (Some _today) 
+                    try return! MockOperations.chain request (Some c.Today) 
                     with e -> return Failure (Error e)
                 }
             member x.LoadMetadata (rics, ?timeout) = 
                 async {
-                    try return! MockOperations.meta rics (Some _today) timeout
+                    try return! MockOperations.meta rics (Some c.Today) timeout
                     with e -> return Failure (Error e)
                 }
 

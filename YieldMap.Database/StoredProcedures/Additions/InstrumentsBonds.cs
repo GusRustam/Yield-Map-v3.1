@@ -185,7 +185,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 } while (!finished);
                 
             }
-            Context.Dispose();
             return res;
         }
 

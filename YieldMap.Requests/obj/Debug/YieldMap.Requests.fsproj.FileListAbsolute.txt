@@ -6,3 +6,4 @@ C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\Yi
 C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\obj\Debug\YieldMap.Requests.dll
 C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\obj\Debug\YieldMap.Requests.pdb
 C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\bin\Debug\Interop.EikonDesktopDataAPI.dll
+C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\obj\Debug\YieldMap.Requests.fsprojResolveAssemblyReference.cache

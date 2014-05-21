@@ -83,5 +83,3 @@ module Calendar =
                 token <- new CancellationTokenSource ()
                 startWaitTom ()
             )
-
-    let defaultCalendar = RealCalendar() :> Calendar

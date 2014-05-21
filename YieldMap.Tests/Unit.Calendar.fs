@@ -66,7 +66,6 @@ module ``Calendar`` =
         Async.Sleep(5000) |> Async.RunSynchronously // sleep 5 seconds
         !count |> should equal 0 // no tomorrow should happen in 5 seconds
 
-        !count |> should equal 0 // check still no tomorrow happened
         let start = DateTime(2010, 1, 31, 23, 59, 59) // one second until tom
         d.SetTime start  // reset datetime
         Async.Sleep(3000) |> Async.RunSynchronously // sleep 3 seconds

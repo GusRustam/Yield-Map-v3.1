@@ -25,8 +25,9 @@ module MetaChainsTests =
     let ``Requested chain is recieved`` () = 
         try
             let dt = DateTime(2014,3,4)
+            let c = MockCalendar dt
             let f = MockFactory() :> EikonFactory
-            let l = MockChainMeta(dt) :> ChainMetaLoader
+            let l = MockChainMeta c :> ChainMetaLoader
 
             globalThreshold := LoggingLevel.Debug
 
@@ -44,7 +45,8 @@ module MetaChainsTests =
 
         let dt = DateTime(2014,3,4)
         let f = MockFactory() :> EikonFactory
-        let l = MockChainMeta(dt) :> ChainMetaLoader
+        let c = MockCalendar dt
+        let l = MockChainMeta c :> ChainMetaLoader
         let chain name timeout = Dex2Tests.getChain l { Feed = "IDN"; Mode = "UWC:YES LAY:VER"; Ric = name; Timeout = timeout }
                 
         let tasks = [ chain "0#RUTSY=MM" t1; chain "0#RUSOVB=MM" t2 ]

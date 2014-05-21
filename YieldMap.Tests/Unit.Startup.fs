@@ -156,11 +156,13 @@ module StartupTest =
         ctx.SaveChanges () |> ignore
 
         // Preparing
+        let c = MockCalendar dt
+
         let x = Startup {
             Factory = MockFactory()
             TodayFix = dt
-            Loader = MockChainMeta dt
-            Calendar = MockCalendar dt
+            Loader = MockChainMeta c
+            Calendar = c
         }
 
         x.StateChanged |> Observable.add (fun state -> logger.InfoF " => %A" state)
@@ -220,12 +222,14 @@ module StartupTest =
         ctx.Chains.Add <| Chain(Name = prms, Feed = idn, Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
+        let c  = MockCalendar dt
+
         // Preparing
         let x = Startup {
             Factory = MockFactory()
             TodayFix = dt
-            Loader = MockChainMeta dt
-            Calendar = MockCalendar dt
+            Loader = MockChainMeta c
+            Calendar = c
         }
 
         x.StateChanged |> Observable.add (fun state -> logger.InfoF " => %A" state)
@@ -291,12 +295,14 @@ module StartupTest =
         ctx.Chains.Add <| Chain(Name = "0#RUEUROS=", Feed = idn, Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
+        let c  = MockCalendar dt
+
         // Preparing
         let x = Startup {
             Factory = MockFactory()
             TodayFix = dt
-            Loader = MockChainMeta dt
-            Calendar = MockCalendar dt
+            Loader = MockChainMeta c
+            Calendar = c
         }
 
         let command cmd func state = 
@@ -349,12 +355,14 @@ module StartupTest =
         ctx.Chains.Add <| Chain(Name = "0#US30YSTRIP=PX", Feed = idn, Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
+        let c  = MockCalendar dt
+
         // Preparing
         let x = Startup {
             Factory = MockFactory()
             TodayFix = dt
-            Loader = MockChainMeta dt
-            Calendar = MockCalendar dt
+            Loader = MockChainMeta c
+            Calendar = c
         }
 
         let command cmd func state = 
@@ -388,11 +396,6 @@ module StartupTest =
     (* ========================= ============================= *)
     [<Test>]
     let ``RUCORP overnight`` () =
-//        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
-//        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
-//        
-//        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
-
 
         globalThreshold := LoggingLevel.Debug
 
@@ -415,7 +418,7 @@ module StartupTest =
         let idn = ctx.Feeds.Add <| Feed(Name = "Q")
         ctx.SaveChanges () |> ignore
 
-        ctx.Chains.Add <| Chain(Name = "0#RUSOVB=MM", Feed = idn, Params = "") |> ignore
+        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", Feed = idn, Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
         // Preparing
@@ -423,11 +426,12 @@ module StartupTest =
         use c = new UpdateableCalendar (dt)
         let clndr = c :> Calendar
 
+        // Preparing
         let x = Startup {
             Factory = MockFactory()
             TodayFix = dt
-            Loader = MockChainMeta dt
-            Calendar = clndr
+            Loader = MockChainMeta c
+            Calendar = c
         }
 
         let command cmd func state = 
@@ -448,29 +452,58 @@ module StartupTest =
             |> Map.map (fun _ -> Array.length)
 
         logger.InfoF "%A" proportions
-//
-//        let e = Event<_> ()
-//        let ep = e.Publish
-//
-//        logger.Info "Setting time"
-//        let dt = DateTime(2014,5,14,23,59,55)
-//        c.SetTime dt
-//
-//        // now wait 5 secs until tomorrow
-//        logger.Info "Adding handler time"
-//        clndr.NewDay |> Observable.add (fun dt ->
-//            logger.Info "Reloading2"
-//            command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
-//            logger.Info "Reloaded2"
-//            let proportions = ChainsLogic.Classify(dt, [||]) |> Map.fromDict
-//            logger.InfoF "%A" proportions
-//            e.Trigger ()
-//        )
-//
-//        let newDay = 
-//            Async.AwaitEvent clndr.NewDay 
-//            |> Async.WithTimeout (Some 10) 
-//            |> Async.RunSynchronously
-//        newDay |> Option.isNone |> should be (equal false)
-//
-//        Async.AwaitEvent ep |> Async.RunSynchronously
+
+        proportions.[Mission.Obsolete] |> should be (equal 8)
+        proportions.[Mission.ToReload] |> should be (equal 49)
+        proportions.[Mission.Keep] |> should be (equal 870)
+
+        let e = Event<_> ()
+        let ep = e.Publish
+
+        logger.Info "Setting time"
+        let dt = DateTime(2014,5,14,23,59,55)
+        c.SetTime dt
+
+        logger.InfoF "And time is %s" (clndr.Now.ToString("dd-MMM-yy"))
+
+        // now wait 5 secs until tomorrow
+        logger.Info "Adding handler time"
+        clndr.NewDay |> Observable.add (fun dt ->
+
+            logger.InfoF "OnNewDay: Reloading second time at %s" (dt.ToString("dd-MMM-yy hh:mm:ss"))
+            // todo secure proprtions
+            let proportions = 
+                ChainsLogic.Classify(dt, [||]) 
+                |> Map.fromDict
+                |> Map.map (fun _ -> Array.length)
+                
+            logger.InfoF "%A" proportions
+
+            proportions.[Mission.Obsolete] |> should be (equal 8)
+            proportions.[Mission.ToReload] |> should be (equal 49)
+            proportions.[Mission.Keep] |> should be (equal 870)
+
+            command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+            logger.Info "Reloaded2"
+
+            e.Trigger ()
+        )
+
+        let awaitForReload = async {
+            logger.Info "ReloadAwaiter: Waiting for reload to start and finish"
+            do! Async.AwaitEvent ep |> Async.WithTimeoutEx (Some (5*60*1000))
+            logger.Info "ReloadAwaiter: Yesss!"
+        }
+
+        let errorCount = 
+            awaitForReload
+                |> Async.Catch
+                |> Async.RunSynchronously
+
+
+        let ec = 
+            match errorCount with
+            | Choice1Of2 _ -> 0 
+            | Choice2Of2 e -> logger.ErrorEx "Error" e; 1
+
+        ec |> should be (equal 0)
