@@ -12,25 +12,19 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RatingAgency
+    public partial class RatingAgencyCode
     {
-        public RatingAgency()
-        {
-            this.RatingAgencyCodes = new HashSet<RatingAgencyCode>();
-        }
-    
         public long id { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
-    	public RatingAgency ToPocoSimple() {
-    	    return new RatingAgency {
+        public long id_RatingAgency { get; set; }
+    	public RatingAgencyCode ToPocoSimple() {
+    	    return new RatingAgencyCode {
     			id = this.id,
     			Name = this.Name,
-    			Description = this.Description,
+    			id_RatingAgency = this.id_RatingAgency,
     		};
     	}
     		
-        public virtual Rating Rating { get; set; }
-        public virtual ICollection<RatingAgencyCode> RatingAgencyCodes { get; set; }
+        public virtual RatingAgency RatingAgency { get; set; }
     }
 }

@@ -19,7 +19,7 @@ namespace YieldMap.Database
         public Nullable<double> Floor { get; set; }
         public string Frequency { get; set; }
         public Nullable<double> Margin { get; set; }
-        public string Index { get; set; }
+        public Nullable<long> id_Index { get; set; }
         public Nullable<long> id_Bond { get; set; }
     	public InstrumentFrn ToPocoSimple() {
     	    return new InstrumentFrn {
@@ -28,11 +28,12 @@ namespace YieldMap.Database
     			Floor = this.Floor,
     			Frequency = this.Frequency,
     			Margin = this.Margin,
-    			Index = this.Index,
+    			id_Index = this.id_Index,
     			id_Bond = this.id_Bond,
     		};
     	}
     		
+        public virtual Index Index { get; set; }
         public virtual InstrumentBond InstrumentBond { get; set; }
     }
 }
