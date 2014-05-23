@@ -23,11 +23,13 @@ namespace YieldMap.Database
         public long id { get; set; }
         public string Name { get; set; }
         public string DefaultField { get; set; }
+        public bool Default { get; set; }
     	public FieldGroup ToPocoSimple() {
     	    return new FieldGroup {
     			id = this.id,
     			Name = this.Name,
     			DefaultField = this.DefaultField,
+    			Default = this.Default,
     		};
     	}
     		

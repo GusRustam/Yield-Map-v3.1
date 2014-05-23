@@ -32,7 +32,7 @@ namespace YieldMap.Database
     		};
     	}
     		
-        public virtual ICollection<InstrumentFrn> InstrumentFrns { get; set; }
         public virtual FieldGroup FieldGroup { get; set; }
+        public virtual ICollection<InstrumentFrn> InstrumentFrns { get; set; }
     }
 }

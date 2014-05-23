@@ -35,7 +35,6 @@ namespace YieldMap.Database
         public DbSet<InstrumentCustomBond> InstrumentCustomBonds { get; set; }
         public DbSet<Isin> Isins { get; set; }
         public DbSet<Issuer> Issuers { get; set; }
-        public DbSet<Rating> Ratings { get; set; }
         public DbSet<RatingAgency> RatingAgencies { get; set; }
         public DbSet<RatingToBond> RatingToBonds { get; set; }
         public DbSet<Ric> Rics { get; set; }
@@ -49,6 +48,7 @@ namespace YieldMap.Database
         public DbSet<Index> Indices { get; set; }
         public DbSet<RatingAgencyCode> RatingAgencyCodes { get; set; }
         public DbSet<RatingsView> RatingsViews { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
         public DbSet<InstrumentFrn> InstrumentFrns { get; set; }
     }
 }

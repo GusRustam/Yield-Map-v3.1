@@ -17,6 +17,7 @@ namespace YieldMap.Database
         public RatingAgency()
         {
             this.RatingAgencyCodes = new HashSet<RatingAgencyCode>();
+            this.Ratings = new HashSet<Rating>();
         }
     
         public long id { get; set; }
@@ -30,7 +31,7 @@ namespace YieldMap.Database
     		};
     	}
     		
-        public virtual Rating Rating { get; set; }
         public virtual ICollection<RatingAgencyCode> RatingAgencyCodes { get; set; }
+        public virtual ICollection<Rating> Ratings { get; set; }
     }
 }

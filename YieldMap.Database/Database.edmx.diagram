@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="59">
+      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="72">
         <EntityTypeShape EntityType="mainModel.Borrower" Width="1.5" PointX="14.125" PointY="9.25" />
         <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="17.625" PointY="26.625" />
         <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="15.125" PointY="6.75" />
@@ -15,13 +15,12 @@
         <EntityTypeShape EntityType="mainModel.InstrumentCustomBond" Width="2.125" PointX="3.125" PointY="11.375" />
         <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="16.375" PointY="20.125" />
         <EntityTypeShape EntityType="mainModel.Issuer" Width="1.5" PointX="16" PointY="9.375" />
-        <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="5.875" PointY="18" />
         <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="5.75" PointY="15.25" />
         <EntityTypeShape EntityType="mainModel.RatingToBond" Width="1.5" PointX="8.5" PointY="17.5" />
         <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="13.375" PointY="23.5" />
         <EntityTypeShape EntityType="mainModel.RicToChain" Width="1.5" PointX="14.375" PointY="26.75" />
-        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="17" PointY="12.5" />
-        <EntityTypeShape EntityType="mainModel.Specimen" Width="1.5" PointX="17" PointY="16.875" />
+        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="18.5" PointY="12.5" />
+        <EntityTypeShape EntityType="mainModel.Specimen" Width="1.5" PointX="18.5" PointY="16.125" />
         <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="10.625" PointY="20.625" />
         <EntityTypeShape EntityType="mainModel.Ticker" Width="1.75" PointX="11" PointY="15" />
         <AssociationConnector Association="mainModel.FK_Borrower_0_0" />
@@ -38,18 +37,15 @@
         <AssociationConnector Association="mainModel.FK_InstrumentBond_1_0" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_2_0" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_3_0" ManuallyRouted="true" >
-          <ConnectorPoint PointX="14.543236006629705" PointY="23.5" />
-          <ConnectorPoint PointX="14.543236006629705" PointY="21.939352507587365" />
-          <ConnectorPoint PointX="15.598476094375741" PointY="21.939352507587365" />
-          <ConnectorPoint PointX="15.598476094375741" PointY="19.297425130208335" />
+          <ConnectorPoint PointX="14.125" PointY="23.5" />
+          <ConnectorPoint PointX="14.125" PointY="16.897803180016503" />
+          <ConnectorPoint PointX="15.125" PointY="16.897803180016503" />
         </AssociationConnector>
         <AssociationConnector Association="mainModel.FK_InstrumentBond_4_0" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_5_0" />
         <AssociationConnector Association="mainModel.FK_InstrumentBond_6_0" />
         <AssociationConnector Association="mainModel.FK_RatingToBond_0_0" />
         <AssociationConnector Association="mainModel.FK_Ric_1_0" />
-        <AssociationConnector Association="mainModel.FK_Rating_0_0" />
-        <AssociationConnector Association="mainModel.FK_RatingToBond_1_0" />
         <AssociationConnector Association="mainModel.FK_RicToChain_1_0" />
         <AssociationConnector Association="mainModel.FK_Ticker_0_0" />
         <EntityTypeShape EntityType="mainModel.Field" Width="1.5" PointX="3.875" PointY="7.375" />
@@ -58,11 +54,14 @@
         <EntityTypeShape EntityType="mainModel.RatingAgencyCode" Width="1.5" PointX="2.5" PointY="17" />
         <EntityTypeShape EntityType="mainModel.RatingsView" Width="1.5" PointX="24.375" PointY="16.125" />
         <AssociationConnector Association="mainModel.FK_RatingAgencyCode_0_0" />
-        <EntityTypeShape EntityType="mainModel.InstrumentFrn" Width="1.5" PointX="10.25" PointY="4.5" />
-        <AssociationConnector Association="mainModel.FK_InstrumentFrn_0_0" />
-        <AssociationConnector Association="mainModel.FK_InstrumentFrn_1_0" />
         <AssociationConnector Association="mainModel.FK_Field_0_0" />
         <AssociationConnector Association="mainModel.FK_Index_0_0" />
+        <EntityTypeShape EntityType="mainModel.Rating" Width="1.5" PointX="5.5" PointY="18.875" />
+        <AssociationConnector Association="mainModel.FK_Rating_0_0" />
+        <AssociationConnector Association="mainModel.FK_RatingToBond_1_0" />
+        <EntityTypeShape EntityType="mainModel.InstrumentFrn" Width="1.5" PointX="11.875" PointY="3.375" />
+        <AssociationConnector Association="mainModel.FK_InstrumentFrn_0_0" />
+        <AssociationConnector Association="mainModel.FK_InstrumentFrn_1_0" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

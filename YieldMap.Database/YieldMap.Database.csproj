@@ -102,6 +102,7 @@
     <Compile Include="RatingsView.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="StoredProcedures\Additions\InstrumentFrns.cs" />
     <Compile Include="StoredProcedures\Eraser.cs" />
     <Compile Include="Feed.cs">
       <DependentUpon>Database.tt</DependentUpon>
@@ -148,6 +149,7 @@
     <Compile Include="StoredProcedures\Additions\ChainRics.cs" />
     <Compile Include="StoredProcedures\BackupRestore.cs" />
     <Compile Include="StoredProcedures\ChainsLogic.cs" />
+    <Compile Include="StoredProcedures\Fields.cs" />
     <Compile Include="StoredProcedures\Mission.cs" />
     <Compile Include="StoredProcedures\Refresh.cs" />
     <Compile Include="SubIndustry.cs">
@@ -184,9 +186,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="main.db.sql" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YieldMap.Requests\YieldMap.Requests.fsproj">

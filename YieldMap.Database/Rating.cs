@@ -22,7 +22,7 @@ namespace YieldMap.Database
         public long id { get; set; }
         public long Value { get; set; }
         public string Name { get; set; }
-        public Nullable<long> id_RatingAgency { get; set; }
+        public long id_RatingAgency { get; set; }
     	public Rating ToPocoSimple() {
     	    return new Rating {
     			id = this.id,

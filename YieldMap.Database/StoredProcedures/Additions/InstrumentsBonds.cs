@@ -12,46 +12,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
     public class InstrumentsBonds : AccessToDb, IDisposable {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.InstrumentsBonds");
 
-        public IEnumerable<Tuple<MetaTables.FrnData, Exception>> SaveFrns(IEnumerable<MetaTables.FrnData> bonds, bool useEf = false) {
-            var res = new List<Tuple<MetaTables.FrnData, Exception>>();
-            var bondsToBeAdded = new Dictionary<string, InstrumentFrn>();
-            foreach (var bond in bonds) {
-                InstrumentFrn instrument = null;
-                var failed = false;
-                try {
-                    instrument = new InstrumentFrn {
-                        Cap = bond.Cap,
-                        Floor = bond.Floor,
-                        Frequency = bond.Frequency,
-                        Index = bond.IndexRic, // TODO SPECIAL TABLE INSTRUMENT_INDEX WITH INFO ON FIELDS AND SO ON!!!
-                        Margin = bond.Margin,
-                        InstrumentBond = Context.InstrumentBonds.First(b => b.Ric != null && b.Ric.Name == bond.Ric)
-                    };
-                } catch (Exception e) {
-                    failed = true;
-                    res.Add(Tuple.Create(bond, e));
-                }
-                if (!failed) {
-                    if (!useEf) bondsToBeAdded.Add(bond.Ric, instrument);
-                    else Context.InstrumentFrns.Add(instrument);
-                }
-                try {
-                    Context.SaveChanges();
-                } catch (DbEntityValidationException e) {
-                    Logger.Report("Saving bonds failed", e);
-                    throw;
-                }
-            }
-
-            if (!useEf && bondsToBeAdded.Any())
-                bondsToBeAdded.Values.ChunkedForEach(x => {
-                    var sql = BulkInsertInstrumentFrn(x);
-                    //sql = sql.Substring(0, sql.Length - 2);
-                    Logger.Info(String.Format("Sql is {0}", sql));
-                    Context.Database.ExecuteSqlCommand(sql);
-                }, 500);
-            return res;
-        }
 
         public void SaveIssueRatings(IEnumerable<MetaTables.IssueRatingData> bonds) {
         }
@@ -189,23 +149,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                                i.BondStructure, i.RateStructure, issueSize, name, isCallable, isPutable, series,
                                issue, maturity, nextCoupon, coupon, idRic);
                 });
-        }
-
-        private static string BulkInsertInstrumentFrn(IEnumerable<InstrumentFrn> bonds) {
-            var res =  bonds.Aggregate(
-                "INSERT INTO InstrumentFrn(" +
-                    "id_Bond, Cap, Floor, Frequency, Margin, \"Index\"" +
-                ") SELECT ",
-                (current, i) => {
-                    var idBond = i.InstrumentBond != null ? i.InstrumentBond.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-
-                    var cap = i.Cap.HasValue ? "'" + i.Cap.Value.ToString(CultureInfo.InvariantCulture) + "'": "NULL";
-                    var floor = i.Floor.HasValue ? "'" + i.Floor.Value.ToString(CultureInfo.InvariantCulture) + "'" : "NULL";
-                    var margin = i.Margin.HasValue ? "'" + i.Margin.Value.ToString(CultureInfo.InvariantCulture) + "'" : "NULL";
-                    
-                    return current + String.Format("{0}, {1}, {2}, '{3}', {4}, '{5}' UNION SELECT ", idBond, cap, floor, i.Frequency, margin, i.Index);
-                });
-            return res.Substring(0, res.Length - " UNION SELECT ".Length);
         }
 
         private static Isin EnsureIsin(MainEntities ctx, Ric ric, string name) {

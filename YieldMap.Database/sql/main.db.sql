@@ -11,8 +11,8 @@ CREATE TABLE Borrower (
   /* Foreign keys */
   FOREIGN KEY (id_Country)
     REFERENCES Country(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefBorrower_Index01
@@ -32,8 +32,8 @@ CREATE TABLE Chain (
   /* Foreign keys */
   FOREIGN KEY (id_Feed)
     REFERENCES Feed(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefChain_Index01
@@ -71,6 +71,86 @@ CREATE TABLE Feed (
   Name         varchar(50),
   Description  varchar(50)
 );
+
+CREATE TABLE Field (
+  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Bid            varchar(50),
+  Ask            varchar(50),
+  Last           varchar(50),
+  Close          varchar(50),
+  VWAP           varchar(50),
+  Volume         varchar(50),
+  id_FieldGroup  integer NOT NULL,
+  "Default"      boolean NOT NULL DEFAULT false,
+  /* Foreign keys */
+  FOREIGN KEY (id_FieldGroup)
+    REFERENCES FieldGroup(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TRIGGER Field_AfterUpdate
+  AFTER UPDATE
+  ON Field
+  WHEN NEW."Default" = 1 AND EXISTS (SELECT SUM("Default") AS x FROM Field GROUP BY "Default" HAVING x >= 1)
+BEGIN
+  --INSERT INTO _log(msg) VALUES("Setting new default");
+  UPDATE Field SET "Default" = 0 WHERE Field.id <> NEW.id;
+END;
+
+CREATE TRIGGER Field_BeforeUpdate
+  BEFORE UPDATE
+  ON Field
+  WHEN NEW."Default" = 0 AND NOT EXISTS (SELECT SUM("Default") AS x FROM Field GROUP BY "Default" HAVING x > 1)
+BEGIN
+  --INSERT INTO _log(msg) VALUES("Trying to remove last default");
+  SELECT RAISE(IGNORE);
+END;
+
+CREATE TABLE FieldGroup (
+  id            integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name          varchar(50) NOT NULL UNIQUE,
+  DefaultField  varchar(50),
+  "Default"     boolean NOT NULL DEFAULT false
+);
+
+CREATE TRIGGER FieldGroup_AfterUpdate
+  AFTER UPDATE
+  ON FieldGroup
+  WHEN NEW."Default" = 1 AND EXISTS (SELECT SUM("Default") AS x FROM FieldGroup GROUP BY "Default" HAVING x >= 1)
+BEGIN
+  --INSERT INTO _log(msg) VALUES("Setting new default");
+  UPDATE FieldGroup SET "Default" = 0 WHERE FieldGroup.id <> NEW.id;
+END;
+
+CREATE TRIGGER FieldGroup_BeforeUpdate
+  BEFORE UPDATE
+  ON FieldGroup
+  WHEN NEW."Default" = 0 AND NOT EXISTS (SELECT SUM("Default") AS x FROM FieldGroup GROUP BY "Default" HAVING x > 1)
+BEGIN
+  --INSERT INTO _log(msg) VALUES("Trying to remove last default");
+  SELECT RAISE(IGNORE);
+END;
+
+CREATE TABLE "Index" (
+  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name           varchar(50) NOT NULL UNIQUE,
+  Ric            varchar(50),
+  id_FieldGroup  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_FieldGroup)
+    REFERENCES FieldGroup(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE INDEX Index_Index01
+  ON "Index"
+  (id);
+
+CREATE INDEX Index_Index02
+  ON "Index"
+  (Name);
 
 CREATE TABLE Industry (
   id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -110,40 +190,40 @@ CREATE TABLE InstrumentBond (
   /* Foreign keys */
   FOREIGN KEY (id_Seniority)
     REFERENCES Seniority(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Issuer)
     REFERENCES Issuer(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Isin)
     REFERENCES Isin(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Ric)
     REFERENCES Ric(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Ticker)
     REFERENCES Ticker(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_SubIndustry)
     REFERENCES SubIndustry(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Specimen)
     REFERENCES Specimen(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Borrower)
     REFERENCES Borrower(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Currency)
     REFERENCES Currency(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX InstrumentBond_Index01
@@ -161,13 +241,32 @@ CREATE TABLE InstrumentCustomBond (
   /* Foreign keys */
   FOREIGN KEY (id_Currency)
     REFERENCES Currency(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX InstrumentCustomBond_Index01
   ON InstrumentCustomBond
   (id);
+
+CREATE TABLE InstrumentFrn (
+  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Cap        float(50),
+  Floor      float(50),
+  Frequency  varchar(50),
+  Margin     float(50),
+  id_Index   integer,
+  id_Bond    integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_Index)
+    REFERENCES "Index"(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Bond)
+    REFERENCES InstrumentBond(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
 
 CREATE TABLE Isin (
   id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -176,8 +275,8 @@ CREATE TABLE Isin (
   /* Foreign keys */
   FOREIGN KEY (id_Feed)
     REFERENCES Feed(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefIsin_Index01
@@ -195,8 +294,8 @@ CREATE TABLE Issuer (
   /* Foreign keys */
   FOREIGN KEY (id_Country)
     REFERENCES Country(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefIssuer_Index01
@@ -206,13 +305,13 @@ CREATE INDEX RefIssuer_Index01
 CREATE TABLE Rating (
   id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Value            integer NOT NULL,
-  Name             varchar(50) UNIQUE,
-  id_RatingAgency  integer,
+  Name             varchar(50) NOT NULL,
+  id_RatingAgency  integer NOT NULL,
   /* Foreign keys */
-  FOREIGN KEY (id)
+  FOREIGN KEY (id_RatingAgency)
     REFERENCES RatingAgency(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefRating_Index01
@@ -224,8 +323,9 @@ CREATE INDEX RefRating_Index02
   (Name);
 
 CREATE TABLE RatingAgency (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50) NOT NULL UNIQUE
+  id           integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name         varchar(50) NOT NULL UNIQUE,
+  Description  varchar(50)
 );
 
 CREATE INDEX RefRatingAgency_Index01
@@ -236,90 +336,31 @@ CREATE INDEX RefRatingAgency_Index02
   ON RatingAgency
   (Name);
 
-CREATE TABLE RatingToBond (
-  id_Rating  integer NOT NULL,
-  id_Bond    integer NOT NULL,
+CREATE TABLE RatingAgencyCode (
+  id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name             varchar(50) UNIQUE,
+  id_RatingAgency  integer NOT NULL,
   /* Foreign keys */
-  FOREIGN KEY (id_Rating)
-    REFERENCES Rating(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+  FOREIGN KEY (id_RatingAgency)
+    REFERENCES RatingAgency(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE RatingToBond (
+  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_Rating  integer NOT NULL,
+  id_Bond    integer,
+  /* Foreign keys */
   FOREIGN KEY (id_Bond)
     REFERENCES InstrumentBond(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Rating)
+    REFERENCES Rating(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
-
-CREATE TABLE RawBondInfo (
-  id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  BondStructure    text,
-  RateStructure    text,
-  IssueSize        integer,
-  IssuerName       varchar(50),
-  BorrowerName     varchar(50),
-  Coupon           float(50),
-  Issue            date,
-  Maturity         date,
-  Currency         varchar(50),
-  ShortName        varchar(50),
-  IsCallable       bit NOT NULL,
-  IsPutable        bit NOT NULL,
-  IsFloater        bit NOT NULL,
-  IsConvertible    bit NOT NULL,
-  IsStraight       bit NOT NULL,
-  Ticker           varchar(50),
-  Series           varchar(50),
-  BorrowerCountry  varchar(50),
-  IssuerCountry    varchar(50),
-  Isin             varchar(50),
-  ParentTicker     varchar(50),
-  Seniority        varchar(50),
-  Industry         varchar(50),
-  SubIndustry      varchar(50),
-  Instrument       varchar(50),
-  Ric              text
-);
-
-CREATE INDEX RawBondInfo_Index01
-  ON RawBondInfo
-  (id);
-
-CREATE TABLE RawFrnData (
-  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Cap         float(50),
-  Floor       float(50),
-  Margin      float(50),
-  "Index"     varchar(50),
-  id_RawBond  integer,
-  Frequency   text,
-  /* Foreign keys */
-  FOREIGN KEY (id_RawBond)
-    REFERENCES RawBondInfo(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
-);
-
-CREATE INDEX RawFrnData_Index01
-  ON RawFrnData
-  (id);
-
-CREATE TABLE RawRating (
-  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  "Date"      date,
-  Rating      varchar(50),
-  Source      varchar(50),
-  Issue       bit,
-  id_RawBond  integer,
-  /* Foreign keys */
-  FOREIGN KEY (id_RawBond)
-    REFERENCES RawBondInfo(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
-);
-
-CREATE INDEX RawRating_Index01
-  ON RawRating
-  (id);
 
 CREATE TABLE Ric (
   id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -329,12 +370,12 @@ CREATE TABLE Ric (
   /* Foreign keys */
   FOREIGN KEY (Feed_id)
     REFERENCES Feed(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (Isin_id)
     REFERENCES Isin(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefRic_Index01
@@ -348,12 +389,12 @@ CREATE TABLE RicToChain (
   /* Foreign keys */
   FOREIGN KEY (Chain_id)
     REFERENCES Chain(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT, 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (Ric_id)
     REFERENCES Ric(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE UNIQUE INDEX RicToChain_Index01
@@ -385,8 +426,8 @@ CREATE TABLE SubIndustry (
   /* Foreign keys */
   FOREIGN KEY (id_Industry)
     REFERENCES Industry(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefSubIndustry_Index01
@@ -404,8 +445,8 @@ CREATE TABLE Ticker (
   /* Foreign keys */
   FOREIGN KEY (id_ParentTicker)
     REFERENCES Ticker(id)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE INDEX RefTicker_Index01
@@ -415,4 +456,205 @@ CREATE INDEX RefTicker_Index01
 CREATE INDEX RefTicker_Index02
   ON Ticker
   (Name);
+
+CREATE TABLE _log (
+  msg  varchar(255)
+);
+
+/* Data for table Borrower */
+
+
+
+
+/* Data for table Chain */
+
+
+
+
+/* Data for table Country */
+
+
+
+
+/* Data for table Currency */
+
+
+
+
+/* Data for table Feed */
+
+
+
+
+/* Data for table Field */
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup, "Default") VALUES (1, 'BID', 'ASK', 'LAST', 'CLOSE', 'VWAP', 'VOLUME', 1, 1);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup, "Default") VALUES (2, '393', '275', NULL, NULL, NULL, NULL, 2, 0);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup, "Default") VALUES (3, NULL, NULL, '1054', NULL, NULL, NULL, 3, 0);
+
+
+
+/* Data for table FieldGroup */
+INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (1, 'Micex', 'Last', 0);
+INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (2, 'Eurobonds', 'Bid', 1);
+INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (3, 'Russian CPI Index', 'Last', 0);
+
+
+
+/* Data for table Index */
+INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (1, 'RUCPI1M', 'RUCPI=ECI', 1);
+INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (2, 'RUSSRR', NULL, 1);
+INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (3, 'MPRIME3M', 'MOSPRIME3MD=', 1);
+
+
+
+/* Data for table Industry */
+
+
+
+
+/* Data for table InstrumentBond */
+
+
+
+
+/* Data for table InstrumentCustomBond */
+
+
+
+
+/* Data for table InstrumentFrn */
+
+
+
+
+/* Data for table Isin */
+
+
+
+
+/* Data for table Issuer */
+
+
+
+
+/* Data for table Rating */
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (1, 210, 'AAA', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (2, 200, 'AA+', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (3, 190, 'AA', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (4, 180, 'AA-', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (5, 170, 'A+', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (6, 160, 'A', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (7, 150, 'A-', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (8, 140, 'BBB+', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (9, 130, 'BBB', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (10, 120, 'BBB-', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (11, 110, 'BB+', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (12, 100, 'BB', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (13, 90, 'BB-', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (14, 80, 'B+', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (15, 70, 'B', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (16, 60, 'B-', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (17, 50, 'CCC+', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (18, 40, 'CCC', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (19, 30, 'CCC-', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (20, 20, 'CC', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (21, 10, 'C', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (22, 0, '', 1);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (23, 210, 'AAA', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (24, 200, 'AA+', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (25, 190, 'AA', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (26, 180, 'AA-', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (27, 170, 'A+', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (28, 160, 'A', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (29, 150, 'A-', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (30, 140, 'BBB+', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (31, 130, 'BBB', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (32, 120, 'BBB-', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (33, 110, 'BB+', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (34, 100, 'BB', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (35, 90, 'BB-', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (36, 80, 'B+', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (37, 70, 'B', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (38, 60, 'B-', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (39, 50, 'CCC+', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (40, 40, 'CCC', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (41, 30, 'CCC-', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (42, 20, 'CC', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (43, 10, 'C', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (44, 0, '', 3);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (45, 210, 'AAA', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (46, 200, 'Aa1', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (47, 190, 'Aa2', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (48, 180, 'Aa3', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (49, 170, 'A1', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (50, 160, 'A2', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (51, 150, 'A3', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (52, 140, 'Baa1', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (53, 130, 'Baa2', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (54, 120, 'Baa3', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (55, 110, 'Ba1', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (56, 100, 'Ba2', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (57, 90, 'Ba3', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (58, 80, 'B1', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (59, 70, 'B2', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (60, 60, 'B3', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (61, 50, 'Caa1', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (62, 40, 'Caa2', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (63, 30, 'Caa3', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (64, 20, 'Ca', 2);
+INSERT INTO Rating (id, Value, Name, id_RatingAgency) VALUES (65, 0, '', 2);
+
+
+
+/* Data for table RatingAgency */
+INSERT INTO RatingAgency (id, Name, Description) VALUES (1, 'S&P', 'Standard and Poors');
+INSERT INTO RatingAgency (id, Name, Description) VALUES (2, 'Moody''s', 'Moody''s rating agency');
+INSERT INTO RatingAgency (id, Name, Description) VALUES (3, 'Fitch', 'Fitch rating agency');
+
+
+
+/* Data for table RatingAgencyCode */
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (1, 'S&P', 1);
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (2, 'SPI', 1);
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (3, 'MDL', 2);
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (4, 'MIS', 2);
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (5, 'MDY', 2);
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (6, 'FTC', 3);
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (7, 'FDL', 3);
+INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (8, 'FSU', 3);
+
+
+
+/* Data for table RatingToBond */
+
+
+
+
+/* Data for table Ric */
+
+
+
+
+/* Data for table RicToChain */
+
+
+
+
+/* Data for table Seniority */
+
+
+
+
+/* Data for table Specimen */
+
+
+
+
+/* Data for table SubIndustry */
+
+
+
+
+/* Data for table Ticker */
+
 

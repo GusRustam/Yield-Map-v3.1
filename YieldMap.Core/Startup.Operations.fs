@@ -87,23 +87,24 @@ module Operations =
             tweet {
                 let loader = s.Loader
                 
-                use db = new Additions.InstrumentsBonds ()
+                use iBonds = new Additions.InstrumentsBonds ()
             
                 let! bonds = loader.LoadMetadata<BondDescr> rics
-                let failures = db.SaveBonds bonds |> List.ofSeq
+                let failures = iBonds.SaveBonds bonds |> List.ofSeq
 //                if List.length failures > 0 then logger.Error "Bond errors:"
                 failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
              
+                let iFrns = Additions.InstrumentFrns ()
                 let! frns = loader.LoadMetadata<FrnData> rics
-                let failures = db.SaveFrns frns
+                let failures = iFrns.SaveFrns frns
 //                if List.length failures > 0 then logger.Error "Frn errors:"
                 failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
 
                 let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
-                db.SaveIssueRatings issueRatings
+                iBonds.SaveIssueRatings issueRatings
                             
                 let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
-                db.SaveIssuerRatings issuerRatings
+                iBonds.SaveIssuerRatings issuerRatings
             }
 
         let rec reload (s:Drivers) chains force  = 

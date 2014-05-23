@@ -9,6 +9,16 @@ open FsUnit
 module Ops = 
     open System.Data.Entity
     open YieldMap.Database
+    open YieldMap.Database.StoredProcedures
+
+    let cleanup () =
+        // Cleaning up db
+        let eraser = new Eraser ()
+        eraser.DeleteChains ()
+        eraser.DeleteBonds ()
+        eraser.DeleteFeeds ()
+        eraser.DeleteIsins ()
+        eraser.DeleteRics ()
 
     let cnt (table : 'a DbSet) = 
         query { for x in table do 
@@ -131,12 +141,7 @@ module StartupTest =
         globalThreshold := LoggingLevel.Debug
 
         // Cleaning up db
-        let eraser = new Eraser ()
-        eraser.DeleteChains ()
-        eraser.DeleteBonds ()
-        eraser.DeleteFeeds ()
-        eraser.DeleteIsins ()
-        eraser.DeleteRics ()
+        cleanup ()
 
         // Checking cleanup
         use ctx = DbConn.CreateContext()
@@ -201,12 +206,7 @@ module StartupTest =
         globalThreshold := LoggingLevel.Debug
 
         // Cleaning up db
-        let eraser = new Eraser ()
-        eraser.DeleteChains ()
-        eraser.DeleteBonds ()
-        eraser.DeleteFeeds ()
-        eraser.DeleteIsins ()
-        eraser.DeleteRics ()
+        cleanup ()
 
         // Checking cleanup
         use ctx = DbConn.CreateContext()
@@ -274,12 +274,7 @@ module StartupTest =
         globalThreshold := LoggingLevel.Debug
 
         // Cleaning up db
-        let eraser = new Eraser ()
-        eraser.DeleteChains ()
-        eraser.DeleteBonds ()
-        eraser.DeleteFeeds ()
-        eraser.DeleteIsins ()
-        eraser.DeleteRics ()
+        cleanup ()
 
         // Checking cleanup
         use ctx = DbConn.CreateContext()
@@ -333,12 +328,7 @@ module StartupTest =
         globalThreshold := LoggingLevel.Debug
 
         // Cleaning up db
-        let eraser = new Eraser ()
-        eraser.DeleteChains ()
-        eraser.DeleteBonds ()
-        eraser.DeleteFeeds ()
-        eraser.DeleteIsins ()
-        eraser.DeleteRics ()
+        cleanup ()
 
         // Checking cleanup
         use ctx = DbConn.CreateContext()
@@ -400,11 +390,7 @@ module StartupTest =
 
         // Cleaning up db
         let eraser = new Eraser ()
-        eraser.DeleteChains ()
-        eraser.DeleteBonds ()
-        eraser.DeleteFeeds ()
-        eraser.DeleteIsins ()
-        eraser.DeleteRics ()
+        cleanup ()
 
         // Checking cleanup
         use ctx = DbConn.CreateContext()
@@ -505,3 +491,31 @@ module StartupTest =
             | Choice2Of2 e -> logger.ErrorEx "Error" e; 1
 
         ec |> should be (equal 0)
+
+
+    (* ========================= ============================= *)
+    [<Test>]
+    let ``Indexes and FRNs`` () =
+        let dt = DateTime(2014,5,14) 
+        
+        globalThreshold := LoggingLevel.Debug
+
+        cleanup ()
+
+        use ctx = DbConn.CreateContext ()
+        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
+        ctx.SaveChanges () |> ignore
+
+        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", Feed = idn, Params = "") |> ignore
+        ctx.SaveChanges () |> ignore
+
+        // Preparing
+        let c  = MockCalendar dt
+        let x = Startup { Factory = MockFactory(); TodayFix = dt; Loader = MockChainMeta c; Calendar = c }
+
+        let command cmd func state = 
+            let res = func () |> Async.RunSynchronously  
+            res |> should be (equal state)
+
+        command "Connect" x.Connect (State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
