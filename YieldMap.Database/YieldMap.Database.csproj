@@ -56,13 +56,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Access\AccessToDb.cs" />
-    <Compile Include="Borrower.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
+    <Compile Include="Access\DbConn.cs" />
     <Compile Include="Chain.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="Access\DbConn.cs" />
     <Compile Include="Country.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -84,16 +81,55 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Database.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Description.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Feed.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="Field.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="FieldGroup.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="FieldsAndGroup.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="Index.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="InstrumentFrn.cs">
+    <Compile Include="Industry.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Instrument.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="InstrumentType.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Isin.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Leg.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="LegalEntity.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="LegType.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="OrdinaryBond.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="OrdinaryFrn.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Rating.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="RatingAgency.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="RatingAgencyCode.cs">
@@ -102,35 +138,10 @@
     <Compile Include="RatingsView.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="StoredProcedures\Additions\InstrumentFrns.cs" />
-    <Compile Include="StoredProcedures\Eraser.cs" />
-    <Compile Include="Feed.cs">
+    <Compile Include="RatingToInstrument.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="Industry.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="InstrumentBond.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="InstrumentCustomBond.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Isin.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Issuer.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="MainEntities.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rating.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RatingAgency.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RatingToBond.cs">
+    <Compile Include="RatingToLegalEntity.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Ric.cs">
@@ -145,6 +156,13 @@
     <Compile Include="Specimen.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="StoredProcedures\Additions\InstrumentFrns.cs" />
+    <Compile Include="StoredProcedures\Additions\Ratings.cs" />
+    <Compile Include="StoredProcedures\Enums\InstrumentTypes.cs" />
+    <Compile Include="StoredProcedures\Enums\LegTypes.cs" />
+    <Compile Include="StoredProcedures\Eraser.cs" />
+    <Compile Include="MainEntities.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StoredProcedures\Additions\InstrumentsBonds.cs" />
     <Compile Include="StoredProcedures\Additions\ChainRics.cs" />
     <Compile Include="StoredProcedures\BackupRestore.cs" />

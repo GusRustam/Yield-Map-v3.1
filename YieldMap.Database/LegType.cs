@@ -12,27 +12,22 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class InstrumentCustomBond
+    public partial class LegType
     {
+        public LegType()
+        {
+            this.Legs = new HashSet<Leg>();
+        }
+    
         public long id { get; set; }
         public string Name { get; set; }
-        public string BondStructure { get; set; }
-        public string RateStructure { get; set; }
-        public Nullable<long> id_Currency { get; set; }
-        public Nullable<System.DateTime> Issue { get; set; }
-        public Nullable<System.DateTime> Maturity { get; set; }
-    	public InstrumentCustomBond ToPocoSimple() {
-    	    return new InstrumentCustomBond {
+    	public LegType ToPocoSimple() {
+    	    return new LegType {
     			id = this.id,
     			Name = this.Name,
-    			BondStructure = this.BondStructure,
-    			RateStructure = this.RateStructure,
-    			id_Currency = this.id_Currency,
-    			Issue = this.Issue,
-    			Maturity = this.Maturity,
     		};
     	}
     		
-        public virtual Currency Currency { get; set; }
+        public virtual ICollection<Leg> Legs { get; set; }
     }
 }

@@ -12,18 +12,20 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class Issuer
+    public partial class LegalEntity
     {
-        public Issuer()
+        public LegalEntity()
         {
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.RatingToLegalEntities = new HashSet<RatingToLegalEntity>();
+            this.Descriptions = new HashSet<Description>();
+            this.Descriptions1 = new HashSet<Description>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
         public long id_Country { get; set; }
-    	public Issuer ToPocoSimple() {
-    	    return new Issuer {
+    	public LegalEntity ToPocoSimple() {
+    	    return new LegalEntity {
     			id = this.id,
     			Name = this.Name,
     			id_Country = this.id_Country,
@@ -31,6 +33,8 @@ namespace YieldMap.Database
     	}
     		
         public virtual Country Country { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual ICollection<RatingToLegalEntity> RatingToLegalEntities { get; set; }
+        public virtual ICollection<Description> Descriptions { get; set; }
+        public virtual ICollection<Description> Descriptions1 { get; set; }
     }
 }

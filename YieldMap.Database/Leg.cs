@@ -12,28 +12,36 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class InstrumentFrn
+    public partial class Leg
     {
         public long id { get; set; }
+        public string Structure { get; set; }
+        public Nullable<long> id_Instrument { get; set; }
+        public Nullable<long> id_LegType { get; set; }
+        public Nullable<long> id_Currency { get; set; }
+        public Nullable<double> FixedRate { get; set; }
+        public Nullable<long> id_Index { get; set; }
         public Nullable<double> Cap { get; set; }
         public Nullable<double> Floor { get; set; }
-        public string Frequency { get; set; }
         public Nullable<double> Margin { get; set; }
-        public Nullable<long> id_Index { get; set; }
-        public Nullable<long> id_Bond { get; set; }
-    	public InstrumentFrn ToPocoSimple() {
-    	    return new InstrumentFrn {
+    	public Leg ToPocoSimple() {
+    	    return new Leg {
     			id = this.id,
+    			Structure = this.Structure,
+    			id_Instrument = this.id_Instrument,
+    			id_LegType = this.id_LegType,
+    			id_Currency = this.id_Currency,
+    			FixedRate = this.FixedRate,
+    			id_Index = this.id_Index,
     			Cap = this.Cap,
     			Floor = this.Floor,
-    			Frequency = this.Frequency,
     			Margin = this.Margin,
-    			id_Index = this.id_Index,
-    			id_Bond = this.id_Bond,
     		};
     	}
     		
+        public virtual LegType LegType { get; set; }
+        public virtual Currency Currency { get; set; }
         public virtual Index Index { get; set; }
-        public virtual InstrumentBond InstrumentBond { get; set; }
+        public virtual Instrument Instrument { get; set; }
     }
 }

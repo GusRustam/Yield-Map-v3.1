@@ -12,24 +12,18 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class InstrumentBond
+    public partial class Description
     {
-        public InstrumentBond()
+        public Description()
         {
-            this.RatingToBonds = new HashSet<RatingToBond>();
-            this.InstrumentFrns = new HashSet<InstrumentFrn>();
+            this.Instruments = new HashSet<Instrument>();
         }
     
         public long id { get; set; }
         public Nullable<long> id_Issuer { get; set; }
         public Nullable<long> id_Borrower { get; set; }
-        public Nullable<long> id_Currency { get; set; }
-        public string BondStructure { get; set; }
         public string RateStructure { get; set; }
         public Nullable<long> IssueSize { get; set; }
-        public string Name { get; set; }
-        public Nullable<bool> IsCallable { get; set; }
-        public Nullable<bool> IsPutable { get; set; }
         public string Series { get; set; }
         public Nullable<long> id_Isin { get; set; }
         public Nullable<long> id_Ric { get; set; }
@@ -40,19 +34,13 @@ namespace YieldMap.Database
         public Nullable<System.DateTime> Maturity { get; set; }
         public Nullable<long> id_Seniority { get; set; }
         public Nullable<System.DateTime> NextCoupon { get; set; }
-        public Nullable<double> Coupon { get; set; }
-    	public InstrumentBond ToPocoSimple() {
-    	    return new InstrumentBond {
+    	public Description ToPocoSimple() {
+    	    return new Description {
     			id = this.id,
     			id_Issuer = this.id_Issuer,
     			id_Borrower = this.id_Borrower,
-    			id_Currency = this.id_Currency,
-    			BondStructure = this.BondStructure,
     			RateStructure = this.RateStructure,
     			IssueSize = this.IssueSize,
-    			Name = this.Name,
-    			IsCallable = this.IsCallable,
-    			IsPutable = this.IsPutable,
     			Series = this.Series,
     			id_Isin = this.id_Isin,
     			id_Ric = this.id_Ric,
@@ -63,20 +51,17 @@ namespace YieldMap.Database
     			Maturity = this.Maturity,
     			id_Seniority = this.id_Seniority,
     			NextCoupon = this.NextCoupon,
-    			Coupon = this.Coupon,
     		};
     	}
     		
-        public virtual Borrower Borrower { get; set; }
-        public virtual Currency Currency { get; set; }
-        public virtual Seniority Seniority { get; set; }
-        public virtual Issuer Issuer { get; set; }
-        public virtual Isin Isin { get; set; }
-        public virtual Ric Ric { get; set; }
-        public virtual Ticker Ticker { get; set; }
-        public virtual SubIndustry SubIndustry { get; set; }
+        public virtual LegalEntity Issuer { get; set; }
         public virtual Specimen Specimen { get; set; }
-        public virtual ICollection<RatingToBond> RatingToBonds { get; set; }
-        public virtual ICollection<InstrumentFrn> InstrumentFrns { get; set; }
+        public virtual SubIndustry SubIndustry { get; set; }
+        public virtual Ticker Ticker { get; set; }
+        public virtual Ric Ric { get; set; }
+        public virtual Isin Isin { get; set; }
+        public virtual LegalEntity Borrower { get; set; }
+        public virtual Seniority Seniority { get; set; }
+        public virtual ICollection<Instrument> Instruments { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace YieldMap.Database.StoredProcedures {
             return chain.Expanded.HasValue && chain.Expanded.Value < today || !chain.Expanded.HasValue;
         }
 
-        private static bool NeedsRefresh(InstrumentBond bond, DateTime today) {
+        private static bool NeedsRefresh(OrdinaryBond bond, DateTime today) {
             if (!bond.NextCoupon.HasValue) return false;
             
             var nextCoupon = bond.NextCoupon.Value;
@@ -37,16 +37,16 @@ namespace YieldMap.Database.StoredProcedures {
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
         public Ric[] StaleBondRics(DateTime dt) {
-                return Context.InstrumentBonds.ToList()
-                    .Where(b => b.Ric != null && NeedsRefresh(b, dt))
-                    .Select(b => b.Ric.ToPocoSimple())
-                    .ToArray();
+            return Context.OrdinaryBonds.ToList()
+                .Where(b => b.Ric != null && NeedsRefresh(b, dt))
+                .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
+                .ToArray();
         }
 
         public Ric[] AllBondRics() {
-            return Context.InstrumentBonds.ToList()
+            return Context.OrdinaryBonds.ToList()
                     .Where(b => b.Ric != null)
-                    .Select(b => b.Ric.ToPocoSimple())
+                    .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
                     .ToArray();
         }
 
@@ -54,9 +54,9 @@ namespace YieldMap.Database.StoredProcedures {
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
         public Ric[] ObsoleteBondRics(DateTime dt) {
-            return Context.InstrumentBonds.ToList()
+            return Context.OrdinaryBonds.ToList()
                     .Where(b => b.Ric != null && b.Maturity.HasValue && b.Maturity.Value < dt)
-                    .Select(b => b.Ric.ToPocoSimple())
+                    .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
                     .ToArray();
         }
     }

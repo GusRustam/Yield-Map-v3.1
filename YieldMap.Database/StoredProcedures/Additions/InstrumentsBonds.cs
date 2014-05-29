@@ -1,155 +1,227 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity.Validation;
-using System.Globalization;
 using System.Linq;
 using YieldMap.Database.Access;
 using YieldMap.Requests.MetaTables;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public class InstrumentsBonds : AccessToDb, IDisposable {
+    public class InstrumentsBonds : IDisposable {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.InstrumentsBonds");
 
+        // TODO NOW FRNS MUST GO SOMEHOW TOGETHER WITH BONDS :(
 
-        public void SaveIssueRatings(IEnumerable<MetaTables.IssueRatingData> bonds) {
-        }
-
-        public void SaveIssuerRatings(IEnumerable<MetaTables.IssuerRatingData> bonds) {
-        }
 
         public IEnumerable<Tuple<MetaTables.BondDescr, Exception>> SaveBonds(IEnumerable<MetaTables.BondDescr> bonds, bool useEf = false) {
             var res = new List<Tuple<MetaTables.BondDescr, Exception>>();
             var theBonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
 
-            // A kind of performance optimization.
-            try {
-                Context.Configuration.AutoDetectChangesEnabled = false;
-                var isins = new Dictionary<string, Isin>();
-                foreach (var bond in theBonds) {
-                    var ric = Context.Rics.First(r => r.Name == bond.Ric);
-                    if (!isins.ContainsKey(bond.Isin)) { 
-                        var isin = EnsureIsin(Context, ric, bond.Isin);
-                        isins.Add(bond.Isin, isin);
-                    } else {
-                        Logger.Warn(string.Format("Duplicate ISIN {0}", bond.Isin));
-                        if (ric.Isin == null) ric.Isin = isins[bond.Isin];
+            // Creating RICs and ISINs
+            using (var ctx = DbConn.CreateContext()) {
+                try {
+                    ctx.Configuration.AutoDetectChangesEnabled = false;
+                    var isins = new Dictionary<string, Isin>();
+                    foreach (var bond in theBonds) {
+                        var ric = ctx.Rics.First(r => r.Name == bond.Ric);
+                        if (!isins.ContainsKey(bond.Isin)) {
+                            var isin = EnsureIsin(ctx, ric, bond.Isin);
+                            isins.Add(bond.Isin, isin);
+                        } else {
+                            Logger.Warn(string.Format("Duplicate ISIN {0}", bond.Isin));
+                            if (ric.Isin == null) ric.Isin = isins[bond.Isin];
+                        }
                     }
-                }
-                Context.SaveChanges();
-            } catch (DataException e) {
-                Logger.ErrorEx("Saving isings failed", e);
-            } finally {
-                Context.Configuration.AutoDetectChangesEnabled = true;
-            }
-
-            var bondsToBeAdded = new Dictionary<string, InstrumentBond>();
-            foreach (var bond in theBonds) {
-                InstrumentBond instrument = null;
-                var failed = false;
-                try {
-                    instrument = new InstrumentBond {
-                        BondStructure = bond.BondStructure,
-                        RateStructure = bond.RateStructure,
-                        IssueSize = bond.IssueSize,
-                        Name = bond.ShortName,
-                        IsCallable = bond.IsCallable,
-                        IsPutable = bond.IsPutable,
-                        Series = bond.Series,
-                        Issue = bond.Issue,
-                        Maturity = bond.Maturity,
-                        Coupon = bond.Coupon,
-                        NextCoupon = bond.NextCoupon
-                    };
-
-                    // Handling issuer, borrower and their countries
-                    var issuerCountry = EnsureCountry(Context, bond.IssuerCountry);
-                    var borrowerCountry = EnsureCountry(Context, bond.BorrowerCountry);
-
-                    instrument.Issuer = EnsureIssuer(Context, bond.IssuerName, issuerCountry);
-                    instrument.Borrower = EnsureBorrower(Context, bond.BorrowerName, borrowerCountry);
-                    instrument.Currency = EnsureCurrency(Context, bond.Currency);
-                    instrument.Ticker = EnsureTicker(Context, bond.Ticker, bond.ParentTicker);
-                    instrument.Seniority = EnsureSeniority(Context, bond.Seniority);
-                    instrument.SubIndustry = EnsureSubIndustry(Context, bond.Industry, bond.SubIndustry);
-                    instrument.Specimen = EnsureSpecimen(Context, bond.Instrument);
-
-                    // CONSTRAINT: there already must be some ric with some feed!!!
-                    instrument.Ric = Context.Rics.First(r => r.Name == bond.Ric);
-                    instrument.Isin = instrument.Ric.Isin;
-
-                } catch (Exception e) {
-                    failed = true;
-                    res.Add(Tuple.Create(bond, e));
-                }
-                if (!failed) {
-                    if (!useEf) bondsToBeAdded.Add(instrument.Ric.Name, instrument);
-                    else Context.InstrumentBonds.Add(instrument);
-                }
-                try {
-                    Context.SaveChanges();
-                } catch (DbEntityValidationException e) {
-                    Logger.Report("Saving bonds failed", e);
-                    throw;
+                    ctx.SaveChanges();
+                } catch (DataException e) {
+                    Logger.ErrorEx("Saving isings failed", e);
+                } finally {
+                    ctx.Configuration.AutoDetectChangesEnabled = true;
                 }
             }
 
-            if (!useEf && bondsToBeAdded.Any())
-                bondsToBeAdded.Values.ChunkedForEach(x => {
-                    var sql = BulkInsertInstrumentBond(x);
-                    sql = sql.Substring(0, sql.Length - 2);
-                    Logger.Info(String.Format("Sql is {0}", sql));
-                    Context.Database.ExecuteSqlCommand(sql);
-                }, 500);
+           // using (var ctx = DbConn.CreateContext()) {
+           //     var descriptions = new Dictionary<string, Description>();
+           //     try {
+           //         // Descriptions
+           //         ctx.Configuration.AutoDetectChangesEnabled = false;
+           //         foreach (var bond in theBonds) {
+           //             Description description = null;
+           //             var failed = false;
+           //             try {
+           //                 description = new Description {
+           //                     RateStructure = bond.RateStructure,
+           //                     IssueSize = bond.IssueSize,
+           //                     Series = bond.Series,
+           //                     Issue = bond.Issue,
+           //                     Maturity = bond.Maturity,
+           //                     NextCoupon = bond.NextCoupon
+           //                 };
+
+           //                 // Handling issuer, borrower and their countries
+           //                 var issuerCountry = EnsureCountry(ctx, bond.IssuerCountry);
+           //                 var borrowerCountry = EnsureCountry(ctx, bond.BorrowerCountry);
+
+           //                 description.Issuer = EnsureLegalEntity(ctx, bond.IssuerName, issuerCountry);
+           //                 description.Borrower = EnsureLegalEntity(ctx, bond.BorrowerName, borrowerCountry);
+           //                 description.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
+           //                 description.Seniority = EnsureSeniority(ctx, bond.Seniority);
+           //                 description.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
+           //                 description.Specimen = EnsureSpecimen(ctx, bond.Instrument);
+
+           //                 // CONSTRAINT: there already must be some ric with some feed!!!
+           //                 description.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
+           //                 description.Isin = description.Ric.Isin;
+           //             } catch (Exception e) {
+           //                 failed = true;
+           //                 Logger.ErrorEx("Instrument", e);
+           //             }
+           //             if (failed) continue;
+           //             if (!useEf) descriptions.Add(bond.Ric, description);
+           //             else ctx.Descriptions.Add(description);
+           //         }
+           //         if (!useEf) BulkInsertDescriptions(descriptions);
+           //     } finally {
+           //         ctx.Configuration.AutoDetectChangesEnabled = true;
+           //     }
+           // }
+           // // todo now reload descriptions. But how? They do not exist in context. Or do they? 
+
+           // // Creating instruments
+           //try {
+           //     ctx.Configuration.AutoDetectChangesEnabled = false;  var instruments = new Dictionary<string, Instrument>();
+           //     foreach (var bond in theBonds) {
+           //         Instrument instrument = null;
+           //         var failed = false;
+           //         try {
+           //             instrument = new Instrument {
+           //                 Name = bond.ShortName,
+           //                 InstrumentType = Enums.InstrumentTypes.Bond,
+           //                 id_Description = descriptions[bond.Ric].id
+           //             };
+           //         } catch (Exception e) {
+           //             failed = true;
+           //             Logger.ErrorEx("Instrument",e);
+           //         }
+           //         if (failed) continue;
+           //         if (!useEf) instruments.Add(bond.Ric, instrument);
+           //         else ctx.Instruments.Add(instrument);
+           //     }
+           //     if (!useEf) BulkInsertInstruments(instruments);
+           //} finally {
+           //    ctx.Configuration.AutoDetectChangesEnabled = true;
+           //}
+           //// todo now reload descriptions. But how? They do not exist in context. Or do they? 
+
+
+           // // Legs
+
+           // var bondsToBeAdded = new Dictionary<string, InstrumentBond>();
+           // foreach (var bond in theBonds) {
+           //     InstrumentBond instrument = null;
+           //     var failed = false;
+           //     try {
+           //         instrument = new InstrumentBond {
+           //             BondStructure = bond.BondStructure,
+           //             RateStructure = bond.RateStructure,
+           //             IssueSize = bond.IssueSize,
+           //             Name = bond.ShortName,
+           //             IsCallable = bond.IsCallable,
+           //             IsPutable = bond.IsPutable,
+           //             Series = bond.Series,
+           //             Issue = bond.Issue,
+           //             Maturity = bond.Maturity,
+           //             Coupon = bond.Coupon,
+           //             NextCoupon = bond.NextCoupon
+           //         };
+
+           //         // Handling issuer, borrower and their countries
+           //         var issuerCountry = EnsureCountry(ctx, bond.IssuerCountry);
+           //         var borrowerCountry = EnsureCountry(ctx, bond.BorrowerCountry);
+
+           //         instrument.Issuer = EnsureLegalEntity(ctx, bond.IssuerName, issuerCountry);
+           //         instrument.Borrower = EnsureLegalEntity(ctx, bond.BorrowerName, borrowerCountry);
+           //         instrument.Currency = EnsureCurrency(ctx, bond.Currency);
+           //         instrument.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
+           //         instrument.Seniority = EnsureSeniority(ctx, bond.Seniority);
+           //         instrument.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
+           //         instrument.Specimen = EnsureSpecimen(ctx, bond.Instrument);
+
+           //         // CONSTRAINT: there already must be some ric with some feed!!!
+           //         instrument.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
+           //         instrument.Isin = instrument.Ric.Isin;
+
+           //     } catch (Exception e) {
+           //         failed = true;
+           //         res.Add(Tuple.Create(bond, e));
+           //     }
+           //     if (!failed) {
+           //         if (!useEf) bondsToBeAdded.Add(instrument.Ric.Name, instrument);
+           //         else ctx.InstrumentBonds.Add(instrument);
+           //     }
+           //     try {
+           //         ctx.SaveChanges();
+           //     } catch (DbEntityValidationException e) {
+           //         Logger.Report("Saving bonds failed", e);
+           //         throw;
+           //     }
+           // }
+
+           // if (!useEf && bondsToBeAdded.Any())
+           //     bondsToBeAdded.Values.ChunkedForEach(x => {
+           //         var sql = BulkInsertInstrumentBond(x);
+           //         sql = sql.Substring(0, sql.Length - 2);
+           //         Logger.Info(String.Format("Sql is {0}", sql));
+           //         ctx.Database.ExecuteSqlCommand(sql);
+           //     }, 500);
 
             return res;
         }
 
-        private static string BulkInsertInstrumentBond(IEnumerable<InstrumentBond> bonds) {
-            return bonds.Aggregate(
-                "INSERT INTO InstrumentBond(" +
-                "id_Issuer, id_Borrower, id_Currency, id_Isin, id_Ric, id_ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
-                "BondStructure, RateStructure, IssueSize, Name, IsCallable, IsPutable, Series, Issue, Maturity, NextCoupon, Coupon" +
-                ") VALUES",
-                (current, i) => {
-                    if (String.IsNullOrWhiteSpace(i.BondStructure))
-                        return current;
+        //private static string BulkInsertInstrumentBond(IEnumerable<InstrumentBond> bonds) {
+        //    return bonds.Aggregate(
+        //        "INSERT INTO InstrumentBond(" +
+        //        "id_Issuer, id_Borrower, id_Currency, id_Isin, id_Ric, id_ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
+        //        "BondStructure, RateStructure, IssueSize, Name, IsCallable, IsPutable, Series, Issue, Maturity, NextCoupon, Coupon" +
+        //        ") VALUES",
+        //        (current, i) => {
+        //            if (String.IsNullOrWhiteSpace(i.BondStructure))
+        //                return current;
 
-                    var issueSize = i.IssueSize.HasValue ? i.IssueSize.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var name = i.Name.Replace("''", "\"").Replace("'", "\"");
-                    var series = i.Series.Replace("''", "\"").Replace("'", "\"");
-                    var isCallable = i.IsCallable.HasValue && i.IsCallable.Value ? 1 : 0;
-                    var isPutable = i.IsPutable.HasValue && i.IsPutable.Value ? 1 : 0;
+        //            var issueSize = i.IssueSize.HasValue ? i.IssueSize.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var name = i.Name.Replace("''", "\"").Replace("'", "\"");
+        //            var series = i.Series.Replace("''", "\"").Replace("'", "\"");
+        //            var isCallable = i.IsCallable.HasValue && i.IsCallable.Value ? 1 : 0;
+        //            var isPutable = i.IsPutable.HasValue && i.IsPutable.Value ? 1 : 0;
 
-                    var issue = i.Issue.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Issue.Value.ToLocalTime()) : "NULL";
-                    var maturity = i.Maturity.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Maturity.Value.ToLocalTime()) : "NULL";
-                    var nextCoupon = i.NextCoupon.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.NextCoupon.Value.ToLocalTime()) : "NULL";
-                    var coupon = i.Coupon.HasValue ? String.Format("'{0}'", i.Coupon.Value) : "0";
+        //            var issue = i.Issue.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Issue.Value.ToLocalTime()) : "NULL";
+        //            var maturity = i.Maturity.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Maturity.Value.ToLocalTime()) : "NULL";
+        //            var nextCoupon = i.NextCoupon.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.NextCoupon.Value.ToLocalTime()) : "NULL";
+        //            var coupon = i.Coupon.HasValue ? String.Format("'{0}'", i.Coupon.Value) : "0";
 
-                    var idIssuer = i.Issuer != null ? i.Issuer.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idBorrower = i.Borrower != null ? i.Borrower.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idCurrency = i.Currency != null ? i.Currency.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idIsin = i.Isin != null ? i.Isin.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idTicker = i.Ticker != null ? i.Ticker.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idSubIndustry = i.SubIndustry != null ? i.SubIndustry.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idSpecimen = i.Specimen != null ? i.Specimen.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idSeniority = i.Seniority != null ? i.Seniority.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idRic = i.Ric != null ? i.Ric.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idIssuer = i.Issuer != null ? i.Issuer.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idBorrower = i.Borrower != null ? i.Borrower.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idCurrency = i.Currency != null ? i.Currency.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idIsin = i.Isin != null ? i.Isin.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idTicker = i.Ticker != null ? i.Ticker.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idSubIndustry = i.SubIndustry != null ? i.SubIndustry.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idSpecimen = i.Specimen != null ? i.Specimen.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idSeniority = i.Seniority != null ? i.Seniority.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+        //            var idRic = i.Ric != null ? i.Ric.id.ToString(CultureInfo.InvariantCulture) : "NULL";
 
-                    return current +
-                           String.Format(
-                               "(" +
-                               "{0}, {1}, {2}, {3}, {19}, {4}, {5}, {6}, {7}, " +
-                               "'{8}', '{9}', {10}, '{11}', {12}, {13}, '{14}', " +
-                               "{15}, {16}, {17}, {18}" +
-                               "), ",
-                               idIssuer, idBorrower, idCurrency, idIsin, idTicker, idSubIndustry, idSpecimen,
-                               idSeniority,
-                               i.BondStructure, i.RateStructure, issueSize, name, isCallable, isPutable, series,
-                               issue, maturity, nextCoupon, coupon, idRic);
-                });
-        }
+        //            return current +
+        //                   String.Format(
+        //                       "(" +
+        //                       "{0}, {1}, {2}, {3}, {19}, {4}, {5}, {6}, {7}, " +
+        //                       "'{8}', '{9}', {10}, '{11}', {12}, {13}, '{14}', " +
+        //                       "{15}, {16}, {17}, {18}" +
+        //                       "), ",
+        //                       idIssuer, idBorrower, idCurrency, idIsin, idTicker, idSubIndustry, idSpecimen,
+        //                       idSeniority,
+        //                       i.BondStructure, i.RateStructure, issueSize, name, isCallable, isPutable, series,
+        //                       issue, maturity, nextCoupon, coupon, idRic);
+        //        });
+        //}
 
         private static Isin EnsureIsin(MainEntities ctx, Ric ric, string name) {
             if (String.IsNullOrWhiteSpace(name)) return null;
@@ -167,8 +239,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
         private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();
         private readonly Dictionary<string, Currency> _currencies = new Dictionary<string, Currency>();
-        private readonly Dictionary<string, Borrower> _borrowers = new Dictionary<string, Borrower>();
-        private readonly Dictionary<string, Issuer> _issuers = new Dictionary<string, Issuer>();
+        private readonly Dictionary<string, LegalEntity> _legalEntities = new Dictionary<string, LegalEntity>();
         private readonly Dictionary<string, Country> _countries = new Dictionary<string, Country>();
         private readonly Dictionary<string, Ticker> _tickers = new Dictionary<string, Ticker>();
         private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
@@ -178,8 +249,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         void IDisposable.Dispose() {
             // don't drop that durka durk
             _countries.Clear();
-            _borrowers.Clear();
-            _issuers.Clear();
+            _legalEntities.Clear();
             _seniorities.Clear();
             _tickers.Clear();
             _currencies.Clear();
@@ -303,39 +373,22 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             return currency;
         }
 
-        private Borrower EnsureBorrower(MainEntities ctx, string name, Country country) {
+        private LegalEntity EnsureLegalEntity(MainEntities ctx, string name, Country country) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
-            if (_borrowers.ContainsKey(name))
-                return _borrowers[name];
+            if (_legalEntities.ContainsKey(name))
+                return _legalEntities[name];
             
-            var borrower = ctx.Borrowers.FirstOrDefault(b => b.Name == name);
-            if (borrower != null) {
-                _borrowers[name] = borrower;
-                return borrower;
+            var legalEntity = ctx.LegalEntities.FirstOrDefault(b => b.Name == name);
+            if (legalEntity != null) {
+                _legalEntities[name] = legalEntity;
+                return legalEntity;
             }
 
-            borrower = ctx.Borrowers.Add(new Borrower {Name = name, Country = country});
-            _borrowers[name] = borrower;
-            return borrower;
-        }
-
-        private Issuer EnsureIssuer(MainEntities ctx, string name, Country country) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_issuers.ContainsKey(name))
-                return _issuers[name];
-            var issuer = ctx.Issuers.FirstOrDefault(b => b.Name == name);
-            if (issuer != null) {
-                _issuers[name] = issuer;
-                return issuer;
-            }
-
-            issuer = ctx.Issuers.Add(new Issuer {Name = name, Country = country});
-            _issuers[name] = issuer;
-            return issuer;
+            legalEntity = ctx.LegalEntities.Add(new LegalEntity {Name = name, Country = country});
+            _legalEntities[name] = legalEntity;
+            return legalEntity;
         }
 
         private Country EnsureCountry(MainEntities ctx, string name) {

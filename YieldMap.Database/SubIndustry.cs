@@ -16,7 +16,7 @@ namespace YieldMap.Database
     {
         public SubIndustry()
         {
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.Descriptions = new HashSet<Description>();
         }
     
         public long id { get; set; }
@@ -31,6 +31,6 @@ namespace YieldMap.Database
     	}
     		
         public virtual Industry Industry { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual ICollection<Description> Descriptions { get; set; }
     }
 }

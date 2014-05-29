@@ -16,8 +16,7 @@ namespace YieldMap.Database
     {
         public Country()
         {
-            this.Borrowers = new HashSet<Borrower>();
-            this.Issuers = new HashSet<Issuer>();
+            this.LegalEntities = new HashSet<LegalEntity>();
         }
     
         public long id { get; set; }
@@ -29,7 +28,6 @@ namespace YieldMap.Database
     		};
     	}
     		
-        public virtual ICollection<Borrower> Borrowers { get; set; }
-        public virtual ICollection<Issuer> Issuers { get; set; }
+        public virtual ICollection<LegalEntity> LegalEntities { get; set; }
     }
 }

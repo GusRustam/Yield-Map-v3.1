@@ -16,7 +16,7 @@ namespace YieldMap.Database
     {
         public Seniority()
         {
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
+            this.Descriptions = new HashSet<Description>();
         }
     
         public long id { get; set; }
@@ -28,6 +28,6 @@ namespace YieldMap.Database
     		};
     	}
     		
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual ICollection<Description> Descriptions { get; set; }
     }
 }

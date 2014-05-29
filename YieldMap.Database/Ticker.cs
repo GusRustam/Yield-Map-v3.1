@@ -16,8 +16,8 @@ namespace YieldMap.Database
     {
         public Ticker()
         {
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
             this.Child = new HashSet<Ticker>();
+            this.Descriptions = new HashSet<Description>();
         }
     
         public long id { get; set; }
@@ -31,8 +31,8 @@ namespace YieldMap.Database
     		};
     	}
     		
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
         public virtual ICollection<Ticker> Child { get; set; }
         public virtual Ticker Parent { get; set; }
+        public virtual ICollection<Description> Descriptions { get; set; }
     }
 }

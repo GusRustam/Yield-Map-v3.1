@@ -100,11 +100,12 @@ module Operations =
 //                if List.length failures > 0 then logger.Error "Frn errors:"
                 failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
 
+                use iRatings = new Additions.Ratings ()
                 let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
-                iBonds.SaveIssueRatings issueRatings
+                iRatings.SaveIssueRatings issueRatings
                             
                 let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
-                iBonds.SaveIssuerRatings issuerRatings
+                iRatings.SaveIssuerRatings issuerRatings
             }
 
         let rec reload (s:Drivers) chains force  = 

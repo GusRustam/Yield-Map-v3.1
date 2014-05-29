@@ -4,14 +4,14 @@ using YieldMap.Database.Access;
 
 namespace YieldMap.Database.StoredProcedures {
     public class Eraser : AccessToDb {
-        public void DeleteBonds(Func<InstrumentBond, bool> selector = null) {
+        public void DeleteInstruments(Func<Instrument, bool> selector = null) {
             if (selector == null) selector = x => true;
             try {
                 Context.Configuration.AutoDetectChangesEnabled = false;
-                var bondsToDelete = Context.InstrumentBonds.ToList().Where(bond => selector(bond)).ToList();
+                var bondsToDelete = Context.Instruments.ToList().Where(bond => selector(bond)).ToList();
 
                 foreach (var bond in bondsToDelete) {
-                    Context.InstrumentBonds.Remove(bond);
+                    Context.Instruments.Remove(bond);
                 }
                 Context.SaveChanges();
             } finally {

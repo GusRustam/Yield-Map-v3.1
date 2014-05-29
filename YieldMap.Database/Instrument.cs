@@ -12,22 +12,30 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class Currency
+    public partial class Instrument
     {
-        public Currency()
+        public Instrument()
         {
             this.Legs = new HashSet<Leg>();
+            this.RatingToInstruments = new HashSet<RatingToInstrument>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
-    	public Currency ToPocoSimple() {
-    	    return new Currency {
+        public Nullable<long> id_InstrumentType { get; set; }
+        public Nullable<long> id_Description { get; set; }
+    	public Instrument ToPocoSimple() {
+    	    return new Instrument {
     			id = this.id,
     			Name = this.Name,
+    			id_InstrumentType = this.id_InstrumentType,
+    			id_Description = this.id_Description,
     		};
     	}
     		
+        public virtual Description Description { get; set; }
+        public virtual InstrumentType InstrumentType { get; set; }
         public virtual ICollection<Leg> Legs { get; set; }
+        public virtual ICollection<RatingToInstrument> RatingToInstruments { get; set; }
     }
 }

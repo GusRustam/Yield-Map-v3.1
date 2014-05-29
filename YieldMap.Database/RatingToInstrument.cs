@@ -12,25 +12,20 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class Borrower
+    public partial class RatingToInstrument
     {
-        public Borrower()
-        {
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
-        }
-    
         public long id { get; set; }
-        public string Name { get; set; }
-        public long id_Country { get; set; }
-    	public Borrower ToPocoSimple() {
-    	    return new Borrower {
+        public long id_Rating { get; set; }
+        public Nullable<long> id_Instrument { get; set; }
+    	public RatingToInstrument ToPocoSimple() {
+    	    return new RatingToInstrument {
     			id = this.id,
-    			Name = this.Name,
-    			id_Country = this.id_Country,
+    			id_Rating = this.id_Rating,
+    			id_Instrument = this.id_Instrument,
     		};
     	}
     		
-        public virtual Country Country { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual Rating Rating { get; set; }
+        public virtual Instrument Instrument { get; set; }
     }
 }

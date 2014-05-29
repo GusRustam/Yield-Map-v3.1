@@ -16,26 +16,31 @@ namespace YieldMap.Database
     {
         public Ric()
         {
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
             this.RicToChains = new HashSet<RicToChain>();
+            this.Indices = new HashSet<Index>();
+            this.Descriptions = new HashSet<Description>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
-        public Nullable<long> Isin_id { get; set; }
-        public Nullable<long> Feed_id { get; set; }
+        public Nullable<long> id_Isin { get; set; }
+        public Nullable<long> id_Feed { get; set; }
+        public Nullable<long> id_FieldGroup { get; set; }
     	public Ric ToPocoSimple() {
     	    return new Ric {
     			id = this.id,
     			Name = this.Name,
-    			Isin_id = this.Isin_id,
-    			Feed_id = this.Feed_id,
+    			id_Isin = this.id_Isin,
+    			id_Feed = this.id_Feed,
+    			id_FieldGroup = this.id_FieldGroup,
     		};
     	}
     		
         public virtual Feed Feed { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
+        public virtual FieldGroup FieldGroup { get; set; }
         public virtual Isin Isin { get; set; }
         public virtual ICollection<RicToChain> RicToChains { get; set; }
+        public virtual ICollection<Index> Indices { get; set; }
+        public virtual ICollection<Description> Descriptions { get; set; }
     }
 }

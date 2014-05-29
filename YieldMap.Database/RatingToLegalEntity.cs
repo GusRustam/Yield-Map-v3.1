@@ -12,28 +12,20 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class FieldGroup
+    public partial class RatingToLegalEntity
     {
-        public FieldGroup()
-        {
-            this.Fields = new HashSet<Field>();
-            this.Rics = new HashSet<Ric>();
-        }
-    
         public long id { get; set; }
-        public string Name { get; set; }
-        public string DefaultField { get; set; }
-        public bool Default { get; set; }
-    	public FieldGroup ToPocoSimple() {
-    	    return new FieldGroup {
+        public long id_Rating { get; set; }
+        public Nullable<long> id_LegalEntity { get; set; }
+    	public RatingToLegalEntity ToPocoSimple() {
+    	    return new RatingToLegalEntity {
     			id = this.id,
-    			Name = this.Name,
-    			DefaultField = this.DefaultField,
-    			Default = this.Default,
+    			id_Rating = this.id_Rating,
+    			id_LegalEntity = this.id_LegalEntity,
     		};
     	}
     		
-        public virtual ICollection<Field> Fields { get; set; }
-        public virtual ICollection<Ric> Rics { get; set; }
+        public virtual LegalEntity LegalEntity { get; set; }
+        public virtual Rating Rating { get; set; }
     }
 }

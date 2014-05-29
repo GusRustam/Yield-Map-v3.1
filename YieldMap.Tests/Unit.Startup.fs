@@ -15,7 +15,7 @@ module Ops =
         // Cleaning up db
         let eraser = new Eraser ()
         eraser.DeleteChains ()
-        eraser.DeleteBonds ()
+        eraser.DeleteInstruments () // todo why???
         eraser.DeleteFeeds ()
         eraser.DeleteIsins ()
         eraser.DeleteRics ()
@@ -513,9 +513,15 @@ module StartupTest =
         let c  = MockCalendar dt
         let x = Startup { Factory = MockFactory(); TodayFix = dt; Loader = MockChainMeta c; Calendar = c }
 
-        let command cmd func state = 
-            let res = func () |> Async.RunSynchronously  
-            res |> should be (equal state)
+        let command cmd func state = func () |> Async.RunSynchronously |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+
+        use ctx = DbConn.CreateContext ()
+        let n = query { for x in ctx.OrdinaryFrns do
+                        select x
+                        count }
+
+        n |> should be (equal 22)
+        

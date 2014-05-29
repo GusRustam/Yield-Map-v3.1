@@ -16,8 +16,8 @@ namespace YieldMap.Database
     {
         public Isin()
         {
-            this.InstrumentBonds = new HashSet<InstrumentBond>();
             this.Rics = new HashSet<Ric>();
+            this.Descriptions = new HashSet<Description>();
         }
     
         public long id { get; set; }
@@ -32,7 +32,7 @@ namespace YieldMap.Database
     	}
     		
         public virtual Feed Feed { get; set; }
-        public virtual ICollection<InstrumentBond> InstrumentBonds { get; set; }
         public virtual ICollection<Ric> Rics { get; set; }
+        public virtual ICollection<Description> Descriptions { get; set; }
     }
 }

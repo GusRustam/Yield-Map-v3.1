@@ -16,23 +16,21 @@ namespace YieldMap.Database
     {
         public Index()
         {
-            this.InstrumentFrns = new HashSet<InstrumentFrn>();
+            this.Legs = new HashSet<Leg>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
-        public string Ric { get; set; }
-        public Nullable<long> id_FieldGroup { get; set; }
+        public Nullable<long> id_Ric { get; set; }
     	public Index ToPocoSimple() {
     	    return new Index {
     			id = this.id,
     			Name = this.Name,
-    			Ric = this.Ric,
-    			id_FieldGroup = this.id_FieldGroup,
+    			id_Ric = this.id_Ric,
     		};
     	}
     		
-        public virtual FieldGroup FieldGroup { get; set; }
-        public virtual ICollection<InstrumentFrn> InstrumentFrns { get; set; }
+        public virtual Ric Ric { get; set; }
+        public virtual ICollection<Leg> Legs { get; set; }
     }
 }
