@@ -4,25 +4,6 @@
 --Database : C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Database\main.db
 
 
-CREATE TABLE Borrower (
-  id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name        varchar(255) NOT NULL,
-  id_Country  integer NOT NULL,
-  /* Foreign keys */
-  FOREIGN KEY (id_Country)
-    REFERENCES Country(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-);
-
-CREATE INDEX RefBorrower_Index01
-  ON Borrower
-  (id);
-
-CREATE INDEX RefBorrower_Index02
-  ON Borrower
-  (id);
-
 CREATE TABLE Chain (
   id        integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name      varchar(50) NOT NULL UNIQUE,
@@ -65,6 +46,57 @@ CREATE TABLE Currency (
 CREATE INDEX RefCurrency_Index01
   ON Currency
   (id);
+
+CREATE TABLE Description (
+  id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_Issuer       integer,
+  id_Borrower     integer,
+  RateStructure   text,
+  IssueSize       integer,
+  Series          varchar(50),
+  id_Isin         integer,
+  id_Ric          integer,
+  id_Ticker       integer,
+  id_SubIndustry  integer,
+  id_Specimen     integer,
+  Issue           date,
+  Maturity        date,
+  id_Seniority    integer,
+  NextCoupon      date,
+  /* Foreign keys */
+  FOREIGN KEY (id_Borrower)
+    REFERENCES LegalEntity(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Specimen)
+    REFERENCES Specimen(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_SubIndustry)
+    REFERENCES SubIndustry(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Ticker)
+    REFERENCES Ticker(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Ric)
+    REFERENCES Ric(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Isin)
+    REFERENCES Isin(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Issuer)
+    REFERENCES LegalEntity(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Seniority)
+    REFERENCES Seniority(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
 
 CREATE TABLE Feed (
   id           integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -133,13 +165,12 @@ BEGIN
 END;
 
 CREATE TABLE "Index" (
-  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name           varchar(50) NOT NULL UNIQUE,
-  Ric            varchar(50),
-  id_FieldGroup  integer,
+  id      integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name    varchar(50) NOT NULL UNIQUE,
+  id_Ric  integer,
   /* Foreign keys */
-  FOREIGN KEY (id_FieldGroup)
-    REFERENCES FieldGroup(id)
+  FOREIGN KEY (id_Ric)
+    REFERENCES Ric(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
@@ -165,107 +196,25 @@ CREATE INDEX RefIndustry_Index02
   ON Industry
   (Name);
 
-CREATE TABLE InstrumentBond (
-  id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  id_Issuer       integer,
-  id_Borrower     integer,
-  id_Currency     integer,
-  BondStructure   text,
-  RateStructure   text,
-  IssueSize       integer,
-  Name            varchar(50) NOT NULL,
-  IsCallable      bit,
-  IsPutable       bit,
-  Series          varchar(50),
-  id_Isin         integer,
-  id_Ric          integer,
-  id_Ticker       integer,
-  id_SubIndustry  integer,
-  id_Specimen     integer,
-  Issue           date,
-  Maturity        date,
-  id_Seniority    integer,
-  NextCoupon      date,
-  Coupon          float(50),
+CREATE TABLE Instrument (
+  id                 integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name               varchar(50),
+  id_InstrumentType  integer,
+  id_Description     integer,
   /* Foreign keys */
-  FOREIGN KEY (id_Seniority)
-    REFERENCES Seniority(id)
+  FOREIGN KEY (id_Description)
+    REFERENCES Description(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Issuer)
-    REFERENCES Issuer(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Isin)
-    REFERENCES Isin(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Ric)
-    REFERENCES Ric(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Ticker)
-    REFERENCES Ticker(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_SubIndustry)
-    REFERENCES SubIndustry(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Specimen)
-    REFERENCES Specimen(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Borrower)
-    REFERENCES Borrower(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Currency)
-    REFERENCES Currency(id)
+  FOREIGN KEY (id_InstrumentType)
+    REFERENCES InstrumentType(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
 
-CREATE INDEX InstrumentBond_Index01
-  ON InstrumentBond
-  (id);
-
-CREATE TABLE InstrumentCustomBond (
-  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name           varchar(50),
-  BondStructure  text,
-  RateStructure  text,
-  id_Currency    integer,
-  Issue          date,
-  Maturity       date,
-  /* Foreign keys */
-  FOREIGN KEY (id_Currency)
-    REFERENCES Currency(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-);
-
-CREATE INDEX InstrumentCustomBond_Index01
-  ON InstrumentCustomBond
-  (id);
-
-CREATE TABLE InstrumentFrn (
-  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Cap        float(50),
-  Floor      float(50),
-  Frequency  varchar(50),
-  Margin     float(50),
-  id_Index   integer,
-  id_Bond    integer,
-  /* Foreign keys */
-  FOREIGN KEY (id_Index)
-    REFERENCES "Index"(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Bond)
-    REFERENCES InstrumentBond(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+CREATE TABLE InstrumentType (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE Isin (
@@ -287,7 +236,46 @@ CREATE INDEX RefIsin_Index02
   ON Isin
   (Name);
 
-CREATE TABLE Issuer (
+CREATE TABLE Leg (
+  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Structure      varchar(1000),
+  id_Instrument  integer,
+  id_LegType     integer,
+  id_Currency    integer,
+  FixedRate      float(50),
+  id_Index       integer,
+  Cap            float(50),
+  Floor          float(50),
+  Margin         float(50),
+  /* Foreign keys */
+  FOREIGN KEY (id_Index)
+    REFERENCES "Index"(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_LegType)
+    REFERENCES LegType(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Instrument)
+    REFERENCES Instrument(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Currency)
+    REFERENCES Currency(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE UNIQUE INDEX Leg_Index01
+  ON Leg
+  (id, id_Instrument, id_LegType);
+
+CREATE TABLE LegType (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50) UNIQUE
+);
+
+CREATE TABLE LegalEntity (
   id          integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name        varchar(255) NOT NULL,
   id_Country  integer NOT NULL,
@@ -298,8 +286,16 @@ CREATE TABLE Issuer (
     ON UPDATE CASCADE
 );
 
-CREATE INDEX RefIssuer_Index01
-  ON Issuer
+CREATE INDEX Borrower01_Index01
+  ON LegalEntity
+  (id);
+
+CREATE INDEX Borrower01_Index02
+  ON LegalEntity
+  (id);
+
+CREATE INDEX Borrower01_Index03
+  ON LegalEntity
   (id);
 
 CREATE TABLE Rating (
@@ -347,13 +343,28 @@ CREATE TABLE RatingAgencyCode (
     ON UPDATE CASCADE
 );
 
-CREATE TABLE RatingToBond (
-  id         integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  id_Rating  integer NOT NULL,
-  id_Bond    integer,
+CREATE TABLE RatingToInstrument (
+  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_Rating      integer NOT NULL,
+  id_Instrument  integer,
   /* Foreign keys */
-  FOREIGN KEY (id_Bond)
-    REFERENCES InstrumentBond(id)
+  FOREIGN KEY (id_Rating)
+    REFERENCES Rating(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Instrument)
+    REFERENCES Instrument(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE RatingToLegalEntity (
+  id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_Rating       integer NOT NULL,
+  id_LegalEntity  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_LegalEntity)
+    REFERENCES LegalEntity(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE, 
   FOREIGN KEY (id_Rating)
@@ -363,17 +374,22 @@ CREATE TABLE RatingToBond (
 );
 
 CREATE TABLE Ric (
-  id       integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name     varchar(50) NOT NULL,
-  Isin_id  integer,
-  Feed_id  integer,
+  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name           varchar(50) NOT NULL,
+  id_Isin        integer,
+  id_Feed        integer,
+  id_FieldGroup  integer,
   /* Foreign keys */
-  FOREIGN KEY (Feed_id)
-    REFERENCES Feed(id)
+  FOREIGN KEY (id_FieldGroup)
+    REFERENCES FieldGroup(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE, 
-  FOREIGN KEY (Isin_id)
+  FOREIGN KEY (id_Isin)
     REFERENCES Isin(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Feed)
+    REFERENCES Feed(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
@@ -461,11 +477,6 @@ CREATE TABLE _log (
   msg  varchar(255)
 );
 
-/* Data for table Borrower */
-
-
-
-
 /* Data for table Chain */
 
 
@@ -477,6 +488,11 @@ CREATE TABLE _log (
 
 
 /* Data for table Currency */
+
+
+
+
+/* Data for table Description */
 
 
 
@@ -501,9 +517,9 @@ INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (3, 'Russian C
 
 
 /* Data for table Index */
-INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (1, 'RUCPI1M', 'RUCPI=ECI', 1);
-INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (2, 'RUSSRR', NULL, 1);
-INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (3, 'MPRIME3M', 'MOSPRIME3MD=', 1);
+INSERT INTO "Index" (id, Name, id_Ric) VALUES (1, 'RUCPI1M', NULL);
+INSERT INTO "Index" (id, Name, id_Ric) VALUES (2, 'RUSSRR', NULL);
+INSERT INTO "Index" (id, Name, id_Ric) VALUES (3, 'MPRIME3M', NULL);
 
 
 
@@ -512,18 +528,17 @@ INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (3, 'MPRIME3M', 'MOSPR
 
 
 
-/* Data for table InstrumentBond */
+/* Data for table Instrument */
 
 
 
 
-/* Data for table InstrumentCustomBond */
-
-
-
-
-/* Data for table InstrumentFrn */
-
+/* Data for table InstrumentType */
+INSERT INTO InstrumentType (id, Name) VALUES (1, 'Bond');
+INSERT INTO InstrumentType (id, Name) VALUES (2, 'Frn');
+INSERT INTO InstrumentType (id, Name) VALUES (3, 'Swap');
+INSERT INTO InstrumentType (id, Name) VALUES (4, 'Ndf');
+INSERT INTO InstrumentType (id, Name) VALUES (5, 'Cds');
 
 
 
@@ -532,7 +547,19 @@ INSERT INTO "Index" (id, Name, Ric, id_FieldGroup) VALUES (3, 'MPRIME3M', 'MOSPR
 
 
 
-/* Data for table Issuer */
+/* Data for table Leg */
+
+
+
+
+/* Data for table LegType */
+INSERT INTO LegType (id, Name) VALUES (1, 'Received');
+INSERT INTO LegType (id, Name) VALUES (2, 'Paid');
+INSERT INTO LegType (id, Name) VALUES (3, 'Both');
+
+
+
+/* Data for table LegalEntity */
 
 
 
@@ -625,7 +652,12 @@ INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (8, 'FSU', 3);
 
 
 
-/* Data for table RatingToBond */
+/* Data for table RatingToInstrument */
+
+
+
+
+/* Data for table RatingToLegalEntity */
 
 
 
@@ -658,3 +690,6 @@ INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (8, 'FSU', 3);
 /* Data for table Ticker */
 
 
+
+
+/* Data for table _log */

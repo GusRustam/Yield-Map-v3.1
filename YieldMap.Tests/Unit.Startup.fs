@@ -157,8 +157,8 @@ module StartupTest =
         prms |> Array.iter (fun name -> 
             if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
                 ctx.Chains.Add <| Chain(Name = name, Feed = idn, Params = "") |> ignore
+                ctx.SaveChanges () |> ignore
         )
-        ctx.SaveChanges () |> ignore
 
         // Preparing
         let c = MockCalendar dt
@@ -378,7 +378,7 @@ module StartupTest =
         unattachedRics |> Array.length |> should be (equal 1)
 
         let loser = unattachedRics.[0]
-        loser.Isin |> should be (equal "US912834NP9=PX")
+        loser.Name |> should be (equal "US912834NP9=PX")
 
     open YieldMap.Tools.Aux
 
@@ -438,9 +438,19 @@ module StartupTest =
 
         logger.InfoF "%A" proportions
 
+        let total = 
+            proportions.[Mission.Obsolete] +
+            proportions.[Mission.ToReload] +
+            proportions.[Mission.Keep]
+
+        let totalCount = query { for x in ctx.Instruments do
+                                 count }
+
+        total |> should be (equal totalCount)
+
         proportions.[Mission.Obsolete] |> should be (equal 8)
         proportions.[Mission.ToReload] |> should be (equal 49)
-        proportions.[Mission.Keep] |> should be (equal 870)
+        proportions.[Mission.Keep] |> should be (equal 872)
 
         let e = Event<_> ()
         let ep = e.Publish
@@ -464,9 +474,20 @@ module StartupTest =
                 
             logger.InfoF "%A" proportions
 
+            let total = 
+                proportions.[Mission.Obsolete] +
+                proportions.[Mission.ToReload] +
+                proportions.[Mission.Keep]
+
+            let totalCount = query { for x in ctx.Instruments do
+                                     count }
+
+            total |> should be (equal totalCount)
+
+
             proportions.[Mission.Obsolete] |> should be (equal 8)
             proportions.[Mission.ToReload] |> should be (equal 49)
-            proportions.[Mission.Keep] |> should be (equal 870)
+            proportions.[Mission.Keep] |> should be (equal 872)
 
             command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
             logger.Info "Reloaded2"

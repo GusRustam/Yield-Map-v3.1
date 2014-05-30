@@ -25,6 +25,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 try {
                     var isins = new Dictionary<string, Isin>();
                     foreach (var bond in bonds) {
+                        if (bond.RateStructure.StartsWith("Unable"))
+                            continue;
+
                         var ric = ctx.Rics.First(r => r.Name == bond.Ric);
                         if (!isins.ContainsKey(bond.Isin)) {
                             var isin = EnsureIsin(ctx, ric, bond.Isin);
@@ -48,60 +51,58 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             // Descriptions
             using (var ctx = DbConn.CreateContext()) {
                 var descriptions = new Dictionary<string, Description>();
-                try {
-                    ctx.Configuration.AutoDetectChangesEnabled = false;
-                    foreach (var bond in bonds) {
-                        Description description = null;
-                        var failed = false;
-                        try {
-                            description = new Description {
-                                RateStructure = bond.RateStructure,
-                                IssueSize = bond.IssueSize,
-                                Series = bond.Series,
-                                Issue = bond.Issue,
-                                Maturity = bond.Maturity,
-                                NextCoupon = bond.NextCoupon
-                            };
+                foreach (var bond in bonds) {
+                    if (bond.RateStructure.StartsWith("Unable"))
+                        continue;
 
-                            // Handling issuer, borrower and their countries
-                            var issuerCountry = EnsureCountry(ctx, bond.IssuerCountry);
-                            var borrowerCountry = EnsureCountry(ctx, bond.BorrowerCountry);
-
-                            description.Issuer = EnsureLegalEntity(ctx, bond.IssuerName, issuerCountry);
-                            description.Borrower = EnsureLegalEntity(ctx, bond.BorrowerName, borrowerCountry);
-                            description.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
-                            description.Seniority = EnsureSeniority(ctx, bond.Seniority);
-                            description.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
-                            description.Specimen = EnsureSpecimen(ctx, bond.Instrument);
-
-                            // CONSTRAINT: there already must be some ric with some feed!!!
-                            description.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
-                            description.Isin = description.Ric.Isin;
-                        } catch (Exception e) {
-                            failed = true;
-                            Logger.ErrorEx("Instrument", e);
-                        }
-                        if (failed) continue;
-                        descriptions.Add(bond.Ric, description);
-                        
-                    }
+                    Description description = null;
+                    var failed = false;
                     try {
-                        ctx.SaveChanges();   // Saving all new records in tables Country, LegalEntity etc
-                    } catch (DbEntityValidationException e) {
-                        Logger.Report("Saving descriptions failed", e);
-                        throw;
+
+                        description = new Description {
+                            RateStructure = bond.RateStructure,
+                            IssueSize = bond.IssueSize,
+                            Series = bond.Series,
+                            Issue = bond.Issue,
+                            Maturity = bond.Maturity,
+                            NextCoupon = bond.NextCoupon
+                        };
+
+                        // Handling issuer, borrower and their countries
+                        var issuerCountry = EnsureCountry(ctx, bond.IssuerCountry);
+                        var borrowerCountry = EnsureCountry(ctx, bond.BorrowerCountry);
+
+                        description.Issuer = EnsureLegalEntity(ctx, bond.IssuerName, issuerCountry);
+                        description.Borrower = EnsureLegalEntity(ctx, bond.BorrowerName, borrowerCountry);
+                        description.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
+                        description.Seniority = EnsureSeniority(ctx, bond.Seniority);
+                        description.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
+                        description.Specimen = EnsureSpecimen(ctx, bond.Instrument);
+
+                        // CONSTRAINT: there already must be some ric with some feed!!!
+                        description.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
+                        description.Isin = description.Ric.Isin;
+                    } catch (Exception e) {
+                        failed = true;
+                        Logger.ErrorEx("Instrument", e);
                     }
-                    if (descriptions.Any()) {
-                        var peggedContext = ctx;
-                        descriptions.Values.ChunkedForEach(x => {
-                            var sql = BulkInsertBondDescription(x);
-                            sql = sql.Substring(0, sql.Length - 2);
-                            Logger.Info(String.Format("Sql is {0}", sql));
-                            peggedContext.Database.ExecuteSqlCommand(sql);
-                        }, 500);
-                    }
-                } finally {
-                    ctx.Configuration.AutoDetectChangesEnabled = true;
+                    if (failed) continue;
+                    descriptions.Add(bond.Ric, description);
+                        
+                }
+                try {
+                    ctx.SaveChanges();   // Saving all new records in tables Country, LegalEntity etc
+                } catch (DbEntityValidationException e) {
+                    Logger.Report("Saving descriptions failed", e);
+                    throw;
+                }
+                if (descriptions.Any()) {
+                    var peggedContext = ctx;
+                    descriptions.Values.ChunkedForEach(x => {
+                        var sql = BulkInsertBondDescription(x);
+                        Logger.Info(String.Format("Sql is {0}", sql));
+                        peggedContext.Database.ExecuteSqlCommand(sql);
+                    }, 500);
                 }
             }
 
@@ -110,6 +111,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             using (var ctx = DbConn.CreateContext()) {
                 var instruments = new Dictionary<string, Instrument>();
                 foreach (var bond in bonds) {
+                    if (bond.RateStructure.StartsWith("Unable"))
+                        continue;
+
                     Instrument instrument = null;
                     var failed = false;
                     try {
@@ -132,7 +136,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     var peggedContext = ctx;
                     instruments.Values.ChunkedForEach(x => {
                         var sql = BulkInsertInstruments(x);
-                        sql = sql.Substring(0, sql.Length - 2);
                         Logger.Info(String.Format("Sql is {0}", sql));
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
@@ -146,6 +149,9 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     ctx.Configuration.AutoDetectChangesEnabled = false;
                     var legs = new Dictionary<string, Leg>();
                     foreach (var bond in bonds) {
+                        if (bond.RateStructure.StartsWith("Unable"))
+                            continue;
+
                         Leg leg = null;
                         var failed = false;
                         try {
@@ -176,7 +182,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                         var peggedContext = ctx;
                         legs.Values.ChunkedForEach(x => {
                             var sql = BulkInsertLegs(x);
-                            sql = sql.Substring(0, sql.Length - 2);
                             Logger.Info(String.Format("Sql is {0}", sql));
                             peggedContext.Database.ExecuteSqlCommand(sql);
                         }, 500);
@@ -189,22 +194,27 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         }
 
         private static string BulkInsertLegs(IEnumerable<Leg> legs) {
-            return legs.Aggregate(
+            var res =  legs.Aggregate(
                 "INSERT INTO Leg(id_Instrument, id_LegType, id_Currency, Structure, FixedRate) VALUES",
                 (current, i) => {
                     var coupon = i.FixedRate.HasValue ? String.Format("'{0}'", i.FixedRate.Value) : "0";
                     return current + String.Format("({0}, {1}, {2}, '{3}', {4}), ", i.id_Instrument, i.id_LegType, i.Currency.id, i.Structure, coupon);
                 });
+            return res.Substring(0, res.Length - 2);
         }
 
         private static string BulkInsertInstruments(IEnumerable<Instrument> instruments) {
-            return instruments.Aggregate(
-                "INSERT INTO Instrument(id_InstrumentType, id_Description, Name) VALUES",
-                (current, i) => current + String.Format("({0}, {1}, '{2}'), ", i.id_InstrumentType, i.id_Description, i.Name));
+            var res = instruments.Aggregate(
+                "INSERT INTO Instrument(id_InstrumentType, id_Description, Name) SELECT ",
+                (current, i) => {
+                    var name = i.Name.Replace("'","");
+                    return current + String.Format("{0}, {1}, '{2}' UNION SELECT ", i.id_InstrumentType, i.id_Description, name);
+                });
+            return res.Substring(0, res.Length - "UNION SELECT ".Length);
         }
 
         private static string BulkInsertBondDescription(IEnumerable<Description> descriptions) {
-            return descriptions.Aggregate(
+            var res = descriptions.Aggregate(
                 "INSERT INTO Description(" +
                 "id_Issuer, id_Borrower, id_Isin, id_Ric, id_Ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
                 "RateStructure, IssueSize, Series, Issue, Maturity, NextCoupon" +
@@ -230,6 +240,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                                                   idIssuer, idBorrower, idIsin, idTicker, idSubIndustry, idSpecimen, idSeniority, 
                                                   i.RateStructure, issueSize, series, issue, maturity, nextCoupon, idRic);
                 });
+            return res.Substring(0, res.Length - 2);
         }
 
 
