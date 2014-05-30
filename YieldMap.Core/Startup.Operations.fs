@@ -83,6 +83,10 @@ module Operations =
             return rics, fails
         }
 
+        let isFloater (b:BondDescr) = b.IsFloater
+        let isConvertible (b:BondDescr) = b.IsConvertible
+        let isStraight (b:BondDescr) = (not b.IsFloater) && (not b.IsConvertible)
+
         let loadAndSaveMetadata (s:Drivers) rics =
             tweet {
                 let loader = s.Loader
@@ -90,9 +94,13 @@ module Operations =
                 use iBonds = new Additions.InstrumentsBonds ()
             
                 let! bonds = loader.LoadMetadata<BondDescr> rics
-                let failures = iBonds.SaveBonds bonds |> List.ofSeq
-//                if List.length failures > 0 then logger.Error "Bond errors:"
-                failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
+                let floaters = bonds |> List.filter isFloater
+                let convertibles = bonds |> List.filter isConvertible
+                let straights = bonds |> List.filter isStraight
+
+                let straightFailures = iBonds.SaveBonds straights |> List.ofSeq
+                //if List.length failures > 0 then logger.Error "Bond errors:"
+                straightFailures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
              
                 let iFrns = Additions.InstrumentFrns ()
                 let! frns = loader.LoadMetadata<FrnData> rics
