@@ -4,13 +4,13 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="82">
+      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="63">
         <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="20.75" PointY="38.75" FillColor="DarkRed" />
         <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="31.625" PointY="45.625" />
         <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="47" PointY="46.125" />
         <EntityTypeShape EntityType="mainModel.Feed" Width="1.5" PointX="24.125" PointY="42.125" FillColor="DarkRed" />
         <EntityTypeShape EntityType="mainModel.Field" Width="1.5" PointX="34.875" PointY="34.375" />
-        <EntityTypeShape EntityType="mainModel.FieldGroup" Width="1.5" PointX="31.375" PointY="35.375" />
+        <EntityTypeShape EntityType="mainModel.FieldGroup" Width="1.5" PointX="31.25" PointY="35.25" />
         <EntityTypeShape EntityType="mainModel.Industry" Width="1.5" PointX="25.625" PointY="59.125" />
         <EntityTypeShape EntityType="mainModel.InstrumentType" Width="1.5" PointX="45.875" PointY="50.125" />
         <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="25.625" PointY="45.875" FillColor="Green" />
@@ -24,8 +24,7 @@
         <EntityTypeShape EntityType="mainModel.Specimen" Width="1.5" PointX="28.125" PointY="57.25" />
         <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="25.5" PointY="56.125" />
         <EntityTypeShape EntityType="mainModel.Ticker" Width="1.5" PointX="22.25" PointY="54.875" />
-        <EntityTypeShape EntityType="mainModel.FieldsAndGroup" Width="1.5" PointX="43.25" PointY="35.875" FillColor="Olive" />
-        <EntityTypeShape EntityType="mainModel.RatingsView" Width="2.125" PointX="45" PointY="35.875" FillColor="Olive" />
+        <EntityTypeShape EntityType="mainModel.RatingsView" Width="1.75" PointX="44.25" PointY="35" FillColor="Olive" />
         <AssociationConnector Association="mainModel.FK_Chain_0_0" />
         <AssociationConnector Association="mainModel.FK_RicToChain_0_0" ></AssociationConnector>
         <AssociationConnector Association="mainModel.FK_Isin_0_0" />
@@ -43,16 +42,13 @@
         <AssociationConnector Association="mainModel.FK_RatingToLegalEntity_0_0" />
         <AssociationConnector Association="mainModel.FK_RatingToLegalEntity_1_0" />
         <AssociationConnector Association="mainModel.FK_Leg_0_01" />
-        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="28.25" PointY="38.625" FillColor="DarkRed" />
+        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="28.375" PointY="38.375" FillColor="DarkRed" />
         <AssociationConnector Association="mainModel.FK_Ric_2_0" />
         <AssociationConnector Association="mainModel.FK_Ric_0_0" />
-        <AssociationConnector Association="mainModel.FK_Ric_1_0" ManuallyRouted="true" >
-          <ConnectorPoint PointX="26.53125" PointY="45.875" />
-          <ConnectorPoint PointX="26.53125" PointY="41.088440755208332" />
-          <ConnectorPoint PointX="28.25" PointY="41.088440755208332" />
+        <AssociationConnector Association="mainModel.FK_Ric_1_0" ManuallyRouted="false" >
         </AssociationConnector>
         <AssociationConnector Association="mainModel.FK_RicToChain_1_0" />
-        <EntityTypeShape EntityType="mainModel.Index" Width="1.5" PointX="31.25" PointY="40.25" />
+        <EntityTypeShape EntityType="mainModel.Index" Width="1.5" PointX="31.25" PointY="40.375" />
         <AssociationConnector Association="mainModel.FK_Index_0_0" />
         <AssociationConnector Association="mainModel.FK_Leg_0_02" />
         <EntityTypeShape EntityType="mainModel.Description" Width="1.5" PointX="28.125" PointY="48.25" FillColor="DarkGreen" />
@@ -67,10 +63,11 @@
         <AssociationConnector Association="mainModel.FK_Description_7_0" />
         <AssociationConnector Association="mainModel.FK_Instrument_0_0" />
         <AssociationConnector Association="mainModel.FK_Instrument_1_0" />
-        <AssociationConnector Association="mainModel.FK_Leg_2_0" />
+        <AssociationConnector Association="mainModel.FK_Leg_2_0" ></AssociationConnector>
         <AssociationConnector Association="mainModel.FK_RatingToInstrument_1_0" />
-        <EntityTypeShape EntityType="mainModel.OrdinaryBond" Width="1.5" PointX="39.125" PointY="35.625" FillColor="Olive" />
+        <EntityTypeShape EntityType="mainModel.OrdinaryBond" Width="1.5" PointX="39.5" PointY="35" FillColor="Olive" />
         <EntityTypeShape EntityType="mainModel.OrdinaryFrn" Width="1.5" PointX="41.125" PointY="35" FillColor="Olive" />
+        <EntityTypeShape EntityType="mainModel.FieldVsGroup" Width="1.375" PointX="42.75" PointY="35" FillColor="Olive" />
         </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

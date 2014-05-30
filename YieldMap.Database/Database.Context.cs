@@ -44,7 +44,6 @@ namespace YieldMap.Database
         public DbSet<Specimen> Specimens { get; set; }
         public DbSet<SubIndustry> SubIndustries { get; set; }
         public DbSet<Ticker> Tickers { get; set; }
-        public DbSet<FieldsAndGroup> FieldsAndGroups { get; set; }
         public DbSet<RatingsView> RatingsViews { get; set; }
         public DbSet<LegalEntity> LegalEntities { get; set; }
         public DbSet<RatingToInstrument> RatingToInstruments { get; set; }
@@ -55,5 +54,6 @@ namespace YieldMap.Database
         public DbSet<Instrument> Instruments { get; set; }
         public DbSet<OrdinaryBond> OrdinaryBonds { get; set; }
         public DbSet<OrdinaryFrn> OrdinaryFrns { get; set; }
+        public DbSet<FieldVsGroup> FieldVsGroups { get; set; }
     }
 }

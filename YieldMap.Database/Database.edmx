@@ -32,18 +32,18 @@
           <EntitySet Name="Specimen" EntityType="mainModel.Store.Specimen" store:Type="Tables" />
           <EntitySet Name="SubIndustry" EntityType="mainModel.Store.SubIndustry" store:Type="Tables" />
           <EntitySet Name="Ticker" EntityType="mainModel.Store.Ticker" store:Type="Tables" />
-          <EntitySet Name="FieldsAndGroups" EntityType="mainModel.Store.FieldsAndGroups" store:Type="Views" store:Name="FieldsAndGroups">
+          <EntitySet Name="FieldVsGroup" EntityType="mainModel.Store.FieldVsGroup" store:Type="Views" store:Name="FieldVsGroup">
             <DefiningQuery>SELECT 
-      [FieldsAndGroups].[id_FieldGroup] AS [id_FieldGroup], 
-      [FieldsAndGroups].[FieldGroup_Name] AS [FieldGroup_Name], 
-      [FieldsAndGroups].[FieldGroup_IsDefault] AS [FieldGroup_IsDefault], 
-      [FieldsAndGroups].[Bid] AS [Bid], 
-      [FieldsAndGroups].[Ask] AS [Ask], 
-      [FieldsAndGroups].[Last] AS [Last], 
-      [FieldsAndGroups].[Close] AS [Close], 
-      [FieldsAndGroups].[VWAP] AS [VWAP], 
-      [FieldsAndGroups].[Volume] AS [Volume]
-      FROM [FieldsAndGroups] AS [FieldsAndGroups]</DefiningQuery>
+      [FieldVsGroup].[id_FieldGroup] AS [id_FieldGroup], 
+      [FieldVsGroup].[Name] AS [Name], 
+      [FieldVsGroup].[IsDefault] AS [IsDefault], 
+      [FieldVsGroup].[Bid] AS [Bid], 
+      [FieldVsGroup].[Ask] AS [Ask], 
+      [FieldVsGroup].[Last] AS [Last], 
+      [FieldVsGroup].[Close] AS [Close], 
+      [FieldVsGroup].[VWAP] AS [VWAP], 
+      [FieldVsGroup].[Volume] AS [Volume]
+      FROM [FieldVsGroup] AS [FieldVsGroup]</DefiningQuery>
           </EntitySet>
           <EntitySet Name="OrdinaryBond" EntityType="mainModel.Store.OrdinaryBond" store:Type="Views" store:Name="OrdinaryBond">
             <DefiningQuery>SELECT 
@@ -473,18 +473,18 @@
           <Property Name="id_ParentTicker" Type="integer" />
         </EntityType>
         <!--Errors Found During Generation:
-      warning 6002: The table/view 'main.FieldsAndGroups' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
-      warning 6005: The data type '' is currently not supported for the target .NET Framework version; the column 'DefaultField' in table 'main.FieldsAndGroups' was excluded.
+      warning 6002: The table/view 'main.FieldVsGroup' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
+      warning 6005: The data type '' is currently not supported for the target .NET Framework version; the column 'DefaultField' in table 'main.FieldVsGroup' was excluded.
       -->
-        <EntityType Name="FieldsAndGroups">
+        <EntityType Name="FieldVsGroup">
           <Key>
             <PropertyRef Name="id_FieldGroup" />
-            <PropertyRef Name="FieldGroup_Name" />
-            <PropertyRef Name="FieldGroup_IsDefault" />
+            <PropertyRef Name="Name" />
+            <PropertyRef Name="IsDefault" />
           </Key>
           <Property Name="id_FieldGroup" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="FieldGroup_Name" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="FieldGroup_IsDefault" Type="bit" Nullable="false" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="IsDefault" Type="bit" Nullable="false" />
           <Property Name="Bid" Type="varchar" MaxLength="50" />
           <Property Name="Ask" Type="varchar" MaxLength="50" />
           <Property Name="Last" Type="varchar" MaxLength="50" />
@@ -992,7 +992,6 @@
           <EntitySet Name="Specimens" EntityType="mainModel.Specimen" />
           <EntitySet Name="SubIndustries" EntityType="mainModel.SubIndustry" />
           <EntitySet Name="Tickers" EntityType="mainModel.Ticker" />
-          <EntitySet Name="FieldsAndGroups" EntityType="mainModel.FieldsAndGroup" />
           <EntitySet Name="RatingsViews" EntityType="mainModel.RatingsView" />
           <AssociationSet Name="FK_Chain_0_0" Association="mainModel.FK_Chain_0_0">
             <End Role="Feed" EntitySet="Feeds" />
@@ -1131,6 +1130,7 @@
           </AssociationSet>
           <EntitySet Name="OrdinaryBonds" EntityType="mainModel.OrdinaryBond" />
           <EntitySet Name="OrdinaryFrns" EntityType="mainModel.OrdinaryFrn" />
+          <EntitySet Name="FieldVsGroups" EntityType="mainModel.FieldVsGroup" />
           </EntityContainer>
         <EntityType Name="Chain">
           <Key>
@@ -1328,22 +1328,6 @@
           <NavigationProperty Name="Child" Relationship="mainModel.FK_Ticker_0_0" FromRole="Ticker" ToRole="Ticker1" />
           <NavigationProperty Name="Parent" Relationship="mainModel.FK_Ticker_0_0" FromRole="Ticker1" ToRole="Ticker" />
           <NavigationProperty Name="Descriptions" Relationship="mainModel.FK_Description_3_0" FromRole="Ticker" ToRole="Description" />
-        </EntityType>
-        <EntityType Name="FieldsAndGroup">
-          <Key>
-            <PropertyRef Name="id_FieldGroup" />
-            <PropertyRef Name="FieldGroup_Name" />
-            <PropertyRef Name="FieldGroup_IsDefault" />
-          </Key>
-          <Property Type="Int64" Name="id_FieldGroup" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="FieldGroup_Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Boolean" Name="FieldGroup_IsDefault" Nullable="false" />
-          <Property Type="String" Name="Bid" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Ask" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Last" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Close" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="VWAP" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Volume" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="RatingsView">
           <Key>
@@ -1912,6 +1896,22 @@
           <Property Type="String" Name="IndexName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Type="String" Name="IndexRic" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
+        <EntityType Name="FieldVsGroup">
+          <Key>
+            <PropertyRef Name="id_FieldGroup" />
+            <PropertyRef Name="Name" />
+            <PropertyRef Name="IsDefault" />
+          </Key>
+          <Property Type="Int64" Name="id_FieldGroup" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="IsDefault" Nullable="false" />
+          <Property Type="String" Name="Bid" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Ask" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Last" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Close" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="VWAP" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Volume" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2099,21 +2099,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="FieldsAndGroups">
-            <EntityTypeMapping TypeName="mainModel.FieldsAndGroup">
-              <MappingFragment StoreEntitySet="FieldsAndGroups">
-                <ScalarProperty Name="Volume" ColumnName="Volume" />
-                <ScalarProperty Name="VWAP" ColumnName="VWAP" />
-                <ScalarProperty Name="Close" ColumnName="Close" />
-                <ScalarProperty Name="Last" ColumnName="Last" />
-                <ScalarProperty Name="Ask" ColumnName="Ask" />
-                <ScalarProperty Name="Bid" ColumnName="Bid" />
-                <ScalarProperty Name="FieldGroup_IsDefault" ColumnName="FieldGroup_IsDefault" />
-                <ScalarProperty Name="FieldGroup_Name" ColumnName="FieldGroup_Name" />
-                <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="RatingsViews">
             <EntityTypeMapping TypeName="mainModel.RatingsView">
               <MappingFragment StoreEntitySet="RatingsView">
@@ -2260,6 +2245,21 @@
                 <ScalarProperty Name="Series" ColumnName="Series" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="FieldVsGroups">
+            <EntityTypeMapping TypeName="mainModel.FieldVsGroup">
+              <MappingFragment StoreEntitySet="FieldVsGroup">
+                <ScalarProperty Name="Volume" ColumnName="Volume" />
+                <ScalarProperty Name="VWAP" ColumnName="VWAP" />
+                <ScalarProperty Name="Close" ColumnName="Close" />
+                <ScalarProperty Name="Last" ColumnName="Last" />
+                <ScalarProperty Name="Ask" ColumnName="Ask" />
+                <ScalarProperty Name="Bid" ColumnName="Bid" />
+                <ScalarProperty Name="IsDefault" ColumnName="IsDefault" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

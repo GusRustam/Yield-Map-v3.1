@@ -93,7 +93,7 @@
     <Compile Include="FieldGroup.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="FieldsAndGroup.cs">
+    <Compile Include="FieldVsGroup.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Index.cs">

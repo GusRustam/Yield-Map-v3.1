@@ -12,22 +12,22 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class FieldsAndGroup
+    public partial class FieldVsGroup
     {
         public long id_FieldGroup { get; set; }
-        public string FieldGroup_Name { get; set; }
-        public bool FieldGroup_IsDefault { get; set; }
+        public string Name { get; set; }
+        public bool IsDefault { get; set; }
         public string Bid { get; set; }
         public string Ask { get; set; }
         public string Last { get; set; }
         public string Close { get; set; }
         public string VWAP { get; set; }
         public string Volume { get; set; }
-    	public FieldsAndGroup ToPocoSimple() {
-    	    return new FieldsAndGroup {
+    	public FieldVsGroup ToPocoSimple() {
+    	    return new FieldVsGroup {
     			id_FieldGroup = this.id_FieldGroup,
-    			FieldGroup_Name = this.FieldGroup_Name,
-    			FieldGroup_IsDefault = this.FieldGroup_IsDefault,
+    			Name = this.Name,
+    			IsDefault = this.IsDefault,
     			Bid = this.Bid,
     			Ask = this.Ask,
     			Last = this.Last,
