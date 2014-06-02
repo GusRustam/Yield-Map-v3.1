@@ -3,22 +3,58 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Validation;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using YieldMap.Database.Access;
 using YieldMap.Database.StoredProcedures.Enums;
-using YieldMap.Requests.MetaTables;
 using YieldMap.Tools.Logging;
+using YieldMap.Transitive;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public class InstrumentsBonds : IDisposable {
-        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.InstrumentsBonds");
+    public class Bonds : IDisposable {
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.Bonds");
 
-        // TODO NOW FRNS MUST GO SOMEHOW TOGETHER WITH BONDS :(
+        public Leg CreateLeg(MainEntities ctx, long descrId, InstrumentDescription description) {
+            Leg leg = null;
+            if (description is Bond) {
+                var bond = description as Bond;
+                leg = new Leg {
+                    Structure = bond.BondStructure,
+                    FixedRate = bond.Coupon,
+                    Currency = EnsureCurrency(ctx, bond.Currency),
+                    id_LegType = LegTypes.Received.id,
+                    id_Instrument = ctx.Instruments.First(i => i.id_Description == descrId).id
+                };
+            } else if (description is Frn) {
+                var note = description as Frn;
+                leg  = new Leg {
+                    Structure = note.FrnStructure,
+                    Index = EnsureIndex(ctx, note.IndexName),
+                    Cap = note.Cap,
+                    Floor = note.Floor,
+                    Margin = note.Margin,
+                    Currency = EnsureCurrency(ctx, note.Currency),
+                    id_LegType = LegTypes.Received.id,
+                    id_Instrument = ctx.Instruments.First(i => i.id_Description == descrId).id
+                };
+            }
+            if (leg != null) return leg;
+            throw new InvalidDataException();
+        }
 
+        private static Index EnsureIndex(MainEntities ctx, string ind) {
+            if (String.IsNullOrWhiteSpace(ind))
+                return null;
 
-        public IEnumerable<Tuple<MetaTables.BondDescr, Exception>> SaveBonds(IEnumerable<MetaTables.BondDescr> bonds) {
-            var res = new List<Tuple<MetaTables.BondDescr, Exception>>();
-            bonds = bonds as IList<MetaTables.BondDescr> ?? bonds.ToList();
+            var index =
+                ctx.Indices.FirstOrDefault(t => t.Name == ind) ??
+                ctx.Indices.Add(new Index { Name = ind });
+
+            return index;
+        }
+
+        public void Save(IEnumerable<InstrumentDescription> bonds) {
+            bonds = bonds as IList<InstrumentDescription> ?? bonds.ToList();
 
             // Creating ISINs, and linking RICs to them
             using (var ctx = DbConn.CreateContext()) {
@@ -77,7 +113,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                         description.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
                         description.Seniority = EnsureSeniority(ctx, bond.Seniority);
                         description.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
-                        description.Specimen = EnsureSpecimen(ctx, bond.Instrument);
+                        description.Specimen = EnsureSpecimen(ctx, bond.Specimen);
 
                         // CONSTRAINT: there already must be some ric with some feed!!!
                         description.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
@@ -152,23 +188,11 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                         if (bond.RateStructure.StartsWith("Unable"))
                             continue;
 
-                        Leg leg = null;
-                        var failed = false;
                         try {
-                            var descrId = descrIds[bond.Ric];
-                            leg = new Leg {
-                                Structure = bond.BondStructure,
-                                FixedRate = bond.Coupon,
-                                Currency = EnsureCurrency(ctx, bond.Currency),
-                                id_LegType = LegTypes.Received.id,
-                                id_Instrument = ctx.Instruments.First(i => i.id_Description == descrId).id 
-                            };
+                            legs.Add(bond.Ric, CreateLeg(ctx, descrIds[bond.Ric], bond));
                         } catch (Exception e) {
-                            failed = true;
                             Logger.ErrorEx("Instrument", e);
                         }
-                        if (failed) continue;
-                        legs.Add(bond.Ric, leg);
                     }
 
                     try {
@@ -190,15 +214,20 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     ctx.Configuration.AutoDetectChangesEnabled = true;
                 }
             }
-            return res;
         }
 
         private static string BulkInsertLegs(IEnumerable<Leg> legs) {
             var res =  legs.Aggregate(
-                "INSERT INTO Leg(id_Instrument, id_LegType, id_Currency, Structure, FixedRate) VALUES",
+                "INSERT INTO Leg(id_Instrument, id_LegType, id_Currency, id_Index, Structure, FixedRate, Cap, Floor, Margin) VALUES",
                 (current, i) => {
-                    var coupon = i.FixedRate.HasValue ? String.Format("'{0}'", i.FixedRate.Value) : "0";
-                    return current + String.Format("({0}, {1}, {2}, '{3}', {4}), ", i.id_Instrument, i.id_LegType, i.Currency.id, i.Structure, coupon);
+                    var coupon = i.FixedRate.HasValue ? String.Format("'{0}'", i.FixedRate.Value) : "NULL";
+                    var idIndex = i.Index != null ? i.Index.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var cap = i.Cap.HasValue ? i.Cap.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var floor = i.Floor.HasValue ? i.Floor.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var margin = i.Margin.HasValue ? i.Margin.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    return current + String.Format(
+                        "({0}, {1}, {2}, {3}, '{4}', {5}, {6}, {7}, {8}), ", 
+                        i.id_Instrument, i.id_LegType, i.Currency.id, idIndex, i.Structure, coupon, cap, floor, margin);
                 });
             return res.Substring(0, res.Length - 2);
         }
@@ -242,7 +271,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 });
             return res.Substring(0, res.Length - 2);
         }
-
 
         private static Isin EnsureIsin(MainEntities ctx, Ric ric, string name) {
             if (String.IsNullOrWhiteSpace(name)) return null;

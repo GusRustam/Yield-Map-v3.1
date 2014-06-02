@@ -156,14 +156,13 @@
     <Compile Include="Specimen.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="StoredProcedures\Additions\InstrumentFrns.cs" />
     <Compile Include="StoredProcedures\Additions\Ratings.cs" />
     <Compile Include="StoredProcedures\Enums\InstrumentTypes.cs" />
     <Compile Include="StoredProcedures\Enums\LegTypes.cs" />
     <Compile Include="StoredProcedures\Eraser.cs" />
     <Compile Include="MainEntities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StoredProcedures\Additions\InstrumentsBonds.cs" />
+    <Compile Include="StoredProcedures\Additions\Bonds.cs" />
     <Compile Include="StoredProcedures\Additions\ChainRics.cs" />
     <Compile Include="StoredProcedures\BackupRestore.cs" />
     <Compile Include="StoredProcedures\ChainsLogic.cs" />
@@ -214,6 +213,13 @@
       <Project>{41cf2e5f-752e-4e65-8773-ae7061242ba9}</Project>
       <Name>YieldMap.Tools</Name>
     </ProjectReference>
+    <ProjectReference Include="..\YieldMap.Transitive\YieldMap.Transitive.csproj">
+      <Project>{4B1A3B28-6A9D-4D2D-8158-1DD276BAE9F4}</Project>
+      <Name>YieldMap.Transitive</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

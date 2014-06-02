@@ -4,20 +4,24 @@ module Converters =
     open System
     open System.Globalization
 
-    type Refinement = Invalid | Empty | Product of obj
+    type Refinement = Invalid of string | Empty | Product of obj
 
     (* Converters *)
     type Cnv = abstract member Convert : string -> Refinement
 
     type RequiredBoolConverter() = interface Cnv with member self.Convert x = Product <| box (string(x.[0]).ToUpper() = "Y")
-    type RequiredConverter() = interface Cnv with member self.Convert x = if x = null then Invalid else Product <| box x 
+    type RequiredConverter() = 
+        interface Cnv with 
+            member self.Convert x = 
+                if x = null then Invalid "Object is null"
+                else Product <| box x 
                 
     type RequeredStringConverter() = 
         interface Cnv with 
             member self.Convert x = 
-                if x = null then Invalid
+                if x = null then Invalid "String is null"
                 elif x.Trim() <> String.Empty then Product <| box x 
-                else Invalid
+                else Invalid "String is empty"
 
     type OptionalDateConverter() = 
         interface Cnv with
@@ -29,7 +33,7 @@ module Converters =
         interface Cnv with
             member self.Convert x =
                 let success, num = Double.TryParse(x, NumberStyles.Any, CultureInfo.InvariantCulture)
-                if success then Product <| box num else Invalid
+                if success then Product <| box num else Invalid <| sprintf "%s not a number" x
 
     type OptionalFloatConverter() = 
         interface Cnv with

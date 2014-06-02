@@ -42,8 +42,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FrnTransitive.cs" />
+    <Compile Include="Bond.cs" />
+    <Compile Include="Frn.cs" />
+    <Compile Include="InstrumentDescription.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rating.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

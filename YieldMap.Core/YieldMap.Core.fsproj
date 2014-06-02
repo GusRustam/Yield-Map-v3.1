@@ -110,6 +110,11 @@
       <Project>{41cf2e5f-752e-4e65-8773-ae7061242ba9}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\YieldMap.Transitive\YieldMap.Transitive.csproj">
+      <Name>YieldMap.Transitive</Name>
+      <Project>{4b1a3b28-6a9d-4d2d-8158-1dd276bae9f4}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>mkdir "$(TargetDir)data" 

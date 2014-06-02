@@ -13,6 +13,8 @@ module Operations =
     open YieldMap.Requests
     open YieldMap.Requests.Responses
 
+    open YieldMap.Transitive
+
     open System
 
     type Drivers = {
@@ -83,30 +85,39 @@ module Operations =
             return rics, fails
         }
 
-        let isFloater (b:BondDescr) = b.IsFloater
-        let isConvertible (b:BondDescr) = b.IsConvertible
-        let isStraight (b:BondDescr) = (not b.IsFloater) && (not b.IsConvertible)
+        let (|Floater|Convertible|Straight|) (b:BondDescr) = 
+            if b.IsFloater then Floater b
+            elif b.IsConvertible then Convertible b
+            else Straight b
 
         let loadAndSaveMetadata (s:Drivers) rics =
             tweet {
                 let loader = s.Loader
-                
-                use iBonds = new Additions.InstrumentsBonds ()
+                use iBonds = new Additions.Bonds ()
             
                 let! bonds = loader.LoadMetadata<BondDescr> rics
-                let floaters = bonds |> List.filter isFloater
-                let convertibles = bonds |> List.filter isConvertible
-                let straights = bonds |> List.filter isStraight
-
-                let straightFailures = iBonds.SaveBonds straights |> List.ofSeq
-                //if List.length failures > 0 then logger.Error "Bond errors:"
-                straightFailures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
-             
-                let iFrns = Additions.InstrumentFrns ()
                 let! frns = loader.LoadMetadata<FrnData> rics
-                let failures = iFrns.SaveFrns frns
-//                if List.length failures > 0 then logger.Error "Frn errors:"
-                failures |> Seq.iter (fun (d, e) -> logger.ErrorEx d.Ric e)  // todo do something else with failures
+
+                let frnMap = frns |> List.map (fun x -> x.Ric, x) |> Map.ofList
+
+                let toSave = bonds |> List.choose (function
+                    | Floater b -> 
+                        if frnMap |> Map.containsKey b.Ric then
+                            (frnMap.[b.Ric], b) 
+                            |> Frn.Create 
+                            :> InstrumentDescription 
+                            |> Some
+                        else
+                            logger.WarnF "No frn info on frn %s" b.Ric 
+                            None
+
+                    | Straight b -> b |> Bond.Create 
+                                      :> InstrumentDescription 
+                                      |> Some
+
+                    | Convertible _ -> None)
+
+                iBonds.Save toSave
 
                 use iRatings = new Additions.Ratings ()
                 let! issueRatings = loader.LoadMetadata<IssueRatingData> rics

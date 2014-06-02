@@ -120,7 +120,7 @@ module MetaChains =
 
                 let convert (value:obj) conv = 
                     let converter = getConverter conv
-                    try converter.Convert <| value.ToString() with _ -> Invalid
+                    try converter.Convert <| value.ToString() with e -> Invalid (e.Message)
 
                 let rec import acc n = 
                     if n > maxRow then
@@ -154,15 +154,23 @@ module MetaChains =
                                     | Empty ->
                                         p.SetValue(res, null) 
                                         importRow rest
-                                    | Invalid -> false
-                                | [] -> true
+                                    | Invalid reason -> Some <| sprintf "%s @ %s error: %s" (value.ToString()) (p.Name) reason
+                                | [] -> None
 
-                            if importRow fieldsInfo then
+                            match importRow fieldsInfo with
+                            | Some failure ->
+                                let printableError = 
+                                    fieldsInfo 
+                                    |> List.map (function
+                                        | (_, name, Some t) -> (name, t.Name)
+                                        | (_, name, _) -> (name, "N/A"))
+                                    |> Map.ofList
+
+                                logger.WarnF "Row %A import failed because of %s" printableError failure
+                                import acc (n+1)
+                            | None -> 
                                 logger.Trace "Imported"
                                 import ([res] @ acc) (n+1)
-                            else 
-                                logger.Warn "Row import failed"
-                                import acc (n+1)
 
                         with e -> 
                             logger.WarnF "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())

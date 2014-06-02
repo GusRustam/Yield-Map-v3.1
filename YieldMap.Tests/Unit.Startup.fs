@@ -201,7 +201,7 @@ module StartupTest =
     [<Test>]
     let ``Simple startup and states`` () =
         let dt = DateTime(2014,5,14) 
-        let prms = "0#RUTSY=MM"
+        let prms = "0#RUCORP=MM"
         
         globalThreshold := LoggingLevel.Debug
 
@@ -251,13 +251,13 @@ module StartupTest =
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
-//        command "Connect" x.Connect (State Initialized)
-//
-//        logger.Error " =============== SECOND RELOAD ====================="
-//        command "Reload" (fun () -> x.Reload true) (State Initialized)
-//        command "Close" x.Close (State Closed)
-//        command "Close" x.Close NotResponding
-//        command "Connect" x.Connect NotResponding
+        command "Connect" x.Connect (State Initialized)
+
+        logger.Error " =============== SECOND RELOAD ====================="
+        command "Reload" (fun () -> x.Reload true) (State Initialized)
+        command "Close" x.Close (State Closed)
+        command "Close" x.Close NotResponding
+        command "Connect" x.Connect NotResponding
 
         use ctx = DbConn.CreateContext()
         cnt ctx.Feeds |> should be (equal 1)
