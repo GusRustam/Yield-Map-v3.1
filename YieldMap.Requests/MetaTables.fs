@@ -115,7 +115,7 @@ module MetaTables =
         [<Field(1, "EJV.IR.Rating", typeof<RequiredConverter>)>]
         member val Rating = String.Empty with get, set
 
-        [<Field(2, "EJV.IR.RatingDate", typeof<OptionalDateConverter>)>]
+        [<Field(2, "EJV.IR.RatingDate", typeof<RequiredDateConverter>)>]
         member val RatingDate : DateTime Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.IR.RatingSourceCode")>]
@@ -129,7 +129,7 @@ module MetaTables =
         [<Field(1, "EJV.GR.Rating", typeof<RequiredConverter>)>]
         member val Rating = String.Empty with get, set
 
-        [<Field(2, "EJV.GR.RatingDate", typeof<OptionalDateConverter>)>]
+        [<Field(2, "EJV.GR.RatingDate", typeof<RequiredDateConverter>)>]
         member val RatingDate : DateTime Nullable = Nullable() with get, set
 
         [<Field(3, "EJV.GR.RatingSourceCode")>]

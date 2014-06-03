@@ -17,11 +17,13 @@ namespace YieldMap.Database
         public long id { get; set; }
         public long id_Rating { get; set; }
         public Nullable<long> id_LegalEntity { get; set; }
+        public Nullable<System.DateTime> RatingDate { get; set; }
     	public RatingToLegalEntity ToPocoSimple() {
     	    return new RatingToLegalEntity {
     			id = this.id,
     			id_Rating = this.id_Rating,
     			id_LegalEntity = this.id_LegalEntity,
+    			RatingDate = this.RatingDate,
     		};
     	}
     		

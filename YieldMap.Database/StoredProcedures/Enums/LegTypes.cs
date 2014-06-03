@@ -3,15 +3,15 @@ using YieldMap.Database.Access;
 
 namespace YieldMap.Database.StoredProcedures.Enums {
     public static class LegTypes {
-        public static readonly InstrumentType Paid;
-        public static readonly InstrumentType Received;
-        public static readonly InstrumentType Both;
+        public static readonly LegType Paid;
+        public static readonly LegType Received;
+        public static readonly LegType Both;
 
         static LegTypes() {
             using (var ctx = DbConn.CreateContext()) {
-                Paid = ctx.InstrumentTypes.First(i => i.Name == "Bond").ToPocoSimple();
-                Received = ctx.InstrumentTypes.First(i => i.Name == "Frn").ToPocoSimple();
-                Both = ctx.InstrumentTypes.First(i => i.Name == "Swap").ToPocoSimple();
+                Paid = ctx.LegTypes.First(i => i.Name == "Paid").ToPocoSimple();
+                Received = ctx.LegTypes.First(i => i.Name == "Received").ToPocoSimple();
+                Both = ctx.LegTypes.First(i => i.Name == "Both").ToPocoSimple();
             }
         }
     }

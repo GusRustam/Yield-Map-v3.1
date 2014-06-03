@@ -105,6 +105,12 @@
     <Compile Include="Instrument.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="InstrumentIBView.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
+    <Compile Include="InstrumentRicView.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="InstrumentType.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>

@@ -45,6 +45,23 @@
       [FieldVsGroup].[Volume] AS [Volume]
       FROM [FieldVsGroup] AS [FieldVsGroup]</DefiningQuery>
           </EntitySet>
+          <EntitySet Name="InstrumentIBView" EntityType="mainModel.Store.InstrumentIBView" store:Type="Views" store:Name="InstrumentIBView">
+            <DefiningQuery>SELECT 
+      [InstrumentIBView].[id_Ric] AS [id_Ric], 
+      [InstrumentIBView].[id_Instrument] AS [id_Instrument], 
+      [InstrumentIBView].[id_Borrower] AS [id_Borrower], 
+      [InstrumentIBView].[id_Issuer] AS [id_Issuer], 
+      [InstrumentIBView].[Name] AS [Name]
+      FROM [InstrumentIBView] AS [InstrumentIBView]</DefiningQuery>
+          </EntitySet>
+          <EntitySet Name="InstrumentRicView" EntityType="mainModel.Store.InstrumentRicView" store:Type="Views" store:Name="InstrumentRicView">
+            <DefiningQuery>SELECT 
+      [InstrumentRicView].[id_Ric] AS [id_Ric], 
+      [InstrumentRicView].[id_Instrument] AS [id_Instrument], 
+      [InstrumentRicView].[id_Description] AS [id_Description], 
+      [InstrumentRicView].[Name] AS [Name]
+      FROM [InstrumentRicView] AS [InstrumentRicView]</DefiningQuery>
+          </EntitySet>
           <EntitySet Name="OrdinaryBond" EntityType="mainModel.Store.OrdinaryBond" store:Type="Views" store:Name="OrdinaryBond">
             <DefiningQuery>SELECT 
       [OrdinaryBond].[id_Instrument] AS [id_Instrument], 
@@ -415,6 +432,7 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="id_Rating" Type="integer" Nullable="false" />
           <Property Name="id_Instrument" Type="integer" />
+          <Property Name="RatingDate" Type="datetime" />
         </EntityType>
         <EntityType Name="RatingToLegalEntity">
           <Key>
@@ -423,6 +441,7 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="id_Rating" Type="integer" Nullable="false" />
           <Property Name="id_LegalEntity" Type="integer" />
+          <Property Name="RatingDate" Type="datetime" />
         </EntityType>
         <EntityType Name="Ric">
           <Key>
@@ -491,6 +510,36 @@
           <Property Name="Close" Type="varchar" MaxLength="50" />
           <Property Name="VWAP" Type="varchar" MaxLength="50" />
           <Property Name="Volume" Type="varchar" MaxLength="50" />
+        </EntityType>
+        <!--Errors Found During Generation:
+      warning 6002: The table/view 'main.InstrumentIBView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
+      -->
+        <EntityType Name="InstrumentIBView">
+          <Key>
+            <PropertyRef Name="id_Ric" />
+            <PropertyRef Name="id_Instrument" />
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Name="id_Ric" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_Borrower" Type="integer" />
+          <Property Name="id_Issuer" Type="integer" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
+        </EntityType>
+        <!--Errors Found During Generation:
+      warning 6002: The table/view 'main.InstrumentRicView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
+      -->
+        <EntityType Name="InstrumentRicView">
+          <Key>
+            <PropertyRef Name="id_Ric" />
+            <PropertyRef Name="id_Instrument" />
+            <PropertyRef Name="id_Description" />
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Name="id_Ric" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_Description" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
         </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.OrdinaryBond' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
@@ -1131,6 +1180,8 @@
           <EntitySet Name="OrdinaryBonds" EntityType="mainModel.OrdinaryBond" />
           <EntitySet Name="OrdinaryFrns" EntityType="mainModel.OrdinaryFrn" />
           <EntitySet Name="FieldVsGroups" EntityType="mainModel.FieldVsGroup" />
+          <EntitySet Name="InstrumentRicViews" EntityType="mainModel.InstrumentRicView" />
+          <EntitySet Name="InstrumentIBViews" EntityType="mainModel.InstrumentIBView" />
           </EntityContainer>
         <EntityType Name="Chain">
           <Key>
@@ -1463,8 +1514,8 @@
           <Property Type="Int64" Name="id_Country" Nullable="false" />
           <NavigationProperty Name="Country" Relationship="mainModel.FK_LegalEntity_0_0" FromRole="LegalEntity" ToRole="Country" />
           <NavigationProperty Name="RatingToLegalEntities" Relationship="mainModel.FK_RatingToLegalEntity_0_0" FromRole="LegalEntity" ToRole="RatingToLegalEntity" />
-          <NavigationProperty Name="Descriptions" Relationship="mainModel.FK_Description_0_0" FromRole="LegalEntity" ToRole="Description" />
-          <NavigationProperty Name="Descriptions1" Relationship="mainModel.FK_Description_6_0" FromRole="LegalEntity" ToRole="Description" />
+          <NavigationProperty Name="IssuerDescriptions" Relationship="mainModel.FK_Description_0_0" FromRole="LegalEntity" ToRole="Description" />
+          <NavigationProperty Name="BorrowerDescriptions" Relationship="mainModel.FK_Description_6_0" FromRole="LegalEntity" ToRole="Description" />
         </EntityType>
         <EntityType Name="RatingToInstrument">
           <Key>
@@ -1475,6 +1526,7 @@
           <Property Type="Int64" Name="id_Instrument" />
           <NavigationProperty Name="Rating" Relationship="mainModel.FK_RatingToInstrument_0_0" FromRole="RatingToInstrument" ToRole="Rating" />
           <NavigationProperty Name="Instrument" Relationship="mainModel.FK_RatingToInstrument_1_0" FromRole="RatingToInstrument" ToRole="Instrument" />
+          <Property Type="DateTime" Name="RatingDate" />
         </EntityType>
         <Association Name="FK_LegalEntity_0_0">
           <End Type="mainModel.Country" Role="Country" Multiplicity="1" />
@@ -1509,6 +1561,7 @@
           <Property Type="Int64" Name="id_LegalEntity" />
           <NavigationProperty Name="LegalEntity" Relationship="mainModel.FK_RatingToLegalEntity_0_0" FromRole="RatingToLegalEntity" ToRole="LegalEntity" />
           <NavigationProperty Name="Rating" Relationship="mainModel.FK_RatingToLegalEntity_1_0" FromRole="RatingToLegalEntity" ToRole="Rating" />
+          <Property Type="DateTime" Name="RatingDate" />
         </EntityType>
         <Association Name="FK_RatingToLegalEntity_0_0">
           <End Type="mainModel.LegalEntity" Role="LegalEntity" Multiplicity="0..1" />
@@ -1912,6 +1965,30 @@
           <Property Type="String" Name="VWAP" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Type="String" Name="Volume" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
+        <EntityType Name="InstrumentRicView">
+          <Key>
+            <PropertyRef Name="id_Ric" />
+            <PropertyRef Name="id_Instrument" />
+            <PropertyRef Name="id_Description" />
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Type="Int64" Name="id_Ric" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Description" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="InstrumentIBView">
+          <Key>
+            <PropertyRef Name="id_Ric" />
+            <PropertyRef Name="id_Instrument" />
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Type="Int64" Name="id_Ric" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Borrower" />
+          <Property Type="Int64" Name="id_Issuer" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2124,6 +2201,7 @@
           <EntitySetMapping Name="RatingToInstruments">
             <EntityTypeMapping TypeName="mainModel.RatingToInstrument">
               <MappingFragment StoreEntitySet="RatingToInstrument">
+                <ScalarProperty Name="RatingDate" ColumnName="RatingDate" />
                 <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
                 <ScalarProperty Name="id_Rating" ColumnName="id_Rating" />
                 <ScalarProperty Name="id" ColumnName="id" />
@@ -2133,6 +2211,7 @@
           <EntitySetMapping Name="RatingToLegalEntities">
             <EntityTypeMapping TypeName="mainModel.RatingToLegalEntity">
               <MappingFragment StoreEntitySet="RatingToLegalEntity">
+                <ScalarProperty Name="RatingDate" ColumnName="RatingDate" />
                 <ScalarProperty Name="id_LegalEntity" ColumnName="id_LegalEntity" />
                 <ScalarProperty Name="id_Rating" ColumnName="id_Rating" />
                 <ScalarProperty Name="id" ColumnName="id" />
@@ -2260,6 +2339,27 @@
                 <ScalarProperty Name="IsDefault" ColumnName="IsDefault" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="InstrumentRicViews">
+            <EntityTypeMapping TypeName="mainModel.InstrumentRicView">
+              <MappingFragment StoreEntitySet="InstrumentRicView">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id_Description" ColumnName="id_Description" />
+                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
+                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="InstrumentIBViews">
+            <EntityTypeMapping TypeName="mainModel.InstrumentIBView">
+              <MappingFragment StoreEntitySet="InstrumentIBView">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id_Issuer" ColumnName="id_Issuer" />
+                <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
+                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
+                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

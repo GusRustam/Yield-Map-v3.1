@@ -2,14 +2,14 @@
 
 namespace YieldMap.Transitive {
     public class Frn : InstrumentDescription {
-        public string FrnStructure;
+        public string FrnStructure{ get; private set; }
 
-        public string Description;
+        public string Description{ get; private set; }
 
-        public string IndexName;
-        public double? Cap;
-        public double? Floor;
-        public double? Margin;
+        public string IndexName{ get; private set; }
+        public double? Cap{ get; private set; }
+        public double? Floor{ get; private set; }
+        public double? Margin{ get; private set; }
 
         protected Frn(MetaTables.BondDescr bond) : base(bond) {
         }

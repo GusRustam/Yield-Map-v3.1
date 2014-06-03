@@ -12,22 +12,21 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class RatingToInstrument
+    public partial class InstrumentIBView
     {
-        public long id { get; set; }
-        public long id_Rating { get; set; }
-        public Nullable<long> id_Instrument { get; set; }
-        public Nullable<System.DateTime> RatingDate { get; set; }
-    	public RatingToInstrument ToPocoSimple() {
-    	    return new RatingToInstrument {
-    			id = this.id,
-    			id_Rating = this.id_Rating,
+        public long id_Ric { get; set; }
+        public long id_Instrument { get; set; }
+        public Nullable<long> id_Borrower { get; set; }
+        public Nullable<long> id_Issuer { get; set; }
+        public string Name { get; set; }
+    	public InstrumentIBView ToPocoSimple() {
+    	    return new InstrumentIBView {
+    			id_Ric = this.id_Ric,
     			id_Instrument = this.id_Instrument,
-    			RatingDate = this.RatingDate,
+    			id_Borrower = this.id_Borrower,
+    			id_Issuer = this.id_Issuer,
+    			Name = this.Name,
     		};
     	}
-    		
-        public virtual Rating Rating { get; set; }
-        public virtual Instrument Instrument { get; set; }
-    }
+    		}
 }

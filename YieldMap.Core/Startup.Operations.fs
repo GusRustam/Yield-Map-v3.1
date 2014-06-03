@@ -101,30 +101,33 @@ module Operations =
                 let frnMap = frns |> List.map (fun x -> x.Ric, x) |> Map.ofList
 
                 let toSave = bonds |> List.choose (function
-                    | Floater b -> 
-                        if frnMap |> Map.containsKey b.Ric then
-                            (frnMap.[b.Ric], b) 
-                            |> Frn.Create 
-                            :> InstrumentDescription 
-                            |> Some
-                        else
-                            logger.WarnF "No frn info on frn %s" b.Ric 
-                            None
+                    | Floater note when frnMap |> Map.containsKey note.Ric -> 
+                        Frn.Create (frnMap.[note.Ric], note) 
+                        :> InstrumentDescription 
+                        |> Some
 
-                    | Straight b -> b |> Bond.Create 
-                                      :> InstrumentDescription 
-                                      |> Some
+                    | Floater note  -> 
+                        logger.WarnF "No frn info on frn %s" note.Ric 
+                        None
 
-                    | Convertible _ -> None)
+                    | Straight bond -> 
+                        Bond.Create bond
+                        :> InstrumentDescription 
+                        |> Some
+
+                    | Convertible conv -> 
+                        logger.WarnF "Convertibles not supported yet %s" conv.Ric 
+                        None)
 
                 iBonds.Save toSave
 
-                use iRatings = new Additions.Ratings ()
+                let iRatings = new Additions.Ratings ()
                 let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
-                iRatings.SaveIssueRatings issueRatings
-                            
                 let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
-                iRatings.SaveIssuerRatings issuerRatings
+
+                let iR = (issueRatings |> List.map Rating.Create) @ (issuerRatings |> List.map Rating.Create)
+                iRatings.SaveRatings iR
+                            
             }
 
         let rec reload (s:Drivers) chains force  = 

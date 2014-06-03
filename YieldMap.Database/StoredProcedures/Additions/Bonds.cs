@@ -184,10 +184,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 try {
                     ctx.Configuration.AutoDetectChangesEnabled = false;
                     var legs = new Dictionary<string, Leg>();
-                    foreach (var bond in bonds) {
-                        if (bond.RateStructure.StartsWith("Unable"))
-                            continue;
-
+                    foreach (var bond in bonds.Where(bond => !bond.RateStructure.StartsWith("Unable"))) {
                         try {
                             legs.Add(bond.Ric, CreateLeg(ctx, descrIds[bond.Ric], bond));
                         } catch (Exception e) {
@@ -195,14 +192,14 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                         }
                     }
 
-                    try {
-                        ctx.SaveChanges(); 
-                    } catch (DbEntityValidationException e) {
-                        Logger.Report("Saving legs failed", e);
-                        throw;
-                    }
-
                     if (legs.Any()) {
+                        try {
+                            ctx.SaveChanges();
+                        } catch (DbEntityValidationException e) {
+                            Logger.Report("Saving legs failed", e);
+                            throw;
+                        }
+                        
                         var peggedContext = ctx;
                         legs.Values.ChunkedForEach(x => {
                             var sql = BulkInsertLegs(x);

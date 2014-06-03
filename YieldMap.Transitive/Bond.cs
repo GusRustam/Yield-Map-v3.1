@@ -2,8 +2,8 @@
 
 namespace YieldMap.Transitive {
     public class Bond : InstrumentDescription {
-        public string BondStructure;
-        public double? Coupon;
+        public string BondStructure{ get; private set; }
+        public double? Coupon{ get; private set; }
 
         protected Bond(MetaTables.BondDescr bond) : base(bond) {
         }

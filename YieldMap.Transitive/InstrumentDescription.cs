@@ -3,31 +3,31 @@ using YieldMap.Requests.MetaTables;
 
 namespace YieldMap.Transitive {
     public class InstrumentDescription {
-        public string Ric;
-        public string Isin;
-        public string Series;
+        public string Ric{ get; private set; }
+        public string Isin{ get; private set; }
+        public string Series{ get; private set; }
 
-        public string ShortName;
-        public string IssuerName;
-        public string BorrowerName;
-        public string IssuerCountry;
-        public string BorrowerCountry;
+        public string ShortName{ get; private set; }
+        public string IssuerName{ get; private set; }
+        public string BorrowerName{ get; private set; }
+        public string IssuerCountry{ get; private set; }
+        public string BorrowerCountry{ get; private set; }
 
-        public string Currency;
+        public string Currency{ get; private set; }
 
-        public long? IssueSize;
-        public string RateStructure;
+        public long? IssueSize{ get; private set; }
+        public string RateStructure{ get; private set; }
 
-        public string Ticker;
-        public string ParentTicker;
-        public string Industry;
-        public string SubIndustry;
-        public string Seniority;
-        public string Specimen;
+        public string Ticker{ get; private set; }
+        public string ParentTicker{ get; private set; }
+        public string Industry{ get; private set; }
+        public string SubIndustry{ get; private set; }
+        public string Seniority{ get; private set; }
+        public string Specimen{ get; private set; }
 
-        public DateTime? Issue;
-        public DateTime? Maturity;
-        public DateTime? NextCoupon;
+        public DateTime? Issue{ get; private set; }
+        public DateTime? Maturity{ get; private set; }
+        public DateTime? NextCoupon{ get; private set; }
 
         protected InstrumentDescription(MetaTables.BondDescr bond) {
             Ric = bond.Ric;

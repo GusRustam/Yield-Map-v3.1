@@ -133,40 +133,33 @@ module MetaChains =
                             let t = typedefof<'T>
 
                             let rec importRow = function
-                                | (num, name, converter) :: rest ->
-                                    let p = t.GetProperty name
+                            | (num, name, converter) :: rest ->
+                                let p = t.GetProperty name
                                     
-                                    // a kind of hack. It some item is out of bounds of returned array
-                                    // it is considered to be null
-                                    let value =  if num-minCol < Array.length row then row.[num-minCol] else null
+                                // a kind of hack. It some item is out of bounds of returned array
+                                // it is considered to be null
+                                let value =  if num-minCol < Array.length row then row.[num-minCol] else null
                                     
-                                    logger.TraceF "Converting value %A field %s to type %s" value p.Name p.PropertyType.Name
+                                logger.TraceF "Converting value %A field %s to type %s" value p.Name p.PropertyType.Name
 
-                                    let convertedValue = 
-                                        match converter with
-                                        | Some conv -> convert (value.ToString()) conv
-                                        | None -> Product value
+                                let convertedValue = 
+                                    match converter with
+                                    | Some conv -> convert (value.ToString()) conv
+                                    | None -> Product value
 
-                                    match convertedValue with
-                                    | Product v -> 
-                                        p.SetValue(res, v) 
-                                        importRow rest
-                                    | Empty ->
-                                        p.SetValue(res, null) 
-                                        importRow rest
-                                    | Invalid reason -> Some <| sprintf "%s @ %s error: %s" (value.ToString()) (p.Name) reason
-                                | [] -> None
+                                match convertedValue with
+                                | Product v -> 
+                                    p.SetValue(res, v) 
+                                    importRow rest
+                                | Empty ->
+                                    p.SetValue(res, null) 
+                                    importRow rest
+                                | Invalid reason -> Some <| sprintf "[%s] in %s error: %s" (value.ToString()) (p.Name) reason
+                            | [] -> None
 
                             match importRow fieldsInfo with
                             | Some failure ->
-                                let printableError = 
-                                    fieldsInfo 
-                                    |> List.map (function
-                                        | (_, name, Some t) -> (name, t.Name)
-                                        | (_, name, _) -> (name, "N/A"))
-                                    |> Map.ofList
-
-                                logger.WarnF "Row %A import failed because of %s" printableError failure
+                                logger.WarnF "Import failed: %s" failure
                                 import acc (n+1)
                             | None -> 
                                 logger.Trace "Imported"

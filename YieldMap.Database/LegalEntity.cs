@@ -17,8 +17,8 @@ namespace YieldMap.Database
         public LegalEntity()
         {
             this.RatingToLegalEntities = new HashSet<RatingToLegalEntity>();
-            this.Descriptions = new HashSet<Description>();
-            this.Descriptions1 = new HashSet<Description>();
+            this.IssuerDescriptions = new HashSet<Description>();
+            this.BorrowerDescriptions = new HashSet<Description>();
         }
     
         public long id { get; set; }
@@ -34,7 +34,7 @@ namespace YieldMap.Database
     		
         public virtual Country Country { get; set; }
         public virtual ICollection<RatingToLegalEntity> RatingToLegalEntities { get; set; }
-        public virtual ICollection<Description> Descriptions { get; set; }
-        public virtual ICollection<Description> Descriptions1 { get; set; }
+        public virtual ICollection<Description> IssuerDescriptions { get; set; }
+        public virtual ICollection<Description> BorrowerDescriptions { get; set; }
     }
 }

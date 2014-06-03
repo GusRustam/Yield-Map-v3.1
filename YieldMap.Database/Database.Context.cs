@@ -55,5 +55,7 @@ namespace YieldMap.Database
         public DbSet<OrdinaryBond> OrdinaryBonds { get; set; }
         public DbSet<OrdinaryFrn> OrdinaryFrns { get; set; }
         public DbSet<FieldVsGroup> FieldVsGroups { get; set; }
+        public DbSet<InstrumentRicView> InstrumentRicViews { get; set; }
+        public DbSet<InstrumentIBView> InstrumentIBViews { get; set; }
     }
 }

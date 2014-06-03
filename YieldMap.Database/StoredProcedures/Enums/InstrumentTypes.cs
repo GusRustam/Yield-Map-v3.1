@@ -3,8 +3,6 @@ using YieldMap.Database.Access;
 
 namespace YieldMap.Database.StoredProcedures.Enums {
     public static class InstrumentTypes {
-        
-
         public static readonly InstrumentType Bond;
         public static readonly InstrumentType Frn;
         public static readonly InstrumentType Swap;

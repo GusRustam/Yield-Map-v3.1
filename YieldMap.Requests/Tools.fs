@@ -29,6 +29,12 @@ module Converters =
                 let success, date = DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
                 if success then Product <| box date else Empty
 
+    type RequiredDateConverter() = 
+        interface Cnv with
+            member self.Convert x = 
+                let success, date = DateTime.TryParse(x, CultureInfo.InvariantCulture, DateTimeStyles.None)
+                if success then Product <| box date else Invalid <| sprintf "String %s not a date" x
+
     type RequiredFloatConverter() = 
         interface Cnv with
             member self.Convert x =
