@@ -37,10 +37,10 @@ namespace YieldMap.Database
     	}
     		
         public virtual Feed Feed { get; set; }
-        public virtual FieldGroup FieldGroup { get; set; }
         public virtual Isin Isin { get; set; }
         public virtual ICollection<RicToChain> RicToChains { get; set; }
         public virtual ICollection<Index> Indices { get; set; }
         public virtual ICollection<Description> Descriptions { get; set; }
+        public virtual FieldGroup FieldGroup { get; set; }
     }
 }

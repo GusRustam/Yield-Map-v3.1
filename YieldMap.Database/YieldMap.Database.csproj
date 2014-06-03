@@ -163,6 +163,7 @@
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="StoredProcedures\Additions\Ratings.cs" />
+    <Compile Include="StoredProcedures\Enums\FieldGroups.cs" />
     <Compile Include="StoredProcedures\Enums\InstrumentTypes.cs" />
     <Compile Include="StoredProcedures\Enums\LegTypes.cs" />
     <Compile Include="StoredProcedures\Eraser.cs" />
@@ -172,7 +173,6 @@
     <Compile Include="StoredProcedures\Additions\ChainRics.cs" />
     <Compile Include="StoredProcedures\BackupRestore.cs" />
     <Compile Include="StoredProcedures\ChainsLogic.cs" />
-    <Compile Include="StoredProcedures\Fields.cs" />
     <Compile Include="StoredProcedures\Mission.cs" />
     <Compile Include="StoredProcedures\Refresh.cs" />
     <Compile Include="SubIndustry.cs">

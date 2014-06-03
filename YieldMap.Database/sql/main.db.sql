@@ -113,7 +113,6 @@ CREATE TABLE Field (
   VWAP           varchar(50),
   Volume         varchar(50),
   id_FieldGroup  integer NOT NULL,
-  "Default"      boolean NOT NULL DEFAULT false,
   /* Foreign keys */
   FOREIGN KEY (id_FieldGroup)
     REFERENCES FieldGroup(id)
@@ -121,29 +120,11 @@ CREATE TABLE Field (
     ON UPDATE CASCADE
 );
 
-CREATE TRIGGER Field_AfterUpdate
-  AFTER UPDATE
-  ON Field
-  WHEN NEW."Default" = 1 AND EXISTS (SELECT SUM("Default") AS x FROM Field GROUP BY "Default" HAVING x >= 1)
-BEGIN
-  --INSERT INTO _log(msg) VALUES("Setting new default");
-  UPDATE Field SET "Default" = 0 WHERE Field.id <> NEW.id;
-END;
-
-CREATE TRIGGER Field_BeforeUpdate
-  BEFORE UPDATE
-  ON Field
-  WHEN NEW."Default" = 0 AND NOT EXISTS (SELECT SUM("Default") AS x FROM Field GROUP BY "Default" HAVING x > 1)
-BEGIN
-  --INSERT INTO _log(msg) VALUES("Trying to remove last default");
-  SELECT RAISE(IGNORE);
-END;
-
 CREATE TABLE FieldGroup (
   id            integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Name          varchar(50) NOT NULL UNIQUE,
   DefaultField  varchar(50),
-  "Default"     boolean NOT NULL DEFAULT false
+  "Default"     bit NOT NULL DEFAULT 0
 );
 
 CREATE TRIGGER FieldGroup_AfterUpdate
@@ -347,6 +328,7 @@ CREATE TABLE RatingToInstrument (
   id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   id_Rating      integer NOT NULL,
   id_Instrument  integer,
+  RatingDate     date,
   /* Foreign keys */
   FOREIGN KEY (id_Rating)
     REFERENCES Rating(id)
@@ -362,6 +344,7 @@ CREATE TABLE RatingToLegalEntity (
   id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   id_Rating       integer NOT NULL,
   id_LegalEntity  integer,
+  RatingDate      date,
   /* Foreign keys */
   FOREIGN KEY (id_LegalEntity)
     REFERENCES LegalEntity(id)
@@ -503,9 +486,9 @@ CREATE TABLE _log (
 
 
 /* Data for table Field */
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup, "Default") VALUES (1, 'BID', 'ASK', 'LAST', 'CLOSE', 'VWAP', 'VOLUME', 1, 1);
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup, "Default") VALUES (2, '393', '275', NULL, NULL, NULL, NULL, 2, 0);
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup, "Default") VALUES (3, NULL, NULL, '1054', NULL, NULL, NULL, 3, 0);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (4, 'BID', 'ASK', 'LAST', 'CLOSE', 'VWAP', 'VOLUME', 1);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (5, '393', '275', NULL, NULL, NULL, NULL, 2);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (6, NULL, NULL, '1053', NULL, NULL, NULL, 3);
 
 
 
@@ -685,11 +668,3 @@ INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (8, 'FSU', 3);
 /* Data for table SubIndustry */
 
 
-
-
-/* Data for table Ticker */
-
-
-
-
-/* Data for table _log */

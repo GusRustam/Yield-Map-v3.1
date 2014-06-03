@@ -22,7 +22,6 @@ namespace YieldMap.Database
         public string VWAP { get; set; }
         public string Volume { get; set; }
         public long id_FieldGroup { get; set; }
-        public bool Default { get; set; }
     	public Field ToPocoSimple() {
     	    return new Field {
     			id = this.id,
@@ -33,7 +32,6 @@ namespace YieldMap.Database
     			VWAP = this.VWAP,
     			Volume = this.Volume,
     			id_FieldGroup = this.id_FieldGroup,
-    			Default = this.Default,
     		};
     	}
     		

@@ -320,7 +320,6 @@
           <Property Name="VWAP" Type="varchar" MaxLength="50" />
           <Property Name="Volume" Type="varchar" MaxLength="50" />
           <Property Name="id_FieldGroup" Type="integer" Nullable="false" />
-          <Property Name="Default" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="FieldGroup">
           <Key>
@@ -1027,7 +1026,6 @@
           <EntitySet Name="Currencies" EntityType="mainModel.Currency" />
           <EntitySet Name="Feeds" EntityType="mainModel.Feed" />
           <EntitySet Name="Fields" EntityType="mainModel.Field" />
-          <EntitySet Name="FieldGroups" EntityType="mainModel.FieldGroup" />
           <EntitySet Name="Industries" EntityType="mainModel.Industry" />
           <EntitySet Name="InstrumentTypes" EntityType="mainModel.InstrumentType" />
           <EntitySet Name="Isins" EntityType="mainModel.Isin" />
@@ -1053,10 +1051,6 @@
           <AssociationSet Name="FK_Isin_0_0" Association="mainModel.FK_Isin_0_0">
             <End Role="Feed" EntitySet="Feeds" />
             <End Role="Isin" EntitySet="Isins" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Field_0_0" Association="mainModel.FK_Field_0_0">
-            <End Role="FieldGroup" EntitySet="FieldGroups" />
-            <End Role="Field" EntitySet="Fields" />
           </AssociationSet>
           <AssociationSet Name="FK_SubIndustry_0_0" Association="mainModel.FK_SubIndustry_0_0">
             <End Role="Industry" EntitySet="Industries" />
@@ -1104,10 +1098,6 @@
           <EntitySet Name="Rics" EntityType="mainModel.Ric" />
           <AssociationSet Name="FK_Ric_2_0" Association="mainModel.FK_Ric_2_0">
             <End Role="Feed" EntitySet="Feeds" />
-            <End Role="Ric" EntitySet="Rics" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Ric_0_0" Association="mainModel.FK_Ric_0_0">
-            <End Role="FieldGroup" EntitySet="FieldGroups" />
             <End Role="Ric" EntitySet="Rics" />
           </AssociationSet>
           <AssociationSet Name="FK_Ric_1_0" Association="mainModel.FK_Ric_1_0">
@@ -1182,6 +1172,15 @@
           <EntitySet Name="FieldVsGroups" EntityType="mainModel.FieldVsGroup" />
           <EntitySet Name="InstrumentRicViews" EntityType="mainModel.InstrumentRicView" />
           <EntitySet Name="InstrumentIBViews" EntityType="mainModel.InstrumentIBView" />
+          <EntitySet Name="FieldGroups" EntityType="mainModel.FieldGroup" />
+          <AssociationSet Name="FK_Field_0_0" Association="mainModel.FK_Field_0_0">
+            <End Role="FieldGroup" EntitySet="FieldGroups" />
+            <End Role="Field" EntitySet="Fields" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ric_0_0" Association="mainModel.FK_Ric_0_0">
+            <End Role="FieldGroup" EntitySet="FieldGroups" />
+            <End Role="Ric" EntitySet="Rics" />
+          </AssociationSet>
           </EntityContainer>
         <EntityType Name="Chain">
           <Key>
@@ -1234,19 +1233,7 @@
           <Property Type="String" Name="VWAP" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Type="String" Name="Volume" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Type="Int64" Name="id_FieldGroup" Nullable="false" />
-          <Property Type="Boolean" Name="Default" Nullable="false" />
           <NavigationProperty Name="FieldGroup" Relationship="mainModel.FK_Field_0_0" FromRole="Field" ToRole="FieldGroup" />
-        </EntityType>
-        <EntityType Name="FieldGroup">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="DefaultField" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Boolean" Name="Default" Nullable="false" />
-          <NavigationProperty Name="Fields" Relationship="mainModel.FK_Field_0_0" FromRole="FieldGroup" ToRole="Field" />
-          <NavigationProperty Name="Rics" Relationship="mainModel.FK_Ric_0_0" FromRole="FieldGroup" ToRole="Ric" />
         </EntityType>
         <EntityType Name="Industry">
           <Key>
@@ -1433,18 +1420,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Field_0_0">
-          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="1" />
-          <End Type="mainModel.Field" Role="Field" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="FieldGroup">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Field">
-              <PropertyRef Name="id_FieldGroup" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_SubIndustry_0_0">
           <End Type="mainModel.Industry" Role="Industry" Multiplicity="1" />
           <End Type="mainModel.SubIndustry" Role="SubIndustry" Multiplicity="*" />
@@ -1609,11 +1584,11 @@
           <Property Type="Int64" Name="id_Feed" />
           <Property Type="Int64" Name="id_FieldGroup" />
           <NavigationProperty Name="Feed" Relationship="mainModel.FK_Ric_2_0" FromRole="Ric" ToRole="Feed" />
-          <NavigationProperty Name="FieldGroup" Relationship="mainModel.FK_Ric_0_0" FromRole="Ric" ToRole="FieldGroup" />
           <NavigationProperty Name="Isin" Relationship="mainModel.FK_Ric_1_0" FromRole="Ric" ToRole="Isin" />
           <NavigationProperty Name="RicToChains" Relationship="mainModel.FK_RicToChain_1_0" FromRole="Ric" ToRole="RicToChain" />
           <NavigationProperty Name="Indices" Relationship="mainModel.FK_Index_0_0" FromRole="Ric" ToRole="Index" />
           <NavigationProperty Name="Descriptions" Relationship="mainModel.FK_Description_4_0" FromRole="Ric" ToRole="Description" />
+          <NavigationProperty Name="FieldGroup" Relationship="mainModel.FK_Ric_0_0" FromRole="Ric" ToRole="FieldGroup" />
         </EntityType>
         <Association Name="FK_Ric_2_0">
           <End Type="mainModel.Feed" Role="Feed" Multiplicity="0..1" />
@@ -1624,18 +1599,6 @@
             </Principal>
             <Dependent Role="Ric">
               <PropertyRef Name="id_Feed" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Ric_0_0">
-          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="0..1" />
-          <End Type="mainModel.Ric" Role="Ric" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="FieldGroup">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Ric">
-              <PropertyRef Name="id_FieldGroup" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1989,6 +1952,41 @@
           <Property Type="Int64" Name="id_Issuer" />
           <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
+        <EntityType Name="FieldGroup">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="DefaultField" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="Default" Nullable="false" />
+          <NavigationProperty Name="Fields" Relationship="mainModel.FK_Field_0_0" FromRole="FieldGroup" ToRole="Field" />
+          <NavigationProperty Name="Rics" Relationship="mainModel.FK_Ric_0_0" FromRole="FieldGroup" ToRole="Ric" />
+        </EntityType>
+        <Association Name="FK_Field_0_0">
+          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="1" />
+          <End Type="mainModel.Field" Role="Field" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldGroup">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Field">
+              <PropertyRef Name="id_FieldGroup" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ric_0_0">
+          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="0..1" />
+          <End Type="mainModel.Ric" Role="Ric" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldGroup">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Ric">
+              <PropertyRef Name="id_FieldGroup" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2034,7 +2032,6 @@
           <EntitySetMapping Name="Fields">
             <EntityTypeMapping TypeName="mainModel.Field">
               <MappingFragment StoreEntitySet="Field">
-                <ScalarProperty Name="Default" ColumnName="Default" />
                 <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
                 <ScalarProperty Name="Volume" ColumnName="Volume" />
                 <ScalarProperty Name="VWAP" ColumnName="VWAP" />
@@ -2042,16 +2039,6 @@
                 <ScalarProperty Name="Last" ColumnName="Last" />
                 <ScalarProperty Name="Ask" ColumnName="Ask" />
                 <ScalarProperty Name="Bid" ColumnName="Bid" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="FieldGroups">
-            <EntityTypeMapping TypeName="mainModel.FieldGroup">
-              <MappingFragment StoreEntitySet="FieldGroup">
-                <ScalarProperty Name="Default" ColumnName="Default" />
-                <ScalarProperty Name="DefaultField" ColumnName="DefaultField" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -2360,6 +2347,16 @@
                 <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
                 <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
                 <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="FieldGroups">
+            <EntityTypeMapping TypeName="mainModel.FieldGroup">
+              <MappingFragment StoreEntitySet="FieldGroup">
+                <ScalarProperty Name="Default" ColumnName="Default" />
+                <ScalarProperty Name="DefaultField" ColumnName="DefaultField" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

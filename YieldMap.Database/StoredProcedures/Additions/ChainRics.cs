@@ -4,6 +4,7 @@ using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Linq;
 using YieldMap.Database.Access;
+using YieldMap.Database.StoredProcedures.Enums;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
@@ -39,6 +40,10 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             }
         }
 
+        public void DeleteRics(HashSet<string> rics) {
+            // todo
+        }
+
         private Feed EnsureFeed(MainEntities ctx, string name) {
             if (_feeds.ContainsKey(name)) 
                 return _feeds[name];
@@ -72,7 +77,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     var ric = _rics.ContainsKey(name)
                         ? _rics[name]
                         : ctx.Rics.FirstOrDefault(r => r.Name == name) ??
-                          ctx.Rics.Add(new Ric {Name = name});
+                          ctx.Rics.Add(new Ric {Name = name, id_FieldGroup = ResolveFieldGroup(name).id});
 
                     ric.Feed = feed;
                     _rics[name] = ric;
@@ -90,5 +95,11 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             }
         }
 
+        private static FieldGroup ResolveFieldGroup(string ric) {
+            if (ric.Contains("=MM")) 
+                return FieldGroups.Micex;
+            
+            return FieldGroups.Default;
+        }
     }
 }

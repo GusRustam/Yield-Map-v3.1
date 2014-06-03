@@ -30,7 +30,6 @@ namespace YieldMap.Database
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Feed> Feeds { get; set; }
         public DbSet<Field> Fields { get; set; }
-        public DbSet<FieldGroup> FieldGroups { get; set; }
         public DbSet<Industry> Industries { get; set; }
         public DbSet<InstrumentType> InstrumentTypes { get; set; }
         public DbSet<Isin> Isins { get; set; }
@@ -57,5 +56,6 @@ namespace YieldMap.Database
         public DbSet<FieldVsGroup> FieldVsGroups { get; set; }
         public DbSet<InstrumentRicView> InstrumentRicViews { get; set; }
         public DbSet<InstrumentIBView> InstrumentIBViews { get; set; }
+        public DbSet<FieldGroup> FieldGroups { get; set; }
     }
 }

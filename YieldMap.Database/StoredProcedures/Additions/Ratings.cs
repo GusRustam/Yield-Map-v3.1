@@ -33,7 +33,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     let idLegalEntity = ricInfo.id_Issuer.HasValue ? ricInfo.id_Issuer.Value : ricInfo.id_Borrower.Value
                     select new RatingToLegalEntity { id_LegalEntity = idLegalEntity, id_Rating = ratingInfo.id_Rating, RatingDate = rating.Date }).ToList();
                 
-                
                 var peggedContext = ctx;
                 if (instruments.Any())
                     instruments.ChunkedForEach(x => {

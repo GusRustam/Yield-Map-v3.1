@@ -174,12 +174,7 @@ module Operations =
                         (classified.[Mission.Obsolete].Length) 
                         (classified.[Mission.Keep].Length)
 
-                    // todo delete obsolete rics <- definitely a stored procedure 
-                    // todo should I do a cleanup here?
-
-                    // TODODODODO!
-//                    try Additions.DeleteBonds <| HashSet<_>(classified.[Mission.Keep])
-//                    with e -> logger.ErrorEx "Failed to cleanup" e
+                    db.DeleteRics <| HashSet<_>(classified.[Mission.Keep])                    
                     
                     let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                     match res with 
