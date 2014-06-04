@@ -8,7 +8,7 @@ namespace YieldMap.Database {
     public partial class MainEntities {
         private static readonly Dictionary<string, string> Variables = new Dictionary<string, string>();
 
-        public static void SetVariable(string name, string value) {
+        internal static void SetVariable(string name, string value) {
             Variables[name] = value;
         }
 
@@ -20,13 +20,13 @@ namespace YieldMap.Database {
             }
         }
 
-        public static string GetConnectionString(string name) {
+        internal static string GetConnectionString(string name) {
             return Variables.Aggregate(
                 GetCnnString(name),
                 (current, variable) => current.Replace(@"${" + variable.Key + "}", variable.Value));
         }
 
-        public MainEntities(string nameOrConnectionString)
+        internal MainEntities(string nameOrConnectionString)
             : base(nameOrConnectionString) {
             Debug.Print(nameOrConnectionString);
         }

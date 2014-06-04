@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using YieldMap.Tools.Location;
+﻿using YieldMap.Tools.Location;
 
 namespace YieldMap.Database.Access {
     public static class DbConn {
@@ -15,5 +12,7 @@ namespace YieldMap.Database.Access {
         public static MainEntities CreateContext() {
             return new MainEntities(ConnectionString);
         }
+
+        
     }
 }

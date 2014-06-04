@@ -20,16 +20,13 @@ module DbTests =
         
     open YieldMap.Database
 
+    let cnt boo = query { for x in boo do select x; count }
 
     let logger = LogFactory.create "UnitTests.TestDb"
 
     [<Test>]
     let ``Reading and writing to Db works`` () = 
-        MainEntities.SetVariable("PathToTheDatabase", Location.path)
-        let cnnStr = MainEntities.GetConnectionString("TheMainEntities")
-        use ctx = new MainEntities(cnnStr)
-
-        let cnt boo = query { for x in boo do select x; count }
+        use ctx = Access.DbConn.CreateContext()
 
         let count = cnt ctx.Chains
         logger.InfoF "Da count is %d" count
@@ -50,3 +47,23 @@ module DbTests =
         let poo =  cnt ctx.Chains
         logger.InfoF "Da count is now %d" poo
         poo |> should equal count
+
+    [<Test>]
+    let ``Backup / restore`` () = 
+        using (Access.DbConn.CreateContext()) (fun ctx ->
+            cnt ctx.Feeds |> should be (equal 1))
+
+        let addr = StoredProcedures.BackupRestore.Backup ()
+
+        using (Access.DbConn.CreateContext()) (fun ctx ->
+            cnt ctx.Feeds |> should be (equal 1))
+
+        StoredProcedures.BackupRestore.Cleanup ()
+
+        using (Access.DbConn.CreateContext()) (fun ctx ->
+            cnt ctx.Feeds |> should be (equal 0))
+
+        StoredProcedures.BackupRestore.Restore addr
+
+        using (Access.DbConn.CreateContext()) (fun ctx ->
+            cnt ctx.Feeds |> should be (equal 1))

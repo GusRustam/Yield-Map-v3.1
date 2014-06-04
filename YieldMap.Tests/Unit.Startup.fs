@@ -11,17 +11,6 @@ module Ops =
     open YieldMap.Database
     open YieldMap.Database.StoredProcedures
 
-    let cleanup () =
-        // TODO RESTORE DATABASE
-
-
-        // Cleaning up db
-        let eraser = new Eraser ()
-        eraser.DeleteChains ()
-        eraser.DeleteInstruments () // todo why???
-        eraser.DeleteIsins ()
-        eraser.DeleteRics (fun (x:Ric) -> x.Isin <> null)
-
     let cnt (table : 'a DbSet) = 
         query { for x in table do 
                 select x
@@ -128,6 +117,20 @@ module StartupTest =
         { chains = [|   "0#RUTSY=MM";"0#RUMOSB=MM";"0#RUSOVB=MM";"0#RFGOVBONDS=";"QDSDADS" |]; date = DateTime(2014,5,14) }
     ]
 
+    let mutable backupFile = ""
+
+    [<SetUp>]
+    let setup () = 
+        logger.Info "setup"
+        DbConn.CloseAll()
+        backupFile <- BackupRestore.Backup()
+
+    [<TearDown>]
+    let teardown () = 
+        logger.Info "teardown"
+        DbConn.CloseAll()
+        BackupRestore.Restore backupFile
+
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
     let ``Startup with one chain`` xxx =             
@@ -141,16 +144,6 @@ module StartupTest =
         logger.WarnF "Starting test with chains %A" prms
         
         globalThreshold := LoggingLevel.Debug
-
-        // Cleaning up db
-        cleanup ()
-
-        // Checking cleanup
-        use ctx = DbConn.CreateContext()
-        cnt ctx.Feeds |> should be (equal 0)
-        cnt ctx.Chains |> should be (equal 0)
-        cnt ctx.Rics |> should be (equal 0)
-        cnt ctx.Isins |> should be (equal 0)
 
         use ctx = DbConn.CreateContext ()
         ctx.SaveChanges () |> ignore
@@ -206,18 +199,7 @@ module StartupTest =
         
         globalThreshold := LoggingLevel.Debug
 
-        // Cleaning up db
-        cleanup ()
-
-        // Checking cleanup
-        use ctx = DbConn.CreateContext()
-        cnt ctx.Feeds |> should be (equal 0)
-        cnt ctx.Chains |> should be (equal 0)
-        cnt ctx.Rics |> should be (equal 0)
-        cnt ctx.Isins |> should be (equal 0)
-
         use ctx = DbConn.CreateContext ()
-       
         ctx.Chains.Add <| Chain(Name = prms, id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
@@ -272,18 +254,7 @@ module StartupTest =
         
         globalThreshold := LoggingLevel.Debug
 
-        // Cleaning up db
-        cleanup ()
-
-        // Checking cleanup
-        use ctx = DbConn.CreateContext()
-        cnt ctx.Feeds |> should be (equal 0)
-        cnt ctx.Chains |> should be (equal 0)
-        cnt ctx.Rics |> should be (equal 0)
-        cnt ctx.Isins |> should be (equal 0)
-
         use ctx = DbConn.CreateContext ()
-        
         ctx.Chains.Add <| Chain(Name = "0#RUEUROS=", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
@@ -324,17 +295,13 @@ module StartupTest =
         
         globalThreshold := LoggingLevel.Debug
 
-        // Cleaning up db
-        cleanup ()
-
-        // Checking cleanup
-        use ctx = DbConn.CreateContext()
-        cnt ctx.Feeds |> should be (equal 0)
-        cnt ctx.Chains |> should be (equal 0)
-        cnt ctx.Rics |> should be (equal 0)
-        cnt ctx.Isins |> should be (equal 0)
-
         use ctx = DbConn.CreateContext ()
+
+        let initialUnattachedRics = query {
+            for n in ctx.Rics do
+            where (n.Isin = null)
+            count
+        }
 
         ctx.Chains.Add <| Chain(Name = "0#US30YSTRIP=PX", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
@@ -370,10 +337,13 @@ module StartupTest =
         let unattachedRics = unattachedRics.ToArray()
 
         // RIC US912834NP9=PX exists in chains, but doesn't exist in bond database for some reason. And that's ok
-        unattachedRics |> Array.length |> should be (equal 1)
+        (Array.length unattachedRics - initialUnattachedRics) |> should be (equal 1)
 
         let loser = unattachedRics.[0]
-        loser.Name |> should be (equal "US912834NP9=PX")
+
+        match unattachedRics |> Array.tryFindIndex (fun t -> t.Name = "US912834NP9=PX") with
+        | None -> true |> should be (equal false)
+        | _ -> ()
 
     open YieldMap.Tools.Aux
 
@@ -383,19 +353,8 @@ module StartupTest =
 
         globalThreshold := LoggingLevel.Debug
 
-        // Cleaning up db
-        let eraser = new Eraser ()
-        cleanup ()
-
         // Checking cleanup
         use ctx = DbConn.CreateContext()
-        cnt ctx.Feeds |> should be (equal 0)
-        cnt ctx.Chains |> should be (equal 0)
-        cnt ctx.Rics |> should be (equal 0)
-        cnt ctx.Isins |> should be (equal 0)
-
-        use ctx = DbConn.CreateContext ()
-       
         ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
@@ -423,48 +382,13 @@ module StartupTest =
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         logger.Info "Reloaded"
 
-        // todo secure proprtions
-        let proportions = 
-            ChainsLogic.Classify(dt, [||]) 
-            |> Map.fromDict
-            |> Map.map (fun _ -> Array.length)
-
-        logger.InfoF "%A" proportions
-
-        let total = 
-            proportions.[Mission.Obsolete] +
-            proportions.[Mission.ToReload] +
-            proportions.[Mission.Keep]
-
-        let totalCount = query { for x in ctx.Instruments do
-                                 count }
-
-        total |> should be (equal totalCount)
-
-        proportions.[Mission.Obsolete] |> should be (equal 8)
-        proportions.[Mission.ToReload] |> should be (equal 49)
-        proportions.[Mission.Keep] |> should be (equal 872)
-
-        let e = Event<_> ()
-        let ep = e.Publish
-
-        logger.Info "Setting time"
-        let dt = DateTime(2014,5,14,23,59,55)
-        c.SetTime dt
-
-        logger.InfoF "And time is %s" (clndr.Now.ToString("dd-MMM-yy"))
-
-        // now wait 5 secs until tomorrow
-        logger.Info "Adding handler time"
-        clndr.NewDay |> Observable.add (fun dt ->
-
-            logger.InfoF "OnNewDay: Reloading second time at %s" (dt.ToString("dd-MMM-yy hh:mm:ss"))
+        let assertAmounts dt t o r k =
             // todo secure proprtions
             let proportions = 
                 ChainsLogic.Classify(dt, [||]) 
                 |> Map.fromDict
                 |> Map.map (fun _ -> Array.length)
-                
+
             logger.InfoF "%A" proportions
 
             let total = 
@@ -475,12 +399,27 @@ module StartupTest =
             let totalCount = query { for x in ctx.Instruments do
                                      count }
 
-            total |> should be (equal totalCount)
+            total |> should be (equal t)
+            totalCount |> should be (equal t)
 
+            proportions.[Mission.Obsolete] |> should be (equal o)
+            proportions.[Mission.ToReload] |> should be (equal r)
+            proportions.[Mission.Keep] |> should be (equal k)
 
-            proportions.[Mission.Obsolete] |> should be (equal 8)
-            proportions.[Mission.ToReload] |> should be (equal 49)
-            proportions.[Mission.Keep] |> should be (equal 872)
+        assertAmounts dt 923 8 48 867
+
+        let e = Event<_> ()
+        let ep = e.Publish
+
+        logger.Info "Setting time"
+        let dt = DateTime(2014,5,14,23,59,55)
+        c.SetTime dt
+
+        logger.InfoF "And time is %s" (clndr.Now.ToString("dd-MMM-yy"))
+
+        logger.Info "Adding handler time"
+        clndr.NewDay |> Observable.add (fun dt ->
+            assertAmounts dt 923 8 48 867
 
             command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
             logger.Info "Reloaded2"
@@ -490,14 +429,12 @@ module StartupTest =
 
         let awaitForReload = async {
             logger.Info "ReloadAwaiter: Waiting for reload to start and finish"
+            // now wait 5 secs until tomorrow
             do! Async.AwaitEvent ep |> Async.WithTimeoutEx (Some (5*60*1000))
             logger.Info "ReloadAwaiter: Yesss!"
         }
 
-        let errorCount = 
-            awaitForReload
-                |> Async.Catch
-                |> Async.RunSynchronously
+        let errorCount = awaitForReload |> Async.Catch|> Async.RunSynchronously
 
         let ec = 
             match errorCount with
@@ -506,15 +443,12 @@ module StartupTest =
 
         ec |> should be (equal 0)
 
-
     (* ========================= ============================= *)
     [<Test>]
     let ``Indexes and FRNs`` () =
         let dt = DateTime(2014,5,14) 
         
         globalThreshold := LoggingLevel.Debug
-
-        cleanup ()
 
         use ctx = DbConn.CreateContext ()
         ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
@@ -535,4 +469,3 @@ module StartupTest =
                         count }
 
         n |> should be (equal 22)
-        

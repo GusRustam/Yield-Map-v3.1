@@ -90,6 +90,8 @@ module Operations =
             elif b.IsConvertible then Convertible b
             else Straight b
 
+        let mutable backupFile = ""
+
         let loadAndSaveMetadata (s:Drivers) rics =
             tweet {
                 let loader = s.Loader
@@ -139,7 +141,7 @@ module Operations =
             async {
                 if force || force && needsReload then
                     try
-                        BackupRestore.Backup ()
+                        backupFile <- BackupRestore.Backup ()
                         return! load s chains
                     with e -> 
                         logger.ErrorEx "Load failed" e
@@ -191,7 +193,7 @@ module Operations =
             logger.Trace "loadFailed ()"
             async {
                 try 
-                    BackupRestore.Restore ()
+                    BackupRestore.Restore backupFile
                     logger.ErrorF "Failed to reload data, restored successfully: %A" (e.ToString())
                     return Ping.Failure (Problem "Failed to reload data, restored successfully")
                 with e ->
