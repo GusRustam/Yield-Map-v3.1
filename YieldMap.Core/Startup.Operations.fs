@@ -181,9 +181,7 @@ module Operations =
                     let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                     match res with 
                     | Some e -> return! loadFailed s e
-                    | None -> 
-                        BackupRestore.Cleanup ()
-                        return Answer ()
+                    | None -> return Answer ()
                 with e -> 
                     logger.ErrorEx "Load failed" e
                     return! loadFailed s (Error e)

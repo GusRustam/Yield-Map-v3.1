@@ -188,7 +188,7 @@ namespace YieldMap.Database.StoredProcedures {
         }
 
         public static void Restore(string fileName) {
-            Logger.Info("Restore()");
+            Logger.Info(string.Format("Restore({0})", fileName));
             if (!File.Exists(fileName)) throw new Exception(string.Format("Backup file {0} not found", fileName));
             var commands = File.ReadAllLines(fileName);
             Cleanup();

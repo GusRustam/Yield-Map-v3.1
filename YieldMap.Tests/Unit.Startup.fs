@@ -122,13 +122,11 @@ module StartupTest =
     [<SetUp>]
     let setup () = 
         logger.Info "setup"
-        DbConn.CloseAll()
         backupFile <- BackupRestore.Backup()
 
     [<TearDown>]
     let teardown () = 
         logger.Info "teardown"
-        DbConn.CloseAll()
         BackupRestore.Restore backupFile
 
     [<Test>]
@@ -253,8 +251,14 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         
         globalThreshold := LoggingLevel.Debug
-
         use ctx = DbConn.CreateContext ()
+       
+        let initialUnattachedRics = query {
+            for n in ctx.Rics do
+            where (n.Isin = null)
+            count
+        }
+       
         ctx.Chains.Add <| Chain(Name = "0#RUEUROS=", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
@@ -285,7 +289,7 @@ module StartupTest =
             count
         }
 
-        unattachedRics |> should be (equal 0)
+        unattachedRics |> should be (equal initialUnattachedRics)
 
 
     (* ========================= ============================= *)
@@ -293,7 +297,7 @@ module StartupTest =
     let ``Strange US30`` () =
         let dt = DateTime(2014,5,14) 
         
-        globalThreshold := LoggingLevel.Debug
+        globalThreshold := LoggingLevel.Trace
 
         use ctx = DbConn.CreateContext ()
 
