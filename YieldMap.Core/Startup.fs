@@ -1,15 +1,5 @@
 ﻿namespace YieldMap.Core.Application
 
-//[<AutoOpen>]
-//module Timeouts =
-//    type Timeouts = {
-//        load : int
-//        connect : int
-//        agent : int
-//        awaiter : int
-//    }
-
-
 module Startup =
     open YieldMap.Core.Application.Operations
     open YieldMap.Core.Notifier

@@ -12,13 +12,15 @@ module Ops =
     open YieldMap.Database.StoredProcedures
 
     let cleanup () =
+        // TODO RESTORE DATABASE
+
+
         // Cleaning up db
         let eraser = new Eraser ()
         eraser.DeleteChains ()
         eraser.DeleteInstruments () // todo why???
-        eraser.DeleteFeeds ()
         eraser.DeleteIsins ()
-        eraser.DeleteRics ()
+        eraser.DeleteRics (fun (x:Ric) -> x.Isin <> null)
 
     let cnt (table : 'a DbSet) = 
         query { for x in table do 
@@ -151,12 +153,11 @@ module StartupTest =
         cnt ctx.Isins |> should be (equal 0)
 
         use ctx = DbConn.CreateContext ()
-        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
         ctx.SaveChanges () |> ignore
 
         prms |> Array.iter (fun name -> 
             if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
-                ctx.Chains.Add <| Chain(Name = name, Feed = idn, Params = "") |> ignore
+                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
                 ctx.SaveChanges () |> ignore
         )
 
@@ -216,10 +217,8 @@ module StartupTest =
         cnt ctx.Isins |> should be (equal 0)
 
         use ctx = DbConn.CreateContext ()
-        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
-        ctx.SaveChanges () |> ignore
-
-        ctx.Chains.Add <| Chain(Name = prms, Feed = idn, Params = "") |> ignore
+       
+        ctx.Chains.Add <| Chain(Name = prms, id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
         let c  = MockCalendar dt
@@ -284,10 +283,8 @@ module StartupTest =
         cnt ctx.Isins |> should be (equal 0)
 
         use ctx = DbConn.CreateContext ()
-        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
-        ctx.SaveChanges () |> ignore
-
-        ctx.Chains.Add <| Chain(Name = "0#RUEUROS=", Feed = idn, Params = "") |> ignore
+        
+        ctx.Chains.Add <| Chain(Name = "0#RUEUROS=", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
         let c  = MockCalendar dt
@@ -338,10 +335,8 @@ module StartupTest =
         cnt ctx.Isins |> should be (equal 0)
 
         use ctx = DbConn.CreateContext ()
-        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
-        ctx.SaveChanges () |> ignore
 
-        ctx.Chains.Add <| Chain(Name = "0#US30YSTRIP=PX", Feed = idn, Params = "") |> ignore
+        ctx.Chains.Add <| Chain(Name = "0#US30YSTRIP=PX", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
         let c  = MockCalendar dt
@@ -400,10 +395,8 @@ module StartupTest =
         cnt ctx.Isins |> should be (equal 0)
 
         use ctx = DbConn.CreateContext ()
-        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
-        ctx.SaveChanges () |> ignore
-
-        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", Feed = idn, Params = "") |> ignore
+       
+        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
         // Preparing
@@ -524,10 +517,7 @@ module StartupTest =
         cleanup ()
 
         use ctx = DbConn.CreateContext ()
-        let idn = ctx.Feeds.Add <| Feed(Name = "Q")
-        ctx.SaveChanges () |> ignore
-
-        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", Feed = idn, Params = "") |> ignore
+        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
         // Preparing

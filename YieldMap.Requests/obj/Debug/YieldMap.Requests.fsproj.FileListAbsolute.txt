@@ -1,9 +1,0 @@
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\bin\Debug\YieldMap.Requests.XML
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\bin\Debug\YieldMap.Requests.dll
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\bin\Debug\YieldMap.Requests.pdb
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\bin\Debug\FSharp.Core.dll
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\bin\Debug\FSharp.Core.xml
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\obj\Debug\YieldMap.Requests.dll
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\obj\Debug\YieldMap.Requests.pdb
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\bin\Debug\Interop.EikonDesktopDataAPI.dll
-C:\Users\Rustam Guseynov\Documents\Visual Studio 2012\Projects\Yield Map v3.1\YieldMap.Requests\obj\Debug\YieldMap.Requests.fsprojResolveAssemblyReference.cache

@@ -44,7 +44,7 @@ namespace YieldMap.Transitive {
             Currency = bond.Currency;
 
             IssueSize = bond.IssueSize;
-            RateStructure = bond.BondStructure;
+            RateStructure = bond.RateStructure;
 
             Ticker = bond.Ticker;
             ParentTicker = bond.ParentTicker;
