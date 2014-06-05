@@ -11,7 +11,7 @@ using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures {
     public static class BackupRestore {
-        private static readonly Logging.Logger Logger = Logging.LogFactory.create("BackupRestore");
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.BackupRestore");
 
         private static readonly List<string> Tables = new List<string> {
             "LegType", 
@@ -63,9 +63,10 @@ namespace YieldMap.Database.StoredProcedures {
             var commands = new List<string>();
             using (var ctx = DbConn.CreateContext()) {
                 for (var i = Tables.Count - 1; i >= 0; i--) {
+                    var currentTable = Tables[i];
+                    Logger.Debug(string.Format("Saving table {0}", currentTable));
                     var dbConnection = ctx.Database.Connection;
                     dbConnection.Open();
-                    var currentTable = Tables[i];
                     try {
                         var table = GetFieldDefitions(dbConnection, currentTable);
 
@@ -148,12 +149,13 @@ namespace YieldMap.Database.StoredProcedures {
             var v = reader.GetValue(index);
             if (String.IsNullOrEmpty(v.ToString()))
                 return def.NotNull ? "''" : "NULL";
-            
 
             string res;
             if (type.StartsWith("INTEGER"))
                 res = reader.GetInt32(index).ToString(CultureInfo.InvariantCulture);
-            else if (type.Contains("CHAR"))
+            else if (type.Contains("FLOAT"))
+                res = reader.GetDouble(index).ToString(CultureInfo.InvariantCulture);
+            else if (type.Contains("CHAR") || type.Contains("TEXT"))
                 res = reader.GetString(index).Replace("'", "''");
             else if (type.Contains("DATE") || type.Contains("TIME"))
                 res = reader.GetDateTime(index).ToLocalTime().ToString(CultureInfo.InvariantCulture);
@@ -171,10 +173,11 @@ namespace YieldMap.Database.StoredProcedures {
                 try {
                     dbConnection.Open();
                     foreach (var table in Tables) {
+                        Logger.Debug(string.Format("Cleaning table {0}", table));
                         try {
                             var cmd = dbConnection.CreateCommand();
                             cmd.CommandText = "DELETE FROM \"" + table + "\"";
-                            Logger.Debug(cmd.CommandText);
+                            Logger.Trace(cmd.CommandText);
                             cmd.ExecuteNonQuery();
                         } catch (Exception e) {
                             Logger.ErrorEx("Failure", e);
@@ -198,8 +201,10 @@ namespace YieldMap.Database.StoredProcedures {
                 try {
                     dbConnection.Open();
                     foreach (var table in Tables) {
+                        Logger.Debug(string.Format("Restoring table {0}", table));
                         try {
                             var sql = commands.FirstOrDefault(command => Regex.IsMatch(command, "^INSERT INTO \"" + table + "\""));
+                            Logger.Trace(sql);
                             if (string.IsNullOrEmpty(sql)) {
                                 Logger.Warn(string.Format("No insertions for table {0}", table));
                                 continue;

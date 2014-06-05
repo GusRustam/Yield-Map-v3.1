@@ -7,12 +7,13 @@ using System.IO;
 using System.Linq;
 using YieldMap.Database.Access;
 using YieldMap.Database.StoredProcedures.Enums;
+using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
     public class Bonds : IDisposable {
-        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.Bonds");
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Bonds");
 
         public Leg CreateLeg(MainEntities ctx, long descrId, InstrumentDescription description) {
             Leg leg = null;

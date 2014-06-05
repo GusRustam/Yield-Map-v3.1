@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using YieldMap.Database.Access;
+using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
     public class Ratings {
-        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.Ratings");
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Ratings");
 
         public void SaveRatings(IEnumerable<Transitive.Rating> ratings) {
             using (var ctx = DbConn.CreateContext()) {

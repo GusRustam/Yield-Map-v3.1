@@ -5,11 +5,12 @@ using System.Data.Entity.Validation;
 using System.Linq;
 using YieldMap.Database.Access;
 using YieldMap.Database.StoredProcedures.Enums;
+using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
     public class ChainRics : AccessToDb, IDisposable {
-        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Additions.ChainRics");
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.ChainRics");
 
         private readonly Dictionary<string, Ric> _rics = new Dictionary<string, Ric>();
         private readonly Dictionary<string, Feed> _feeds = new Dictionary<string, Feed>();

@@ -181,7 +181,10 @@
     <Compile Include="Ticker.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="Tools.cs" />
+    <Compile Include="Tools\Extensions.cs" />
+    <Compile Include="Tools\RicComparer.cs" />
+    <Compile Include="Tools\RicString.cs" />
+    <Compile Include="Tools\Set.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.Config" />

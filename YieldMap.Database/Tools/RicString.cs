@@ -1,22 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity.Validation;
-using System.Linq;
-using YieldMap.Tools.Logging;
 
-namespace YieldMap.Database {
-    public class RicComparer : IEqualityComparer<string> {
-        public bool Equals(string x, string y) {
-            var theX = new RicString(x);
-            var theY = new RicString(y);
-            return theX.Equals(theY);
-        }
-
-        public int GetHashCode(string obj) {
-            return new RicString(obj).GetHashCode();
-        }
-    }
-
+namespace YieldMap.Database.Tools {
     public class RicString : IComparable<RicString>, IEqualityComparer<RicString> {
         private readonly string _ric;
         private readonly string _undelayed;
@@ -73,37 +58,6 @@ namespace YieldMap.Database {
 
         public int GetHashCode(RicString obj) {
             return obj.GetHashCode();
-        }
-    }
-
-    public static class Tools {
-        public static void Report(this Logging.Logger logger, string msg, DbEntityValidationException e) {
-            logger.Error(msg);
-            foreach (var eve in e.EntityValidationErrors) {
-                logger.Error(
-                    String.Format(
-                        "Entity of type [{0}] in state [{1}] has the following validation errors:",
-                        eve.Entry.Entity.GetType().Name, eve.Entry.State));
-
-                foreach (var ve in eve.ValidationErrors)
-                    logger.Error(String.Format("- Property: [{0}], Error: [{1}]", ve.PropertyName, ve.ErrorMessage));
-            }
-        }
-
-        public static void ChunkedForEach<T>(this IEnumerable<T> items, Action<IEnumerable<T>> action, int chunkSize) {
-            var list = items.ToList();
-            var length = list.Count();
-            var iteration = 0;
-            bool finished;
-            
-            do {
-                var minRange = iteration * chunkSize;
-                finished = minRange + chunkSize > length;
-                var maxRange = (finished ? length : minRange + chunkSize) - 1;
-                action(list.GetRange(minRange, maxRange - minRange + 1));
-                iteration = iteration + 1;
-            } while (!finished);
-
         }
     }
 }
