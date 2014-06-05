@@ -10,6 +10,13 @@ module Ops =
     open System.Data.Entity
     open YieldMap.Database
     open YieldMap.Database.StoredProcedures
+    open YieldMap.Database.Access
+    open YieldMap.Core.Application.Startup
+    open YieldMap.Loader.Calendar
+    open YieldMap.Loader.MetaChains
+    open YieldMap.Loader.SdkFactory
+    open System.Data.Entity
+    open System.Linq
 
     let cnt (table : 'a DbSet) = 
         query { for x in table do 
@@ -33,6 +40,34 @@ module Ops =
     let str (z : TimeSpan Nullable) = 
         if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
         else "N/A"
+
+
+    let init chains dt =
+        use ctx = DbConn.CreateContext ()
+
+        chains |> Array.iter (fun name -> 
+            if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
+                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
+                ctx.SaveChanges () |> ignore
+        )
+        ctx.SaveChanges () |> ignore
+
+        let c  = MockCalendar dt
+
+        // Preparing
+        Startup {
+            Factory = MockFactory()
+            TodayFix = dt
+            Loader = MockChainMeta c
+            Calendar = c
+        }
+
+    let command cmd func state = 
+        logger.InfoF "===> %s " cmd
+        let res = func () |> Async.RunSynchronously  
+        logger.InfoF " <=== %s : %s " cmd (res.ToString())
+        res |> should be (equal state)
+
 
 module StartupTest = 
     open Ops
@@ -121,6 +156,7 @@ module StartupTest =
 
     [<SetUp>]
     let setup () = 
+        globalThreshold := LoggingLevel.Debug
         logger.Info "setup"
         backupFile <- BackupRestore.Backup()
 
@@ -134,34 +170,12 @@ module StartupTest =
     let ``Startup with one chain`` xxx =             
         let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
         let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
-        
         DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
 
         let { date = dt; chains = prms } = xxx
-
         logger.WarnF "Starting test with chains %A" prms
         
-        globalThreshold := LoggingLevel.Debug
-
-        use ctx = DbConn.CreateContext ()
-        ctx.SaveChanges () |> ignore
-
-        prms |> Array.iter (fun name -> 
-            if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
-                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
-                ctx.SaveChanges () |> ignore
-        )
-
-        // Preparing
-        let c = MockCalendar dt
-
-        let x = Startup {
-            Factory = MockFactory()
-            TodayFix = dt
-            Loader = MockChainMeta c
-            Calendar = c
-        }
-
+        let x = init prms dt
         x.StateChanged |> Observable.add (fun state -> logger.InfoF " => %A" state)
         Notifier.notification |> Observable.add (fun (state, fail, severity) -> 
             let m =
@@ -172,12 +186,6 @@ module StartupTest =
 
             m "MSG: @%A %s" state (fail.ToString())
         )
-
-        let command cmd func state = 
-            logger.InfoF "===> %s " cmd
-            let res = func () |> Async.RunSynchronously  
-            logger.InfoF " <=== %s : %s " cmd (res.ToString())
-            res |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
@@ -197,20 +205,7 @@ module StartupTest =
         
         globalThreshold := LoggingLevel.Debug
 
-        use ctx = DbConn.CreateContext ()
-        ctx.Chains.Add <| Chain(Name = prms, id_Feed = Nullable(1L), Params = "") |> ignore
-        ctx.SaveChanges () |> ignore
-
-        let c  = MockCalendar dt
-
-        // Preparing
-        let x = Startup {
-            Factory = MockFactory()
-            TodayFix = dt
-            Loader = MockChainMeta c
-            Calendar = c
-        }
-
+        let x = init [|prms|] dt
         x.StateChanged |> Observable.add (fun state -> logger.InfoF " => %A" state)
         Notifier.notification |> Observable.add (fun (state, fail, severity) -> 
             let m =
@@ -221,12 +216,6 @@ module StartupTest =
 
             m "MSG: @%A %s" state (fail.ToString())
         )
-
-        let command cmd func state = 
-            logger.InfoF "===> %s " cmd
-            let res = func () |> Async.RunSynchronously  
-            logger.InfoF " <=== %s : %s " cmd (res.ToString())
-            res |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
@@ -248,35 +237,16 @@ module StartupTest =
     (* ========================= ============================= *)
     [<Test>]
     let ``Duplicate Isin leave no RIC unlinked`` () =
-        let dt = DateTime(2014,5,14) 
         
-        globalThreshold := LoggingLevel.Debug
         use ctx = DbConn.CreateContext ()
-       
         let initialUnattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
             count
         }
        
-        ctx.Chains.Add <| Chain(Name = "0#RUEUROS=", id_Feed = Nullable(1L), Params = "") |> ignore
-        ctx.SaveChanges () |> ignore
-
-        let c  = MockCalendar dt
-
-        // Preparing
-        let x = Startup {
-            Factory = MockFactory()
-            TodayFix = dt
-            Loader = MockChainMeta c
-            Calendar = c
-        }
-
-        let command cmd func state = 
-            logger.InfoF "===> %s " cmd
-            let res = func () |> Async.RunSynchronously  
-            logger.InfoF " <=== %s : %s " cmd (res.ToString())
-            res |> should be (equal state)
+        let dt = DateTime(2014,5,14) 
+        let x = init [|"0#RUEUROS="|] dt
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload true) (State Initialized)
@@ -307,24 +277,7 @@ module StartupTest =
             count
         }
 
-        ctx.Chains.Add <| Chain(Name = "0#US30YSTRIP=PX", id_Feed = Nullable(1L), Params = "") |> ignore
-        ctx.SaveChanges () |> ignore
-
-        let c  = MockCalendar dt
-
-        // Preparing
-        let x = Startup {
-            Factory = MockFactory()
-            TodayFix = dt
-            Loader = MockChainMeta c
-            Calendar = c
-        }
-
-        let command cmd func state = 
-            logger.InfoF "===> %s " cmd
-            let res = func () |> Async.RunSynchronously  
-            logger.InfoF " <=== %s : %s " cmd (res.ToString())
-            res |> should be (equal state)
+        let x = init [|"0#US30YSTRIP=PX"|] dt
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
@@ -374,12 +327,6 @@ module StartupTest =
             Loader = MockChainMeta c
             Calendar = c
         }
-
-        let command cmd func state = 
-            logger.InfoF "===> %s " cmd
-            let res = func () |> Async.RunSynchronously  
-            logger.InfoF " <=== %s : %s " cmd (res.ToString())
-            res |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
         logger.Info "Reloading"
@@ -451,16 +398,8 @@ module StartupTest =
     [<Test>]
     let ``Indexes and FRNs`` () =
         let dt = DateTime(2014,5,14) 
-        
-        globalThreshold := LoggingLevel.Debug
 
-        use ctx = DbConn.CreateContext ()
-        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
-        ctx.SaveChanges () |> ignore
-
-        // Preparing
-        let c  = MockCalendar dt
-        let x = Startup { Factory = MockFactory(); TodayFix = dt; Loader = MockChainMeta c; Calendar = c }
+        let x = init [|"0#RUCORP=MM"|] dt
 
         let command cmd func state = func () |> Async.RunSynchronously |> should be (equal state)
 
@@ -473,3 +412,14 @@ module StartupTest =
                         count }
 
         n |> should be (equal 22)
+
+    (* ========================= ============================= *)
+    [<Test>]
+    let ``Wow-wow-wow!!!!`` () =
+        let dt = DateTime(2014,5,14) 
+
+        let x = init [|"0#RUCORP=MM"|] dt
+        command "Connect" x.Connect (State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+        
+        logger.Info <| BackupRestore.Backup()

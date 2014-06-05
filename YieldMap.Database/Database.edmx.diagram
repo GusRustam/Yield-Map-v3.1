@@ -9,7 +9,7 @@
         <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="31.625" PointY="45.625" />
         <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="47" PointY="46.125" />
         <EntityTypeShape EntityType="mainModel.Feed" Width="1.5" PointX="24.125" PointY="42.125" FillColor="DarkRed" />
-        <EntityTypeShape EntityType="mainModel.Field" Width="1.5" PointX="34.875" PointY="34.375" />
+        <EntityTypeShape EntityType="mainModel.Field" Width="1.5" PointX="34.75" PointY="36.5" />
         <EntityTypeShape EntityType="mainModel.Industry" Width="1.5" PointX="25.625" PointY="59.125" />
         <EntityTypeShape EntityType="mainModel.InstrumentType" Width="1.5" PointX="45.875" PointY="50.125" />
         <EntityTypeShape EntityType="mainModel.Isin" Width="1.5" PointX="25.625" PointY="45.875" FillColor="Green" />
@@ -19,7 +19,7 @@
         <EntityTypeShape EntityType="mainModel.RatingAgency" Width="1.5" PointX="37.375" PointY="45.625" />
         <EntityTypeShape EntityType="mainModel.RatingAgencyCode" Width="2.125" PointX="40" PointY="46.125" />
         <EntityTypeShape EntityType="mainModel.RicToChain" Width="1.5" PointX="24.375" PointY="38.375" />
-        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="31" PointY="55.25" />
+        <EntityTypeShape EntityType="mainModel.Seniority" Width="1.5" PointX="31.75" PointY="55.875" />
         <EntityTypeShape EntityType="mainModel.Specimen" Width="1.5" PointX="28.125" PointY="57.25" />
         <EntityTypeShape EntityType="mainModel.SubIndustry" Width="1.5" PointX="25.5" PointY="56.125" />
         <EntityTypeShape EntityType="mainModel.Ticker" Width="1.5" PointX="22.25" PointY="54.875" />
@@ -33,10 +33,10 @@
         <AssociationConnector Association="mainModel.FK_RatingAgencyCode_0_0" />
         <AssociationConnector Association="mainModel.FK_Ticker_0_0" />
         <EntityTypeShape EntityType="mainModel.LegalEntity" Width="1.5" PointX="31.875" PointY="49.25" />
-        <EntityTypeShape EntityType="mainModel.RatingToInstrument" Width="1.5" PointX="40.5" PointY="49.25" />
+        <EntityTypeShape EntityType="mainModel.RatingToInstrument" Width="1.5" PointX="40.25" PointY="49.125" />
         <AssociationConnector Association="mainModel.FK_LegalEntity_0_0" />
         <AssociationConnector Association="mainModel.FK_RatingToInstrument_0_0" />
-        <EntityTypeShape EntityType="mainModel.RatingToLegalEntity" Width="1.5" PointX="34.25" PointY="49" />
+        <EntityTypeShape EntityType="mainModel.RatingToLegalEntity" Width="1.5" PointX="34.625" PointY="49" />
         <AssociationConnector Association="mainModel.FK_RatingToLegalEntity_0_0" />
         <AssociationConnector Association="mainModel.FK_RatingToLegalEntity_1_0" />
         <AssociationConnector Association="mainModel.FK_Leg_0_01" />

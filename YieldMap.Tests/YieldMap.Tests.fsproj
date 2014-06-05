@@ -90,6 +90,9 @@
     <None Include="packages.config" />
     <None Include="app.config" />
     <Compile Include="Unit.Calendar.fs" />
+    <None Include="RUCORP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YieldMap.Core\YieldMap.Core.fsproj">

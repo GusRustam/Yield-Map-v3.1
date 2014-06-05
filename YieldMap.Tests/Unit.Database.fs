@@ -20,6 +20,8 @@ module DbTests =
         
     open YieldMap.Database
 
+    open System.IO
+
     let cnt boo = query { for x in boo do select x; count }
 
     let logger = LogFactory.create "UnitTests.TestDb"
@@ -67,3 +69,14 @@ module DbTests =
 
         using (Access.DbConn.CreateContext()) (fun ctx ->
             cnt ctx.Feeds |> should be (equal 1))
+
+
+    [<Test>]
+    let ``Restore only`` () = 
+        let b = StoredProcedures.BackupRestore.Backup ()
+
+        try 
+            StoredProcedures.BackupRestore.Restore <| Path.Combine(Location.path, "RUCORP.sql")
+        with e -> 
+            logger.ErrorEx "Failed to restore rucorp" e
+            StoredProcedures.BackupRestore.Restore b
