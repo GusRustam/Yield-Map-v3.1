@@ -86,13 +86,15 @@
     <Compile Include="Unit.Startup.fs" />
     <Compile Include="Unit.Others.fs" />
     <Compile Include="Unit.Api.fs" />
+    <Compile Include="Unit.Calendar.fs" />
+    <Compile Include="Unit.Parser.fs" />
     <Compile Include="IntegrationTesting.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
-    <Compile Include="Unit.Calendar.fs" />
     <None Include="RUCORP.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="EMPTY.sql" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YieldMap.Core\YieldMap.Core.fsproj">
@@ -108,6 +110,11 @@
     <ProjectReference Include="..\YieldMap.Loader\YieldMap.Loader.fsproj">
       <Name>YieldMap.Loader</Name>
       <Project>{ef7a6217-b508-43b1-8012-e4a041e50108}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\YieldMap.Parser\YieldMap.Parser.vbproj">
+      <Name>YieldMap.Parser</Name>
+      <Project>{2874458b-7753-4f65-9144-b902846ee32a}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\YieldMap.Requests\YieldMap.Requests.fsproj">
