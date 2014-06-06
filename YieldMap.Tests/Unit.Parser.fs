@@ -11,19 +11,36 @@ module Parser =
    
     let logger = LogFactory.create "UnitTests.Parser"
 
-    let error expr = 
+    let error expr l = 
         let p = Parser()
         try
-            p.SetFilter expr |> ignore
+            let grammar = p.SetFilter expr
+            grammar.Count |> should be (equal l)
             None
         with :? Exceptions.ParserException as e ->
             logger.ErrorEx "" e
             Some e.ErrorPos
 
     [<Test>]
-    let ``Simple Error`` () =
-        error "$a = 2" |> should be (equal None)
-        error "$a= 2" |> should be (equal None)
-        error "$a =2" |> should be (equal None)
-        error "$a=2" |> should be (equal None)
+    let ``Single-term expressions and spaces`` () =
+        error "$a = 2" 3 |> should be (equal None) 
+        error "$a= 2" 3 |> should be (equal None) 
+        error "$a =2" 3 |> should be (equal None)
+        error "$a=2" 3 |> should be (equal None)
+        error "($a = 2)" 3 |> should be (equal None)
+        error "($a= 2)" 3 |> should be (equal None)
+        error "($a =2)" 3 |> should be (equal None)
+        error "($a=2)" 3 |> should be (equal None)
+        error "( $a = 2)" 3 |> should be (equal None)
+        error "( $a= 2)" 3 |> should be (equal None)
+        error "( $a =2)" 3 |> should be (equal None)
+        error "( $a=2)" 3 |> should be (equal None)
+        error "($a = 2 )" 3 |> should be (equal None)
+        error "($a= 2 )" 3 |> should be (equal None)
+        error "($a =2 )" 3 |> should be (equal None)
+        error "($a=2 )" 3 |> should be (equal None)
+        error "($a = 2) " 3 |> should be (equal None)
+        error "($a= 2) " 3 |> should be (equal None)
+        error "($a =2) " 3 |> should be (equal None)
+        error "($a=2) " 3 |> should be (equal None)
         

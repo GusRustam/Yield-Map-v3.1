@@ -12,15 +12,15 @@ Public Class Parser
 
     Private ReadOnly _opStack As New LinkedList(Of Operation)
 
-    Private Shared ReadOnly VarName As Regex = New Regex("^\s*?\$(?<varname>\w+)")
-    Private Shared ReadOnly ObjName As Regex = New Regex("^\s*?\$(?<objname>\w+)\.(?<fieldname>\w+)")
-    Private Shared ReadOnly LogOp As Regex = New Regex("^\s*?(?<lop>AND|OR)")
-    Private Shared ReadOnly BinOp As Regex = New Regex("^\s*?(?<bop>\<=|\>=|=|\<\>|\<|\>|like|nlike)")
-    Private Shared ReadOnly NumValue As Regex = New Regex("^\s*?(?<num>-?\d+.\d+|-?\d+)")
-    Private Shared ReadOnly BoolValue As Regex = New Regex("^\s*?(?<bool>True|False)")
-    Private Shared ReadOnly StrValue As Regex = New Regex("^\s*?""(?<str>[^""]*)""")
-    Private Shared ReadOnly DatValue As Regex = New Regex("^\s*?#(?<dd>\d{1,2})/(?<mm>\d{1,2})/(?<yy>\d{2}|\d{4})#")
-    Private Shared ReadOnly RatingValue As Regex = New Regex("^\s*?\[(?<rating>[^\]]*)\]")
+    Private Shared ReadOnly VarName As Regex = New Regex("^\$(?<varname>\w+)")
+    Private Shared ReadOnly ObjName As Regex = New Regex("^\$(?<objname>\w+)\.(?<fieldname>\w+)")
+    Private Shared ReadOnly LogOp As Regex = New Regex("^(?<lop>AND|OR)")
+    Private Shared ReadOnly BinOp As Regex = New Regex("^(?<bop>\<=|\>=|=|\<\>|\<|\>|like|nlike)")
+    Private Shared ReadOnly NumValue As Regex = New Regex("^(?<num>-?\d+.\d+|-?\d+)")
+    Private Shared ReadOnly BoolValue As Regex = New Regex("^(?<bool>True|False)")
+    Private Shared ReadOnly StrValue As Regex = New Regex("^""(?<str>[^""]*)""")
+    Private Shared ReadOnly DatValue As Regex = New Regex("^#(?<dd>\d{1,2})/(?<mm>\d{1,2})/(?<yy>\d{2}|\d{4})#")
+    Private Shared ReadOnly RatingValue As Regex = New Regex("\[(?<rating>[^\]]*)\]")
 
     Private Enum ParserState
         Expr
@@ -163,13 +163,13 @@ Public Class Parser
                     If match1.Success Then
                         Dim variableName = match1.Groups("varname").Captures(0).Value
                         node = New Var(variableName.ToUpper())
-                        i = i + match1.Length + 1
+                        i = i + match1.Length
                         res.AddLast(node)
                     ElseIf match2.Success Then
                         Dim objectName = match1.Groups("objname").Captures(0).Value
                         Dim fieldName = match1.Groups("fieldname").Captures(0).Value
                         node = New ObjVar(objectName.ToUpper(), fieldName.ToUpper())
-                        i = i + match1.Length + 1
+                        i = i + match1.Length
                         res.AddLast(node)
                     Else
                         Throw New ParserException("Unexpected sequence, variable name required", i)
@@ -186,7 +186,7 @@ Public Class Parser
                         Dim opName = match.Groups("bop").Captures(0).Value
                         Try
                             opNode = New Bop(opName, BinaryOpPriority + bracketsLevel * BracketsPriority)
-                            i = i + match.Length + 1
+                            i = i + match.Length
                             PushToOpStack(res, opNode)
                         Catch ex As ConditionLexicalException
                             Throw New ParserException("Unexpected error in binary operation", ex, i)
@@ -206,7 +206,7 @@ Public Class Parser
                         If match.Success Then
                             Dim str = match.Groups("str").Captures(0).Value
                             valNode = New Val(Of String)(str)
-                            i = i + match.Length + 1
+                            i = i + match.Length
                         Else
                             Throw New ParserException("Unexpected sequence, string expression required", i)
                         End If
@@ -216,7 +216,7 @@ Public Class Parser
                             Dim num = match.Groups("num").Captures(0).Value
                             If Not IsNumeric(num) Then Throw New ParserException("Invalid number", i)
                             valNode = New Val(Of Double)(num)
-                            i = i + match.Length + 1
+                            i = i + match.Length
                         Else
                             Throw New ParserException("Unexpected sequence, string expression required", i)
                         End If
@@ -228,7 +228,7 @@ Public Class Parser
                             Dim yy = match.Groups("yy").Captures(0).Value
                             Dim dt As New Date(yy, mm, dd)
                             valNode = New Val(Of Date)(dt)
-                            i = i + match.Length + 1
+                            i = i + match.Length
                         Else
                             Throw New ParserException("Unexpected sequence, date expression required", i)
                         End If
@@ -238,7 +238,7 @@ Public Class Parser
                             Dim rate = match.Groups("rating").Captures(0).Value
                             Dim rt = Rating.Parse(rate)
                             valNode = New Val(Of Rating)(rt)
-                            i = i + match.Length + 1
+                            i = i + match.Length
                         Else
                             Throw New ParserException("Unexpected sequence, rating expression required", i)
                         End If
@@ -251,7 +251,7 @@ Public Class Parser
                             Catch ex As FormatException
                                 Throw New ParserException("Unexpected sequence, boolean (True/False) expression required", i)
                             End Try
-                            i = i + match.Length + 1
+                            i = i + match.Length
                         Else
                             Throw New ParserException("Unexpected sequence, rating expression required", i)
                         End If
@@ -273,7 +273,7 @@ Public Class Parser
                             opNode = New Lop(num, LogicalOpPriority + bracketsLevel * BracketsPriority)
                             PushToOpStack(res, opNode)
                             Logger.Trace(String.Format("Node is {0}", opNode))
-                            i = i + match.Length + 1
+                            i = i + match.Length
                         Catch ex As ConditionLexicalException
                             Throw New ParserException("Unexpected error in logical operation", ex, i)
                         End Try
