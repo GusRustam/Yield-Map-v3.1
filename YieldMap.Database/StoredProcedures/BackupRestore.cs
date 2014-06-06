@@ -116,12 +116,7 @@ namespace YieldMap.Database.StoredProcedures {
             using (var r = query.ExecuteReader()) {
                 var index = 0;
                 while (r.Read()) {
-                    // data: [0]: index, 
-                    //       [1]: field name
-                    //       [2]: field type
-                    //       [3]: can be NULL
-                    //       [4]: default
-
+                    // data: [0]: index, [1]: field name, [2]: field type, [3]: can be NULL, [4]: default
                     var name = r.GetString(1);
                     var type = r.GetString(2);
                     var canBeNull = r.GetInt16(3);
@@ -148,12 +143,14 @@ namespace YieldMap.Database.StoredProcedures {
             string res;
             if (type.StartsWith("INTEGER"))
                 res = reader.GetInt32(index).ToString(CultureInfo.InvariantCulture);
+            else if (type.Contains("BIGINT"))
+                res = reader.GetInt64(index).ToString(CultureInfo.InvariantCulture);
             else if (type.Contains("FLOAT"))
                 res = reader.GetDouble(index).ToString(CultureInfo.InvariantCulture);
             else if (type.Contains("CHAR") || type.Contains("TEXT"))
                 res = reader.GetString(index).Replace("'", "''");
             else if (type.Contains("DATE") || type.Contains("TIME"))
-                res = reader.GetDateTime(index).ToLocalTime().ToString(CultureInfo.InvariantCulture);
+                res = reader.GetDateTime(index).ToLocalTime().ToString("yyyy-MM-dd 00:00:00", CultureInfo.InvariantCulture);
             else if (type.Contains("BOOL") || type.Contains("BIT"))
                 res = reader.GetInt16(index).ToString(CultureInfo.InvariantCulture);
             else throw new Exception(string.Format("Unknown type {0}", type));

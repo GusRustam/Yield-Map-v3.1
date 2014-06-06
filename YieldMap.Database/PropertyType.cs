@@ -12,24 +12,22 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class InstrumentType
+    public partial class PropertyType
     {
-        public InstrumentType()
+        public PropertyType()
         {
-            this.Instruments = new HashSet<Instrument>();
-            this.PropertyToInstrumentTypes = new HashSet<PropertyToInstrumentType>();
+            this.Properties = new HashSet<Property>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
-    	public InstrumentType ToPocoSimple() {
-    	    return new InstrumentType {
+    	public PropertyType ToPocoSimple() {
+    	    return new PropertyType {
     			id = this.id,
     			Name = this.Name,
     		};
     	}
     		
-        public virtual ICollection<Instrument> Instruments { get; set; }
-        public virtual ICollection<PropertyToInstrumentType> PropertyToInstrumentTypes { get; set; }
+        public virtual ICollection<Property> Properties { get; set; }
     }
 }

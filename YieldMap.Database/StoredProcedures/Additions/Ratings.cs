@@ -10,39 +10,54 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Ratings");
 
         public void SaveRatings(IEnumerable<Transitive.Rating> ratings) {
-            using (var ctx = DbConn.CreateContext()) {
-                var theRatings = ratings as Transitive.Rating[] ?? ratings.ToArray();
+            var rtis = new Dictionary<Tuple<long, long, DateTime>, RatingToInstrument>();
+            var rtcs = new Dictionary<Tuple<long, long, DateTime>, RatingToLegalEntity>();
+
+            using (var context = DbConn.CreateContext()) {
+                var local = context;
+                var enumerable = ratings as Transitive.Rating[] ?? ratings.ToArray();
 
                 var instruments = (
-                    from rating in theRatings
+                    from rating in enumerable
                     let r = rating
                     where !r.Issuer
-                    let ratingInfo = ctx.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
+                    let ratingInfo = local.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
                     where ratingInfo != null
-                    let ricInfo = ctx.InstrumentRicViews.FirstOrDefault(x => x.Name == rating.Ric)
+                    let ricInfo = local.InstrumentRicViews.FirstOrDefault(x => x.Name == rating.Ric)
                     where ricInfo != null
                     select new RatingToInstrument { id_Instrument = ricInfo.id_Instrument, id_Rating = ratingInfo.id_Rating, RatingDate = rating.Date}).ToList();
 
+                foreach (var instrument in instruments) {
+                    if (instrument.RatingDate == null || instrument.id_Instrument == null) continue;
+                    var key = Tuple.Create(instrument.id_Instrument.Value, instrument.id_Rating, instrument.RatingDate.Value);
+                    if (!rtis.ContainsKey(key)) rtis.Add(key, instrument);
+                }
+
                 var companies = (
-                    from rating in theRatings
+                    from rating in enumerable
                     let r = rating
                     where r.Issuer
-                    let ratingInfo = ctx.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
+                    let ratingInfo = local.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
                     where ratingInfo != null
-                    let ricInfo = ctx.InstrumentIBViews.FirstOrDefault(x => x.Name == rating.Ric)
+                    let ricInfo = local.InstrumentIBViews.FirstOrDefault(x => x.Name == rating.Ric)
                     where ricInfo != null && (ricInfo.id_Issuer.HasValue || ricInfo.id_Borrower.HasValue)
                     let idLegalEntity = ricInfo.id_Issuer.HasValue ? ricInfo.id_Issuer.Value : ricInfo.id_Borrower.Value
                     select new RatingToLegalEntity { id_LegalEntity = idLegalEntity, id_Rating = ratingInfo.id_Rating, RatingDate = rating.Date }).ToList();
                 
-                var peggedContext = ctx;
-                if (instruments.Any())
-                    instruments.ChunkedForEach(x => {
+                foreach (var company in companies) {
+                    if (company.RatingDate == null || company.id_LegalEntity == null) continue;
+                    var key = Tuple.Create(company.id_LegalEntity.Value, company.id_Rating, company.RatingDate.Value);
+                    if (!rtcs.ContainsKey(key)) rtcs.Add(key, company);
+                }                
+                var peggedContext = local;
+                if (rtis.Any())
+                    rtis.Values.ChunkedForEach(x => {
                         var sql = BulkInsertRatingLink(x);
                         Logger.Info(String.Format("Sql is {0}", sql));
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
-                if (companies.Any())
-                    companies.ChunkedForEach(x => {
+                if (rtcs.Any())
+                    rtcs.Values.ChunkedForEach(x => {
                         var sql = BulkInsertRatingLink2(x);
                         Logger.Info(String.Format("Sql is {0}", sql));
                         peggedContext.Database.ExecuteSqlCommand(sql);

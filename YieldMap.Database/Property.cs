@@ -12,32 +12,31 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     
-    public partial class Instrument
+    public partial class Property
     {
-        public Instrument()
+        public Property()
         {
-            this.Legs = new HashSet<Leg>();
-            this.RatingToInstruments = new HashSet<RatingToInstrument>();
+            this.PropertyToInstrumentTypes = new HashSet<PropertyToInstrumentType>();
             this.PropertyValues = new HashSet<PropertyValue>();
         }
     
         public long id { get; set; }
         public string Name { get; set; }
-        public Nullable<long> id_InstrumentType { get; set; }
-        public Nullable<long> id_Description { get; set; }
-    	public Instrument ToPocoSimple() {
-    	    return new Instrument {
+        public string Description { get; set; }
+        public string Expression { get; set; }
+        public Nullable<long> id_PropertyType { get; set; }
+    	public Property ToPocoSimple() {
+    	    return new Property {
     			id = this.id,
     			Name = this.Name,
-    			id_InstrumentType = this.id_InstrumentType,
-    			id_Description = this.id_Description,
+    			Description = this.Description,
+    			Expression = this.Expression,
+    			id_PropertyType = this.id_PropertyType,
     		};
     	}
     		
-        public virtual Description Description { get; set; }
-        public virtual InstrumentType InstrumentType { get; set; }
-        public virtual ICollection<Leg> Legs { get; set; }
-        public virtual ICollection<RatingToInstrument> RatingToInstruments { get; set; }
+        public virtual PropertyType PropertyType { get; set; }
+        public virtual ICollection<PropertyToInstrumentType> PropertyToInstrumentTypes { get; set; }
         public virtual ICollection<PropertyValue> PropertyValues { get; set; }
     }
 }

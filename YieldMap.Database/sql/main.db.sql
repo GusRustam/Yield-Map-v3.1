@@ -52,7 +52,7 @@ CREATE TABLE Description (
   id_Issuer       integer,
   id_Borrower     integer,
   RateStructure   text,
-  IssueSize       integer,
+  IssueSize       bigint,
   Series          varchar(50),
   id_Isin         integer,
   id_Ric          integer,
@@ -64,36 +64,36 @@ CREATE TABLE Description (
   id_Seniority    integer,
   NextCoupon      date,
   /* Foreign keys */
-  FOREIGN KEY (id_Borrower)
-    REFERENCES LegalEntity(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Specimen)
-    REFERENCES Specimen(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_SubIndustry)
-    REFERENCES SubIndustry(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Ticker)
-    REFERENCES Ticker(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Ric)
-    REFERENCES Ric(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Isin)
-    REFERENCES Isin(id)
+  FOREIGN KEY (id_Seniority)
+    REFERENCES Seniority(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE, 
   FOREIGN KEY (id_Issuer)
     REFERENCES LegalEntity(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE, 
-  FOREIGN KEY (id_Seniority)
-    REFERENCES Seniority(id)
+  FOREIGN KEY (id_Isin)
+    REFERENCES Isin(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Ric)
+    REFERENCES Ric(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Ticker)
+    REFERENCES Ticker(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_SubIndustry)
+    REFERENCES SubIndustry(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Specimen)
+    REFERENCES Specimen(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Borrower)
+    REFERENCES LegalEntity(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
@@ -279,6 +279,85 @@ CREATE INDEX Borrower01_Index03
   ON LegalEntity
   (id);
 
+CREATE TABLE Property (
+  id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name             varchar(50) UNIQUE,
+  Description      varchar(50),
+  Expression       varchar(300),
+  id_PropertyType  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_PropertyType)
+    REFERENCES PropertyType(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE INDEX CustomProperty_Index01
+  ON Property
+  (id);
+
+CREATE INDEX CustomProperty_Index02
+  ON Property
+  (Name);
+
+CREATE TABLE PropertyToInstrumentType (
+  id                 integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_InstrumentType  integer,
+  id_Property        integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_Property)
+    REFERENCES Property(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_InstrumentType)
+    REFERENCES InstrumentType(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE INDEX CustomPropertyToInstrumentType_Index01
+  ON PropertyToInstrumentType
+  (id);
+
+CREATE UNIQUE INDEX CustomPropertyToInstrumentType_Index02
+  ON PropertyToInstrumentType
+  (id_InstrumentType, id_Property);
+
+CREATE TABLE PropertyType (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50) UNIQUE
+);
+
+CREATE INDEX CustomPropertyType_Index01
+  ON PropertyType
+  (id);
+
+CREATE INDEX CustomPropertyType_Index02
+  ON PropertyType
+  (Name);
+
+CREATE TABLE PropertyValue (
+  id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  id_Property    integer,
+  id_Instrument  integer,
+  StringValue    varchar(300),
+  IntValue       integer,
+  FloatValue     float(50),
+  /* Foreign keys */
+  FOREIGN KEY (id_Instrument)
+    REFERENCES Instrument(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Property)
+    REFERENCES Property(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE INDEX CustomPropertyValue_Index01
+  ON PropertyValue
+  (id);
+
 CREATE TABLE Rating (
   id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   Value            integer NOT NULL,
@@ -340,6 +419,10 @@ CREATE TABLE RatingToInstrument (
     ON UPDATE CASCADE
 );
 
+CREATE UNIQUE INDEX RatingToInstrument_Index01
+  ON RatingToInstrument
+  (id_Rating, id_Instrument, RatingDate);
+
 CREATE TABLE RatingToLegalEntity (
   id              integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   id_Rating       integer NOT NULL,
@@ -355,6 +438,10 @@ CREATE TABLE RatingToLegalEntity (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
+
+CREATE UNIQUE INDEX RatingToLegalEntity_Index01
+  ON RatingToLegalEntity
+  (id_Rating, id_LegalEntity, RatingDate);
 
 CREATE TABLE Ric (
   id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
@@ -481,14 +568,15 @@ CREATE TABLE _log (
 
 
 /* Data for table Feed */
-
+INSERT INTO Feed (id, Name, Description) VALUES (1, 'Q', 'Main Eikon data feed');
 
 
 
 /* Data for table Field */
 INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (4, 'BID', 'ASK', 'LAST', 'CLOSE', 'VWAP', 'VOLUME', 1);
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (5, '393', '275', NULL, NULL, NULL, NULL, 2);
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (6, NULL, NULL, '1053', NULL, NULL, NULL, 3);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (5, '393', '275', NULL, 'CLOSE', NULL, NULL, 2);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (6, NULL, NULL, '1053', 'CLOSE', NULL, NULL, 3);
+INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (7, NULL, NULL, '22', 'CLOSE', NULL, NULL, 4);
 
 
 
@@ -496,13 +584,14 @@ INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUE
 INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (1, 'Micex', 'Last', 0);
 INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (2, 'Eurobonds', 'Bid', 1);
 INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (3, 'Russian CPI Index', 'Last', 0);
+INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (4, 'Mosprime', 'Last', 0);
 
 
 
 /* Data for table Index */
-INSERT INTO "Index" (id, Name, id_Ric) VALUES (1, 'RUCPI1M', NULL);
-INSERT INTO "Index" (id, Name, id_Ric) VALUES (2, 'RUSSRR', NULL);
-INSERT INTO "Index" (id, Name, id_Ric) VALUES (3, 'MPRIME3M', NULL);
+INSERT INTO "Index" (id, Name, id_Ric) VALUES (1, 'RUCPI1M', 1);
+INSERT INTO "Index" (id, Name, id_Ric) VALUES (2, 'RUSSRR', 3);
+INSERT INTO "Index" (id, Name, id_Ric) VALUES (3, 'MPRIME3M', 2);
 
 
 
@@ -543,6 +632,26 @@ INSERT INTO LegType (id, Name) VALUES (3, 'Both');
 
 
 /* Data for table LegalEntity */
+
+
+
+
+/* Data for table Property */
+
+
+
+
+/* Data for table PropertyToInstrumentType */
+
+
+
+
+/* Data for table PropertyType */
+
+
+
+
+/* Data for table PropertyValue */
 
 
 
@@ -646,7 +755,9 @@ INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (8, 'FSU', 3);
 
 
 /* Data for table Ric */
-
+INSERT INTO Ric (id, Name, id_Isin, id_Feed, id_FieldGroup) VALUES (1, 'RUCPI=ECI', NULL, 1, 3);
+INSERT INTO Ric (id, Name, id_Isin, id_Feed, id_FieldGroup) VALUES (2, 'MOSPRIME3MD=', NULL, 1, 4);
+INSERT INTO Ric (id, Name, id_Isin, id_Feed, id_FieldGroup) VALUES (3, 'RUSSRR', NULL, 1, 1);
 
 
 
@@ -667,4 +778,35 @@ INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (8, 'FSU', 3);
 
 /* Data for table SubIndustry */
 
+
+
+
+/* Data for table Ticker */
+
+
+
+
+/* Data for table _log */
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('HAHA');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('OHLOH');
+INSERT INTO _log (msg) VALUES ('Trying to remove last default');
+INSERT INTO _log (msg) VALUES ('Setting new default');
+INSERT INTO _log (msg) VALUES ('Trying to remove last default');
 
