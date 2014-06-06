@@ -1,35 +1,31 @@
 ﻿Imports System.Text.RegularExpressions
 Imports System.Globalization
 Imports YieldMap.Parser.GrammarElements
-Imports YieldMap.Parser.Grammar
 Imports YieldMap.Parser.Helper
 Imports YieldMap.Parser.Exceptions
 
-Public Class Interpreter(Of T)
-    Private _grammar As LinkedList(Of IGrammarElement)
+Public Class Interpreter
+    Private ReadOnly _grammar As LinkedList(Of IGrammarElement)
 
-    Public Sub New()
-
-    End Sub
-
-    Public Sub SetGrammar(ByVal grammar As LinkedList(Of IGrammarElement))
+    Public Sub New(ByVal grammar As LinkedList(Of IGrammarElement))
         _grammar = grammar
+
     End Sub
 
-    Public Function Allows(ByVal elem As T) As Boolean
+    Public Function Evaluate(Of T)(ByVal dataCarrier As T) As Boolean
         If _grammar Is Nothing OrElse Not _grammar.Any Then Return True
-        Dim fieldsAndValues As Dictionary(Of String, Object) = FilterHelper.GetFieldsAndValues(elem)
-        Return Allows(fieldsAndValues)
+        Dim fieldsAndValues As Dictionary(Of String, Object) = FilterHelper.GetFieldsAndValues(dataCarrier)
+        Return Evaluate(fieldsAndValues)
     End Function
 
-    Private Function Allows(ByVal fav As Dictionary(Of String, Object)) As Boolean
+    Public Function Evaluate(ByVal fieldsAndValues As Dictionary(Of String, Object)) As Boolean
         ' тут надо считывать и вычислять тройки, складывать их в стек, а в стеке постепенно продолжать вычисления
         Dim resultStack As New Stack(Of Boolean)
         Dim first = True
         Dim pointer = _grammar.First
         Do
             If TypeOf pointer.Value Is Var Then
-                InterpretTriple(resultStack, fav, pointer)
+                InterpretTriple(resultStack, fieldsAndValues, pointer)
             ElseIf TypeOf pointer.Value Is Lop And Not first Then
                 ApplyBoolean(resultStack, pointer.Value)
             Else

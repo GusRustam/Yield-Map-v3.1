@@ -16,7 +16,7 @@ Public Class Parser
     Private Shared ReadOnly ObjName As Regex = New Regex("^\$(?<objname>\w+)\.(?<fieldname>\w+)")
     Private Shared ReadOnly LogOp As Regex = New Regex("^(?<lop>AND|OR)")
     Private Shared ReadOnly BinOp As Regex = New Regex("^(?<bop>\<=|\>=|=|\<\>|\<|\>|like|nlike)")
-    Private Shared ReadOnly NumValue As Regex = New Regex("^(?<num>-?\d+.\d+|-?\d+)")
+    Private Shared ReadOnly NumValue As Regex = New Regex("^(?<num>-?\d+\.\d+|-?\d+)")
     Private Shared ReadOnly BoolValue As Regex = New Regex("^(?<bool>True|False)")
     Private Shared ReadOnly StrValue As Regex = New Regex("^""(?<str>[^""]*)""")
     Private Shared ReadOnly DatValue As Regex = New Regex("^#(?<dd>\d{1,2})/(?<mm>\d{1,2})/(?<yy>\d{2}|\d{4})#")
@@ -40,7 +40,7 @@ Public Class Parser
         End Get
     End Property
 
-    Public Function SetFilter(ByVal fltStr As String) As LinkedList(Of IGrammarElement)
+    Public Function Parse(ByVal fltStr As String) As LinkedList(Of IGrammarElement)
         Logger.Debug(String.Format("SetFilter({0})", fltStr))
         fltStr = fltStr.Trim()
         _filterString = fltStr
@@ -134,6 +134,7 @@ Public Class Parser
                         ' NAME
                         _state = ParserState.Term
                     Else
+                        ' todo ' _state = ParserState.Value ' try to interpret as value
                         Throw New ParserException("Unexpected symbol, brackets or variable name required", i)
                     End If
 
@@ -146,7 +147,7 @@ Public Class Parser
                         endIndex = i + 1
                         Return res
                     Else
-                        _state = ParserState.Lop
+                        _state = ParserState.Lop ' todo could well be bop
                     End If
 
                 Case ParserState.Name
@@ -215,10 +216,20 @@ Public Class Parser
                         If match.Success Then
                             Dim num = match.Groups("num").Captures(0).Value
                             If Not IsNumeric(num) Then Throw New ParserException("Invalid number", i)
-                            valNode = New Val(Of Double)(num)
+
+                            Dim int As Integer
+                            Dim dbl As Double
+                            If Integer.TryParse(num, int) Then
+                                valNode = New Val(Of Integer)(int)
+                            ElseIf Double.TryParse(num, dbl) Then
+                                valNode = New Val(Of Double)(dbl)
+                            Else
+                                Throw New ParserException(String.Format("Unrecognized number {0}", num), i)
+                            End If
+
                             i = i + match.Length
                         Else
-                            Throw New ParserException("Unexpected sequence, string expression required", i)
+                            Throw New ParserException("Unexpected sequence, number expression required", i)
                         End If
                     ElseIf fltStr(i) = "#" Then       ' date
                         match = DatValue.Match(fltStr.Substring(i))
