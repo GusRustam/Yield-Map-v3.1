@@ -107,6 +107,11 @@
       <Project>{21174b80-86bf-491f-9bf5-057d46a39d4c}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\YieldMap.Language\YieldMap.Language.fsproj">
+      <Name>YieldMap.Language</Name>
+      <Project>{8ed0f41e-4146-4875-9ab1-0d5ecf2ca491}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Loader\YieldMap.Loader.fsproj">
       <Name>YieldMap.Loader</Name>
       <Project>{ef7a6217-b508-43b1-8012-e4a041e50108}</Project>
