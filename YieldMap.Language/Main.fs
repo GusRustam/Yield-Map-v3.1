@@ -18,6 +18,24 @@ module Analyzer =
 
         let pointingString pos = StringBuilder().Append('-', pos).Append('^').ToString()
 
+        let extractUntilBracketClose (str : string) =
+            let rec extract (buffer : System.Text.StringBuilder) (str : string) level = 
+                if String.IsNullOrEmpty str then
+                    None
+                else
+                    let ch = str.[0]
+                    let rest = str.Substring 1
+                    if ch = ')' && level = 0 then Some buffer
+                    else
+                        extract (buffer.Append ch) rest <|
+                            if ch = ')' then level-1
+                            elif ch = '(' then level + 1
+                            else level
+
+            extract (System.Text.StringBuilder()) str 0
+            |> Option.map (fun s -> s.ToString())
+            
+
     exception internal AnalyzerException of string
 
     type LexicalError = { str : string; message : string; position : int }
@@ -143,13 +161,18 @@ module Analyzer =
             elif ch = ')' then (Lexem.CloseBracket, 1)
 
             elif Regex.IsMatch (str, "^[a-zA-Z]\w+\(.*\)") then
-                let m = Regex.Match(str, "^(?<name>[a-zA-Z]\w+)\((?<params>.*)\)")
+                let m = Regex.Match(str, "^(?<name>[a-zA-Z]\w+)\((?<params>.*)")
                 if m.Success then
                     let str = str.Substring m.Length                    
                     let func = m.Groups.Item("name").Captures.Item(0).Value.ToUpper()
-                    let prms = m.Groups.Item("params").Captures.Item(0).Value
-                    let call = Lexem.FunctionCall { name = func; parameters = Lexem.parseInternal prms (basis + func.Length + 1) }
-                    (call, m.Length)
+                    let prms = 
+                        m.Groups.Item("params").Captures.Item(0).Value 
+                        |> Helper.extractUntilBracketClose
+                    match prms with
+                    | Some parameters -> 
+                        let call = Lexem.FunctionCall { name = func; parameters = Lexem.parseInternal parameters (basis + func.Length + 1) }
+                        (call, func.Length + 1 + parameters.Length + 1)
+                    | None -> raise <| AnalyzerException ("Failed to parse function: brackets unbalanced")
                 else raise <| AnalyzerException ("Failed to parse function name")
 
              else // TODO OPERATIONS!!!
@@ -173,7 +196,7 @@ module Analyzer =
                     let local = offset + spaces                     
 
                     try
-                        let lex, len = Lexem.extact str basis
+                        let lex, len = Lexem.extact str (basis + local)
                         (basis + local, lex) :: stack |>
                             if String.length str > len then
                                 parseRecursive (str.Substring len) (local + len)
