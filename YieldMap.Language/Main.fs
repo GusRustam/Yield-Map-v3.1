@@ -1,15 +1,32 @@
 ﻿namespace YieldMap.Language
 
 open System
+open System.Text
 open System.Text.RegularExpressions
 open YieldMap.Tools.Logging
    
-
 module Analyzer =
     let logger = LogFactory.create "UnitTests.Language"
 
-    exception internal AnalyzerException of string // TODO ERROR POSITION
-    exception LexicalException of string * int
+    module Helper = 
+        let trimStart (str : string) = 
+            if String.IsNullOrEmpty str then (str, 0)
+            else
+                let mutable i = 0
+                while str.[i] = ' ' do i <- i + 1
+                (str.Substring i, i)
+
+        let pointingString pos = StringBuilder().Append('-', pos).Append('^').ToString()
+
+    exception internal AnalyzerException of string
+
+    type LexicalError = { str : string; message : string; position : int }
+
+    exception LexicalException of LexicalError
+        with override x.ToString () = 
+                 let data = x.Data0
+                 let pos = data.position
+                 sprintf "Error at position %d: %s\n%s\n%s" pos data.message data.str (Helper.pointingString pos)
 
     type Value = 
     | Date of DateTime
@@ -26,7 +43,7 @@ module Analyzer =
             | String str -> sprintf "String(%s)" str
             | Bool b -> sprintf "Bool(%s)" (b.ToString())
             | Integer i -> sprintf "Integer(%d)" i
-            | Double d -> sprintf "Integer(%f)" d
+            | Double d -> sprintf "Double(%f)" d
         static member internal extract (str : string) = 
             let ch = str.[0]
             let lStr = str.ToLower()
@@ -50,7 +67,7 @@ module Analyzer =
                 if m.Success then
                     let str = m.Groups.Item("str").Captures.Item(0).Value
                     (String str, m.Length)
-                else raise <| AnalyzerException ("Invalid rating")
+                else raise <| AnalyzerException ("Invalid string")
             elif lStr.StartsWith("true") then // bool
                 (Bool true, 4)
             elif lStr.StartsWith("false") then // bool
@@ -78,22 +95,15 @@ module Analyzer =
             | Object (o,p) -> sprintf "Object %s.%s" o p
             | Global g ->  sprintf "Global %s" g
 
-    module Helper = 
-        let trimStart (str : string) = 
-            if String.IsNullOrEmpty str then
-                (str, 0)
-            else
-                let mutable i = 0
-                while str.[i] = ' ' do i <- i + 1
-                (str.Substring i, i)
-
 
     type FunctionCall = 
         {
             name : string
-            parameters : Lexem list
+            parameters : LexemPos list
         }
         with override x.ToString () = sprintf "Name %s, Params %A" x.name x.parameters
+    
+    and LexemPos = int * Lexem
 
     and Lexem = 
     | OpenBracket 
@@ -115,8 +125,10 @@ module Analyzer =
         static member private extact (str : string) = 
             logger.TraceF "extract %s" str
             let ch = str.[0]
-            if ch = '$' then // TODO MOVE IT TO CORRESPONDING CLASS
-                let m = Regex.Match(str, "^\$(?<objname>\w+)\.(?<fieldname>\w+)|(?<objname>\w+)")
+            if ch = '$' then 
+                let varname = "(?:_[a-zA-Z0-9_]+|[a-zA-Z][a-zA-Z0-9_]*)"
+                let varrx = String.Format("^\$(?<objname>{0})\.(?<fieldname>{0})|^\$(?<objname>{0})", varname)
+                let m = Regex.Match(str, varrx)
                 if m.Success then
                     let globalName = m.Groups.Item("objname").Captures.Item(0).Value.ToUpper()
                     let propertyGroup = m.Groups.Item("fieldname")
@@ -128,11 +140,8 @@ module Analyzer =
                     (var, m.Length)
                 else raise <| AnalyzerException ("Failed to parse variable name")
 
-            elif ch = '(' then
-                (Lexem.OpenBracket, 1)
-
-            elif ch = ')' then
-                (Lexem.CloseBracket, 1)
+            elif ch = '(' then (Lexem.OpenBracket, 1)
+            elif ch = ')' then (Lexem.CloseBracket, 1)
 
             elif Regex.IsMatch (str, "^[a-zA-Z]\w+\(.+?\)") then
                 let m = Regex.Match(str, "^(?<name>[a-zA-Z]\w+)\(?<params>(.+?)\)")
@@ -149,17 +158,22 @@ module Analyzer =
                 (Lexem.Value value, length)
 
         static member parse (s : string) = 
-            let rec doParse str pos (stack : Lexem list) = 
+            logger.TraceF "Parsing [%s]" s
+            let rec doParse str pos stack  = 
                 if String.IsNullOrWhiteSpace str then 
                     stack
                 else
+                    let (str, shift) = Helper.trimStart str
                     try
-                        let (str, shift) = Helper.trimStart str
-                        let (lexem, len) = Lexem.extact str
-                        if String.length str > len then
-                            doParse (str.Substring(len + 1)) (pos + len + shift + 1) (lexem :: stack)
-                        else lexem :: stack
+                        let (lex, len) = Lexem.extact str
+                        (pos + shift, lex) :: stack |>
+                            if String.length str > len then
+                                doParse (str.Substring len) (pos + shift + len)
+                            else id
                     with :? AnalyzerException as ae ->
-                        raise <| LexicalException (ae.Data0, pos)
+                        let ex = LexicalException { str = s; message = ae.Data0; position = pos + shift }
+                        logger.WarnEx "Problem!" ex
+                        raise ex
                         
-            doParse (s.TrimEnd()) 0 [] |> List.rev
+            let res = doParse (s.TrimEnd()) 0 []
+            res |> List.rev

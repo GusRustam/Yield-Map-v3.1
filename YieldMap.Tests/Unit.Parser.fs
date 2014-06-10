@@ -15,75 +15,118 @@ module Language =
     let logger = LogFactory.create "UnitTests.Language"
 
     let lexCatch f = 
-        try f ()
+        try 
+            f ()
             failwith "No error"
         with :? LexicalException as e ->
-            e.Data1
+            e.Data0.position
 
     [<Test>]
-    let ``Parsing numbers`` () =
-        Lexem.parse "1" |> should be (equal [Lexem.Value <| Value.Integer 1L])
-        Lexem.parse "   1   " |> should be (equal [Lexem.Value <| Value.Integer 1L])
-        Lexem.parse "1" |> should be (equal [Lexem.Value <| Value.Integer 1L])
+    let ``Parsing values: numbers (int and double)`` () =
+        Lexem.parse "1" |> should be (equal [0, Lexem.Value <| Value.Integer 1L])
+        Lexem.parse "   1   " |> should be (equal [3, Lexem.Value <| Value.Integer 1L])
+        Lexem.parse "1   " |> should be (equal [0, Lexem.Value <| Value.Integer 1L])
         Lexem.parse "1 2" |> should be (equal 
             [
-                Lexem.Value <| Value.Integer 1L
-                Lexem.Value <| Value.Integer 2L
+                0, Lexem.Value <| Value.Integer 1L
+                2, Lexem.Value <| Value.Integer 2L
             ])
         Lexem.parse "   1   2 " |> should be (equal 
             [
-                Lexem.Value <| Value.Integer 1L
-                Lexem.Value <| Value.Integer 2L
+                3, Lexem.Value <| Value.Integer 1L
+                7, Lexem.Value <| Value.Integer 2L
             ])
         Lexem.parse "1.0 2" |> should be (equal 
             [
-                Lexem.Value <| Value.Double 1.0
-                Lexem.Value <| Value.Integer 2L
+                0, Lexem.Value <| Value.Double 1.0
+                4, Lexem.Value <| Value.Integer 2L
             ])
         Lexem.parse "1.0 2.4" |> should be (equal 
             [
-                Lexem.Value <| Value.Double 1.0
-                Lexem.Value <| Value.Double 2.4
+                0, Lexem.Value <| Value.Double 1.0
+                4, Lexem.Value <| Value.Double 2.4
             ])
 
         // TODO TESTS ON IVALID DATA
         // TODO TESTS ON ALL LEXEMS
-        // TODO AND THEN - THE PARSER
         
-        lexCatch (fun () -> Lexem.parse "1e" |> ignore) |> should be (equal 0)
+        // TODO MIXED TESTS lexCatch (fun () -> Lexem.parse "1e" |> ignore) |> should be (equal 0) 
 
     [<Test>]
-    let ``Parsing dates`` () =
-        Lexem.parse "#1/2/2013#" |> should be (equal [Lexem.Value <| Value.Date (DateTime(2013,2,1))])
-        Lexem.parse "  #21/12/2013#  " |> should be (equal [Lexem.Value <| Value.Date (DateTime(2013,12,21))])
+    let ``Parsing values: dates`` () =
+        Lexem.parse "#1/2/2013#" |> should be (equal [0, Lexem.Value <| Value.Date (DateTime(2013,2,1))])
+        Lexem.parse "  #21/12/2013#  " |> should be (equal [2, Lexem.Value <| Value.Date (DateTime(2013,12,21))])
 
     [<Test>]
-    let ``Parsing booleans`` () =
-        Lexem.parse "true" |> should be (equal [Lexem.Value <| Value.Bool true])
-        Lexem.parse "false" |> should be (equal [Lexem.Value <| Value.Bool false])
+    let ``Parsing values: booleans`` () =
+        Lexem.parse "true" |> should be (equal [0, Lexem.Value <| Value.Bool true])
+        Lexem.parse "false" |> should be (equal [0, Lexem.Value <| Value.Bool false])
         Lexem.parse "  False  FALSE   TRUE   tRuE" |> should be (equal 
             [
-                Lexem.Value <| Value.Bool false
-                Lexem.Value <| Value.Bool false
-                Lexem.Value <| Value.Bool true
-                Lexem.Value <| Value.Bool true
+                2, Lexem.Value <| Value.Bool false
+                9, Lexem.Value <| Value.Bool false
+                17, Lexem.Value <| Value.Bool true
+                24, Lexem.Value <| Value.Bool true
             ])
 
     [<Test>]
-    let ``Parsing string`` () =
-        Lexem.parse "\"hello world!\"" |> should be (equal [Lexem.Value <| Value.String "hello world!"])
-        Lexem.parse "\"Hello World!\"" |> should be (equal [Lexem.Value <| Value.String "Hello World!"])
-        Lexem.parse "\"Hello    World!\"" |> should be (equal [Lexem.Value <| Value.String "Hello    World!"])
-        Lexem.parse "\"hello world!\"     \"hello world!\"            \"Hello    World!\" \"Hello World!\"       " |> should be (equal 
+    let ``Parsing values: ratings`` () =
+        Lexem.parse "[BBB+]" |> should be (equal [0, Lexem.Value <| Value.Rating "BBB+"])
+        Lexem.parse "[]" |> should be (equal [0, Lexem.Value <| Value.Rating ""])
+        Lexem.parse "  [sdf]  [AAA]   [wow!]   [-+-+]" |> should be (equal 
             [
-                Lexem.Value <| Value.String "hello world!"
-                Lexem.Value <| Value.String "hello world!"
-                Lexem.Value <| Value.String "Hello    World!"
-                Lexem.Value <| Value.String "Hello World!"
+                2, Lexem.Value <| Value.Rating "sdf"
+                9, Lexem.Value <| Value.Rating "AAA"
+                17, Lexem.Value <| Value.Rating "wow!"
+                26, Lexem.Value <| Value.Rating "-+-+"
             ])
 
-        lexCatch (fun () -> Lexem.parse "\"hello world!\"\"hello world!\"" |> ignore) |> should be (equal 15)
+    [<Test>]
+    let ``Parsing values: strings`` () =
+        Lexem.parse "\"hello world!\"" |> should be (equal [0, Lexem.Value <| Value.String "hello world!"])
+        Lexem.parse "\"Hello World!\"" |> should be (equal [0, Lexem.Value <| Value.String "Hello World!"])
+        Lexem.parse "\"Hello    World!\"" |> should be (equal [0, Lexem.Value <| Value.String "Hello    World!"])
+        Lexem.parse "\"hello world!\"     \"hello world!\"            \"Hello    World!\" \"Hello World!\"       " |> should be (equal 
+            [
+                0, Lexem.Value <| Value.String "hello world!"
+                19, Lexem.Value <| Value.String "hello world!"
+                45, Lexem.Value <| Value.String "Hello    World!"
+                63, Lexem.Value <| Value.String "Hello World!"
+            ])
+        Lexem.parse "\"hello world!\"\"hello world!\""|> should be (equal 
+            [
+                0, Lexem.Value <| Value.String "hello world!"
+                14, Lexem.Value <| Value.String "hello world!"
+            ])
+    
+    [<Test>]
+    let ``Parsing lexems: brackets`` () =
+        Lexem.parse "(() ) (  " |> should be (equal 
+            [
+                0, Lexem.OpenBracket
+                1, Lexem.OpenBracket
+                2, Lexem.CloseBracket
+                4, Lexem.CloseBracket
+                6, Lexem.OpenBracket
+            ])
+
+    [<Test>]
+    let ``Parsing lexems: variables`` () =
+        // valid variable names
+        Lexem.parse "$a" |> should be (equal [0, Lexem.Variable <| Variable.Global "A"])
+        Lexem.parse "$a.b" |> should be (equal [0, Lexem.Variable <| Variable.Object ("A", "B")])
+        Lexem.parse "$a.b $F $eee_11.a23" |> should be (equal 
+            [
+                0, Lexem.Variable <| Variable.Object ("A", "B")
+                5, Lexem.Variable <| Variable.Global "F"
+                8, Lexem.Variable <| Variable.Object ("EEE_11", "A23")
+            ])
         
+        // invalid variable names
+        lexCatch (fun () -> Lexem.parse "$a.b $c $DDDD.312r4wefr3" |> ignore) |> should be (equal 13)
+        lexCatch (fun () -> Lexem.parse "$1" |> ignore) |> should be (equal 0)
+        lexCatch (fun () -> Lexem.parse "$a $_" |> ignore) |> should be (equal 3)
+
 module Parser = 
     open System.Collections.Generic
 
