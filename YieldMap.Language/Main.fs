@@ -13,7 +13,7 @@ module Analyzer =
             if String.IsNullOrEmpty str then (str, 0)
             else
                 let mutable i = 0
-                while str.[i] = ' ' || str.[i] = ',' do i <- i + 1
+                while str.[i] = ' ' do i <- i + 1
                 (str.Substring i, i)
 
         let pointingString pos = StringBuilder().Append('-', pos).Append('^').ToString()
@@ -113,6 +113,13 @@ module Analyzer =
             | Object (o,p) -> sprintf "Object %s.%s" o p
             | Global g ->  sprintf "Global %s" g
 
+    module Operations =
+        let private operations = [|"+"; "-"; "*"; "/"; "and"; "not"; "or"; "="; "<>"; ">="; "<="; ">"; "<"|]
+        
+        let tryExtract (str : string) = 
+            let str = str.ToLower()
+            operations |> Array.tryFind str.StartsWith
+
     type FunctionCall = 
         {
             name : string
@@ -125,6 +132,7 @@ module Analyzer =
     and Lexem = 
     | OpenBracket 
     | CloseBracket
+    | Comma
     | Value of Value
     | Variable of Variable
     | Operation of string
@@ -134,6 +142,7 @@ module Analyzer =
             match x with
             | OpenBracket -> "("
             | CloseBracket -> ")"
+            | Comma -> ","
             | Value v -> sprintf "Value(%s)" (v.ToString())
             | Variable v -> sprintf "Variable(%s)" (v.ToString())
             | Operation o -> sprintf "Operation(%s)" (o.ToString())
@@ -157,6 +166,7 @@ module Analyzer =
                     (var, m.Length)
                 else raise <| AnalyzerException ("Failed to parse variable name")
 
+            elif ch = ',' then (Lexem.Comma, 1)
             elif ch = '(' then (Lexem.OpenBracket, 1)
             elif ch = ')' then (Lexem.CloseBracket, 1)
 
@@ -175,9 +185,13 @@ module Analyzer =
                     | None -> raise <| AnalyzerException ("Failed to parse function: brackets unbalanced")
                 else raise <| AnalyzerException ("Failed to parse function name")
 
-             else // TODO OPERATIONS!!!
-                let (value, length) = Value.extract str
-                (Lexem.Value value, length)
+             else 
+                match Operations.tryExtract str with
+                | Some op -> 
+                    (Lexem.Operation op, op.Length)
+                | None ->
+                    let (value, length) = Value.extract str
+                    (Lexem.Value value, length)
 
         static member private parseInternal (s : string) basis = 
             logger.TraceF "Parsing [%s]" s
@@ -187,6 +201,8 @@ module Analyzer =
                     stack
                 else
                     //=========================================================== 
+                    // String structure and all offsets
+                    //===========================================================
                     //    some call                          current lexem
                     //   FunctionCall( *parsed*   whitespace  123123214
                     // --------------|----------|------------|---------|-

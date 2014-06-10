@@ -47,11 +47,6 @@ module Language =
                 4, Lexem.Value <| Value.Double 2.4
             ])
 
-        // TODO TESTS ON IVALID DATA
-        // TODO TESTS ON ALL LEXEMS
-        
-        // TODO MIXED TESTS lexCatch (fun () -> Lexem.parse "1e" |> ignore) |> should be (equal 0) 
-
     [<Test>]
     let ``Parsing values: dates`` () =
         Lexem.parse "#1/2/2013#" |> should be (equal [0, Lexem.Value <| Value.Date (DateTime(2013,2,1))])
@@ -146,10 +141,13 @@ module Language =
                     { 
                         name = "OHMYGOD"; parameters = 
                             [
-                                8+0, Lexem.Value <| Value.Integer 12L
-                                8+4, Lexem.Value <| Value.Integer 23L
-                                8+8, Lexem.Variable <| Variable.Global "A"
-                                8+12, Lexem.Value <| Value.Bool true
+                                8, Lexem.Value <| Value.Integer 12L
+                                10, Lexem.Comma
+                                12, Lexem.Value <| Value.Integer 23L
+                                14, Lexem.Comma
+                                16, Lexem.Variable <| Variable.Global "A"
+                                18, Lexem.Comma
+                                20, Lexem.Value <| Value.Bool true
                             ] 
                     }
             ])
@@ -157,15 +155,57 @@ module Language =
             [ 0, Lexem.FunctionCall  
                 { name = "OHMYGOD"; parameters = 
                     [   8, Lexem.FunctionCall { name = "HELLO"; parameters = [14, Lexem.Value <| Value.Integer 12L] }
+                        17, Lexem.Comma
                         19, Lexem.FunctionCall 
                             { name = "BYE"; parameters = 
                                 [
                                     23, Lexem.Value <| Value.Integer 23L
+                                    25, Lexem.Comma
                                     27, Lexem.Variable <| Variable.Object ("ALPHA", "BETA_11")
                                 ]}
+                        42, Lexem.Comma
                         44, Lexem.Variable <| Variable.Global "A"
+                        46, Lexem.Comma
                         48, Lexem.Value <| Value.Bool false
                     ]}])
+
+    [<Test>]
+    let ``Parsing lexems: operations`` () = 
+        Lexem.parse "+" |> should be (equal [0, Lexem.Operation "+"])
+        Lexem.parse "-" |> should be (equal [0, Lexem.Operation "-"])
+        Lexem.parse "*" |> should be (equal [0, Lexem.Operation "*"])
+        Lexem.parse "/" |> should be (equal [0, Lexem.Operation "/"])
+        Lexem.parse "and" |> should be (equal [0, Lexem.Operation "and"])
+        Lexem.parse "or" |> should be (equal [0, Lexem.Operation "or"])
+        Lexem.parse "not" |> should be (equal [0, Lexem.Operation "not"])
+        Lexem.parse "=" |> should be (equal [0, Lexem.Operation "="])
+        Lexem.parse "<>" |> should be (equal [0, Lexem.Operation "<>"])
+        Lexem.parse ">" |> should be (equal [0, Lexem.Operation ">"])
+        Lexem.parse "<" |> should be (equal [0, Lexem.Operation "<"])
+        Lexem.parse ">=" |> should be (equal [0, Lexem.Operation ">="])
+        Lexem.parse "<=" |> should be (equal [0, Lexem.Operation "<="])
+
+    [<Test>]
+    let ``Parsing lexems: all together`` () = 
+        Lexem.parse "1+2=4" |> should be (equal 
+            [0, Lexem.Value <| Value.Integer 1L
+             1, Lexem.Operation "+"
+             2, Lexem.Value <| Value.Integer 2L
+             3, Lexem.Operation "="
+             4, Lexem.Value <| Value.Integer 4L])
+
+        Lexem.parse "If($a = \"hello\", $x.alpha + 1, 0)" |> should be (equal 
+            [0, Lexem.FunctionCall 
+                { name = "IF"; parameters = 
+                    [3, Lexem.Variable <| Variable.Global "A"
+                     6, Lexem.Operation "="
+                     8, Lexem.Value <| Value.String "hello"
+                     15, Lexem.Comma
+                     17, Lexem.Variable <| Variable.Object ("X", "ALPHA")
+                     26, Lexem.Operation "+"
+                     28, Lexem.Value <| Value.Integer 1L
+                     29, Lexem.Comma
+                     31, Lexem.Value <| Value.Integer 0L]}])
 
 module Parser = 
     open System.Collections.Generic
