@@ -8,12 +8,12 @@ open YieldMap.Tools.Logging
 module Analyzer =
     let logger = LogFactory.create "UnitTests.Language"
 
-    module Helper = 
+    module internal Helper = 
         let trimStart (str : string) = 
             if String.IsNullOrEmpty str then (str, 0)
             else
                 let mutable i = 0
-                while str.[i] = ' ' do i <- i + 1
+                while str.[i] = ' ' || str.[i] = ',' do i <- i + 1
                 (str.Substring i, i)
 
         let pointingString pos = StringBuilder().Append('-', pos).Append('^').ToString()
@@ -95,7 +95,6 @@ module Analyzer =
             | Object (o,p) -> sprintf "Object %s.%s" o p
             | Global g ->  sprintf "Global %s" g
 
-
     type FunctionCall = 
         {
             name : string
@@ -143,8 +142,8 @@ module Analyzer =
             elif ch = '(' then (Lexem.OpenBracket, 1)
             elif ch = ')' then (Lexem.CloseBracket, 1)
 
-            elif Regex.IsMatch (str, "^[a-zA-Z]\w+\(.+?\)") then
-                let m = Regex.Match(str, "^(?<name>[a-zA-Z]\w+)\(?<params>(.+?)\)")
+            elif Regex.IsMatch (str, "^[a-zA-Z]\w+\(.*\)") then
+                let m = Regex.Match(str, "^(?<name>[a-zA-Z]\w+)\((?<params>.*)\)")
                 if m.Success then
                     let str = str.Substring m.Length                    
                     let func = m.Groups.Item("name").Captures.Item(0).Value.ToUpper()
@@ -159,19 +158,22 @@ module Analyzer =
 
         static member parse (s : string) = 
             logger.TraceF "Parsing [%s]" s
-            let rec doParse str pos stack  = 
+
+            let rec doParse str positionInString stack  = 
                 if String.IsNullOrWhiteSpace str then 
                     stack
                 else
                     let (str, shift) = Helper.trimStart str
+                    let offset = positionInString + shift
+
                     try
-                        let (lex, len) = Lexem.extact str
-                        (pos + shift, lex) :: stack |>
+                        let lex, len = Lexem.extact str
+                        (offset, lex) :: stack |>
                             if String.length str > len then
-                                doParse (str.Substring len) (pos + shift + len)
+                                doParse (str.Substring len) (offset + len)
                             else id
                     with :? AnalyzerException as ae ->
-                        let ex = LexicalException { str = s; message = ae.Data0; position = pos + shift }
+                        let ex = LexicalException { str = s; message = ae.Data0; position = offset }
                         logger.WarnEx "Problem!" ex
                         raise ex
                         
