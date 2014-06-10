@@ -5,8 +5,8 @@ open System.Text
 open System.Text.RegularExpressions
 open YieldMap.Tools.Logging
    
-module Analyzer =
-    let logger = LogFactory.create "UnitTests.Language"
+module Lexan =
+    let logger = LogFactory.create "Language.Lexan"
 
     module internal Helper = 
         let trimStart (str : string) = 
@@ -120,6 +120,17 @@ module Analyzer =
             let str = str.ToLower()
             operations |> Array.tryFind str.StartsWith
 
+    type Delimiter = 
+    | OpenBracket 
+    | CloseBracket
+    | Comma
+    with 
+        override x.ToString () = 
+            match x with
+            | OpenBracket -> "("
+            | CloseBracket -> ")"
+            | Comma -> ","
+
     type FunctionCall = 
         {
             name : string
@@ -130,9 +141,7 @@ module Analyzer =
     and LexemPos = int * Lexem
 
     and Lexem = 
-    | OpenBracket 
-    | CloseBracket
-    | Comma
+    | Delimiter of Delimiter
     | Value of Value
     | Variable of Variable
     | Operation of string
@@ -140,9 +149,7 @@ module Analyzer =
     with 
         override x.ToString () = 
             match x with
-            | OpenBracket -> "("
-            | CloseBracket -> ")"
-            | Comma -> ","
+            | Delimiter d -> sprintf "Delim(%s)" (d.ToString())
             | Value v -> sprintf "Value(%s)" (v.ToString())
             | Variable v -> sprintf "Variable(%s)" (v.ToString())
             | Operation o -> sprintf "Operation(%s)" (o.ToString())
@@ -166,9 +173,9 @@ module Analyzer =
                     (var, m.Length)
                 else raise <| AnalyzerException ("Failed to parse variable name")
 
-            elif ch = ',' then (Lexem.Comma, 1)
-            elif ch = '(' then (Lexem.OpenBracket, 1)
-            elif ch = ')' then (Lexem.CloseBracket, 1)
+            elif ch = ',' then (Lexem.Delimiter <| Delimiter.Comma, 1)
+            elif ch = '(' then (Lexem.Delimiter <| Delimiter.OpenBracket, 1)
+            elif ch = ')' then (Lexem.Delimiter <| Delimiter.CloseBracket, 1)
 
             elif Regex.IsMatch (str, "^[a-zA-Z]\w+\(.*\)") then
                 let m = Regex.Match(str, "^(?<name>[a-zA-Z]\w+)\((?<params>.*)")
@@ -203,10 +210,10 @@ module Analyzer =
                     //=========================================================== 
                     // String structure and all offsets
                     //===========================================================
-                    //    some call                          current lexem
-                    //   FunctionCall( *parsed*   whitespace  123123214
-                    // --------------|----------|------------|---------|-
-                    //         basis-^   offset-^     spaces-^     len-^
+                    //    some call                        current lexem
+                    //   FunctionCall( *parsed*   whitespace  3123214
+                    // --------------|----------|------------|-------|-
+                    //         basis-^   offset-^     spaces-^   len-^
                     //=========================================================== 
                     let (str, spaces) = Helper.trimStart str
                     let local = offset + spaces                     
@@ -226,3 +233,73 @@ module Analyzer =
             res |> List.rev
 
         static member parse (s : string) = Lexem.parseInternal s 0
+
+module SinkingStack = 
+    ()
+
+module Syntan = 
+    open Lexan
+    open YieldMap.Tools.Aux
+
+    let logger = LogFactory.create "Language.Syntan"
+
+    exception SyntaxException of string
+
+//    type SynFunctionCall = 
+//        {
+//            name : string
+//            parameters : SyntemPos list
+//        }
+//        with override x.ToString () = sprintf "Name %s, Params %A" x.name x.parameters
+//    and SyntemPos = int * Syntem
+//    and Syntem = 
+//    | Value of Value
+//    | Variable of Variable
+//    | Operation of string
+//    | FunctionCall of SynFunctionCall
+
+    type State = 
+    | Expression
+    | Parameters
+
+    let levelPriority = 10
+
+    let basicPriority = function
+        | Lexem.FunctionCall _ -> 1
+        | Lexem.Operation o -> 
+            if o |- set ["*"; "/"] then 2
+            elif o |- set ["+"; "-"] then 3
+            elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 4
+            elif o |- set [ "and"; "not"; "or"] then 5
+            else failwith "Unknown operation"
+        | Lexem.Value _ -> 6
+        | Lexem.Variable _ -> 6
+        | _ -> failwith "Unexpected token"
+
+    let prioritize lexems = 
+        let initalState = (0, 0, []) // bracket level * maxLevel * (LexemPos * priority) list
+        let lastLevel, maxLevel, prioritized = 
+            lexems |> List.fold (fun (l, m, prioritizedItems) lex -> 
+                match lex with
+                | (_, Lexem.Delimiter d) ->
+                    let level, max = 
+                        match d with
+                        | Delimiter.OpenBracket -> l+1, l+1
+                        | Delimiter.CloseBracket -> l-1, l
+                        | Delimiter.Comma -> l, l
+                    (level, max, prioritizedItems)
+                | (p, some) -> 
+                    let basic = basicPriority some
+                    (l, m, (p, some, levelPriority * l + basic) :: prioritizedItems))
+                initalState
+        if lastLevel <> 0 then failwith "Brackets unbalanced"
+        prioritized |> List.rev |> List.map (fun (position, lexem, priority) -> 
+            (position, lexem, levelPriority * (maxLevel + 1) - priority)
+        )
+   
+    let syntax lexems =
+        let rec analyze lexems state level acc =
+            match lexems with 
+            | lex :: rest -> acc
+            | [] -> acc
+        analyze lexems State.Expression 0 []

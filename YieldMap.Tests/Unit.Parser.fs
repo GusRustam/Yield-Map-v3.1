@@ -9,7 +9,7 @@ module Language =
     open System.Collections.Generic
 
     open YieldMap.Language
-    open YieldMap.Language.Analyzer
+    open YieldMap.Language.Lexan
     open YieldMap.Tools.Logging
    
     let logger = LogFactory.create "UnitTests.Language"
@@ -98,11 +98,11 @@ module Language =
     let ``Parsing lexems: brackets`` () =
         Lexem.parse "(() ) (  " |> should be (equal 
             [
-                0, Lexem.OpenBracket
-                1, Lexem.OpenBracket
-                2, Lexem.CloseBracket
-                4, Lexem.CloseBracket
-                6, Lexem.OpenBracket
+                0, Lexem.Delimiter <| Delimiter.OpenBracket
+                1, Lexem.Delimiter <| Delimiter.OpenBracket
+                2, Lexem.Delimiter <| Delimiter.CloseBracket
+                4, Lexem.Delimiter <| Delimiter.CloseBracket
+                6, Lexem.Delimiter <| Delimiter.OpenBracket
             ])
 
     [<Test>]
@@ -142,11 +142,11 @@ module Language =
                         name = "OHMYGOD"; parameters = 
                             [
                                 8, Lexem.Value <| Value.Integer 12L
-                                10, Lexem.Comma
+                                10, Lexem.Delimiter <| Delimiter.Comma
                                 12, Lexem.Value <| Value.Integer 23L
-                                14, Lexem.Comma
+                                14, Lexem.Delimiter <| Delimiter.Comma
                                 16, Lexem.Variable <| Variable.Global "A"
-                                18, Lexem.Comma
+                                18, Lexem.Delimiter <| Delimiter.Comma
                                 20, Lexem.Value <| Value.Bool true
                             ] 
                     }
@@ -155,17 +155,17 @@ module Language =
             [ 0, Lexem.FunctionCall  
                 { name = "OHMYGOD"; parameters = 
                     [   8, Lexem.FunctionCall { name = "HELLO"; parameters = [14, Lexem.Value <| Value.Integer 12L] }
-                        17, Lexem.Comma
+                        17, Lexem.Delimiter <| Delimiter.Comma
                         19, Lexem.FunctionCall 
                             { name = "BYE"; parameters = 
                                 [
                                     23, Lexem.Value <| Value.Integer 23L
-                                    25, Lexem.Comma
+                                    25, Lexem.Delimiter <| Delimiter.Comma
                                     27, Lexem.Variable <| Variable.Object ("ALPHA", "BETA_11")
                                 ]}
-                        42, Lexem.Comma
+                        42, Lexem.Delimiter <| Delimiter.Comma
                         44, Lexem.Variable <| Variable.Global "A"
-                        46, Lexem.Comma
+                        46, Lexem.Delimiter <| Delimiter.Comma
                         48, Lexem.Value <| Value.Bool false
                     ]}])
 
@@ -200,12 +200,23 @@ module Language =
                     [3, Lexem.Variable <| Variable.Global "A"
                      6, Lexem.Operation "="
                      8, Lexem.Value <| Value.String "hello"
-                     15, Lexem.Comma
+                     15, Lexem.Delimiter <| Delimiter.Comma
                      17, Lexem.Variable <| Variable.Object ("X", "ALPHA")
                      26, Lexem.Operation "+"
                      28, Lexem.Value <| Value.Integer 1L
-                     29, Lexem.Comma
+                     29, Lexem.Delimiter <| Delimiter.Comma
                      31, Lexem.Value <| Value.Integer 0L]}])
+
+    [<Test>]
+    let ``Priorities assignment`` () =
+        let data = Lexem.parse "1+2=4" 
+        Syntan.prioritize data |> should be (equal 
+            [0, Lexem.Value <| Value.Integer 1L, 4
+             1, Lexem.Operation "+", 7
+             2, Lexem.Value <| Value.Integer 2L, 4
+             3, Lexem.Operation "=", 6
+             4, Lexem.Value <| Value.Integer 4L, 4])
+        
 
 module Parser = 
     open System.Collections.Generic
