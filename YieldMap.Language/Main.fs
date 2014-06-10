@@ -121,7 +121,7 @@ module Analyzer =
             | Operation o -> sprintf "Operation(%s)" (o.ToString())
             | FunctionCall f -> sprintf "FunctionCall(%s)" (f.ToString())
 
-        static member private extact (str : string) = 
+        static member private extact (str : string) basis = 
             logger.TraceF "extract %s" str
             let ch = str.[0]
             if ch = '$' then 
@@ -148,7 +148,7 @@ module Analyzer =
                     let str = str.Substring m.Length                    
                     let func = m.Groups.Item("name").Captures.Item(0).Value.ToUpper()
                     let prms = m.Groups.Item("params").Captures.Item(0).Value
-                    let call = Lexem.FunctionCall { name = func; parameters = Lexem.parse prms }
+                    let call = Lexem.FunctionCall { name = func; parameters = Lexem.parseInternal prms (basis + func.Length + 1) }
                     (call, m.Length)
                 else raise <| AnalyzerException ("Failed to parse function name")
 
@@ -156,26 +156,34 @@ module Analyzer =
                 let (value, length) = Value.extract str
                 (Lexem.Value value, length)
 
-        static member parse (s : string) = 
+        static member private parseInternal (s : string) basis = 
             logger.TraceF "Parsing [%s]" s
 
-            let rec doParse str positionInString stack  = 
+            let rec parseRecursive str offset stack  = 
                 if String.IsNullOrWhiteSpace str then 
                     stack
                 else
-                    let (str, shift) = Helper.trimStart str
-                    let offset = positionInString + shift
+                    //=========================================================== 
+                    //    some call                          current lexem
+                    //   FunctionCall( *parsed*   whitespace  123123214
+                    // --------------|----------|------------|---------|-
+                    //         basis-^   offset-^     spaces-^     len-^
+                    //=========================================================== 
+                    let (str, spaces) = Helper.trimStart str
+                    let local = offset + spaces                     
 
                     try
-                        let lex, len = Lexem.extact str
-                        (offset, lex) :: stack |>
+                        let lex, len = Lexem.extact str basis
+                        (basis + local, lex) :: stack |>
                             if String.length str > len then
-                                doParse (str.Substring len) (offset + len)
+                                parseRecursive (str.Substring len) (local + len)
                             else id
                     with :? AnalyzerException as ae ->
-                        let ex = LexicalException { str = s; message = ae.Data0; position = offset }
+                        let ex = LexicalException { str = s; message = ae.Data0; position = local }
                         logger.WarnEx "Problem!" ex
                         raise ex
                         
-            let res = doParse (s.TrimEnd()) 0 []
+            let res = parseRecursive (s.TrimEnd()) 0 []
             res |> List.rev
+
+        static member parse (s : string) = Lexem.parseInternal s 0

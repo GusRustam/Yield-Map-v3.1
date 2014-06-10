@@ -129,8 +129,7 @@ module Language =
 
     [<Test>]
     let ``Parsing lexems: function calls`` () =
-        // valid variable names
-        //Lexem.parse "Hello()" |> should be (equal [0, Lexem.FunctionCall <| { name = "HELLO"; parameters = [] }])
+        Lexem.parse "Hello()" |> should be (equal [0, Lexem.FunctionCall <| { name = "HELLO"; parameters = [] }])
         Lexem.parse "Hello(12)" |> should be (equal 
             [
                 0, Lexem.FunctionCall  
@@ -154,7 +153,19 @@ module Language =
                             ] 
                     }
             ])
-
+        Lexem.parse "OhMyGod(Hello(12), Bye(23, $alpha.beta_11), $a, false)" |> should be (equal 
+            [ 0, Lexem.FunctionCall  
+                { name = "OHMYGOD"; parameters = 
+                    [   8, Lexem.FunctionCall { name = "HELLO"; parameters = [14, Lexem.Value <| Value.Integer 12L] }
+                        19, Lexem.FunctionCall 
+                            { name = "BYE"; parameters = 
+                                [
+                                    23, Lexem.Value <| Value.Integer 23L
+                                    27, Lexem.Variable <| Variable.Object ("ALPHA", "BETA_11")
+                                ]}
+                        44, Lexem.Variable <| Variable.Global "A"
+                        48, Lexem.Value <| Value.Bool false
+                    ]}])
 
 module Parser = 
     open System.Collections.Generic
