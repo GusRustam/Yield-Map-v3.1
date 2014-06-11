@@ -131,21 +131,13 @@ module Lexan =
             | CloseBracket -> ")"
             | Comma -> ","
 
-    type FunctionCall = 
-        {
-            name : string
-            parameters : LexemPos list
-        }
-        with override x.ToString () = sprintf "Name %s, Params %A" x.name x.parameters
-    
-    and LexemPos = int * Lexem
-
+    type LexemPos = int * Lexem
     and Lexem = 
     | Delimiter of Delimiter
     | Value of Value
     | Variable of Variable
     | Operation of string
-    | FunctionCall of FunctionCall
+    | Function of string
     with 
         override x.ToString () = 
             match x with
@@ -153,7 +145,7 @@ module Lexan =
             | Value v -> sprintf "Value(%s)" (v.ToString())
             | Variable v -> sprintf "Variable(%s)" (v.ToString())
             | Operation o -> sprintf "Operation(%s)" (o.ToString())
-            | FunctionCall f -> sprintf "FunctionCall(%s)" (f.ToString())
+            | Function f -> sprintf "Function(%s)" (f.ToString())
 
         static member private extact (str : string) basis = 
             logger.TraceF "extract %s" str
@@ -187,8 +179,8 @@ module Lexan =
                         |> Helper.extractUntilBracketClose
                     match prms with
                     | Some parameters -> 
-                        let call = Lexem.FunctionCall { name = func; parameters = Lexem.parseInternal parameters (basis + func.Length + 1) }
-                        (call, func.Length + 1 + parameters.Length + 1)
+                        let call = Lexem.Function func//{ name = func; parameters = Lexem.parseInternal parameters (basis + func.Length + 1) }
+                        (call, func.Length) // + 1 + parameters.Length + 1
                     | None -> raise <| AnalyzerException ("Failed to parse function: brackets unbalanced")
                 else raise <| AnalyzerException ("Failed to parse function name")
 
@@ -240,41 +232,84 @@ module SinkPriorityStack = // implement via lists
 module Syntan = 
     open Lexan
     open YieldMap.Tools.Aux
+    open FSharpx.Collections
 
     let logger = LogFactory.create "Language.Syntan"
 
     exception SyntaxException of string
 
-    type SynFunctionCall = {
-            name : string
-            parameters : Syntem list list // сгруппированные параметры
-        }
-        with override x.ToString () = sprintf "Name %s, Params %A" x.name x.parameters
     
-    and Syntem = int * Syntel * int // position * syntel * priority
-    
+    type Syntem = int * Syntel * int // position * syntel * priority
+
     and Syntel = 
     | Value of Value
     | Variable of Variable
     | Operation of string
-    | SynFunctionCall of SynFunctionCall
+    | Function of string
     with 
         override x.ToString () = 
             match x with
             | Value v -> sprintf "Value(%s)" (v.ToString())
             | Variable v -> sprintf "Variable(%s)" (v.ToString())
             | Operation o -> sprintf "Operation(%s)" (o.ToString())
-            | SynFunctionCall f -> sprintf "SynFunctionCall(%s)" (f.ToString())
+            | Function f -> sprintf "Function(%s)" (f.ToString())
+
+    type Op = 
+    | Bracket
+    | Function of int * string 
+    | Operation of int * string * int
+    with
+        static member popToStrict what who = 
+            let rec doPopUntil who acc = 
+                match who with
+                | head :: rest when head = what -> acc, rest
+                | head :: rest -> doPopUntil rest (head :: acc)
+                | [] ->  failwith "Not found"
+            doPopUntil who []
+
+        static member popTo what who = 
+            let rec doPopUntil who acc = 
+                match who with
+                | head :: rest when head = what -> acc, rest
+                | head :: rest -> doPopUntil rest (head :: acc)
+                | [] -> acc, []
+            doPopUntil who []
+
+        static member popUntilStrict cond who = 
+            let rec doPopUntil who acc = 
+                match who with
+                | head :: rest when cond(head)  -> acc, rest
+                | head :: rest -> doPopUntil rest (head :: acc)
+                | [] ->  failwith "Not found"
+            doPopUntil who []
+            
+        static member popUntil cond who = 
+            let rec doPopUntil who acc = 
+                match who with
+                | head :: rest when cond(head)  -> acc, rest
+                | head :: rest -> doPopUntil rest (head :: acc)
+                | [] -> acc, []
+            doPopUntil who []
+
+        static member toSyntel op = 
+            match op with
+            | Op.Function (pos, f) -> pos, Syntel.Function f
+            | Op.Operation (pos, op, _) -> pos, Syntel.Operation op
+            | _ -> failwith "Bad op"
+
+        static member push ops syntelQueue = 
+            let rec doPush o q =
+                match o with
+                | head :: tail -> doPush tail (q |> Queue.conj (Op.toSyntel head))
+                | [] -> q
+            doPush ops syntelQueue
 
     module private Helper = 
         [<Literal>] 
         let levelPriority = 10
 
-        [<Literal>] 
-        let unaryElevation = 4
-        
         let priority = function
-            | Lexem.FunctionCall _ -> 9
+            | Lexem.Function _ -> 9
             | Lexem.Operation o -> 
                 if o = "not" then 8
                 elif o |- set ["and"; "or"] then 7
@@ -286,90 +321,54 @@ module Syntan =
             | Lexem.Variable _ -> 3
             | _ -> failwith "Unexpected token"
 
-        let rec parametrize lexems =
-            ([], lexems)
+    let grammar (lexems : LexemPos list) : (int * Syntel) seq = 
+        let d, o = // TODO UNARY ELEVATION
+            ((Queue.empty, List.empty), lexems) 
             ||> List.fold (fun s lex -> 
+                let (output, operators) = s
                 match lex with
-                | pos, Lexem.Delimiter Delimiter.Comma -> [] :: s // adding empty group
-                | pos, some -> 
-                    match s with
-                    | head :: rest -> (lex :: head) :: rest // adding item to head group and packing it
-                    | [] -> [[lex]]) // creating fresh group
-            |> List.map List.rev
-            |> List.rev
-            |> List.map prioritize
+                | (_, Lexem.Delimiter d) -> 
+                    match d with
+                    | Delimiter.OpenBracket -> // DONE
+                        (output, Op.Bracket :: operators) // to stack
+                    | Delimiter.CloseBracket -> // DONE
+                        // 1) pop until openbracket
+                        // 2) remove openbracket and look at what left
+                        // 3) if function call -> pop too
+                        // 4) no openbracket => imbalance
+                        let popped, rest = operators |> Op.popToStrict Op.Bracket 
+                        let popped, rest = 
+                            match rest with
+                            | head :: tail -> (head :: popped), tail
+                            | _ -> popped, rest
 
-        and prioritize lexems = 
-            let lastLevel, prioritized = 
-                lexems |> List.fold (fun (l, items) lex -> 
-                    match lex with
-                    | (p, Lexem.Delimiter d) ->
-                        let level = 
-                            match d with
-                            | Delimiter.OpenBracket -> l+1
-                            | Delimiter.CloseBracket -> l-1
-                            | Delimiter.Comma ->  failwith "Comma not expected in plain expression"
-                        (level, items)
-                    | (p, call) & (_, Lexem.FunctionCall f) ->
-                        let prms = f.parameters |> parametrize
-                        let newCall = SynFunctionCall { name = f.name; parameters = prms }
-                        (l, (p, newCall, priority call) :: items)
-                    | (p, oper) & (_, Lexem.Operation o) -> 
-                        (l, (p, Syntel.Operation o, levelPriority * l + priority oper) :: items)
-                    | (p, some) -> 
-                        let syntem = 
-                            match some with
-                            | Lexem.Value v -> Syntel.Value v
-                            | Lexem.Variable v -> Syntel.Variable v
-                            | _ -> failwith ""
-                        (l,  (p, syntem, priority some) :: items))
-                    (0, []) // bracket level * maxLevel * (LexemPos * priority) list
-            if lastLevel <> 0 then failwith "Brackets unbalanced"
-            prioritized |>  List.rev 
-
-        let elevate syntems =
-            let elevated, _ = 
-                (([], None), syntems) 
-                ||> List.fold (fun (elevated, last) current -> 
-                    match current with
-                    | (pos, Syntel.Operation "-", priority) -> 
-                        match last with
-                        | Some (_, Syntel.Operation _, _) // previous one is operation
-                        | None ->                         // or beginining of expression
-                            ((pos, Syntel.Operation "-", priority + unaryElevation) :: elevated, Some current)
-                        | _ -> (current :: elevated, Some current)
-                    | _ -> (current :: elevated, Some current))
-            elevated |> List.rev
-
-        let rec stack (syntems : Syntem list) =
-            let x = (Map.empty, syntems)
-                ||> List.fold (fun map (pos, syntem, rating) -> 
+                        output |> Op.push popped, rest 
+                    | Delimiter.Comma ->  // DONE
+                        // 1) pop stack until openbracket
+                        // 2) no openbracket => imbalance
+                        let popped, rest = operators |> Op.popToStrict Op.Bracket 
+                        output |> Op.push popped, rest 
+                | (pos, Lexem.Function f) -> // DONE
+                    output, (Op.Function (pos, f)) :: operators
+                | (pos, oper) & (_, Lexem.Operation o) -> // DONE
+                    // 1) pop stack until priority greater
+                    // 2) push current operation to stack
+                    let r = Helper.priority oper
+                    let newOp = Op.Operation (pos, o, r)
+                    let popped, rest = operators |> Op.popUntil (fun op -> 
+                        match op with
+                        | Op.Operation (_, _, priority) -> priority > r
+                        | _ -> false) 
+                    output |> Op.push popped, newOp :: rest 
+                | (p, some) -> // DONE // value or variable
                     let syntem = 
-                        match syntem with
-                        | Syntel.SynFunctionCall { name = n; parameters = p} -> 
-                            Syntel.SynFunctionCall { name = n; parameters = p |> List.map stack}
-                        | _ -> syntem
-                    map |>
-                        if map |> Map.containsKey rating then
-                            Map.add rating ((pos, syntem) :: map.[rating]) 
-                        else
-                            Map.add rating [pos, syntem]) 
-            let x1 = x |> Map.map (fun _ -> List.rev)
-            let x2 = x1 |> Map.toList
-            let x3 = x2 |> List.sortWith (fun a b ->
-                let (ra, _), (rb, _) = a, b
-                if ra=rb then 0 elif ra > rb then -1 else 1)
-            let x4 = x3 |> List.collect (fun (rating, items) -> 
-                items 
-                |> List.map (fun (pos, s) -> (pos, s, rating)))
-            x4
-
-    let prioritize = Helper.prioritize >> Helper.elevate
-    let stack = Helper.stack
-   
-//    let syntax lexems =
-//        let rec analyze lexems state level acc =
-//            match lexems with 
-//            | lex :: rest -> acc
-//            | [] -> acc
-//        analyze lexems State.Expression 0 []
+                        match some with
+                        | Lexem.Value v -> Syntel.Value v
+                        | Lexem.Variable v -> Syntel.Variable v
+                        | _ -> failwith ""
+                    output |> Queue.conj (p, syntem), operators // var or val priority is zero
+            ) 
+        let popped, rest = o |> Op.popTo Op.Bracket 
+        if not <| List.isEmpty rest then failwith "Brackets"
+        let d = d |> Op.push popped
+        d |> Queue.toSeq

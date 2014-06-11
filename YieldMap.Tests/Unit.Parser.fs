@@ -125,50 +125,51 @@ module Language =
 
     [<Test>]
     let ``Parsing lexems: function calls`` () =
-        Lexem.parse "Hello()" |> should be (equal [0, Lexem.FunctionCall <| { name = "HELLO"; parameters = [] }])
+        Lexem.parse "Hello()" |> should be (equal 
+            [0, Lexem.Function "HELLO"
+             5, Lexem.Delimiter Delimiter.OpenBracket
+             6, Lexem.Delimiter Delimiter.CloseBracket
+            ])
         Lexem.parse "Hello(12)" |> should be (equal 
             [
-                0, Lexem.FunctionCall  
-                    { 
-                        name = "HELLO"; parameters = 
-                            [
-                                6, Lexem.Value <| Value.Integer 12L
-                            ] 
-                    }
+                0, Lexem.Function "HELLO"
+                5, Lexem.Delimiter Delimiter.OpenBracket
+                6, Lexem.Value <| Value.Integer 12L
+                8, Lexem.Delimiter Delimiter.CloseBracket
             ])
         Lexem.parse "OhMyGod(12, 23, $a, true)" |> should be (equal 
             [
-                0, Lexem.FunctionCall  
-                    { 
-                        name = "OHMYGOD"; parameters = 
-                            [
-                                8, Lexem.Value <| Value.Integer 12L
-                                10, Lexem.Delimiter <| Delimiter.Comma
-                                12, Lexem.Value <| Value.Integer 23L
-                                14, Lexem.Delimiter <| Delimiter.Comma
-                                16, Lexem.Variable <| Variable.Global "A"
-                                18, Lexem.Delimiter <| Delimiter.Comma
-                                20, Lexem.Value <| Value.Bool true
-                            ] 
-                    }
+                0, Lexem.Function "OHMYGOD"
+                7, Lexem.Delimiter Delimiter.OpenBracket
+                8, Lexem.Value <| Value.Integer 12L
+                10, Lexem.Delimiter <| Delimiter.Comma
+                12, Lexem.Value <| Value.Integer 23L
+                14, Lexem.Delimiter <| Delimiter.Comma
+                16, Lexem.Variable <| Variable.Global "A"
+                18, Lexem.Delimiter <| Delimiter.Comma
+                20, Lexem.Value <| Value.Bool true
+                24, Lexem.Delimiter Delimiter.CloseBracket
             ])
         Lexem.parse "OhMyGod(Hello(12), Bye(23, $alpha.beta_11), $a, false)" |> should be (equal 
-            [ 0, Lexem.FunctionCall  
-                { name = "OHMYGOD"; parameters = 
-                    [   8, Lexem.FunctionCall { name = "HELLO"; parameters = [14, Lexem.Value <| Value.Integer 12L] }
-                        17, Lexem.Delimiter <| Delimiter.Comma
-                        19, Lexem.FunctionCall 
-                            { name = "BYE"; parameters = 
-                                [
-                                    23, Lexem.Value <| Value.Integer 23L
-                                    25, Lexem.Delimiter <| Delimiter.Comma
-                                    27, Lexem.Variable <| Variable.Object ("ALPHA", "BETA_11")
-                                ]}
-                        42, Lexem.Delimiter <| Delimiter.Comma
-                        44, Lexem.Variable <| Variable.Global "A"
-                        46, Lexem.Delimiter <| Delimiter.Comma
-                        48, Lexem.Value <| Value.Bool false
-                    ]}])
+            [ 0, Lexem.Function "OHMYGOD"
+              7, Lexem.Delimiter Delimiter.OpenBracket
+              8, Lexem.Function "HELLO"
+              13, Lexem.Delimiter Delimiter.OpenBracket
+              14, Lexem.Value <| Value.Integer 12L
+              16, Lexem.Delimiter Delimiter.CloseBracket
+              17, Lexem.Delimiter Delimiter.Comma
+              19, Lexem.Function "BYE"
+              22, Lexem.Delimiter Delimiter.OpenBracket
+              23, Lexem.Value <| Value.Integer 23L
+              25, Lexem.Delimiter Delimiter.Comma
+              27, Lexem.Variable <| Variable.Object ("ALPHA", "BETA_11")
+              41, Lexem.Delimiter Delimiter.CloseBracket
+              42, Lexem.Delimiter Delimiter.Comma
+              44, Lexem.Variable <| Variable.Global "A"
+              46, Lexem.Delimiter Delimiter.Comma
+              48, Lexem.Value <| Value.Bool false
+              53, Lexem.Delimiter Delimiter.CloseBracket
+            ])
 
     [<Test>]
     let ``Parsing lexems: operations`` () = 
@@ -196,112 +197,135 @@ module Language =
              4, Lexem.Value <| Value.Integer 4L])
 
         Lexem.parse "If($a = \"hello\", $x.alpha + 1, 0)" |> should be (equal 
-            [0, Lexem.FunctionCall 
-                { name = "IF"; parameters = 
-                    [3, Lexem.Variable <| Variable.Global "A"
-                     6, Lexem.Operation "="
-                     8, Lexem.Value <| Value.String "hello"
-                     15, Lexem.Delimiter <| Delimiter.Comma
-                     17, Lexem.Variable <| Variable.Object ("X", "ALPHA")
-                     26, Lexem.Operation "+"
-                     28, Lexem.Value <| Value.Integer 1L
-                     29, Lexem.Delimiter <| Delimiter.Comma
-                     31, Lexem.Value <| Value.Integer 0L]}])
+            [0, Lexem.Function "IF"
+             2, Lexem.Delimiter Delimiter.OpenBracket
+             3, Lexem.Variable <| Variable.Global "A"
+             6, Lexem.Operation "="
+             8, Lexem.Value <| Value.String "hello"
+             15, Lexem.Delimiter Delimiter.Comma
+             17, Lexem.Variable <| Variable.Object ("X", "ALPHA")
+             26, Lexem.Operation "+"
+             28, Lexem.Value <| Value.Integer 1L
+             29, Lexem.Delimiter Delimiter.Comma
+             31, Lexem.Value <| Value.Integer 0L
+             32, Lexem.Delimiter Delimiter.CloseBracket])
 
     [<Test>]
-    let ``Priorities assignment`` () =
-        Lexem.parse "1+2=4" |> Syntan.prioritize |> should be (equal 
-            [0, Syntel.Value <| Value.Integer 1L, 3
-             1, Syntel.Operation "+", 4
-             2, Syntel.Value <| Value.Integer 2L, 3
-             3, Syntel.Operation "=", 6
-             4, Syntel.Value <| Value.Integer 4L, 3])
-        
-        Lexem.parse "(1+2)*3" |> Syntan.prioritize |> should be (equal 
-            [1, Syntel.Value <| Value.Integer 1L, 3
-             2, Syntel.Operation "+", 14
-             3, Syntel.Value <| Value.Integer 2L, 3
-             5, Syntel.Operation "*", 5
-             6, Syntel.Value <| Value.Integer 3L, 3])
+    let ``Grammar`` () =
+//        let a = Lexem.parse "1+2=4" |> Syntan.grammar |> Seq.toList
+//        logger.InfoF "%A" a
+//        a |> should be (equal 
+//            [
+//             0, Syntel.Value <| Value.Integer 1L
+//             2, Syntel.Value <| Value.Integer 2L
+//             1, Syntel.Operation "+"
+//             4, Syntel.Value <| Value.Integer 4L
+//             3, Syntel.Operation "="
+//            ])
 
-        Lexem.parse "(1+2)/3" |> Syntan.prioritize |> should be (equal 
-            [1, Syntel.Value <| Value.Integer 1L, 3
-             2, Syntel.Operation "+", 14
-             3, Syntel.Value <| Value.Integer 2L, 3
-             5, Syntel.Operation "/", 5
-             6, Syntel.Value <| Value.Integer 3L, 3])
-
-        Lexem.parse "--1-2" |> Syntan.prioritize |> should be (equal 
-            [0, Syntel.Operation "-", 8
-             1, Syntel.Operation "-", 8
-             2, Syntel.Value <| Value.Integer 1L, 3
-             3, Syntel.Operation "-", 4
-             4, Syntel.Value <| Value.Integer 2L, 3])
-
-        Lexem.parse "1+2*3" |> Syntan.prioritize |> should be (equal 
-            [0, Syntel.Value <| Value.Integer 1L, 3
-             1, Syntel.Operation "+", 4
-             2, Syntel.Value <| Value.Integer 2L, 3
-             3, Syntel.Operation "*", 5
-             4, Syntel.Value <| Value.Integer 3L, 3])
-
-        Lexem.parse "-1+3" |> Syntan.prioritize |> should be (equal 
-            [0, Syntel.Operation "-", 8
-             1, Syntel.Value <| Value.Integer 1L, 3
-             2, Syntel.Operation "+", 4
-             3, Syntel.Value <| Value.Integer 3L, 3])
-
-        Lexem.parse "$shortName + \" \" + $series + If(NotNull($lastIssuerRating), \" \" + $lastIssuerRating.Rating, \"\")"  
-        |> Syntan.prioritize 
-        |> should be (equal
-            [0, Syntel.Variable <| Variable.Global "SHORTNAME", 3
-             11, Syntel.Operation "+", 4
-             13, Syntel.Value <| Value.String " ", 3
-             17, Syntel.Operation "+", 4
-             19, Syntel.Variable <| Variable.Global "SERIES", 3
-             27, Syntel.Operation "+", 4
-             29, Syntel.SynFunctionCall { name = "IF"; parameters = 
-                [[32, Syntel.SynFunctionCall { name = "NOTNULL"; parameters = [[40, Syntel.Variable <| Variable.Global "LASTISSUERRATING", 3]]}, 9]
-                 [60, Syntel.Value <| Value.String " ", 3
-                  64, Syntel.Operation "+", 4
-                  66, Syntel.Variable <| Variable.Object ("LASTISSUERRATING", "RATING"), 3]
-                 [92, Syntel.Value <| Value.String "", 3]
-                ]}, 9
-            ])
-
-        Lexem.parse "-Negate((1+2)*3)*2" |> Syntan.prioritize |> should be (equal 
-            [0, Syntel.Operation "-", 8
-             1, Syntel.SynFunctionCall { name = "NEGATE"; parameters = 
-                [[9, Syntel.Value <| Value.Integer 1L, 3
-                  10, Syntel.Operation "+", 14
-                  11, Syntel.Value <| Value.Integer 2L, 3
-                  13, Syntel.Operation "*", 5
-                  14, Syntel.Value <| Value.Integer 3L, 3
-                ]]}, 9
-             16, Syntel.Operation "*", 5
-             17, Syntel.Value <| Value.Integer 2L, 3])
-
-    [<Test>]
-    let ``Stacking`` () =
-        Lexem.parse "1+2=4" |> Syntan.prioritize |> Syntan.stack |> should be (equal 
-            [
-             3, Syntel.Operation "=", 6
-             1, Syntel.Operation "+", 4
-             0, Syntel.Value <| Value.Integer 1L, 3
-             2, Syntel.Value <| Value.Integer 2L, 3
-             4, Syntel.Value <| Value.Integer 4L, 3
-            ])
-
-        let a = Lexem.parse "(1+2)*3" |> Syntan.prioritize |> Syntan.stack
+        let a = Lexem.parse "(1+2)*3" |> Syntan.grammar |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
-             5, Syntel.Operation "*", 5
-             2, Syntel.Operation "+", 4
              1, Syntel.Value <| Value.Integer 1L, 3
              3, Syntel.Value <| Value.Integer 2L, 3
+             2, Syntel.Operation "+", 14
              6, Syntel.Value <| Value.Integer 3L, 3
+             5, Syntel.Operation "*", 5
             ])
+
+        let a = Lexem.parse "1+2*3" |> Syntan.grammar |> Seq.toList
+        logger.InfoF "%A" a
+        a |> should be (equal 
+            [
+             0, Syntel.Value <| Value.Integer 1L, 3
+             2, Syntel.Value <| Value.Integer 2L, 3
+             4, Syntel.Value <| Value.Integer 3L, 3
+             3, Syntel.Operation "*", 5
+             1, Syntel.Operation "+", 4
+            ])
+//    [<Test>]
+//    let ``Priorities assignment`` () =
+//        Lexem.parse "(1+2)*3" |> Syntan.prioritize |> should be (equal 
+//            [1, Syntel.Value <| Value.Integer 1L, 3
+//             2, Syntel.Operation "+", 14
+//             3, Syntel.Value <| Value.Integer 2L, 3
+//             5, Syntel.Operation "*", 5
+//             6, Syntel.Value <| Value.Integer 3L, 3])
+//
+//        Lexem.parse "(1+2)/3" |> Syntan.prioritize |> should be (equal 
+//            [1, Syntel.Value <| Value.Integer 1L, 3
+//             2, Syntel.Operation "+", 14
+//             3, Syntel.Value <| Value.Integer 2L, 3
+//             5, Syntel.Operation "/", 5
+//             6, Syntel.Value <| Value.Integer 3L, 3])
+//
+//        Lexem.parse "--1-2" |> Syntan.prioritize |> should be (equal 
+//            [0, Syntel.Operation "-", 8
+//             1, Syntel.Operation "-", 8
+//             2, Syntel.Value <| Value.Integer 1L, 3
+//             3, Syntel.Operation "-", 4
+//             4, Syntel.Value <| Value.Integer 2L, 3])
+//
+
+//
+//        Lexem.parse "-1+3" |> Syntan.prioritize |> should be (equal 
+//            [0, Syntel.Operation "-", 8
+//             1, Syntel.Value <| Value.Integer 1L, 3
+//             2, Syntel.Operation "+", 4
+//             3, Syntel.Value <| Value.Integer 3L, 3])
+//
+//        Lexem.parse "$shortName + \" \" + $series + If(NotNull($lastIssuerRating), \" \" + $lastIssuerRating.Rating, \"\")"  
+//        |> Syntan.prioritize 
+//        |> should be (equal
+//            [0, Syntel.Variable <| Variable.Global "SHORTNAME", 3
+//             11, Syntel.Operation "+", 4
+//             13, Syntel.Value <| Value.String " ", 3
+//             17, Syntel.Operation "+", 4
+//             19, Syntel.Variable <| Variable.Global "SERIES", 3
+//             27, Syntel.Operation "+", 4
+//             29, Syntel.SynFunctionCall { name = "IF"; parameters = 
+//                [[32, Syntel.SynFunctionCall { name = "NOTNULL"; parameters = [[40, Syntel.Variable <| Variable.Global "LASTISSUERRATING", 3]]}, 9]
+//                 [60, Syntel.Value <| Value.String " ", 3
+//                  64, Syntel.Operation "+", 4
+//                  66, Syntel.Variable <| Variable.Object ("LASTISSUERRATING", "RATING"), 3]
+//                 [92, Syntel.Value <| Value.String "", 3]
+//                ]}, 9
+//            ])
+//
+//        Lexem.parse "-Negate((1+2)*3)*2" |> Syntan.prioritize |> should be (equal 
+//            [0, Syntel.Operation "-", 8
+//             1, Syntel.SynFunctionCall { name = "NEGATE"; parameters = 
+//                [[9, Syntel.Value <| Value.Integer 1L, 3
+//                  10, Syntel.Operation "+", 14
+//                  11, Syntel.Value <| Value.Integer 2L, 3
+//                  13, Syntel.Operation "*", 5
+//                  14, Syntel.Value <| Value.Integer 3L, 3
+//                ]]}, 9
+//             16, Syntel.Operation "*", 5
+//             17, Syntel.Value <| Value.Integer 2L, 3])
+//
+//    [<Test>]
+//    let ``Stacking`` () =
+//        Lexem.parse "1+2=4" |> Syntan.prioritize |> Syntan.stack |> should be (equal 
+//            [
+//             3, Syntel.Operation "=", 6
+//             1, Syntel.Operation "+", 4
+//             0, Syntel.Value <| Value.Integer 1L, 3
+//             2, Syntel.Value <| Value.Integer 2L, 3
+//             4, Syntel.Value <| Value.Integer 4L, 3
+//            ])
+//
+//        let a = Lexem.parse "(1+2)*3" |> Syntan.prioritize |> Syntan.stack
+//        logger.InfoF "%A" a
+//        a |> should be (equal 
+//            [
+//             5, Syntel.Operation "*", 5
+//             2, Syntel.Operation "+", 4
+//             1, Syntel.Value <| Value.Integer 1L, 3
+//             3, Syntel.Value <| Value.Integer 2L, 3
+//             6, Syntel.Value <| Value.Integer 3L, 3
+//            ])
 
 
 module Parser = 
