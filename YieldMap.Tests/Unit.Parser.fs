@@ -224,6 +224,13 @@ module Language =
              5, Syntel.Operation "*", 17
              6, Syntel.Value <| Value.Integer 3L, 13])
 
+        Lexem.parse "--1-2" |> Syntan.prioritize |> should be (equal 
+            [0, Syntel.Operation "-", 8
+             1, Syntel.Operation "-", 8
+             2, Syntel.Value <| Value.Integer 1L, 3
+             3, Syntel.Operation "-", 6
+             4, Syntel.Value <| Value.Integer 2L, 3])
+
         Lexem.parse "1+2*3" |> Syntan.prioritize |> should be (equal 
             [0, Syntel.Value <| Value.Integer 1L, 3
              1, Syntel.Operation "+", 6
@@ -232,7 +239,7 @@ module Language =
              4, Syntel.Value <| Value.Integer 3L, 3])
 
         Lexem.parse "-1+3" |> Syntan.prioritize |> should be (equal 
-            [0, Syntel.Operation "-", 6
+            [0, Syntel.Operation "-", 8
              1, Syntel.Value <| Value.Integer 1L, 3
              2, Syntel.Operation "+", 6
              3, Syntel.Value <| Value.Integer 3L, 3])
@@ -247,26 +254,23 @@ module Language =
              19, Syntel.Variable <| Variable.Global "SERIES", 3
              27, Syntel.Operation "+", 6
              29, Syntel.SynFunctionCall { name = "IF"; parameters = 
-                [32, Syntel.SynFunctionCall { name = "NOTNULL"; parameters = 
-                    [40, Syntel.Variable <| Variable.Global "LASTISSUERRATING", 23]}, 19
-                 58, Syntel.Comma, 12
-                 60, Syntel.Value <| Value.String " ", 13
-                 64, Syntel.Operation "+", 16
-                 66, Syntel.Variable <| Variable.Object ("LASTISSUERRATING", "RATING"), 13
-                 90, Syntel.Comma, 12
-                 92, Syntel.Value <| Value.String "", 13
+                [[32, Syntel.SynFunctionCall { name = "NOTNULL"; parameters = [[40, Syntel.Variable <| Variable.Global "LASTISSUERRATING", 3]]}, 9]
+                 [60, Syntel.Value <| Value.String " ", 3
+                  64, Syntel.Operation "+", 6
+                  66, Syntel.Variable <| Variable.Object ("LASTISSUERRATING", "RATING"), 3]
+                 [92, Syntel.Value <| Value.String "", 3]
                 ]}, 9
             ])
 
         Lexem.parse "-Negate((1+2)*3)*2" |> Syntan.prioritize |> should be (equal 
-            [0, Syntel.Operation "-", 6
+            [0, Syntel.Operation "-", 8
              1, Syntel.SynFunctionCall { name = "NEGATE"; parameters = 
-                [9, Syntel.Value <| Value.Integer 1L, 13
-                 10, Syntel.Operation "+", 16
-                 11, Syntel.Value <| Value.Integer 2L, 13
-                 13, Syntel.Operation "*", 27
-                 14, Syntel.Value <| Value.Integer 3L, 23
-                ]}, 9
+                [[9, Syntel.Value <| Value.Integer 1L, 3
+                  10, Syntel.Operation "+", 6
+                  11, Syntel.Value <| Value.Integer 2L, 3
+                  13, Syntel.Operation "*", 17
+                  14, Syntel.Value <| Value.Integer 3L, 13
+                ]]}, 9
              16, Syntel.Operation "*", 7
              17, Syntel.Value <| Value.Integer 2L, 3])
 
