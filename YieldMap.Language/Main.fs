@@ -234,7 +234,7 @@ module Lexan =
 
         static member parse (s : string) = Lexem.parseInternal s 0
 
-module SinkingStack = 
+module SinkPriorityStack = // implement via lists
     ()
 
 module Syntan = 
@@ -245,61 +245,83 @@ module Syntan =
 
     exception SyntaxException of string
 
-//    type SynFunctionCall = 
-//        {
-//            name : string
-//            parameters : SyntemPos list
-//        }
-//        with override x.ToString () = sprintf "Name %s, Params %A" x.name x.parameters
-//    and SyntemPos = int * Syntem
-//    and Syntem = 
-//    | Value of Value
-//    | Variable of Variable
-//    | Operation of string
-//    | FunctionCall of SynFunctionCall
+    type SynFunctionCall = 
+        {
+            name : string
+            parameters : Syntem list
+        }
+        with override x.ToString () = sprintf "Name %s, Params %A" x.name x.parameters
+    and Syntem = int * Syntel * int // position syntel priority
+    and Syntel = 
+    | Value of Value
+    | Variable of Variable
+    | Operation of string
+    | SynFunctionCall of SynFunctionCall
+    | Comma
+    with 
+        override x.ToString () = 
+            match x with
+            | Value v -> sprintf "Value(%s)" (v.ToString())
+            | Variable v -> sprintf "Variable(%s)" (v.ToString())
+            | Operation o -> sprintf "Operation(%s)" (o.ToString())
+            | SynFunctionCall f -> sprintf "SynFunctionCall(%s)" (f.ToString())
+            | Comma -> "Comma"
 
-    type State = 
-    | Expression
-    | Parameters
+    module private Helper = 
+        [<Literal>] 
+        let levelPriority = 10
+        let commaPriority = 8
 
-    let levelPriority = 10
+        let basicPriority = function
+            | Lexem.FunctionCall _ -> 1
+            | Lexem.Operation o -> 
+                if o = "not" then 2
+                elif o |- set ["*"; "/"] then 3
+                elif o |- set ["+"; "-"] then 4 // todo unary minus might have elevated priviledges
+                elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 5
+                elif o |- set [ "and"; "or"] then 6
+                else failwith "Unknown operation"
+            | Lexem.Value _ -> 7
+            | Lexem.Variable _ -> 7
+            | _ -> failwith "Unexpected token"
 
-    let basicPriority = function
-        | Lexem.FunctionCall _ -> 1
-        | Lexem.Operation o -> 
-            if o |- set ["*"; "/"] then 2
-            elif o |- set ["+"; "-"] then 3
-            elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 4
-            elif o |- set [ "and"; "not"; "or"] then 5
-            else failwith "Unknown operation"
-        | Lexem.Value _ -> 6
-        | Lexem.Variable _ -> 6
-        | _ -> failwith "Unexpected token"
-
-    let prioritize lexems = 
-        let initalState = (0, 0, []) // bracket level * maxLevel * (LexemPos * priority) list
-        let lastLevel, maxLevel, prioritized = 
-            lexems |> List.fold (fun (l, m, prioritizedItems) lex -> 
-                match lex with
-                | (_, Lexem.Delimiter d) ->
-                    let level, max = 
-                        match d with
-                        | Delimiter.OpenBracket -> l+1, l+1
-                        | Delimiter.CloseBracket -> l-1, l
-                        | Delimiter.Comma -> l, l
-                    (level, max, prioritizedItems)
-                | (p, some) -> 
-                    let basic = basicPriority some
-                    (l, m, (p, some, levelPriority * l + basic) :: prioritizedItems))
-                initalState
-        if lastLevel <> 0 then failwith "Brackets unbalanced"
-        prioritized |> List.rev |> List.map (fun (position, lexem, priority) -> 
-            (position, lexem, levelPriority * (maxLevel + 1) - priority)
-        )
+        let elevate level = List.map (fun (p, s, r) -> (p, s, levelPriority * level + r))
+        let normalize maxLevel = List.rev >> List.map (fun (p, s, r) -> (p, s, levelPriority * (maxLevel + 1) - r))
    
-    let syntax lexems =
-        let rec analyze lexems state level acc =
-            match lexems with 
-            | lex :: rest -> acc
-            | [] -> acc
-        analyze lexems State.Expression 0 []
+    let rec prioritize lexems = 
+        let lastLevel, maxLevel, prioritized = 
+            lexems |> List.fold (fun (l, m, items) lex -> 
+                match lex with
+                | (p, Lexem.Delimiter d) ->
+                    let level, max, n = 
+                        match d with
+                        | Delimiter.OpenBracket -> l+1, l+1, items
+                        | Delimiter.CloseBracket -> l-1, max l m, items
+                        | Delimiter.Comma ->  l, l, (p, Syntel.Comma, Helper.commaPriority) :: items
+                    (level, max, n)
+                | (p, Lexem.FunctionCall f)  ->
+                    let oldCall = FunctionCall f
+                    let basic = Helper.basicPriority oldCall
+                    let prms = f.parameters |> prioritize |> Helper.elevate (l + 1) 
+                    let newCall = SynFunctionCall { name = f.name; parameters = prms }
+                    (l, m, (p, newCall, Helper.levelPriority * l + basic) :: items)
+                | (p, some) -> 
+                    let basic = Helper.basicPriority some
+                    let syntem = 
+                        match some with
+                        | Lexem.Operation o -> Syntel.Operation o
+                        | Lexem.Value v -> Syntel.Value v
+                        | Lexem.Variable v -> Syntel.Variable v
+                        | _ -> failwith ""
+                    (l, m, (p, syntem, Helper.levelPriority * l + basic) :: items))
+                (0, 0, []) // bracket level * maxLevel * (LexemPos * priority) list
+
+        if lastLevel <> 0 then failwith "Brackets unbalanced"
+        prioritized |> Helper.normalize maxLevel
+   
+//    let syntax lexems =
+//        let rec analyze lexems state level acc =
+//            match lexems with 
+//            | lex :: rest -> acc
+//            | [] -> acc
+//        analyze lexems State.Expression 0 []
