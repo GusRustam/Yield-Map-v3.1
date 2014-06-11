@@ -271,20 +271,18 @@ module Syntan =
         let levelPriority = 10
         
         let priority = function
-            | Lexem.FunctionCall _ -> 1
+            | Lexem.FunctionCall _ -> 9
             | Lexem.Operation o -> 
-                if o = "not" then 2
-                elif o |- set ["*"; "/"] then 3
-                elif o |- set ["+"; "-"] then 4 // todo unary minus might have elevated priviledges
+                if o = "not" then 8
+                elif o |- set ["*"; "/"] then 7
+                elif o |- set ["+"; "-"] then 6
                 elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 5
-                elif o |- set [ "and"; "or"] then 6
+                elif o |- set [ "and"; "or"] then 4
                 else failwith "Unknown operation"
-            | Lexem.Value _ -> 7
-            | Lexem.Variable _ -> 7
+            | Lexem.Value _ -> 3
+            | Lexem.Variable _ -> 3
             | _ -> failwith "Unexpected token"
 
-        let normalize maxLevel = List.rev >> List.map (fun (p, s, r) -> (p, s, levelPriority * (maxLevel + 1) - r))
-   
         let rec parametrize lexems =
             ([], lexems)
             ||> List.fold (fun s lex -> 
@@ -299,34 +297,33 @@ module Syntan =
             |> List.map prioritize
 
         and prioritize lexems = 
-            let lastLevel, maxLevel, prioritized = 
-                lexems |> List.fold (fun (l, m, items) lex -> 
+            let lastLevel, prioritized = 
+                lexems |> List.fold (fun (l, items) lex -> 
                     match lex with
                     | (p, Lexem.Delimiter d) ->
-                        let level, max = 
+                        let level = 
                             match d with
-                            | Delimiter.OpenBracket -> l+1, l+1
-                            | Delimiter.CloseBracket -> l-1, max l m
+                            | Delimiter.OpenBracket -> l+1
+                            | Delimiter.CloseBracket -> l-1
                             | Delimiter.Comma ->  failwith "Comma not expected in plain expression"
-                        (level, max, items)
+                        (level, items)
                     | (p, call) & (_, Lexem.FunctionCall f) ->
-                        let basic = priority call
                         let prms = f.parameters |> parametrize
                         let newCall = SynFunctionCall { name = f.name; parameters = prms }
-                        (l, m, (p, newCall, levelPriority * l + basic) :: items)
+                        (l, (p, newCall, priority call) :: items)
+                    | (p, oper) & (_, Lexem.Operation o) -> 
+                        let basic = priority oper
+                        (l, (p, Syntel.Operation o, levelPriority * l + basic) :: items)
                     | (p, some) -> 
-                        let basic = priority some
                         let syntem = 
                             match some with
-                            | Lexem.Operation o -> Syntel.Operation o
                             | Lexem.Value v -> Syntel.Value v
                             | Lexem.Variable v -> Syntel.Variable v
                             | _ -> failwith ""
-                        (l, m, (p, syntem, levelPriority * l + basic) :: items))
-                    (0, 0, []) // bracket level * maxLevel * (LexemPos * priority) list
-
+                        (l,  (p, syntem, priority some) :: items))
+                    (0, []) // bracket level * maxLevel * (LexemPos * priority) list
             if lastLevel <> 0 then failwith "Brackets unbalanced"
-            prioritized |> normalize maxLevel
+            prioritized |>  List.rev 
 
         let rec elevate (syntems : Syntem list) : Syntem list =
             let elevated, _ = 

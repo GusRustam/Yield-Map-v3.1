@@ -219,10 +219,17 @@ module Language =
         
         Lexem.parse "(1+2)*3" |> Syntan.prioritize |> should be (equal 
             [1, Syntel.Value <| Value.Integer 1L, 3
-             2, Syntel.Operation "+", 6
+             2, Syntel.Operation "+", 16
              3, Syntel.Value <| Value.Integer 2L, 3
-             5, Syntel.Operation "*", 17
-             6, Syntel.Value <| Value.Integer 3L, 13])
+             5, Syntel.Operation "*", 7
+             6, Syntel.Value <| Value.Integer 3L, 3])
+
+        Lexem.parse "(1+2)/3" |> Syntan.prioritize |> should be (equal 
+            [1, Syntel.Value <| Value.Integer 1L, 3
+             2, Syntel.Operation "+", 16
+             3, Syntel.Value <| Value.Integer 2L, 3
+             5, Syntel.Operation "/", 7
+             6, Syntel.Value <| Value.Integer 3L, 3])
 
         Lexem.parse "--1-2" |> Syntan.prioritize |> should be (equal 
             [0, Syntel.Operation "-", 8
@@ -266,10 +273,10 @@ module Language =
             [0, Syntel.Operation "-", 8
              1, Syntel.SynFunctionCall { name = "NEGATE"; parameters = 
                 [[9, Syntel.Value <| Value.Integer 1L, 3
-                  10, Syntel.Operation "+", 6
+                  10, Syntel.Operation "+", 16
                   11, Syntel.Value <| Value.Integer 2L, 3
-                  13, Syntel.Operation "*", 17
-                  14, Syntel.Value <| Value.Integer 3L, 13
+                  13, Syntel.Operation "*", 7
+                  14, Syntel.Value <| Value.Integer 3L, 3
                 ]]}, 9
              16, Syntel.Operation "*", 7
              17, Syntel.Value <| Value.Integer 2L, 3])
