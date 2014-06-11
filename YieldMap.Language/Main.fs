@@ -275,18 +275,10 @@ module Syntan =
                 | [] -> acc, []
             doPopUntil who []
 
-        static member popUntilStrict cond who = 
+        static member popUntilExclusive cond who = 
             let rec doPopUntil who acc = 
                 match who with
-                | head :: rest when cond(head)  -> acc, rest
-                | head :: rest -> doPopUntil rest (head :: acc)
-                | [] ->  failwith "Not found"
-            doPopUntil who []
-            
-        static member popUntil cond who = 
-            let rec doPopUntil who acc = 
-                match who with
-                | head :: rest when cond(head)  -> acc, rest
+                | head :: _ when cond(head)  -> acc, who
                 | head :: rest -> doPopUntil rest (head :: acc)
                 | [] -> acc, []
             doPopUntil who []
@@ -329,9 +321,9 @@ module Syntan =
                 match lex with
                 | (_, Lexem.Delimiter d) -> 
                     match d with
-                    | Delimiter.OpenBracket -> // DONE
+                    | Delimiter.OpenBracket ->
                         (output, Op.Bracket :: operators) // to stack
-                    | Delimiter.CloseBracket -> // DONE
+                    | Delimiter.CloseBracket ->
                         // 1) pop until openbracket
                         // 2) remove openbracket and look at what left
                         // 3) if function call -> pop too
@@ -343,24 +335,25 @@ module Syntan =
                             | _ -> popped, rest
 
                         output |> Op.push popped, rest 
-                    | Delimiter.Comma ->  // DONE
+                    | Delimiter.Comma ->
                         // 1) pop stack until openbracket
                         // 2) no openbracket => imbalance
                         let popped, rest = operators |> Op.popToStrict Op.Bracket 
                         output |> Op.push popped, rest 
                 | (pos, Lexem.Function f) -> // DONE
                     output, (Op.Function (pos, f)) :: operators
-                | (pos, oper) & (_, Lexem.Operation o) -> // DONE
+                | (pos, oper) & (_, Lexem.Operation o) ->
                     // 1) pop stack until priority greater
                     // 2) push current operation to stack
                     let r = Helper.priority oper
                     let newOp = Op.Operation (pos, o, r)
-                    let popped, rest = operators |> Op.popUntil (fun op -> 
+                    let popped, rest = operators |> Op.popUntilExclusive (fun op -> 
                         match op with
+                        | Op.Bracket -> true
                         | Op.Operation (_, _, priority) -> priority > r
                         | _ -> false) 
                     output |> Op.push popped, newOp :: rest 
-                | (p, some) -> // DONE // value or variable
+                | (p, some) -> // value or variable
                     let syntem = 
                         match some with
                         | Lexem.Value v -> Syntel.Value v
@@ -370,5 +363,4 @@ module Syntan =
             ) 
         let popped, rest = o |> Op.popTo Op.Bracket 
         if not <| List.isEmpty rest then failwith "Brackets"
-        let d = d |> Op.push popped
-        d |> Queue.toSeq
+        d |> Op.push popped |> Queue.toSeq
