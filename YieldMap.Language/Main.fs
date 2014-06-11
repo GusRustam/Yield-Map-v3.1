@@ -269,15 +269,18 @@ module Syntan =
     module private Helper = 
         [<Literal>] 
         let levelPriority = 10
+
+        [<Literal>] 
+        let unaryElevation = 4
         
         let priority = function
             | Lexem.FunctionCall _ -> 9
             | Lexem.Operation o -> 
                 if o = "not" then 8
-                elif o |- set ["*"; "/"] then 7
-                elif o |- set ["+"; "-"] then 6
-                elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 5
-                elif o |- set [ "and"; "or"] then 4
+                elif o |- set ["and"; "or"] then 7
+                elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 6
+                elif o |- set ["*"; "/"] then 5
+                elif o |- set ["+"; "-"] then 4
                 else failwith "Unknown operation"
             | Lexem.Value _ -> 3
             | Lexem.Variable _ -> 3
@@ -312,8 +315,7 @@ module Syntan =
                         let newCall = SynFunctionCall { name = f.name; parameters = prms }
                         (l, (p, newCall, priority call) :: items)
                     | (p, oper) & (_, Lexem.Operation o) -> 
-                        let basic = priority oper
-                        (l, (p, Syntel.Operation o, levelPriority * l + basic) :: items)
+                        (l, (p, Syntel.Operation o, levelPriority * l + priority oper) :: items)
                     | (p, some) -> 
                         let syntem = 
                             match some with
@@ -325,7 +327,7 @@ module Syntan =
             if lastLevel <> 0 then failwith "Brackets unbalanced"
             prioritized |>  List.rev 
 
-        let rec elevate (syntems : Syntem list) : Syntem list =
+        let elevate syntems =
             let elevated, _ = 
                 (([], None), syntems) 
                 ||> List.fold (fun (elevated, last) current -> 
@@ -334,12 +336,36 @@ module Syntan =
                         match last with
                         | Some (_, Syntel.Operation _, _) // previous one is operation
                         | None ->                         // or beginining of expression
-                            ((pos, Syntel.Operation "-", priority + 2) :: elevated, Some current)
+                            ((pos, Syntel.Operation "-", priority + unaryElevation) :: elevated, Some current)
                         | _ -> (current :: elevated, Some current)
                     | _ -> (current :: elevated, Some current))
             elevated |> List.rev
 
+        let rec stack (syntems : Syntem list) =
+            let x = (Map.empty, syntems)
+                ||> List.fold (fun map (pos, syntem, rating) -> 
+                    let syntem = 
+                        match syntem with
+                        | Syntel.SynFunctionCall { name = n; parameters = p} -> 
+                            Syntel.SynFunctionCall { name = n; parameters = p |> List.map stack}
+                        | _ -> syntem
+                    map |>
+                        if map |> Map.containsKey rating then
+                            Map.add rating ((pos, syntem) :: map.[rating]) 
+                        else
+                            Map.add rating [pos, syntem]) 
+            let x1 = x |> Map.map (fun _ -> List.rev)
+            let x2 = x1 |> Map.toList
+            let x3 = x2 |> List.sortWith (fun a b ->
+                let (ra, _), (rb, _) = a, b
+                if ra=rb then 0 elif ra > rb then -1 else 1)
+            let x4 = x3 |> List.collect (fun (rating, items) -> 
+                items 
+                |> List.map (fun (pos, s) -> (pos, s, rating)))
+            x4
+
     let prioritize = Helper.prioritize >> Helper.elevate
+    let stack = Helper.stack
    
 //    let syntax lexems =
 //        let rec analyze lexems state level acc =
