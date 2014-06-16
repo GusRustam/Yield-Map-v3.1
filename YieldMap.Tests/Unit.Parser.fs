@@ -212,27 +212,27 @@ module Language =
 
     [<Test>]
     let ``Grammar`` () =
-        let a = Lexem.parse "1+2=4" |> Syntan.grammar |> Seq.toList
-        logger.InfoF "%A" a
-        a |> should be (equal 
-            [
-             0, Syntel.Value <| Value.Integer 1L
-             2, Syntel.Value <| Value.Integer 2L
-             1, Syntel.Operation "+"
-             4, Syntel.Value <| Value.Integer 4L
-             3, Syntel.Operation "="
-            ])
-
-        let a = Lexem.parse "(1+2)*3" |> Syntan.grammar |> Seq.toList
-        logger.InfoF "%A" a
-        a |> should be (equal 
-            [
-             1, Syntel.Value <| Value.Integer 1L
-             3, Syntel.Value <| Value.Integer 2L
-             2, Syntel.Operation "+"
-             6, Syntel.Value <| Value.Integer 3L
-             5, Syntel.Operation "*"
-            ])
+//        let a = Lexem.parse "1+2=4" |> Syntan.grammar |> Seq.toList
+//        logger.InfoF "%A" a
+//        a |> should be (equal 
+//            [
+//             0, Syntel.Value <| Value.Integer 1L
+//             2, Syntel.Value <| Value.Integer 2L
+//             1, Syntel.Operation "+"
+//             4, Syntel.Value <| Value.Integer 4L
+//             3, Syntel.Operation "="
+//            ])
+//
+//        let a = Lexem.parse "(1+2)*3" |> Syntan.grammar |> Seq.toList
+//        logger.InfoF "%A" a
+//        a |> should be (equal 
+//            [
+//             1, Syntel.Value <| Value.Integer 1L
+//             3, Syntel.Value <| Value.Integer 2L
+//             2, Syntel.Operation "+"
+//             6, Syntel.Value <| Value.Integer 3L
+//             5, Syntel.Operation "*"
+//            ])
 
         let a = Lexem.parse "1+2*3" |> Syntan.grammar |> Seq.toList
         logger.InfoF "%A" a
@@ -266,8 +266,6 @@ module Language =
 //             2, Syntel.Value <| Value.Integer 1L, 3
 //             3, Syntel.Operation "-", 4
 //             4, Syntel.Value <| Value.Integer 2L, 3])
-//
-
 //
 //        Lexem.parse "-1+3" |> Syntan.prioritize |> should be (equal 
 //            [0, Syntel.Operation "-", 8

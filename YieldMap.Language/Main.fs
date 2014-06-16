@@ -278,10 +278,18 @@ module Syntan =
         static member popUntilExclusive cond who = 
             let rec doPopUntil who acc = 
                 match who with
-                | head :: _ when cond(head)  -> acc, who
+                | head :: _ when cond(head) -> acc, who
                 | head :: rest -> doPopUntil rest (head :: acc)
                 | [] -> acc, []
             doPopUntil who []
+
+        static member popUntilInclusive cond who = 
+            let rec doPopUntil who acc = 
+                match who with
+                | head :: rest when cond(head) -> head :: acc, rest
+                | head :: rest -> doPopUntil (head :: acc) rest
+                | [] -> acc, []
+            doPopUntil [] who
 
         static member toSyntel op = 
             match op with
@@ -297,21 +305,27 @@ module Syntan =
             doPush ops syntelQueue
 
     module private Helper = 
-        [<Literal>] 
-        let levelPriority = 10
-
         let priority = function
             | Lexem.Function _ -> 9
             | Lexem.Operation o -> 
                 if o = "not" then 8
                 elif o |- set ["and"; "or"] then 7
-                elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 6
-                elif o |- set ["*"; "/"] then 5
-                elif o |- set ["+"; "-"] then 4
+                elif o |- set ["*"; "/"] then 6
+                elif o |- set ["+"; "-"] then 5 // TODO UNARY ELEVATION
+                elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 4
                 else failwith "Unknown operation"
-            | Lexem.Value _ -> 3
-            | Lexem.Variable _ -> 3
             | _ -> failwith "Unexpected token"
+    
+    type StringBuilder with
+        static member append (x:string) (sb:StringBuilder) = sb.Append x
+        static member toString (sb:StringBuilder) = sb.ToString()
+        
+    type 'a Queue with
+        member x.ToString() = 
+            StringBuilder("<")
+            |> StringBuilder.append (String.Join("", x))
+            |> StringBuilder.append ">"
+            |> StringBuilder.toString
 
     let grammar (lexems : LexemPos list) : (int * Syntel) seq = 
         let d, o = // TODO UNARY ELEVATION
@@ -347,10 +361,10 @@ module Syntan =
                     // 2) push current operation to stack
                     let r = Helper.priority oper
                     let newOp = Op.Operation (pos, o, r)
-                    let popped, rest = operators |> Op.popUntilExclusive (fun op -> 
+                    let popped, rest = operators |> Op.popUntilInclusive (fun op -> 
                         match op with
                         | Op.Bracket -> true
-                        | Op.Operation (_, _, priority) -> priority > r
+                        | Op.Operation (_, _, priority) -> priority <= r
                         | _ -> false) 
                     output |> Op.push popped, newOp :: rest 
                 | (p, some) -> // value or variable
