@@ -148,6 +148,8 @@ module Lexan =
             | Operation o -> sprintf "Operation(%s)" (o.ToString())
             | Function f -> sprintf "Function(%s)" (f.ToString())
 
+        static member isOperation x = match x with Operation _ -> true | _ -> false
+
         static member private extact (str : string) basis = 
             logger.TraceF "extract %s" str
             let ch = str.[0]
@@ -274,14 +276,14 @@ module Syntan =
             match lex with
             | Lexem.Function _ -> 9
             | Lexem.Operation o -> 
-                if o = "not" then 8
+                if o |- set ["not"; "_"] then 8
                 elif o |- set ["and"; "or"] then 7
                 elif o |- set ["*"; "/"] then 6
                 elif o |- set ["+"; "-"] then 5 // TODO UNARY ELEVATION
                 elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 4
                 else raise <| SyntaxException "Unknown operation"
             | _ -> raise <| SyntaxException "Unexpected token"
-    
+
     let grammar lexems source = 
         let popToBracket operators = 
             let popped, others, found = 
@@ -313,15 +315,15 @@ module Syntan =
                          | _ -> (l, o::r, true))
             popped, others |> List.rev
 
-        let d, o = // TODO UNARY ELEVATION
-            ((List.empty, List.empty), lexems) 
+        let d, o, _ = // TODO UNARY ELEVATION
+            ((List.empty, List.empty, None), lexems) 
             ||> List.fold (fun s lex -> 
-                let (output, operators) = s
+                let (output, operators, prev) = s
                 match lex with
-                | (pos, Lexem.Delimiter d) -> 
+                | (pos, Lexem.Delimiter d) & (_, previous) -> 
                     match d with
                     | Delimiter.OpenBracket ->
-                        (output, Op.Bracket :: operators) // to stack
+                        output, Op.Bracket :: operators, Some previous // to stack
                     | Delimiter.CloseBracket ->
                         // 1) pop until openbracket
                         // 2) remove openbracket and look at what left
@@ -337,7 +339,7 @@ module Syntan =
                             | _ -> popped, rest
 
                         // 5) Add all popped elements to output
-                        (popped |> List.map Op.toSyntel) @ output, rest 
+                        (popped |> List.map Op.toSyntel) @ output, rest, Some previous
 
                     | Delimiter.Comma ->
                         // 1) pop stack until openbracket
@@ -347,18 +349,27 @@ module Syntan =
                         if not found then raise <| GrammarException { str = source; message = "Brackets imbalance"; position = pos }
 
                         // 3) Add all popped elements to output
-                        (popped |> List.map Op.toSyntel) @ output, rest 
+                        (popped |> List.map Op.toSyntel) @ output, rest, Some previous
 
-                | (pos, Lexem.Function f) -> // DONE
-                    output, (Op.Function (pos, f)) :: operators
+                | (pos, Lexem.Function f) & (_, previous) -> // DONE
+                    output, (Op.Function (pos, f)) :: operators, Some previous
 
-                | (pos, oper) & (_, Lexem.Operation o) ->
+                | (pos, Lexem.Operation o) & (_, previous) ->
+                    // if operation is "-" and previous lexem is None or another Operation then it is unary minus
+                    let o = if o = "-" then
+                                match prev with
+                                | Some l when Lexem.isOperation l -> "_"
+                                | None -> "_"
+                                | _ -> o
+                            else o
+                    let oper = Lexem.Operation o
+
                     // 1) pop stack until priority greater
                     let newPriority = Lexem.priority oper
                     let newOp = Op.Operation (pos, o, newPriority)
                     let popped, rest = pushAway newPriority operators
                     // 2) push current operation to stack
-                    (popped |> List.map Op.toSyntel) @ output, newOp :: rest 
+                    (popped |> List.map Op.toSyntel) @ output, newOp :: rest, Some previous
 
                 | (p, some) -> // value or variable
                     let syntem = 
@@ -366,8 +377,8 @@ module Syntan =
                         | Lexem.Value v -> Syntel.Value v
                         | Lexem.Variable v -> Syntel.Variable v
                         | _ -> raise <| SyntaxException (sprintf "Unexpected lexem : %A" some)
-                    (p, syntem) :: output, operators // var or val priority is zero
-            ) 
+                    (p, syntem) :: output, operators, Some some // var or val priority is zero
+                )
         try
             let popped, rest, found = o |> popToBracket
             if found && not <| List.isEmpty rest then raise <| GrammarException { str = source; message = "Brackets imbalance"; position = 0 }
@@ -376,3 +387,32 @@ module Syntan =
             let ex = GrammarException { str = source; message = ae.Data0; position = 0 }
             logger.WarnEx "Problem!" ex
             raise ex
+//
+//    // todo unary ops
+//    module Grammar =
+//        type GrammarType = 
+//        | Integer
+//        | Double
+//        | Bool
+//
+//        type parameters = {
+//            tp : GrammarType Set
+//        }
+//     
+//        type x = {
+//            parameters : parameters array
+//        }
+//
+//        let iif cond t f = if cond then t () else f ()
+//        let iifDescr = {
+//            parameters = [| |]
+//        }
+//
+//        type Definition = GrammarType Set list * GrammarType Set  // argument types * output types
+//
+//        type Grammar =
+//        | UnaryOperation of string * Definition * Grammar
+//        | BinaryOperation of string * Grammar
+//        | FunctionCall of string * Grammar list
+//        | Value 
+//        | Variable

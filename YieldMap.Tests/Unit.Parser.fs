@@ -223,6 +223,48 @@ module Language =
              3, Syntel.Operation "="
             ])
 
+        let a = Lexem.parse "-1+2=4" ||> Syntan.grammar |> Seq.toList
+        logger.InfoF "%A" a
+        a |> should be (equal 
+            [
+             1, Syntel.Value <| Value.Integer 1L
+             0, Syntel.Operation "_"
+             3, Syntel.Value <| Value.Integer 2L
+             2, Syntel.Operation "+"
+             5, Syntel.Value <| Value.Integer 4L
+             4, Syntel.Operation "="
+            ])
+
+        let a = Lexem.parse "not true" ||> Syntan.grammar |> Seq.toList
+        logger.InfoF "%A" a
+        a |> should be (equal 
+            [
+             4, Syntel.Value <| Value.Bool true
+             0, Syntel.Operation "not"
+            ])
+
+        let a = Lexem.parse "false and not true" ||> Syntan.grammar |> Seq.toList
+        logger.InfoF "%A" a
+        a |> should be (equal 
+            [
+             0, Syntel.Value <| Value.Bool false
+             14, Syntel.Value <| Value.Bool true
+             10, Syntel.Operation "not"
+             6, Syntel.Operation "and"
+            ])
+
+        let a = Lexem.parse "1+-2=4" ||> Syntan.grammar |> Seq.toList
+        logger.InfoF "%A" a
+        a |> should be (equal 
+            [
+             0, Syntel.Value <| Value.Integer 1L
+             3, Syntel.Value <| Value.Integer 2L
+             2, Syntel.Operation "_"
+             1, Syntel.Operation "+"
+             5, Syntel.Value <| Value.Integer 4L
+             4, Syntel.Operation "="
+            ])
+
         let a = Lexem.parse "(1+2)*3" ||> Syntan.grammar |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
