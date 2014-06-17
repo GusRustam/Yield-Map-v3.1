@@ -4,6 +4,16 @@ open System
 open System.Text
 open System.Text.RegularExpressions
 open YieldMap.Tools.Logging
+
+type GrammarError = { str : string; message : string; position : int }
+
+exception GrammarException of GrammarError
+    with override x.ToString () = 
+            let pointingString pos = StringBuilder().Append('-', pos).Append('^').ToString()
+
+            let data = x.Data0
+            let pos = data.position
+            sprintf "Error at position %d: %s\n%s\n%s" pos data.message data.str (pointingString pos)
    
 module Lexan =
     let logger = LogFactory.create "Language.Lexan"
@@ -16,7 +26,6 @@ module Lexan =
                 while str.[i] = ' ' do i <- i + 1
                 (str.Substring i, i)
 
-        let pointingString pos = StringBuilder().Append('-', pos).Append('^').ToString()
 
         let extractUntilBracketClose (str : string) =
             let rec extract (buffer : System.Text.StringBuilder) (str : string) level = 
@@ -37,14 +46,6 @@ module Lexan =
             
 
     exception internal AnalyzerException of string
-
-    type LexicalError = { str : string; message : string; position : int }
-
-    exception LexicalException of LexicalError
-        with override x.ToString () = 
-                 let data = x.Data0
-                 let pos = data.position
-                 sprintf "Error at position %d: %s\n%s\n%s" pos data.message data.str (Helper.pointingString pos)
 
     type Value = 
     | Date of DateTime
@@ -217,14 +218,14 @@ module Lexan =
                                 parseRecursive (str.Substring len) (local + len)
                             else id
                     with :? AnalyzerException as ae ->
-                        let ex = LexicalException { str = s; message = ae.Data0; position = local }
+                        let ex = GrammarException { str = s; message = ae.Data0; position = local }
                         logger.WarnEx "Problem!" ex
                         raise ex
                         
             let res = parseRecursive (s.TrimEnd()) 0 []
             res |> List.rev
 
-        static member parse (s : string) = Lexem.parseInternal s 0
+        static member parse (s : string) = Lexem.parseInternal s 0, s
 
 module Syntan = 
     open Lexan
@@ -233,7 +234,7 @@ module Syntan =
 
     let logger = LogFactory.create "Language.Syntan"
 
-    exception SyntaxException of int * string
+    exception internal SyntaxException of string
 
     type Syntel = 
     | Value of Value
@@ -266,7 +267,7 @@ module Syntan =
             match op with 
             | Op.Operation (pos, name, _) -> pos, Syntel.Operation (name) 
             | Op.Function (pos, name) -> pos, Syntel.Function name 
-            | _ -> failwith <| sprintf "%A is not operation or function" op
+            | _ -> raise <| SyntaxException (sprintf "%A is not operation or function" op)
 
     type Lexem with  
         static member priority lex = 
@@ -278,10 +279,10 @@ module Syntan =
                 elif o |- set ["*"; "/"] then 6
                 elif o |- set ["+"; "-"] then 5 // TODO UNARY ELEVATION
                 elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 4
-                else failwith "Unknown operation"
-            | _ -> failwith "Unexpected token"
+                else raise <| SyntaxException "Unknown operation"
+            | _ -> raise <| SyntaxException "Unexpected token"
     
-    let grammar lexems = 
+    let grammar lexems source = 
         let popToBracket operators = 
             let popped, others, found = 
                 ((List.empty, List.empty, false), operators)
@@ -327,7 +328,7 @@ module Syntan =
                         let popped, rest, found = popToBracket operators
 
                         // 4) no openbracket => imbalance
-                        if not found then failwith <| sprintf "Brackets imbalance: bracket at position %d has no counterpart" pos
+                        if not found then raise <| GrammarException { str = source; message = "Brackets imbalance"; position = pos }
 
                         // 3) if function call -> pop too
                         let popped, rest =
@@ -343,12 +344,7 @@ module Syntan =
                         let popped, rest, found = popToBracket1 operators
 
                         // 2) no openbracket => imbalance
-                        if not found then failwith <| sprintf "Brackets imbalance: bracket at position %d has no counterpart" pos
-
-//                        // 3) Check there's a function call
-//                        match rest with
-//                        | head :: _ when Op.isFunction head -> ()
-//                        | _ -> failwith <| sprintf "Unexpected comma at position %d: no function call" pos
+                        if not found then raise <| GrammarException { str = source; message = "Brackets imbalance"; position = pos }
 
                         // 3) Add all popped elements to output
                         (popped |> List.map Op.toSyntel) @ output, rest 
@@ -369,9 +365,14 @@ module Syntan =
                         match some with
                         | Lexem.Value v -> Syntel.Value v
                         | Lexem.Variable v -> Syntel.Variable v
-                        | _ -> failwith ""
+                        | _ -> raise <| SyntaxException (sprintf "Unexpected lexem : %A" some)
                     (p, syntem) :: output, operators // var or val priority is zero
             ) 
-        let popped, rest, found = o |> popToBracket
-        if found && not <| List.isEmpty rest then failwith "Brackets imbalance"
-        (popped |> List.map Op.toSyntel) @ d |> List.rev
+        try
+            let popped, rest, found = o |> popToBracket
+            if found && not <| List.isEmpty rest then raise <| GrammarException { str = source; message = "Brackets imbalance"; position = 0 }
+            (popped |> List.map Op.toSyntel) @ d |> List.rev
+        with :? SyntaxException as ae ->
+            let ex = GrammarException { str = source; message = ae.Data0; position = 0 }
+            logger.WarnEx "Problem!" ex
+            raise ex
