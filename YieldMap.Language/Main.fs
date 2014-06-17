@@ -289,8 +289,17 @@ module Syntan =
                     if f then (l, o::r, f)
                     elif Op.isBracket o then (l, r, true)
                     else (o::l, r, f))
-            popped, others, found
+            popped, others |> List.rev, found
 
+        let popToBracket1 operators = 
+            let popped, others, found = 
+                ((List.empty, List.empty, false), operators)
+                ||> List.fold (fun (l, r, f) o ->
+                    if f then (l, o::r, f)
+                    elif Op.isBracket o then (l, o::r, true) // here's o::r instead of just r
+                    else (o::l, r, f))
+            popped, others |> List.rev, found
+            
         let pushAway newPriority operators =
             let popped, others, _ = 
                 ((List.empty, List.empty, false), operators)
@@ -301,7 +310,7 @@ module Syntan =
                          if priority > newPriority then (o::l, r, f)
                          else (l, o::r, true)
                          | _ -> (l, o::r, true))
-            popped, others
+            popped, others |> List.rev
 
         let d, o = // TODO UNARY ELEVATION
             ((List.empty, List.empty), lexems) 
@@ -331,15 +340,15 @@ module Syntan =
 
                     | Delimiter.Comma ->
                         // 1) pop stack until openbracket
-                        let popped, rest, found = popToBracket operators
+                        let popped, rest, found = popToBracket1 operators
 
                         // 2) no openbracket => imbalance
                         if not found then failwith <| sprintf "Brackets imbalance: bracket at position %d has no counterpart" pos
 
-                        // 3) Check there's a function call
-                        match rest with
-                        | head :: _ when Op.isFunction head -> ()
-                        | _ -> failwith <| sprintf "Unexpected comma at position %d: no function call" pos
+//                        // 3) Check there's a function call
+//                        match rest with
+//                        | head :: _ when Op.isFunction head -> ()
+//                        | _ -> failwith <| sprintf "Unexpected comma at position %d: no function call" pos
 
                         // 3) Add all popped elements to output
                         (popped |> List.map Op.toSyntel) @ output, rest 

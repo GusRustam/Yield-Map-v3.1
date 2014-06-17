@@ -291,17 +291,27 @@ module Language =
              5, Syntel.Operation "/"
             ])
 
+        let a = Lexem.parse  "OhMyGod()" |> Syntan.grammar |> Seq.toList
+        a |> should be (equal [ 0, Syntel.Function "OHMYGOD"])
+
+        let a = Lexem.parse  "OhMyGod(12)" |> Syntan.grammar |> Seq.toList
+        a |> should be (equal [ 8, Syntel.Value <| Value.Integer 12L
+                                0, Syntel.Function "OHMYGOD"])
+
+        let a = Lexem.parse  "OhMyGod(12, 13)" |> Syntan.grammar |> Seq.toList
+        a |> should be (equal [ 8, Syntel.Value <| Value.Integer 12L
+                                12, Syntel.Value <| Value.Integer 13L
+                                0, Syntel.Function "OHMYGOD"])
+                                
         let a = Lexem.parse  "OhMyGod(Hello(12), Bye(23, $alpha.beta_11), $a, false)" |> Syntan.grammar |> Seq.toList
-        a |> should be (equal 
-            [ 0, Syntel.Function "OHMYGOD"
-              8, Syntel.Function "HELLO"
-              14, Syntel.Value <| Value.Integer 12L
-              19, Syntel.Function "BYE"
-              23, Syntel.Value <| Value.Integer 23L
-              27, Syntel.Variable <| Variable.Object ("ALPHA", "BETA_11")
-              44, Syntel.Variable <| Variable.Global "A"
-              48, Syntel.Value <| Value.Bool false
-            ])
+        a |> should be (equal [ 14, Syntel.Value <| Value.Integer 12L
+                                8, Syntel.Function "HELLO"
+                                23, Syntel.Value <| Value.Integer 23L
+                                27, Syntel.Variable <| Variable.Object ("ALPHA", "BETA_11")
+                                19, Syntel.Function "BYE"
+                                44, Syntel.Variable <| Variable.Global "A"
+                                48, Syntel.Value <| Value.Bool false
+                                0, Syntel.Function "OHMYGOD"])
 
 //    [<Test>]
 //    let ``Priorities assignment`` () =
