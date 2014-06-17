@@ -63,6 +63,22 @@ module Lexan =
             | Bool b -> sprintf "Bool(%s)" (b.ToString())
             | Integer i -> sprintf "Integer(%d)" i
             | Double d -> sprintf "Double(%f)" d
+        
+        static member interpret (o : obj) =
+            match o with
+            | :? Int64 as i -> Integer i
+            | :? double as d -> Double d
+            | :? bool as b -> Bool b
+            | :? DateTime as d -> Date d
+            | _ -> 
+                let str = o.ToString()
+                let m = Regex.Match(str, "\[(?<rating>[^\]]*)\]")
+                if m.Success then
+                    let rating = m.Groups.Item("rating").Captures.Item(0).Value
+                    Rating rating
+                else
+                    String str
+
         static member internal extract (str : string) = 
             let ch = str.[0]
             let lStr = str.ToLower()
@@ -251,7 +267,7 @@ module Syntan =
             | Operation o -> sprintf "Operation(%s)" (o.ToString())
             | Function f -> sprintf "Function(%s)" (f.ToString())
 
-    type Op = 
+    type internal Op = 
     | Bracket
     | Function of int * string 
     | Operation of int * string * int
@@ -279,7 +295,7 @@ module Syntan =
                 if o |- set ["not"; "_"] then 8
                 elif o |- set ["and"; "or"] then 7
                 elif o |- set ["*"; "/"] then 6
-                elif o |- set ["+"; "-"] then 5 // TODO UNARY ELEVATION
+                elif o |- set ["+"; "-"] then 5 
                 elif o |- set ["="; "<>"; ">="; "<="; ">"; "<"] then 4
                 else raise <| SyntaxException "Unknown operation"
             | _ -> raise <| SyntaxException "Unexpected token"
@@ -315,7 +331,7 @@ module Syntan =
                          | _ -> (l, o::r, true))
             popped, others |> List.rev
 
-        let d, o, _ = // TODO UNARY ELEVATION
+        let d, o, _ = 
             ((List.empty, List.empty, None), lexems) 
             ||> List.fold (fun s lex -> 
                 let (output, operators, prev) = s
@@ -374,7 +390,7 @@ module Syntan =
                 | (p, some) -> // value or variable
                     let syntem = 
                         match some with
-                        | Lexem.Value v -> Syntel.Value v
+                        | Lexem.Value v -> Syntel.Value v 
                         | Lexem.Variable v -> Syntel.Variable v
                         | _ -> raise <| SyntaxException (sprintf "Unexpected lexem : %A" some)
                     (p, syntem) :: output, operators, Some some // var or val priority is zero
@@ -387,32 +403,59 @@ module Syntan =
             let ex = GrammarException { str = source; message = ae.Data0; position = 0 }
             logger.WarnEx "Problem!" ex
             raise ex
-//
-//    // todo unary ops
-//    module Grammar =
-//        type GrammarType = 
-//        | Integer
-//        | Double
-//        | Bool
-//
-//        type parameters = {
-//            tp : GrammarType Set
-//        }
-//     
-//        type x = {
-//            parameters : parameters array
-//        }
-//
-//        let iif cond t f = if cond then t () else f ()
-//        let iifDescr = {
-//            parameters = [| |]
-//        }
-//
-//        type Definition = GrammarType Set list * GrammarType Set  // argument types * output types
-//
-//        type Grammar =
-//        | UnaryOperation of string * Definition * Grammar
-//        | BinaryOperation of string * Grammar
-//        | FunctionCall of string * Grammar list
-//        | Value 
-//        | Variable
+
+#nowarn "62"
+module Interpreter = 
+    open Lexan
+    open Syntan
+    open YieldMap.Tools.Aux
+
+    // TODO LAZY FUNCTIONS POSSIBLE ONLY IF I FIRST CREATE A TREE FROM A STACK
+
+    module private Operations = 
+        let applyTable op v1 v2 = // TODO DO SOMETHING TO PUT THIS ALL CODE INTO SOME SORT OF TABLE IF POSSIBLE
+            Syntel.Value <| Value.Integer 0L
+
+        let apply op stack = 
+            if op = "_" then
+                match stack with
+                | (Syntel.Value (Value.Integer i)) :: tail -> (Syntel.Value (Value.Integer -i)) :: tail 
+                | (Syntel.Value (Value.Double d)) :: tail -> (Syntel.Value (Value.Double -d)) :: tail 
+                | head :: tail -> failwith <| sprintf "Operation - is not applicable to %A" head
+                | _ -> failwith "Nothing to negate"
+            elif op = "not" then
+                match stack with
+                | (Syntel.Value (Value.Bool b)) :: tail -> (Syntel.Value (Value.Bool (not b))) :: tail 
+                | head :: tail -> failwith <| sprintf "Operation 'not' is not applicable to %A" head
+                | _ -> failwith "Nothing to negate"
+            elif op |- set ["+"; "-"; "*"; "/"] then
+                match stack with
+                | (Syntel.Value v1) :: (Syntel.Value v2) :: tail -> applyTable op v1 v2 :: tail 
+                | _ -> failwith "Need two values to apply mathematical operation"
+            elif op |- set [">"; "<"; ">="; "<="; "="; "<>"] then
+                stack
+            elif op |- set ["and"; "or"] then
+                stack
+            else failwith "Unknown operation"
+
+    module private Functions = 
+        let apply name stack = 
+            if name = "IIF" then
+                stack
+            else failwith "Unknown function"    
+
+    let evaluate grammar (vars : (string, obj) Map)  = 
+        let items = 
+            ([], grammar) ||> List.fold (fun progress i -> 
+                match i with
+                | Syntel.Value v -> i :: progress
+                | Syntel.Variable (Variable.Global glb) -> 
+                    (Syntel.Value <| Value.interpret vars.[glb]) :: progress
+                | Syntel.Variable (Variable.Object (objName, objField)) -> 
+                    (Syntel.Value <| Value.interpret vars.[objName + "." + objField]) :: progress
+                | Syntel.Operation op -> Operations.apply op progress
+                | Syntel.Function name -> Functions.apply name progress) 
+        
+        match items with 
+        | res :: [] -> res
+        | _ -> failwith "Invalid result"
