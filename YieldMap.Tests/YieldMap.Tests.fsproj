@@ -117,11 +117,6 @@
       <Project>{ef7a6217-b508-43b1-8012-e4a041e50108}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\YieldMap.Parser\YieldMap.Parser.vbproj">
-      <Name>YieldMap.Parser</Name>
-      <Project>{2874458b-7753-4f65-9144-b902846ee32a}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Requests\YieldMap.Requests.fsproj">
       <Name>YieldMap.Requests</Name>
       <Project>{e773f65f-d9dc-4420-9af5-d148780b531f}</Project>

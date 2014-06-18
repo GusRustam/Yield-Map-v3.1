@@ -372,59 +372,6 @@ module Language =
         analyzeAndApply "IIf($a, 1, 2)" Map.empty |> should be (equal (Value.Nothing)) 
         analyzeAndApply "IIf(true, 1, 2)" Map.empty |> should be (equal (Value.Integer 1L)) 
         analyzeAndApply "IIf(false, 1, 2)" Map.empty |> should be (equal (Value.Integer 2L)) 
-        analyzeAndApply "$a + 1" Map.empty |> should be (equal (Value.Nothing)) 
+        analyzeAndApply "$a + 1" Map.empty |> should be (equal Value.Nothing)
 
         ["A", box 2] |> Map.ofList |> analyzeAndApply "$a + 1" |> should be (equal (Value.Integer 3L)) 
-
-module Parser = 
-    open System.Collections.Generic
-
-    open YieldMap.Parser
-    open YieldMap.Tools.Logging
-   
-    let logger = LogFactory.create "UnitTests.Parser"
-
-    let error expr l = 
-        let p = Parser()
-        try
-            let grammar = p.Parse expr
-            grammar.Count |> should be (equal l)
-            None
-        with :? Exceptions.ParserException as e ->
-            logger.ErrorEx "" e
-            Some e.ErrorPos
-
-
-    let eval expr = 
-        let p = Parser()
-        try
-            let grammar = p.Parse expr
-            let i = Interpreter grammar
-            Some (i.Evaluate <| Dictionary<_,_>())
-            
-        with :? Exceptions.ParserException as e ->
-            logger.ErrorEx "" e
-            None
-
-    [<Test>]
-    let ``Single-term expressions, spaces and brackets`` () =
-        error "$a = 2" 3 |> should be (equal None) 
-        error "$a= 2" 3 |> should be (equal None) 
-        error "$a =2" 3 |> should be (equal None)
-        error "$a=2" 3 |> should be (equal None)
-        error "($a = 2)" 3 |> should be (equal None)
-        error "($a= 2)" 3 |> should be (equal None)
-        error "($a =2)" 3 |> should be (equal None)
-        error "($a=2)" 3 |> should be (equal None)
-        error "( $a = 2)" 3 |> should be (equal None)
-        error "( $a= 2)" 3 |> should be (equal None)
-        error "( $a =2)" 3 |> should be (equal None)
-        error "( $a=2)" 3 |> should be (equal None)
-        error "($a = 2 )" 3 |> should be (equal None)
-        error "($a= 2 )" 3 |> should be (equal None)
-        error "($a =2 )" 3 |> should be (equal None)
-        error "($a=2 )" 3 |> should be (equal None)
-        error "($a = 2) " 3 |> should be (equal None)
-        error "($a= 2) " 3 |> should be (equal None)
-        error "($a =2) " 3 |> should be (equal None)
-        error "($a=2) " 3 |> should be (equal None)
