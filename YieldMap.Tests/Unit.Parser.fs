@@ -369,6 +369,13 @@ module Language =
         analyzeAndApply "(4+6)/(1+1)" Map.empty |> should be (equal (Value.Integer 5L)) 
         analyzeAndApply "(1+2.0)/(3+4)" Map.empty |> should be (equal (Value.Double ((double 1+2.0)/double(3+4)))) 
 
+        analyzeAndApply "IIf($a, 1, 2)" Map.empty |> should be (equal (Value.Nothing)) 
+        analyzeAndApply "IIf(true, 1, 2)" Map.empty |> should be (equal (Value.Integer 1L)) 
+        analyzeAndApply "IIf(false, 1, 2)" Map.empty |> should be (equal (Value.Integer 2L)) 
+        analyzeAndApply "$a + 1" Map.empty |> should be (equal (Value.Nothing)) 
+
+        ["A", box 2] |> Map.ofList |> analyzeAndApply "$a + 1" |> should be (equal (Value.Integer 3L)) 
+
 module Parser = 
     open System.Collections.Generic
 

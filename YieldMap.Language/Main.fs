@@ -68,6 +68,8 @@ module Lexan =
         
         static member interpret (o : obj) =
             match o with
+            | :? Int16 as i -> Integer (int64 i)
+            | :? Int32 as i -> Integer (int64 i)
             | :? Int64 as i -> Integer i
             | :? double as d -> Double d
             | :? bool as b -> Bool b
@@ -413,6 +415,9 @@ module Interpreter =
     open YieldMap.Tools.Aux
 
     // LAZY FUNCTIONS POSSIBLE ONLY IF I FIRST CREATE A TREE FROM A STACK
+    // FUNCTIONS WITH VARIABLE NUMBER OF ARGS (OR DIFFERING NUMBER OF ARGS)
+    //   ARE NOT IMPLEMENTABLE UNLESS I ADD SOME CALL DELIMITER TO SYNTAX PARSER OUTPUT
+
     // TODO RATINGS!!! RATINGS ARE COMPARABLE AND ONE CAN USE +/- OPS WITH THEM!
 
     module private Operations = 
@@ -515,10 +520,128 @@ module Interpreter =
 
             else failwith <| sprintf "Unknown operation %s" op
 
-    module private Functions = 
+    module internal Functions = 
         let apply name stack = 
+            // functions: 
+            //  - control : iif
+            //  - math : round, floor, ceil, abs
+            //  - strings : format, like, contains
+            //  - date : AddDays, AddMonths, AddYears
+            //  - rating
+
+            // todo any function with nothing is nothing
             if name = "IIF" then
-                stack
+                match stack with 
+                | (Syntel.Value ``if-false``) :: (Syntel.Value ``if-true``) :: (Syntel.Value condition) :: tail -> 
+                    match condition with
+                    | Value.Bool cond -> Syntel.Value (if cond then ``if-true`` else ``if-false``) :: tail
+                    | Value.Nothing -> Syntel.Value condition :: tail
+                    | _ -> failwith <| sprintf "Invalid Iif function call. Use Iif(bool, value-if-true, value-if-false)" 
+                | _ -> failwith <| sprintf "Invalid Iif function call. Use Iif(bool, value-if-true, value-if-false)" 
+            
+            elif name = "ROUND" then
+                match stack with 
+                | (Syntel.Value (Value.Double dbl)) :: tail -> 
+                    let value = dbl |> Math.Round
+                                    |> int64
+                                    |> Value.Integer
+                                    |> Syntel.Value
+                    value :: tail
+
+                | (Syntel.Value (Value.Integer _)) :: _ | (Syntel.Value (Value.Nothing)) :: _ -> 
+                    stack
+                                        
+                | _ -> failwith <| sprintf "Invalid Round function call. Use Round(double)" 
+
+            elif name |- set ["FLOOR"; "CEIL"; "ABS"] then
+                match stack with 
+                | (Syntel.Value Value.Nothing) :: tail -> 
+                    stack
+
+                | (Syntel.Value (Value.Double dbl)) :: tail -> 
+                    let math : float -> float = 
+                        match name with
+                        | "FLOOR" -> Math.Floor
+                        | "CEIL" -> Math.Ceiling
+                        | "ABS" -> Math.Abs
+                        | _ -> failwith ""
+
+                    let value = dbl |> math
+                                    |> int64
+                                    |> Value.Integer
+                                    |> Syntel.Value
+
+                    value :: tail
+
+                | (Syntel.Value (Value.Integer _)) :: _ -> 
+                    stack
+                                        
+                | _ -> failwith <| sprintf "Invalid %s function call. Use %s(double)" name name
+
+            elif name = "FORMAT" then
+                match stack with 
+                | (Syntel.Value value) :: (Syntel.Value (Value.String format)) :: tail -> 
+                    let res = 
+                        match value with
+                        | Value.Bool b -> Value.String <| String.Format("{0:" + format + "}", b)
+                        | Value.Date d -> Value.String <| String.Format("{0:" + format + "}", d)
+                        | Value.Double d -> Value.String <| String.Format("{0:" + format + "}", d)
+                        | Value.Integer i -> Value.String <| String.Format("{0:" + format + "}", i)
+                        | other -> other
+                    Syntel.Value res :: tail
+
+                | Syntel.Value Value.Nothing :: _ :: _ 
+                | _ :: Syntel.Value Value.Nothing :: _ -> 
+                    stack
+
+                | _ -> failwith "Invalid Format function call. Use Format(format, value)" 
+
+            elif name = "LIKE" then
+                match stack with 
+                | (Syntel.Value (Value.String str)) :: (Syntel.Value (Value.String regex)) :: tail -> 
+                    let m = Regex.Match(str, regex)
+                    (Syntel.Value <| Value.Bool m.Success) :: tail
+
+                | Syntel.Value Value.Nothing :: _ :: _ 
+                | _ :: Syntel.Value Value.Nothing :: _ -> 
+                    stack
+
+                | _ -> failwith "Invalid Like function call. Use Like(str, regex-str)" 
+
+            elif name = "CONTAINS" then
+                match stack with 
+                | (Syntel.Value (Value.String needle)) :: (Syntel.Value (Value.String haystack)) :: tail -> 
+                    (Syntel.Value <| Value.Bool (haystack.Contains(needle))) :: tail
+
+                | Syntel.Value Value.Nothing :: _ :: _ 
+                | _ :: Syntel.Value Value.Nothing :: _ -> 
+                    stack
+
+                | _ -> failwith "Invalid Contains function call. Use Contains(haystack-string, needle-string)" 
+                
+            elif name |- set ["ADDDAYS"; "ADDMONTHS"; "ADDYEARS"] then
+                match stack with 
+                | Syntel.Value Value.Nothing :: _ :: _ 
+                | _ :: Syntel.Value Value.Nothing :: _ -> 
+                    stack
+
+                | (Syntel.Value (Value.Integer num)) :: (Syntel.Value (Value.Date dt)) :: tail -> 
+                    let add = 
+                        match name with
+                        | "ADDDAYS" -> dt.AddDays << float
+                        | "ADDMONTHS" -> dt.AddMonths
+                        | "ADDYEARS" -> dt.AddYears
+                        | _ -> failwith ""
+
+                    let newDate = num |> int 
+                                      |> add 
+                                      |> Value.Date 
+                                      |> Syntel.Value
+
+                    newDate :: tail
+
+                | _ -> failwith <| sprintf "Invalid %s function call. Use %s(date, int)" name name
+
             else failwith "Unknown function" 
             
     let private getVariable (vars : (string, obj) Map) var = 
@@ -527,6 +650,7 @@ module Interpreter =
             if vars |> Map.containsKey name then
                 Value.interpret vars.[name]
             else Value.Nothing
+
         | Variable.Object (name, field) -> 
             if vars |> Map.containsKey name then
                 let map = vars.[name] :?> (string, obj) Map
@@ -539,10 +663,11 @@ module Interpreter =
         let items = 
             ([], grammar) ||> List.fold (fun progress i -> 
                 match i with
-                | Syntel.Value v -> i :: progress
+                | Syntel.Value v -> 
+                    i :: progress
 
                 | Syntel.Variable var -> 
-                    (Syntel.Value <| (getVariable vars var)) :: progress
+                    (Syntel.Value <| getVariable vars var) :: progress
 
                 | Syntel.Operation op -> 
                     Operations.apply op progress
