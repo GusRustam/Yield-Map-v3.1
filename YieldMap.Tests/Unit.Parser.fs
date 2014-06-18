@@ -349,6 +349,26 @@ module Language =
                                 48, Syntel.Value <| Value.Bool false
                                 0, Syntel.Function "OHMYGOD"])
 
+
+    [<Test>]
+    let ``Interpretation`` () =
+        let analyzeAndApply code = 
+            Lexem.parse code
+            ||> Syntan.grammar 
+            |> List.map snd 
+            |> Interpreter.evaluateGrammar      
+                  
+        analyzeAndApply "1+2=4" Map.empty |> should be (equal (Value.Bool false))
+        analyzeAndApply "2+2=4" Map.empty |> should be (equal (Value.Bool true))
+        analyzeAndApply "not true" Map.empty |> should be (equal (Value.Bool false))
+        analyzeAndApply "false and not true" Map.empty |> should be (equal (Value.Bool false))
+        analyzeAndApply "(1+2)*3" Map.empty |> should be (equal (Value.Integer 9L))
+        analyzeAndApply "1+2*3" Map.empty |> should be (equal (Value.Integer 7L))
+        analyzeAndApply "1+2-3" Map.empty |> should be (equal (Value.Integer 0L))
+        analyzeAndApply "(4+6)/(1+2)" Map.empty |> should be (equal (Value.Integer 3L)) 
+        analyzeAndApply "(4+6)/(1+1)" Map.empty |> should be (equal (Value.Integer 5L)) 
+        analyzeAndApply "(1+2.0)/(3+4)" Map.empty |> should be (equal (Value.Double ((double 1+2.0)/double(3+4)))) 
+
 module Parser = 
     open System.Collections.Generic
 

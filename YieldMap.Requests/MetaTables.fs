@@ -80,10 +80,10 @@ module MetaTables =
         [<Field(23, "EJV.C.SeniorityTypeDescription")>]
         member val Seniority = String.Empty with get, set
 
-        [<Field(24, "EJV.C.SPIndustryDescription")>]
+        [<Field(24, "EJV.C.SPIndustryDescription")>] // EJV.C.IndustrySectorDescription
         member val Industry = String.Empty with get, set
 
-        [<Field(25, "EJV.C.SPIndustrySubDescription")>]
+        [<Field(25, "EJV.C.SPIndustrySubDescription")>] // EJV.C.IndustrySubSectorDescription
         member val SubIndustry = String.Empty with get, set
 
         [<Field(26, "EJV.C.InstrumentTypeDescription")>]

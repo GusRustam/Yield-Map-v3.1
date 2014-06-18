@@ -54,6 +54,7 @@ module Lexan =
     | Bool of bool
     | Integer of int64
     | Double of double
+    | Nothing
     with
         override x.ToString () = 
             match x with
@@ -63,6 +64,7 @@ module Lexan =
             | Bool b -> sprintf "Bool(%s)" (b.ToString())
             | Integer i -> sprintf "Integer(%d)" i
             | Double d -> sprintf "Double(%f)" d
+            | Nothing -> "Nothing"
         
         static member interpret (o : obj) =
             match o with
@@ -410,52 +412,150 @@ module Interpreter =
     open Syntan
     open YieldMap.Tools.Aux
 
-    // TODO LAZY FUNCTIONS POSSIBLE ONLY IF I FIRST CREATE A TREE FROM A STACK
+    // LAZY FUNCTIONS POSSIBLE ONLY IF I FIRST CREATE A TREE FROM A STACK
+    // TODO RATINGS!!! RATINGS ARE COMPARABLE AND ONE CAN USE +/- OPS WITH THEM!
 
     module private Operations = 
-        let applyTable op v1 v2 = // TODO DO SOMETHING TO PUT THIS ALL CODE INTO SOME SORT OF TABLE IF POSSIBLE
-            Syntel.Value <| Value.Integer 0L
+        let applyMath op v1 v2 =
+            if op = "+" then
+                match v1, v2 with
+                | Value.Integer i1, Value.Integer i2 -> Value.Integer (i1 + i2)
+                | Value.Double d1, Value.Double d2 -> Value.Double (d1 + d2)
+                | Value.Integer i, Value.Double d | Value.Double d, Value.Integer i -> Value.Double (double i + d)
+                | Value.String s1, Value.String s2 -> Value.String (s1 + s2)
+                | _, Value.Nothing | Value.Nothing, _ -> Value.Nothing
+                | _ -> failwith <| sprintf "Operation + is not applicable to args %A %A" v1 v2
+            else 
+                match v1, v2 with
+                | Value.Integer n, Value.Integer m -> 
+                    Value.Integer (if op = "*" then n*m elif op = "/" then n/m else n-m)
+                | Value.Double n, Value.Double m -> 
+                    Value.Double (if op = "*" then n*m elif op = "/" then n/m else n-m)
+                | Value.Integer i, Value.Double d ->
+                    let n, m = double i, d
+                    Value.Double (if op = "*" then n*m elif op = "/" then n/m else n-m)
+                | Value.Double d, Value.Integer i -> 
+                    let n, m = d, double i
+                    Value.Double (if op = "*" then n*m elif op = "/" then n/m else n-m)
+                | _, Value.Nothing | Value.Nothing, _ -> 
+                    Value.Nothing
+                | _ -> failwith <| sprintf "Operation %s is not applicable to args %A %A" op v1 v2
 
+        let private getLogicalOperation op = 
+            match op with
+            | ">"  -> (>)   | "<"  -> (<)
+            | ">=" -> (>=)  | "<=" -> (<=)
+            | "="  -> (=)   | "<>" -> (<>)
+            | _ -> failwith <| sprintf "Unknown logical operation %s" op
+
+        let (|C|_|) v =
+            match v with
+            | Value.Integer i -> Some (i :> IComparable)
+            | Value.Double d -> Some (d :> IComparable)
+            | Value.Date d -> Some (d :> IComparable)
+            | _ -> None
+
+        let applyLogical op v1 v2 =
+            match v1, v2 with
+            | C n, C m -> 
+                Value.Bool <| (getLogicalOperation op) n m
+
+            | Value.Nothing, _ | _, Value.Nothing -> 
+                Value.Nothing
+
+            | _ -> failwith <| sprintf "Operation %s is not applicable to args %A %A" op v1 v2
+                
         let apply op stack = 
             if op = "_" then
                 match stack with
-                | (Syntel.Value (Value.Integer i)) :: tail -> (Syntel.Value (Value.Integer -i)) :: tail 
-                | (Syntel.Value (Value.Double d)) :: tail -> (Syntel.Value (Value.Double -d)) :: tail 
-                | head :: tail -> failwith <| sprintf "Operation - is not applicable to %A" head
+                | (Syntel.Value (Value.Integer i)) :: tail -> 
+                    (Syntel.Value (Value.Integer -i)) :: tail 
+
+                | (Syntel.Value (Value.Double d)) :: tail -> 
+                    (Syntel.Value (Value.Double -d)) :: tail 
+
+                | head :: tail -> 
+                    failwith <| sprintf "Operation - is not applicable to %A" head
+
                 | _ -> failwith "Nothing to negate"
+
             elif op = "not" then
                 match stack with
-                | (Syntel.Value (Value.Bool b)) :: tail -> (Syntel.Value (Value.Bool (not b))) :: tail 
-                | head :: tail -> failwith <| sprintf "Operation 'not' is not applicable to %A" head
-                | _ -> failwith "Nothing to negate"
+                | (Syntel.Value (Value.Bool b)) :: tail -> 
+                    (Syntel.Value (Value.Bool (not b))) :: tail 
+
+                | head :: _ -> 
+                    failwith <| sprintf "Operation 'not' is not applicable to %A" head
+                | _ -> 
+                    failwith "Nothing to negate"
+
             elif op |- set ["+"; "-"; "*"; "/"] then
                 match stack with
-                | (Syntel.Value v1) :: (Syntel.Value v2) :: tail -> applyTable op v1 v2 :: tail 
+                | (Syntel.Value v1) :: (Syntel.Value v2) :: tail -> 
+                    (Syntel.Value <| applyMath op v2 v1) :: tail 
+
                 | _ -> failwith "Need two values to apply mathematical operation"
+
             elif op |- set [">"; "<"; ">="; "<="; "="; "<>"] then
-                stack
+                match stack with // TODO =, <> are not directly applicable to doubles!
+                | (Syntel.Value v1) :: (Syntel.Value v2) :: tail -> 
+                    (Syntel.Value <| applyLogical op v2 v1) :: tail 
+
+                | _ -> failwith "Need two values to apply logical operation"
+
             elif op |- set ["and"; "or"] then
-                stack
-            else failwith "Unknown operation"
+                match stack with
+                | (Syntel.Value (Value.Bool b1)) :: (Syntel.Value (Value.Bool b2)) :: tail -> 
+                    let o = if op = "and" then (&&) 
+                            elif op = "or" then (||) 
+                            else failwith <| sprintf "Unknown boolean operation %s" op
+                    (Syntel.Value <| Value.Bool (o b1 b2)) :: tail 
+
+                | _ -> failwith "Need two values to apply boolean operation"
+
+            else failwith <| sprintf "Unknown operation %s" op
 
     module private Functions = 
         let apply name stack = 
             if name = "IIF" then
                 stack
-            else failwith "Unknown function"    
+            else failwith "Unknown function" 
+            
+    let private getVariable (vars : (string, obj) Map) var = 
+        match var with
+        | Variable.Global name -> 
+            if vars |> Map.containsKey name then
+                Value.interpret vars.[name]
+            else Value.Nothing
+        | Variable.Object (name, field) -> 
+            if vars |> Map.containsKey name then
+                let map = vars.[name] :?> (string, obj) Map
+                if map |> Map.containsKey field then
+                    Value.interpret map.[field]
+                else Value.Nothing
+            else Value.Nothing
 
-    let evaluate grammar (vars : (string, obj) Map)  = 
+    let evaluateGrammar grammar (vars : (string, obj) Map) = 
         let items = 
             ([], grammar) ||> List.fold (fun progress i -> 
                 match i with
                 | Syntel.Value v -> i :: progress
-                | Syntel.Variable (Variable.Global glb) -> 
-                    (Syntel.Value <| Value.interpret vars.[glb]) :: progress
-                | Syntel.Variable (Variable.Object (objName, objField)) -> 
-                    (Syntel.Value <| Value.interpret vars.[objName + "." + objField]) :: progress
-                | Syntel.Operation op -> Operations.apply op progress
-                | Syntel.Function name -> Functions.apply name progress) 
+
+                | Syntel.Variable var -> 
+                    (Syntel.Value <| (getVariable vars var)) :: progress
+
+                | Syntel.Operation op -> 
+                    Operations.apply op progress
+
+                | Syntel.Function name -> 
+                    Functions.apply name progress) 
         
         match items with 
-        | res :: [] -> res
+        | (Syntel.Value v) :: [] -> v
         | _ -> failwith "Invalid result"
+
+    let evaluate code = 
+        Lexem.parse code
+        ||> Syntan.grammar 
+        |> List.map snd 
+        |> evaluateGrammar  
