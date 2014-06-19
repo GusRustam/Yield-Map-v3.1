@@ -39,7 +39,7 @@ module Operations =
 
     let private logger = LogFactory.create "Operations"
 
-    module Loading = 
+    module Load = 
         open YieldMap.Core.Notifier
 
         open YieldMap.Database
@@ -59,7 +59,7 @@ module Operations =
         open System.Collections.Generic
         open System.IO
 
-        let private logger = LogFactory.create "Loading"
+        let private logger = LogFactory.create "Load"
 
         let loadChains (m:ChainMetaLoader) chains = async {
             let names = chains |> Array.map (fun r -> r.Ric)
@@ -203,8 +203,8 @@ module Operations =
 
     type LoadAndSave (s:Drivers) = 
         interface Operation<LoadAndSaveRequest, unit> with
-            member x.Estimate () = Loading.estimate ()
-            member x.Execute (r, ?t) = Loading.reload s r.Chains r.Force
+            member x.Estimate () = Load.estimate ()
+            member x.Execute (r, ?t) = Load.reload s r.Chains r.Force
 
     type EstablishConnection (f:EikonFactory) = 
         interface Operation<unit, unit> with

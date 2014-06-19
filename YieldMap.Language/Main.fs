@@ -252,7 +252,6 @@ module Lexan =
 module Syntan = 
     open Lexan
     open YieldMap.Tools.Aux
-    open FSharpx.Collections
 
     let logger = LogFactory.create "Language.Syntan"
 
@@ -304,6 +303,14 @@ module Syntan =
                 else raise <| SyntaxException "Unknown operation"
             | _ -> raise <| SyntaxException "Unexpected token"
 
+    // Grammar is 
+    // <expression> ::= <term> | (<term>)
+    // <term> ::= <item> | <item> <op> <expression> | <unary-op> <expression>
+    // <item> ::= <value> | <variable> | <function-call> | EMPTY
+    // <function-call> = <name> (<params>)
+    // <params> ::= <expression> | <expression>, <params>
+    // <value> ::= <int> | <float> | <string> | <rating> | <date>
+    // <variable> ::= $<name> | $<name>.<name>
     let grammar lexems source = 
         let popToBracket operators = 
             let popped, others, found = 

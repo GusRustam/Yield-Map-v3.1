@@ -157,13 +157,12 @@ module StartupTest =
     [<SetUp>]
     let setup () = 
         globalThreshold := LoggingLevel.Debug
-        logger.Info "setup"
-        backupFile <- BackupRestore.Backup()
 
     [<TearDown>]
     let teardown () = 
+        globalThreshold := LoggingLevel.Warn
         logger.Info "teardown"
-        BackupRestore.Restore backupFile
+        BackupRestore.Restore "EMPTY.sql"
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
@@ -203,8 +202,6 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let prms = "0#RUCORP=MM"
         
-        globalThreshold := LoggingLevel.Debug
-
         let x = init [|prms|] dt
         x.StateChanged |> Observable.add (fun state -> logger.InfoF " => %A" state)
         Notifier.notification |> Observable.add (fun (state, fail, severity) -> 
@@ -267,8 +264,6 @@ module StartupTest =
     let ``Strange US30`` () =
         let dt = DateTime(2014,5,14) 
         
-        globalThreshold := LoggingLevel.Trace
-
         use ctx = DbConn.CreateContext ()
 
         let initialUnattachedRics = query {
@@ -277,7 +272,7 @@ module StartupTest =
             count
         }
 
-        let x = init [|"0#US30YSTRIP=PX"|] dt
+        let x = init [|"0#US30YSTRIP=PX"|] dt // todo very strange, there were some RUCORP RICS
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
@@ -307,9 +302,6 @@ module StartupTest =
     (* ========================= ============================= *)
     [<Test>]
     let ``RUCORP overnight`` () =
-
-        globalThreshold := LoggingLevel.Debug
-
         // Checking cleanup
         use ctx = DbConn.CreateContext()
         ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore

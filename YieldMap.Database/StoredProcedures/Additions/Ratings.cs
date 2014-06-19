@@ -19,12 +19,16 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
                 var instruments = (
                     from rating in enumerable
+                    where !rating.Issuer
                     let r = rating
-                    where !r.Issuer
                     let ratingInfo = local.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
                     where ratingInfo != null
                     let ricInfo = local.InstrumentRicViews.FirstOrDefault(x => x.Name == rating.Ric)
                     where ricInfo != null
+                    where !local.RatingToInstruments.Any(
+                        x => x.RatingDate == r.Date && 
+                        x.id_Instrument == ricInfo.id_Instrument && 
+                        x.id_Rating == ratingInfo.id_Rating)
                     select new RatingToInstrument { id_Instrument = ricInfo.id_Instrument, id_Rating = ratingInfo.id_Rating, RatingDate = rating.Date}).ToList();
 
                 foreach (var instrument in instruments) {
@@ -35,13 +39,17 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
                 var companies = (
                     from rating in enumerable
+                    where rating.Issuer
                     let r = rating
-                    where r.Issuer
                     let ratingInfo = local.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
                     where ratingInfo != null
                     let ricInfo = local.InstrumentIBViews.FirstOrDefault(x => x.Name == rating.Ric)
                     where ricInfo != null && (ricInfo.id_Issuer.HasValue || ricInfo.id_Borrower.HasValue)
                     let idLegalEntity = ricInfo.id_Issuer.HasValue ? ricInfo.id_Issuer.Value : ricInfo.id_Borrower.Value
+                    where !local.RatingToLegalEntities.Any(
+                        x => x.RatingDate == r.Date &&
+                        x.id_LegalEntity == idLegalEntity &&
+                        x.id_Rating == ratingInfo.id_Rating)
                     select new RatingToLegalEntity { id_LegalEntity = idLegalEntity, id_Rating = ratingInfo.id_Rating, RatingDate = rating.Date }).ToList();
                 
                 foreach (var company in companies) {
