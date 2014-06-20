@@ -8,7 +8,7 @@ namespace YieldMap.Database.StoredProcedures.Enums {
         public static readonly FieldGroup Eurobonds;
 
         static FieldGroups() {
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = DbConn.Instance.CreateContext()) {
                 var items = ctx.FieldGroups.ToList();
                 Default = items.First(x => x.Default).ToPocoSimple();
                 Micex = items.First(x => x.Name == "Micex").ToPocoSimple();

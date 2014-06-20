@@ -1,7 +1,8 @@
-﻿namespace YieldMap.Core.Application.Operations
+﻿namespace YieldMap.Core
 
-[<AutoOpen>]
 module Operations =
+    open YieldMap.Database.Access
+
     open YieldMap.Loader.SdkFactory
     open YieldMap.Loader.LiveQuotes
     open YieldMap.Loader.Calendar
@@ -22,6 +23,7 @@ module Operations =
         Loader : ChainMetaLoader
         Factory : EikonFactory
         Calendar : Calendar
+        Database : IDbConn
     }
 
     type ('Request, 'Answer) Operation =
@@ -41,9 +43,7 @@ module Operations =
 
     module Load = 
         open YieldMap.Core.Notifier
-
         open YieldMap.Database
-        open YieldMap.Database.StoredProcedures
 
         open YieldMap.Loader.MetaChains
         
@@ -95,7 +95,7 @@ module Operations =
         let loadAndSaveMetadata (s:Drivers) rics =
             tweet {
                 let loader = s.Loader
-                use iBonds = new Additions.Bonds ()
+                use iBonds = s.Database |> Manager.CreateBonds
             
                 let! bonds = loader.LoadMetadata<BondDescr> rics
                 let! frns = loader.LoadMetadata<FrnData> rics
@@ -123,7 +123,7 @@ module Operations =
 
                 iBonds.Save toSave
 
-                let iRatings = new Additions.Ratings ()
+                let iRatings = s.Database |> Manager.CreateRatings
                 let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
                 let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
 
@@ -135,13 +135,12 @@ module Operations =
         let rec reload (s:Drivers) chains force  = 
             let loader, dt = s.Loader, s.TodayFix
 
-            let refresh = new Refresh ()
-            let needsReload = refresh.NeedsReload s.TodayFix
+            let needsReload = (s.TodayFix, s.Database) |> Manager.NeedsRefresh 
 
             async {
                 if force || force && needsReload then
                     try
-                        backupFile <- BackupRestore.Backup ()
+                        backupFile <- s.Database |> Manager.Backup
                         return! load s chains
                     with e -> 
                         logger.ErrorEx "Load failed" e
@@ -160,7 +159,7 @@ module Operations =
                     fails |> Array.iter (fun (ric, e, _) -> 
                         Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
-                    use db = new Additions.ChainRics ()
+                    use db = s.Database |> Manager.CreateChainRics
 
                     // saving rics and chains
                     ricsByChain |> Array.iter (fun (chain, rics, req) -> db.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode))
@@ -169,7 +168,7 @@ module Operations =
                     let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set
                     
                     // now determine which rics to reload and refresh
-                    let classified = ChainsLogic.Classify (s.TodayFix, chainRics |> Set.toArray)
+                    let classified = (s.TodayFix, chainRics |> Set.toArray, s.Database) |> Manager.Classify 
 
                     logger.InfoF "Will reload %d, kill %d and keep %d rics" 
                         (classified.[Mission.ToReload].Length) 
@@ -191,7 +190,7 @@ module Operations =
             logger.Trace "loadFailed ()"
             async {
                 try 
-                    BackupRestore.Restore backupFile
+                    (backupFile, s.Database) |> Manager.Restore 
                     logger.ErrorF "Failed to reload data, restored successfully: %A" (e.ToString())
                     return Ping.Failure (Problem "Failed to reload data, restored successfully")
                 with e ->

@@ -55,8 +55,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Access\AccessToDb.cs" />
     <Compile Include="Access\DbConn.cs" />
+    <Compile Include="Access\IDbConn.cs" />
     <Compile Include="Chain.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -129,6 +129,7 @@
     <Compile Include="LegType.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Manager.cs" />
     <Compile Include="OrdinaryBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -181,14 +182,14 @@
     <Compile Include="StoredProcedures\Enums\FieldGroups.cs" />
     <Compile Include="StoredProcedures\Enums\InstrumentTypes.cs" />
     <Compile Include="StoredProcedures\Enums\LegTypes.cs" />
-    <Compile Include="StoredProcedures\Eraser.cs" />
+    <Compile Include="StoredProcedures\Deletions\Eraser.cs" />
     <Compile Include="MainEntities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StoredProcedures\Additions\Bonds.cs" />
     <Compile Include="StoredProcedures\Additions\ChainRics.cs" />
     <Compile Include="StoredProcedures\BackupRestore.cs" />
     <Compile Include="StoredProcedures\ChainsLogic.cs" />
-    <Compile Include="StoredProcedures\Mission.cs" />
+    <Compile Include="Mission.cs" />
     <Compile Include="StoredProcedures\Refresh.cs" />
     <Compile Include="SubIndustry.cs">
       <DependentUpon>Database.tt</DependentUpon>

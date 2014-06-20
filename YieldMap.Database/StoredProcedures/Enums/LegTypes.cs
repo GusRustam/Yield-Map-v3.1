@@ -8,7 +8,7 @@ namespace YieldMap.Database.StoredProcedures.Enums {
         public static readonly LegType Both;
 
         static LegTypes() {
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = DbConn.Instance.CreateContext()) {
                 Paid = ctx.LegTypes.First(i => i.Name == "Paid").ToPocoSimple();
                 Received = ctx.LegTypes.First(i => i.Name == "Received").ToPocoSimple();
                 Both = ctx.LegTypes.First(i => i.Name == "Both").ToPocoSimple();

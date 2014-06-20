@@ -1,11 +1,10 @@
-﻿namespace YieldMap.Core.Application
+﻿namespace YieldMap.Core
 
 module Startup =
-    open YieldMap.Core.Application.Operations
-    open YieldMap.Core.Notifier
-    open YieldMap.Core.Portfolio
-    
-    open YieldMap.Database.StoredProcedures
+    open Operations
+    open Notifier
+
+    open YieldMap.Database
 
     open YieldMap.Loader
     open YieldMap.Loader.SdkFactory
@@ -141,10 +140,9 @@ module Startup =
             and doReload t force channel = 
                 async {
                     try
-                        let refresh = new Refresh()
-
                         let chainRequests = 
-                            refresh.ChainsInNeed c.Today
+                            (c.Today, q.Database)
+                            |> Manager.ChainsInNeed 
                             |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
                     
 

@@ -10,7 +10,7 @@ using YieldMap.Database.Access;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures {
-    public static class BackupRestore {
+    internal static class BackupRestore {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.BackupRestore");
 
         private class FieldDefition {
@@ -37,10 +37,10 @@ namespace YieldMap.Database.StoredProcedures {
             return res;
         }
 
-        public static string Backup(bool useUnion = false) {
+        public static string Backup(this IDbConn conn, bool useUnion = false) {
             Logger.Info("Backup()");
             var commands = new List<string>();
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = conn.CreateContext()) {
                 var dbConnection = ctx.Database.Connection;
                 dbConnection.Open();
                 var tables = ListTables(dbConnection);
@@ -80,7 +80,7 @@ namespace YieldMap.Database.StoredProcedures {
                                         : values + "(" + portion + ")" + internalDelimiter;
                                 }
                             }
-                            if (any)
+                            if (any) 
                                 commands.Add(RenderInsert(useUnion, values, internalDelimiter, currentTable, fieldNames));
                             else
                                 Logger.Debug(string.Format("Empty table {0}", currentTable));
@@ -158,9 +158,9 @@ namespace YieldMap.Database.StoredProcedures {
             return string.Format("'{0}'", res);
         }
 
-        public static void Cleanup() {
+        public static void Cleanup(this IDbConn conn) {
             Logger.Info("Cleanup()");
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = conn.CreateContext()) {
                 var dbConnection = ctx.Database.Connection;
                 try {
                     dbConnection.Open();
@@ -183,13 +183,13 @@ namespace YieldMap.Database.StoredProcedures {
             }
         }
 
-        public static void Restore(string fileName) {
+        public static void Restore(this IDbConn conn, string fileName) {
             Logger.Info(string.Format("Restore({0})", fileName));
             if (!File.Exists(fileName)) throw new Exception(string.Format("Backup file {0} not found", fileName));
             var commands = File.ReadAllLines(fileName);
-            Cleanup();
+            conn.Cleanup();
 
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = conn.CreateContext()) {
                 var dbConnection = ctx.Database.Connection;
                 try {
                     dbConnection.Open();

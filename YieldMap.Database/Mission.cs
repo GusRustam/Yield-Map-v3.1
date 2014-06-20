@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Database.StoredProcedures {
+﻿namespace YieldMap.Database {
     public enum Mission {
         Obsolete,
         ToReload,

@@ -10,7 +10,7 @@ namespace YieldMap.Database.StoredProcedures.Enums {
         public static readonly InstrumentType Cds;
 
         static InstrumentTypes() {
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = DbConn.Instance.CreateContext()) {
                 Bond = ctx.InstrumentTypes.First(i => i.Name == "Bond").ToPocoSimple();
                 Frn = ctx.InstrumentTypes.First(i => i.Name == "Frn").ToPocoSimple();
                 Swap = ctx.InstrumentTypes.First(i => i.Name == "Swap").ToPocoSimple();

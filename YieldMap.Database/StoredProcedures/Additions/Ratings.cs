@@ -8,12 +8,16 @@ using YieldMap.Tools.Logging;
 namespace YieldMap.Database.StoredProcedures.Additions {
     public class Ratings {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Ratings");
+        private readonly IDbConn _dbConn;
+        internal Ratings(IDbConn dbConn) {
+            _dbConn = dbConn;
+        }
 
         public void SaveRatings(IEnumerable<Transitive.Rating> ratings) {
             var rtis = new Dictionary<Tuple<long, long, DateTime>, RatingToInstrument>();
             var rtcs = new Dictionary<Tuple<long, long, DateTime>, RatingToLegalEntity>();
 
-            using (var context = DbConn.CreateContext()) {
+            using (var context = _dbConn.CreateContext()) {
                 var local = context;
                 var enumerable = ratings as Transitive.Rating[] ?? ratings.ToArray();
 

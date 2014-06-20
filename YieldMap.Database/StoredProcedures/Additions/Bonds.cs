@@ -14,7 +14,12 @@ using YieldMap.Transitive;
 namespace YieldMap.Database.StoredProcedures.Additions {
     public class Bonds : IDisposable {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Bonds");
+        private readonly IDbConn _dbConn;
 
+        internal Bonds(IDbConn dbConn) {
+            _dbConn = dbConn;
+        }
+        
         public Leg CreateLeg(MainEntities ctx, long descrId, InstrumentDescription description) {
             Leg leg = null;
             if (description is Bond) {
@@ -58,7 +63,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             bonds = bonds as IList<InstrumentDescription> ?? bonds.ToList();
 
             // Creating ISINs, and linking RICs to them
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = _dbConn.CreateContext()) {
                 try {
                     var isins = new Dictionary<string, Isin>();
                     foreach (var bond in bonds) {
@@ -86,7 +91,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             }
 
             // Descriptions
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = _dbConn.CreateContext()) {
                 var descriptions = new Dictionary<string, Description>();
                 foreach (var bond in bonds) {
                     if (bond.RateStructure.StartsWith("Unable"))
@@ -145,7 +150,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
             // Creating instruments
             var descrIds = new Dictionary<string, long>(); // ric -> id
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = _dbConn.CreateContext()) {
                 var instruments = new Dictionary<string, Instrument>();
                 foreach (var bond in bonds) {
                     if (bond.RateStructure.StartsWith("Unable"))
@@ -181,7 +186,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
 
             // Legs
-            using (var ctx = DbConn.CreateContext()) {
+            using (var ctx = _dbConn.CreateContext()) {
                 try {
                     ctx.Configuration.AutoDetectChangesEnabled = false;
                     var legs = new Dictionary<string, Leg>();
@@ -245,7 +250,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                 "INSERT INTO Description(" +
                 "id_Issuer, id_Borrower, id_Isin, id_Ric, id_Ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
                 "RateStructure, IssueSize, Series, Issue, Maturity, NextCoupon" +
-                ") VALUES",
+                ") SELECT ",
                 (current, i) => {
                     var issueSize = i.IssueSize.HasValue ? i.IssueSize.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
                     var series = i.Series.Replace("''", "\"").Replace("'", "\"");
@@ -263,11 +268,11 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     var idSeniority = i.Seniority != null ? i.Seniority.id.ToString(CultureInfo.InvariantCulture) : "NULL";
                     var idRic = i.Ric != null ? i.Ric.id.ToString(CultureInfo.InvariantCulture) : "NULL";
 
-                    return current + String.Format("({0}, {1}, {2}, {13}, {3}, {4}, {5}, {6}, '{7}', {8}, '{9}', {10}, {11}, {12}), ",
+                    return current + String.Format("{0}, {1}, {2}, {13}, {3}, {4}, {5}, {6}, '{7}', {8}, '{9}', {10}, {11}, {12} UNION SELECT ",
                                                   idIssuer, idBorrower, idIsin, idTicker, idSubIndustry, idSpecimen, idSeniority, 
                                                   i.RateStructure, issueSize, series, issue, maturity, nextCoupon, idRic);
                 });
-            return res.Substring(0, res.Length - 2);
+            return res.Substring(0, res.Length - "UNION SELECT ".Length);
         }
 
         private static Isin EnsureIsin(MainEntities ctx, Ric ric, string name) {

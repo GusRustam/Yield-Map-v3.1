@@ -1,6 +1,5 @@
-﻿namespace YieldMap.Core.Notifier
+﻿namespace YieldMap.Core
 
-[<AutoOpen; RequireQualifiedAccess>]
 module Notifier = 
     open YieldMap.Requests.Responses
     type Severity = Note | Warn | Evil
@@ -10,7 +9,6 @@ module Notifier =
     let notify (source, message, severity) = n.Trigger (source, message, severity)
     let notification = n.Publish
 
-[<RequireQualifiedAccess>]
 module Perquisition = 
     type Answer = Yes | No | Retry | Ok | Cancel
     type Kind = Inform | Confirm | Choose

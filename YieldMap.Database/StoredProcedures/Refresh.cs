@@ -3,7 +3,7 @@ using System.Linq;
 using YieldMap.Database.Access;
 
 namespace YieldMap.Database.StoredProcedures {
-    public class Refresh : AccessToDb {
+    internal static class Refresh {
         private static bool NeedsRefresh(Chain chain, DateTime today) {
             return chain.Expanded.HasValue && chain.Expanded.Value < today || !chain.Expanded.HasValue;
         }
@@ -15,8 +15,8 @@ namespace YieldMap.Database.StoredProcedures {
             return nextCoupon < today + TimeSpan.FromDays(7);
         }
 
-        public Chain[] ChainsInNeed(DateTime dt) {
-            return (from c in Context.Chains.ToList() 
+        public static Chain[] ChainsInNeed(this IDbConn dbConn, DateTime dt) {
+            return (from c in dbConn.CreateContext().Chains.ToList() 
                     where NeedsRefresh(c, dt)
                     select new Chain {
                         Name = c.Name, 
@@ -25,8 +25,8 @@ namespace YieldMap.Database.StoredProcedures {
                     }).ToArray();
         }
 
-        public bool NeedsReload(DateTime dt) {
-            return ChainsInNeed(dt).Any();
+        public static bool NeedsReload(this IDbConn dbConn, DateTime dt) {
+            return dbConn.ChainsInNeed(dt).Any();
         }
 
         /// <summary>
@@ -34,29 +34,34 @@ namespace YieldMap.Database.StoredProcedures {
         /// Condition for refresh is presense of embedded option which is due in +/- 7 days from today
         /// irrespective to if these rics come from chains or they are standalone
         /// </summary>
+        /// <param name="dbConn"></param>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        public Ric[] StaleBondRics(DateTime dt) {
-            return Context.OrdinaryBonds.ToList()
+        public static Ric[] StaleBondRics(this IDbConn dbConn, DateTime dt) {
+            var context = dbConn.CreateContext();
+            return context.OrdinaryBonds.ToList()
                 .Where(b => b.Ric != null && NeedsRefresh(b, dt))
-                .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
+                .Select(b => context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
                 .ToArray();
         }
 
-        public Ric[] AllBondRics() {
-            return Context.OrdinaryBonds.ToList()
+        public static Ric[] AllBondRics(this IDbConn dbConn) {
+            var context = dbConn.CreateContext();
+            return context.OrdinaryBonds.ToList()
                     .Where(b => b.Ric != null)
-                    .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
+                    .Select(b => context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
                     .ToArray();
         }
 
         /// <summary> Enumerates rics which belong to matured bonds </summary>
+        /// <param name="dbConn"></param>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        public Ric[] ObsoleteBondRics(DateTime dt) {
-            return Context.OrdinaryBonds.ToList()
+        public static Ric[] ObsoleteBondRics(this IDbConn dbConn, DateTime dt) {
+            var context = dbConn.CreateContext();
+            return context.OrdinaryBonds.ToList()
                     .Where(b => b.Ric != null && b.Maturity.HasValue && b.Maturity.Value < dt)
-                    .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
+                    .Select(b => context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple())
                     .ToArray();
         }
     }

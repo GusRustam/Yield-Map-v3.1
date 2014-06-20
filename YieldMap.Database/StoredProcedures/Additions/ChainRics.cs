@@ -9,8 +9,13 @@ using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public class ChainRics : AccessToDb, IDisposable {
+    public class ChainRics : IDisposable {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.ChainRics");
+        private readonly MainEntities _context;
+
+        internal ChainRics(IDbConn dbConn) {
+            _context = dbConn.CreateContext();
+        }
 
         private readonly Dictionary<string, Ric> _rics = new Dictionary<string, Ric>();
         private readonly Dictionary<string, Feed> _feeds = new Dictionary<string, Feed>();
@@ -26,15 +31,15 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             if (prms == null) prms = string.Empty;
 
             try {
-                var feed = EnsureFeed(Context, feedName);
-                var chain = EnsureChain(Context, chainRic, feed, expanded, prms);
+                var feed = EnsureFeed(_context, feedName);
+                var chain = EnsureChain(_context, chainRic, feed, expanded, prms);
 
-                var existingRics = Context.RicToChains.Where(rtc => rtc.Chain_id == chain.id).Select(rtc => rtc.Ric.Name).ToArray();
+                var existingRics = _context.RicToChains.Where(rtc => rtc.Chain_id == chain.id).Select(rtc => rtc.Ric.Name).ToArray();
                 var newRics = new HashSet<string>(rics);
                 newRics.RemoveWhere(existingRics.Contains);
 
-                AddRics(Context, chain, feed, newRics);
-                Context.SaveChanges();
+                AddRics(_context, chain, feed, newRics);
+                _context.SaveChanges();
             } catch (DbEntityValidationException e) {
                 Logger.Report("Failed to save", e);
                 throw;

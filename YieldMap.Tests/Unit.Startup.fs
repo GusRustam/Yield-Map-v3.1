@@ -8,10 +8,8 @@ open FsUnit
 
 module Ops = 
     open System.Data.Entity
+    open YieldMap.Core
     open YieldMap.Database
-    open YieldMap.Database.StoredProcedures
-    open YieldMap.Database.Access
-    open YieldMap.Core.Application.Startup
     open YieldMap.Loader.Calendar
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
@@ -24,7 +22,7 @@ module Ops =
                 count }
 
     let checkData numChains dt =
-        use ctx = Access.DbConn.CreateContext()
+        use ctx = Manager.CreateDbConn().CreateContext()
         cnt ctx.Feeds |> should be (equal 1)
         cnt ctx.Chains |> should be (equal numChains)
 
@@ -43,7 +41,7 @@ module Ops =
 
 
     let init chains dt =
-        use ctx = DbConn.CreateContext ()
+        use ctx = Manager.CreateDbConn().CreateContext ()
 
         chains |> Array.iter (fun name -> 
             if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then

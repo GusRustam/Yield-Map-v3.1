@@ -1,18 +1,31 @@
-﻿using YieldMap.Tools.Location;
+﻿using YieldMap.Database.StoredProcedures.Additions;
+using YieldMap.Tools.Location;
 
 namespace YieldMap.Database.Access {
-    public static class DbConn {
-        private static readonly string ConnectionString;
+    public class DbConn : IDbConn {
+        private readonly string _connectionString;
 
-        static DbConn () {
+        internal static readonly DbConn Instance = new DbConn();
+
+        private DbConn () {
             MainEntities.SetVariable("PathToTheDatabase", Location.path);
-            ConnectionString = MainEntities.GetConnectionString("TheMainEntities");
+            _connectionString = MainEntities.GetConnectionString("TheMainEntities");
         }
 
-        public static MainEntities CreateContext() {
-            return new MainEntities(ConnectionString);
+        public MainEntities CreateContext() {
+            return new MainEntities(_connectionString);
         }
 
-        
+        public Bonds CreateBonds() {
+            return new Bonds(this);
+        }
+
+        public ChainRics CreateRics() {
+            return new ChainRics(this);
+        }
+
+        public Ratings CreateRatings() {
+            return new Ratings(this);
+        }
     }
 }
