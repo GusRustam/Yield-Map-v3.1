@@ -1,5 +1,6 @@
 ﻿namespace YieldMap.Core
 
+
 module Startup =
     open Operations
     open Notifier
@@ -140,11 +141,9 @@ module Startup =
             and doReload t force channel = 
                 async {
                     try
-                        let chainRequests = 
-                            (c.Today, q.Database)
-                            |> Manager.ChainsInNeed 
-                            |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
-                    
+                        let chainRequests = c.Today
+                                            |> Manager.chainsInNeed 
+                                            |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
 
                         let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
                         match res with

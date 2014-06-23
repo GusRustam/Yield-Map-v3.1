@@ -8,8 +8,9 @@ open FsUnit
 
 module Ops = 
     open System.Data.Entity
-    open YieldMap.Core
+    open YieldMap.Core.Startup
     open YieldMap.Database
+    open YieldMap.Database.Access
     open YieldMap.Loader.Calendar
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
@@ -40,25 +41,15 @@ module Ops =
         else "N/A"
 
 
-    let init chains dt =
-        use ctx = Manager.CreateDbConn().CreateContext ()
-
-        chains |> Array.iter (fun name -> 
-            if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
-                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
-                ctx.SaveChanges () |> ignore
-        )
-        ctx.SaveChanges () |> ignore
-
-        let c  = MockCalendar dt
-
-        // Preparing
-        Startup {
-            Factory = MockFactory()
-            TodayFix = dt
-            Loader = MockChainMeta c
-            Calendar = c
-        }
+//    let init chains dt =
+//        use ctx = Manager.CreateDbConn().CreateContext ()
+//
+//        chains |> Array.iter (fun name -> 
+//            if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
+//                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
+//                ctx.SaveChanges () |> ignore
+//        )
+//        ctx.SaveChanges () |> ignore
 
     let command cmd func state = 
         logger.InfoF "===> %s " cmd
@@ -74,9 +65,7 @@ module StartupTest =
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
 
-    open YieldMap.Core.Application
-    open YieldMap.Core.Application.Operations
-    open YieldMap.Core.Application.Startup
+    open YieldMap.Core.Startup
     open YieldMap.Core.Notifier
 
     open YieldMap.Database
@@ -150,17 +139,32 @@ module StartupTest =
         { chains = [|   "0#RUTSY=MM";"0#RUMOSB=MM";"0#RUSOVB=MM";"0#RFGOVBONDS=";"QDSDADS" |]; date = DateTime(2014,5,14) }
     ]
 
-    let mutable backupFile = ""
+
+    let mutable (db : IDbConn) = Unchecked.defaultof<IDbConn>
+    let mutable (c : Calendar) = Unchecked.defaultof<Calendar>
+    let mutable (s : Startup) = Unchecked.defaultof<Startup>
+
+    let init dt db = 
+        c <- MockCalendar dt
+
+        s <- Startup {
+            Factory = MockFactory ()
+            TodayFix = dt
+            Loader = MockChainMeta c
+            Calendar = c
+            Database = db
+        }
 
     [<SetUp>]
     let setup () = 
+        db <- Manager.CreateDbConn ()
         globalThreshold := LoggingLevel.Debug
 
     [<TearDown>]
     let teardown () = 
         globalThreshold := LoggingLevel.Warn
         logger.Info "teardown"
-        BackupRestore.Restore "EMPTY.sql"
+        Manager.Restore ("EMPTY.sql", db)
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]

@@ -46,6 +46,7 @@
     <Compile Include="Visual.fs" />
     <Compile Include="Axis.fs" />
     <Compile Include="Program.fs" />
+    <Compile Include="Manager.fs" />
     <Compile Include="Startup.Operations.fs" />
     <Compile Include="Startup.fs" />
     <None Include="App.config" />
@@ -53,6 +54,10 @@
     <None Include="tdd.fsx" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Autofac">
+      <HintPath>..\packages\Autofac.3.5.0\lib\net40\Autofac.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="EntityFramework">
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
       <Private>True</Private>

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using YieldMap.Database.Access;
 using YieldMap.Database.Tools;
 
 namespace YieldMap.Database.StoredProcedures {
+    public interface IChainsLogic {
+        Dictionary<Mission, string[]> Classify( DateTime dt, string[] chainRics);
+    }
+
     /// Some considerations:
     /// 
     /// BondRics = All rics from Table InstrumentBond
@@ -20,13 +23,19 @@ namespace YieldMap.Database.StoredProcedures {
     ///                |--> Keep
     /// 
     /// 
-    internal static class ChainsLogic {
-        public static Dictionary<Mission, string[]> Classify(this IDbConn conn, DateTime dt, string[] chainRics) {
+    internal class ChainsLogic : IChainsLogic {
+        private readonly IRefresh _refresh;
+
+        public ChainsLogic(IRefresh refresh) {
+            _refresh = refresh;
+        }
+
+        public Dictionary<Mission, string[]> Classify( DateTime dt, string[] chainRics) {
             var res = new Dictionary<Mission, string[]>();
 
-            var existing = new Set<String>(conn.AllBondRics().Select(x => x.Name));
-            var obsolete = new Set<String>(conn.ObsoleteBondRics(dt).Select(x => x.Name));
-            var toReload = new Set<String>(conn.StaleBondRics(dt).Select(x => x.Name));
+            var existing = new Set<String>(_refresh.AllBondRics().Select(x => x.Name));
+            var obsolete = new Set<String>(_refresh.ObsoleteBondRics(dt).Select(x => x.Name));
+            var toReload = new Set<String>(_refresh.StaleBondRics(dt).Select(x => x.Name));
             var incoming = new Set<String>(chainRics);
 
             res[Mission.ToReload] = (incoming - existing + toReload).ToArray();

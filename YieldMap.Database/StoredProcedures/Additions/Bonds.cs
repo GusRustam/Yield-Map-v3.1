@@ -12,15 +12,23 @@ using YieldMap.Tools.Logging;
 using YieldMap.Transitive;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public class Bonds : IDisposable {
+    public interface IBonds {
+        void Save(IEnumerable<InstrumentDescription> bonds);
+    }
+
+    internal class Bonds : IDisposable, IBonds {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Bonds");
         private readonly IDbConn _dbConn;
+        private readonly ILegTypes _legTypes;
+        private readonly IInstrumentTypes _instrumentTypes;
 
-        internal Bonds(IDbConn dbConn) {
+        internal Bonds(IDbConn dbConn, ILegTypes legTypes, IInstrumentTypes instrumentTypes) {
             _dbConn = dbConn;
+            _legTypes = legTypes;
+            _instrumentTypes = instrumentTypes;
         }
-        
-        public Leg CreateLeg(MainEntities ctx, long descrId, InstrumentDescription description) {
+
+        private Leg CreateLeg(MainEntities ctx, long descrId, InstrumentDescription description) {
             Leg leg = null;
             if (description is Bond) {
                 var bond = description as Bond;
@@ -28,7 +36,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     Structure = bond.BondStructure,
                     FixedRate = bond.Coupon,
                     Currency = EnsureCurrency(ctx, bond.Currency),
-                    id_LegType = LegTypes.Received.id,
+                    id_LegType = _legTypes.Received.id,
                     id_Instrument = ctx.Instruments.First(i => i.id_Description == descrId).id
                 };
             } else if (description is Frn) {
@@ -40,7 +48,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
                     Floor = note.Floor,
                     Margin = note.Margin,
                     Currency = EnsureCurrency(ctx, note.Currency),
-                    id_LegType = LegTypes.Received.id,
+                    id_LegType = _legTypes.Received.id,
                     id_Instrument = ctx.Instruments.First(i => i.id_Description == descrId).id
                 };
             }
@@ -163,7 +171,7 @@ namespace YieldMap.Database.StoredProcedures.Additions {
 
                         instrument = new Instrument {
                             Name = bond.ShortName,
-                            id_InstrumentType = InstrumentTypes.Bond.id,
+                            id_InstrumentType = _instrumentTypes.Bond.id,
                             id_Description = descrIds[bond.Ric]  
                         };
                     } catch (Exception e) {

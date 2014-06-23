@@ -42,8 +42,10 @@ module Operations =
     let private logger = LogFactory.create "Operations"
 
     module Load = 
-        open YieldMap.Core.Notifier
         open YieldMap.Database
+
+        open YieldMap.Core
+        open YieldMap.Core.Notifier
 
         open YieldMap.Loader.MetaChains
         
@@ -95,7 +97,8 @@ module Operations =
         let loadAndSaveMetadata (s:Drivers) rics =
             tweet {
                 let loader = s.Loader
-                use iBonds = s.Database |> Manager.CreateBonds
+                let iBonds = Manager.bonds
+                use theBonds = iBonds :?> IDisposable
             
                 let! bonds = loader.LoadMetadata<BondDescr> rics
                 let! frns = loader.LoadMetadata<FrnData> rics
@@ -123,7 +126,7 @@ module Operations =
 
                 iBonds.Save toSave
 
-                let iRatings = s.Database |> Manager.CreateRatings
+                let iRatings = Manager.ratings
                 let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
                 let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
 
@@ -135,12 +138,12 @@ module Operations =
         let rec reload (s:Drivers) chains force  = 
             let loader, dt = s.Loader, s.TodayFix
 
-            let needsReload = (s.TodayFix, s.Database) |> Manager.NeedsRefresh 
+            let needsReload = s.TodayFix |> Manager.needsRefresh 
 
             async {
                 if force || force && needsReload then
                     try
-                        backupFile <- s.Database |> Manager.Backup
+                        backupFile <- Manager.backup ()
                         return! load s chains
                     with e -> 
                         logger.ErrorEx "Load failed" e
@@ -159,7 +162,8 @@ module Operations =
                     fails |> Array.iter (fun (ric, e, _) -> 
                         Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
-                    use db = s.Database |> Manager.CreateChainRics
+                    let db = Manager.chainRics
+                    use ddb = db :?> IDisposable
 
                     // saving rics and chains
                     ricsByChain |> Array.iter (fun (chain, rics, req) -> db.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode))
@@ -168,7 +172,7 @@ module Operations =
                     let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set
                     
                     // now determine which rics to reload and refresh
-                    let classified = (s.TodayFix, chainRics |> Set.toArray, s.Database) |> Manager.Classify 
+                    let classified = (s.TodayFix, chainRics |> Set.toArray) ||> Manager.classify 
 
                     logger.InfoF "Will reload %d, kill %d and keep %d rics" 
                         (classified.[Mission.ToReload].Length) 
@@ -190,7 +194,7 @@ module Operations =
             logger.Trace "loadFailed ()"
             async {
                 try 
-                    (backupFile, s.Database) |> Manager.Restore 
+                    backupFile |> Manager.restore 
                     logger.ErrorF "Failed to reload data, restored successfully: %A" (e.ToString())
                     return Ping.Failure (Problem "Failed to reload data, restored successfully")
                 with e ->

@@ -9,11 +9,18 @@ using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public class ChainRics : IDisposable {
+    public interface IChainRics {
+        void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms);
+        void DeleteRics(HashSet<string> rics);
+    }
+
+    internal class ChainRics : IDisposable, IChainRics {
+        private readonly IFieldGroups _fieldGroups;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.ChainRics");
         private readonly MainEntities _context;
 
-        internal ChainRics(IDbConn dbConn) {
+        internal ChainRics(IDbConn dbConn, IFieldGroups fieldGroups) {
+            _fieldGroups = fieldGroups;
             _context = dbConn.CreateContext();
         }
 
@@ -101,11 +108,11 @@ namespace YieldMap.Database.StoredProcedures.Additions {
             }
         }
 
-        private static FieldGroup ResolveFieldGroup(string ric) {
+        private FieldGroup ResolveFieldGroup(string ric) {
             if (ric.Contains("=MM")) 
-                return FieldGroups.Micex;
-            
-            return FieldGroups.Default;
+                return _fieldGroups.Micex;
+
+            return _fieldGroups.Default;
         }
     }
 }

@@ -10,8 +10,20 @@ using YieldMap.Database.Access;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures {
-    internal static class BackupRestore {
+    public interface IBackupRestore {
+        string Backup(bool useUnion = false);
+        void Cleanup();
+        void Restore(string fileName);
+    }
+
+    internal class BackupRestore : IBackupRestore {
+
+        private readonly IDbConn _conn;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.BackupRestore");
+
+        public BackupRestore(IDbConn conn) {
+            _conn = conn;
+        }
 
         private class FieldDefition {
             public int Index { get; set; }
@@ -26,7 +38,7 @@ namespace YieldMap.Database.StoredProcedures {
             }
         }
 
-        public static IEnumerable<string> ListTables(DbConnection dbConnection) {
+        private static IEnumerable<string> ListTables(DbConnection dbConnection) {
             var res = new List<string>();
             var query = dbConnection.CreateCommand();
             query.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND NOT INSTR(name, 'sqlite')";
@@ -37,10 +49,10 @@ namespace YieldMap.Database.StoredProcedures {
             return res;
         }
 
-        public static string Backup(this IDbConn conn, bool useUnion = false) {
+        public string Backup(bool useUnion = false) {
             Logger.Info("Backup()");
             var commands = new List<string>();
-            using (var ctx = conn.CreateContext()) {
+            using (var ctx = _conn.CreateContext()) {
                 var dbConnection = ctx.Database.Connection;
                 dbConnection.Open();
                 var tables = ListTables(dbConnection);
@@ -102,14 +114,14 @@ namespace YieldMap.Database.StoredProcedures {
             return tempFile;
         }
 
-        private static string RenderInsert(bool useUnion, string values, string delimiter, string currentTable, string fieldNames) {
+        private string RenderInsert(bool useUnion, string values, string delimiter, string currentTable, string fieldNames) {
             values = values.Substring(0, values.Length - delimiter.Length);
             var sql = string.Format("INSERT INTO \"{0}\"({1}) {2} {3}", currentTable, fieldNames, useUnion ? "" : "VALUES", values);
             Logger.Trace(sql);
             return sql;
         }
 
-        private static List<FieldDefition> GetFieldDefitions(DbConnection dbConnection, string tableName) {
+        private List<FieldDefition> GetFieldDefitions(DbConnection dbConnection, string tableName) {
             var table = new List<FieldDefition>();
             var query = dbConnection.CreateCommand();
             query.CommandText = "PRAGMA table_info(\"" + tableName + "\")";
@@ -132,7 +144,7 @@ namespace YieldMap.Database.StoredProcedures {
             return table;
         }
 
-        private static string GetAsString(IDataRecord reader, FieldDefition def ) {
+        private  string GetAsString(IDataRecord reader, FieldDefition def ) {
             var type = def.Type.ToUpper();
             var index = def.Index;
 
@@ -158,9 +170,9 @@ namespace YieldMap.Database.StoredProcedures {
             return string.Format("'{0}'", res);
         }
 
-        public static void Cleanup(this IDbConn conn) {
+        public void Cleanup() {
             Logger.Info("Cleanup()");
-            using (var ctx = conn.CreateContext()) {
+            using (var ctx = _conn.CreateContext()) {
                 var dbConnection = ctx.Database.Connection;
                 try {
                     dbConnection.Open();
@@ -183,13 +195,13 @@ namespace YieldMap.Database.StoredProcedures {
             }
         }
 
-        public static void Restore(this IDbConn conn, string fileName) {
+        public void Restore(string fileName) {
             Logger.Info(string.Format("Restore({0})", fileName));
             if (!File.Exists(fileName)) throw new Exception(string.Format("Backup file {0} not found", fileName));
             var commands = File.ReadAllLines(fileName);
-            conn.Cleanup();
+            Cleanup();
 
-            using (var ctx = conn.CreateContext()) {
+            using (var ctx = _conn.CreateContext()) {
                 var dbConnection = ctx.Database.Connection;
                 try {
                     dbConnection.Open();
