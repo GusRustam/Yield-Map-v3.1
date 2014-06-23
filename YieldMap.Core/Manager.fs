@@ -8,20 +8,40 @@ module Manager =
     open YieldMap.Database.StoredProcedures.Deletions
     open YieldMap.Database.StoredProcedures.Additions
 
-    let private container = Manager.Container
+    open YieldMap.Loader.SdkFactory
+    open YieldMap.Loader.LiveQuotes
+    open YieldMap.Loader.Calendar
+    open YieldMap.Loader.MetaChains
 
-    let db = container.Resolve<IDbConn> ()
-    let bonds = container.Resolve<IBonds> ()
-    let chainRics = container.Resolve<IChainRics> ()
-    let ratings = container.Resolve<IRatings> ()
-    let eraser = container.Resolve<IEraser> ()
-    let chainLogic = container.Resolve<IChainsLogic> ()
-    let refresh = container.Resolve<IRefresh> ()
-    let backupRestore = container.Resolve<IBackupRestore> ()
+    open System
 
-    let chainsInNeed = refresh.ChainsInNeed
-    let needsRefresh = refresh.NeedsReload 
-    let backup = backupRestore.Backup
-    let restore = backupRestore.Restore
+    type Manager (?_container : IContainer) = 
+        let container = 
+            match _container with
+            | Some cont -> cont
+            | None -> Manager.Container 
 
-    let classify a b = chainLogic.Classify (a, b)
+        member x.db = container.Resolve<IDbConn> ()
+        member x.bonds = container.Resolve<IBonds> ()
+        member x.chainRics = container.Resolve<IChainRics> ()
+        member x.ratings = container.Resolve<IRatings> ()
+        member x.eraser = container.Resolve<IEraser> ()
+        member x.chainLogic = container.Resolve<IChainsLogic> ()
+        member x.refresh = container.Resolve<IRefresh> ()
+        member x.backupRestore = container.Resolve<IBackupRestore> ()
+
+        member x.chainsInNeed = x.refresh.ChainsInNeed
+        member x.needsRefresh = x.refresh.NeedsReload 
+        member x.backup = x.backupRestore.Backup
+        member x.restore = x.backupRestore.Restore
+
+        member x.classify a b = x.chainLogic.Classify (a, b)
+
+
+    type Drivers = {
+        TodayFix : DateTime
+        Loader : ChainMetaLoader
+        Factory : EikonFactory
+        Calendar : Calendar
+        Database : Manager
+    }

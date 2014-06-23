@@ -22,8 +22,7 @@ module Ops =
                 select x
                 count }
 
-    let checkData numChains dt =
-        use ctx = Manager.CreateDbConn().CreateContext()
+    let checkData numChains dt (ctx : MainEntities) =
         cnt ctx.Feeds |> should be (equal 1)
         cnt ctx.Chains |> should be (equal numChains)
 
@@ -65,7 +64,10 @@ module StartupTest =
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
 
+    open YieldMap.Core
+    open YieldMap.Core.Loader
     open YieldMap.Core.Startup
+    open YieldMap.Core.Manager
     open YieldMap.Core.Notifier
 
     open YieldMap.Database
@@ -140,31 +142,43 @@ module StartupTest =
     ]
 
 
-    let mutable (db : IDbConn) = Unchecked.defaultof<IDbConn>
     let mutable (c : Calendar) = Unchecked.defaultof<Calendar>
-    let mutable (s : Startup) = Unchecked.defaultof<Startup>
+    let mutable (s : Drivers) = Unchecked.defaultof<Drivers>
+    let m = new YieldMap.Core.Manager.Manager ()
 
-    let init dt db = 
+    let init chains dt = 
         c <- MockCalendar dt
 
-        s <- Startup {
+        
+        use ctx = m.db.CreateContext ()
+
+        chains |> Array.iter (fun name -> 
+            if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
+                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
+                ctx.SaveChanges () |> ignore
+        )
+        ctx.SaveChanges () |> ignore
+
+        s <- {
             Factory = MockFactory ()
             TodayFix = dt
             Loader = MockChainMeta c
             Calendar = c
-            Database = db
+            Database = m
         }
+
+        Startup s
+
 
     [<SetUp>]
     let setup () = 
-        db <- Manager.CreateDbConn ()
         globalThreshold := LoggingLevel.Debug
 
     [<TearDown>]
     let teardown () = 
         globalThreshold := LoggingLevel.Warn
         logger.Info "teardown"
-        Manager.Restore ("EMPTY.sql", db)
+        m.restore "EMPTY.sql"
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
@@ -226,7 +240,7 @@ module StartupTest =
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        use ctx = DbConn.CreateContext()
+        use ctx = s.Database.db.CreateContext()
         cnt ctx.Feeds |> should be (equal 1)
         cnt ctx.Chains |> should be (equal 1)
 
@@ -237,7 +251,7 @@ module StartupTest =
     [<Test>]
     let ``Duplicate Isin leave no RIC unlinked`` () =
         
-        use ctx = DbConn.CreateContext ()
+        use ctx = s.Database.db.CreateContext ()
         let initialUnattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
@@ -250,7 +264,7 @@ module StartupTest =
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload true) (State Initialized)
 
-        use ctx = DbConn.CreateContext()
+        use ctx = s.Database.db.CreateContext()
 
         let unattachedRics = query {
             for n in ctx.Rics do
@@ -266,7 +280,7 @@ module StartupTest =
     let ``Strange US30`` () =
         let dt = DateTime(2014,5,14) 
         
-        use ctx = DbConn.CreateContext ()
+        use ctx = s.Database.db.CreateContext ()
 
         let initialUnattachedRics = query {
             for n in ctx.Rics do
@@ -280,7 +294,7 @@ module StartupTest =
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         command "Connect" x.Connect (State Initialized)
 
-        use ctx = DbConn.CreateContext()
+        use ctx = s.Database.db.CreateContext()
 
         let unattachedRics = query {
             for n in ctx.Rics do
@@ -305,7 +319,7 @@ module StartupTest =
     [<Test>]
     let ``RUCORP overnight`` () =
         // Checking cleanup
-        use ctx = DbConn.CreateContext()
+        use ctx = s.Database.db.CreateContext()
         ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
@@ -320,6 +334,7 @@ module StartupTest =
             TodayFix = dt
             Loader = MockChainMeta c
             Calendar = c
+            Database = m
         }
 
         command "Connect" x.Connect (State Connected)
@@ -330,7 +345,7 @@ module StartupTest =
         let assertAmounts dt t o r k =
             // todo secure proprtions
             let proportions = 
-                ChainsLogic.Classify(dt, [||]) 
+                m.chainLogic.Classify(dt, [||]) 
                 |> Map.fromDict
                 |> Map.map (fun _ -> Array.length)
 
@@ -400,7 +415,7 @@ module StartupTest =
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
 
-        use ctx = DbConn.CreateContext ()
+        use ctx = s.Database.db.CreateContext ()
         let n = query { for x in ctx.OrdinaryFrns do
                         select x
                         count }
@@ -416,4 +431,4 @@ module StartupTest =
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         
-        logger.Info <| BackupRestore.Backup()
+        logger.Info <| s.Database.backup()

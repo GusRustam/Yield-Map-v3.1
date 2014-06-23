@@ -4,6 +4,7 @@
 module Startup =
     open Operations
     open Notifier
+    open Manager
 
     open YieldMap.Database
 
@@ -51,6 +52,7 @@ module Startup =
         let c = q.Calendar
         let m = q.Loader
         let dt = c.Today
+        let g = q.Database
 
         let reload = LoadAndSave q :> Operation<_,_>
         let connect = EstablishConnection f :> Operation<_,_>
@@ -142,7 +144,7 @@ module Startup =
                 async {
                     try
                         let chainRequests = c.Today
-                                            |> Manager.chainsInNeed 
+                                            |> g.chainsInNeed 
                                             |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
 
                         let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)

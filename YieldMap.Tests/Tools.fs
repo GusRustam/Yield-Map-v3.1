@@ -6,9 +6,10 @@ open System.IO
 open NUnit.Framework
 open FsUnit
 
-open YieldMap.Database
 open YieldMap.Tools.Location
 open YieldMap.Tools.Logging
+
+open YieldMap.Core.Manager
 
 
 module Tools =
@@ -16,4 +17,4 @@ module Tools =
 
     [<Test>]
     let ``Restore DB to defaults`` () =
-        StoredProcedures.BackupRestore.Restore <| Path.Combine(Location.path, "../../EMPTY.sql")
+        Manager().restore <| Path.Combine(Location.path, "../../EMPTY.sql")
