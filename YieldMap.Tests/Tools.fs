@@ -17,4 +17,5 @@ module Tools =
 
     [<Test>]
     let ``Restore DB to defaults`` () =
-        Manager().restore <| Path.Combine(Location.path, "../../EMPTY.sql")
+        Manager () 
+        |> Manager.restore (Path.Combine(Location.path, "../../EMPTY.sql"))

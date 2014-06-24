@@ -6,10 +6,10 @@ using YieldMap.Database.StoredProcedures.Deletions;
 using YieldMap.Database.StoredProcedures.Enums;
 
 namespace YieldMap.Database {
-    public static class Manager {
+    public static class Initializer {
         public static readonly IContainer Container;
 
-        static Manager() {
+        static Initializer() {
             var builder = new ContainerBuilder();
             builder.RegisterType<DbConn>().As<IDbConn>().SingleInstance();
             builder.RegisterType<Bonds>().As<IBonds>().SingleInstance();

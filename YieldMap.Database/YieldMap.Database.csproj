@@ -132,7 +132,7 @@
     <Compile Include="LegType.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="Manager.cs" />
+    <Compile Include="Initializer.cs" />
     <Compile Include="OrdinaryBond.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -181,8 +181,15 @@
     <Compile Include="Specimen.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="StoredProcedures\Additions\IBonds.cs" />
+    <Compile Include="StoredProcedures\Additions\IChainRics.cs" />
+    <Compile Include="StoredProcedures\Additions\IRatings.cs" />
     <Compile Include="StoredProcedures\Additions\Ratings.cs" />
+    <Compile Include="StoredProcedures\Deletions\IEraser.cs" />
     <Compile Include="StoredProcedures\Enums\FieldGroups.cs" />
+    <Compile Include="StoredProcedures\Enums\IFieldGroups.cs" />
+    <Compile Include="StoredProcedures\Enums\IInstrumentTypes.cs" />
+    <Compile Include="StoredProcedures\Enums\ILegTypes.cs" />
     <Compile Include="StoredProcedures\Enums\InstrumentTypes.cs" />
     <Compile Include="StoredProcedures\Enums\LegTypes.cs" />
     <Compile Include="StoredProcedures\Deletions\Eraser.cs" />
@@ -193,6 +200,9 @@
     <Compile Include="StoredProcedures\BackupRestore.cs" />
     <Compile Include="StoredProcedures\ChainsLogic.cs" />
     <Compile Include="Mission.cs" />
+    <Compile Include="StoredProcedures\IBackupRestore.cs" />
+    <Compile Include="StoredProcedures\IChainsLogic.cs" />
+    <Compile Include="StoredProcedures\IRefresh.cs" />
     <Compile Include="StoredProcedures\Refresh.cs" />
     <Compile Include="SubIndustry.cs">
       <DependentUpon>Database.tt</DependentUpon>

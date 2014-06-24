@@ -61,8 +61,7 @@ module Loader =
     let loadAndSaveMetadata (s:Drivers) rics =
         tweet {
             let loader = s.Loader
-            let iBonds = s.Database.bonds
-            use theBonds = iBonds :?> IDisposable
+            let db = s.Database
             
             let! bonds = loader.LoadMetadata<BondDescr> rics
             let! frns = loader.LoadMetadata<FrnData> rics
@@ -88,26 +87,25 @@ module Loader =
                     logger.WarnF "Convertibles not supported yet %s" conv.Ric 
                     None)
 
-            iBonds.Save toSave
+            db |> Manager.saveBonds (seq toSave)
 
-            let iRatings = s.Database.ratings
             let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
             let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
 
             let iR = (issueRatings |> List.map Rating.Create) @ (issuerRatings |> List.map Rating.Create)
-            iRatings.SaveRatings iR
+            db |> Manager.saveRatings iR
                             
         }
 
     let rec reload (s:Drivers) chains force  = 
-        let loader, dt = s.Loader, s.TodayFix
+        let loader, dt, db = s.Loader, s.TodayFix, s.Database
 
-        let needsReload = s.TodayFix |> s.Database.needsRefresh 
+        let needsReload = db |> Manager.needsRefresh s.TodayFix
 
         async {
             if force || force && needsReload then
                 try
-                    backupFile <- s.Database.backup ()
+                    backupFile <- Manager.backup db
                     return! load s chains
                 with e -> 
                     logger.ErrorEx "Load failed" e
@@ -126,24 +124,25 @@ module Loader =
                 fails |> Array.iter (fun (ric, e, _) -> 
                     Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
-                let db = s.Database.chainRics
-                use ddb = db :?> IDisposable
 
                 // saving rics and chains
-                ricsByChain |> Array.iter (fun (chain, rics, req) -> db.SaveChainRics(chain, rics, req.Feed, s.TodayFix, req.Mode))
+                ricsByChain |> Array.iter (fun (chain, rics, req) -> Manager.saveChainRics s.Database chain rics req.Feed s.TodayFix req.Mode)
 
                 // extracting rics
                 let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set
                     
                 // now determine which rics to reload and refresh
-                let classified = (s.TodayFix, chainRics |> Set.toArray) ||> s.Database.classify 
+                let classified = Manager.classify s.Database s.TodayFix (chainRics |> Set.toArray) 
 
                 logger.InfoF "Will reload %d, kill %d and keep %d rics" 
                     (classified.[Mission.ToReload].Length) 
                     (classified.[Mission.Obsolete].Length) 
                     (classified.[Mission.Keep].Length)
 
-                db.DeleteRics <| HashSet<_>(classified.[Mission.Keep])                    
+// TODO PROPER DELETION USING PROPER RIC COMPARISON
+//                let o = classified.[Mission.Obsolete]
+//                let f = fun (r:Ric) -> Array.exists ((=) r.Name) o
+//                s.Database |> Manager.deleteRics (Func<Ric, bool>(f))
                     
                 let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                 match res with 
@@ -158,7 +157,7 @@ module Loader =
         logger.Trace "loadFailed ()"
         async {
             try 
-                backupFile |> s.Database.restore 
+                s.Database |> Manager.restore backupFile
                 logger.ErrorF "Failed to reload data, restored successfully: %A" (e.ToString())
                 return Ping.Failure (Problem "Failed to reload data, restored successfully")
             with e ->

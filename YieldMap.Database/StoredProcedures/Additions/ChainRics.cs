@@ -9,17 +9,12 @@ using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public interface IChainRics {
-        void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms);
-        void DeleteRics(HashSet<string> rics);
-    }
-
-    internal class ChainRics : IDisposable, IChainRics {
+    internal class ChainRics : IChainRics {
         private readonly IFieldGroups _fieldGroups;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.ChainRics");
         private readonly MainEntities _context;
 
-        internal ChainRics(IDbConn dbConn, IFieldGroups fieldGroups) {
+        public ChainRics(IDbConn dbConn, IFieldGroups fieldGroups) {
             _fieldGroups = fieldGroups;
             _context = dbConn.CreateContext();
         }
@@ -27,12 +22,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private readonly Dictionary<string, Ric> _rics = new Dictionary<string, Ric>();
         private readonly Dictionary<string, Feed> _feeds = new Dictionary<string, Feed>();
         private readonly Dictionary<string, Chain> _chains = new Dictionary<string, Chain>();
-
-        void IDisposable.Dispose() {
-            Logger.Info("ChainRics.Dispose()");
-            _feeds.Clear();
-            _chains.Clear();
-        }
 
         public void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms) {
             if (prms == null) prms = string.Empty;

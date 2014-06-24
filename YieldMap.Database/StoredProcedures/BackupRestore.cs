@@ -10,12 +10,6 @@ using YieldMap.Database.Access;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures {
-    public interface IBackupRestore {
-        string Backup(bool useUnion = false);
-        void Cleanup();
-        void Restore(string fileName);
-    }
-
     internal class BackupRestore : IBackupRestore {
 
         private readonly IDbConn _conn;

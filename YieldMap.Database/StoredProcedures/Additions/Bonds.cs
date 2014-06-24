@@ -12,17 +12,13 @@ using YieldMap.Tools.Logging;
 using YieldMap.Transitive;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public interface IBonds {
-        void Save(IEnumerable<InstrumentDescription> bonds);
-    }
-
-    internal class Bonds : IDisposable, IBonds {
+    internal class Bonds : IBonds {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Bonds");
         private readonly IDbConn _dbConn;
         private readonly ILegTypes _legTypes;
         private readonly IInstrumentTypes _instrumentTypes;
 
-        internal Bonds(IDbConn dbConn, ILegTypes legTypes, IInstrumentTypes instrumentTypes) {
+        public Bonds(IDbConn dbConn, ILegTypes legTypes, IInstrumentTypes instrumentTypes) {
             _dbConn = dbConn;
             _legTypes = legTypes;
             _instrumentTypes = instrumentTypes;
@@ -305,18 +301,6 @@ namespace YieldMap.Database.StoredProcedures.Additions {
         private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
         private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
-
-        void IDisposable.Dispose() {
-            // don't drop that durka durk
-            _countries.Clear();
-            _legalEntities.Clear();
-            _seniorities.Clear();
-            _tickers.Clear();
-            _currencies.Clear();
-            _industries.Clear();
-            _subIndustries.Clear();
-            _specimens.Clear();
-        }
 
         private SubIndustry EnsureSubIndustry(MainEntities ctx, string ind, string sub) {
             if (String.IsNullOrWhiteSpace(ind))

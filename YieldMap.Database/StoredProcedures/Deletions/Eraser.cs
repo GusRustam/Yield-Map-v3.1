@@ -3,14 +3,6 @@ using System.Linq;
 using YieldMap.Database.Access;
 
 namespace YieldMap.Database.StoredProcedures.Deletions {
-    public interface IEraser {
-        void DeleteInstruments(Func<Instrument, bool> selector = null);
-        void DeleteFeeds(Func<Feed, bool> selector = null);
-        void DeleteIsins(Func<Isin, bool> selector = null);
-        void DeleteChains(Func<Chain, bool> selector = null);
-        void DeleteRics(Func<Ric, bool> selector = null);
-    }
-
     internal class Eraser : IEraser {
         private readonly MainEntities _context;
 

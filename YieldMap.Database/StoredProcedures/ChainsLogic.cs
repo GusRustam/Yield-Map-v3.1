@@ -4,10 +4,6 @@ using System.Linq;
 using YieldMap.Database.Tools;
 
 namespace YieldMap.Database.StoredProcedures {
-    public interface IChainsLogic {
-        Dictionary<Mission, string[]> Classify( DateTime dt, string[] chainRics);
-    }
-
     /// Some considerations:
     /// 
     /// BondRics = All rics from Table InstrumentBond

@@ -6,14 +6,10 @@ using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.StoredProcedures.Additions {
-    public interface IRatings {
-        void SaveRatings(IEnumerable<Transitive.Rating> ratings);
-    }
-
     internal class Ratings : IRatings {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Ratings");
         private readonly IDbConn _dbConn;
-        internal Ratings(IDbConn dbConn) {
+        public Ratings(IDbConn dbConn) {
             _dbConn = dbConn;
         }
 

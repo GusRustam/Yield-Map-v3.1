@@ -144,13 +144,12 @@ module StartupTest =
 
     let mutable (c : Calendar) = Unchecked.defaultof<Calendar>
     let mutable (s : Drivers) = Unchecked.defaultof<Drivers>
-    let m = new YieldMap.Core.Manager.Manager ()
+    let m = new Manager ()
 
     let init chains dt = 
         c <- MockCalendar dt
 
-        
-        use ctx = m.db.CreateContext ()
+        use ctx = Manager.createContext m
 
         chains |> Array.iter (fun name -> 
             if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
@@ -178,7 +177,7 @@ module StartupTest =
     let teardown () = 
         globalThreshold := LoggingLevel.Warn
         logger.Info "teardown"
-        m.restore "EMPTY.sql"
+        m |> Manager.restore "EMPTY.sql"
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
@@ -240,7 +239,7 @@ module StartupTest =
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        use ctx = s.Database.db.CreateContext()
+        use ctx = s.Database |> Manager.createContext 
         cnt ctx.Feeds |> should be (equal 1)
         cnt ctx.Chains |> should be (equal 1)
 
@@ -250,22 +249,19 @@ module StartupTest =
     (* ========================= ============================= *)
     [<Test>]
     let ``Duplicate Isin leave no RIC unlinked`` () =
+        let dt = DateTime(2014,5,14) 
+        let x = init [|"0#RUEUROS="|] dt        
         
-        use ctx = s.Database.db.CreateContext ()
+        use ctx =  s.Database |> Manager.createContext 
         let initialUnattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
-            count
-        }
-       
-        let dt = DateTime(2014,5,14) 
-        let x = init [|"0#RUEUROS="|] dt
+            count}
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload true) (State Initialized)
 
-        use ctx = s.Database.db.CreateContext()
-
+        use ctx = s.Database |> Manager.createContext 
         let unattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
@@ -279,23 +275,20 @@ module StartupTest =
     [<Test>]
     let ``Strange US30`` () =
         let dt = DateTime(2014,5,14) 
-        
-        use ctx = s.Database.db.CreateContext ()
+        let x = init [|"0#US30YSTRIP=PX"|] dt
 
+        use ctx =  s.Database |> Manager.createContext 
         let initialUnattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
             count
         }
 
-        let x = init [|"0#US30YSTRIP=PX"|] dt // todo very strange, there were some RUCORP RICS
-
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         command "Connect" x.Connect (State Initialized)
 
-        use ctx = s.Database.db.CreateContext()
-
+        use ctx = s.Database |> Manager.createContext 
         let unattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
@@ -308,7 +301,6 @@ module StartupTest =
         (Array.length unattachedRics - initialUnattachedRics) |> should be (equal 1)
 
         let loser = unattachedRics.[0]
-
         match unattachedRics |> Array.tryFindIndex (fun t -> t.Name = "US912834NP9=PX") with
         | None -> true |> should be (equal false)
         | _ -> ()
@@ -318,24 +310,26 @@ module StartupTest =
     (* ========================= ============================= *)
     [<Test>]
     let ``RUCORP overnight`` () =
-        // Checking cleanup
-        use ctx = s.Database.db.CreateContext()
-        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
-        ctx.SaveChanges () |> ignore
-
         // Preparing
         let dt = DateTime(2014,5,14,23,0,0)
         use c = new UpdateableCalendar (dt)
         let clndr = c :> Calendar
 
         // Preparing
-        let x = Startup {
+        s <- {
             Factory = MockFactory()
             TodayFix = dt
             Loader = MockChainMeta c
             Calendar = c
             Database = m
         }
+
+        let x = Startup s
+        
+        // Checking cleanup
+        use ctx = s.Database |> Manager.createContext 
+        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
+        ctx.SaveChanges () |> ignore
 
         command "Connect" x.Connect (State Connected)
         logger.Info "Reloading"
@@ -345,7 +339,7 @@ module StartupTest =
         let assertAmounts dt t o r k =
             // todo secure proprtions
             let proportions = 
-                m.chainLogic.Classify(dt, [||]) 
+                Manager.classify s.Database dt [||]
                 |> Map.fromDict
                 |> Map.map (fun _ -> Array.length)
 
@@ -407,15 +401,14 @@ module StartupTest =
     [<Test>]
     let ``Indexes and FRNs`` () =
         let dt = DateTime(2014,5,14) 
-
         let x = init [|"0#RUCORP=MM"|] dt
 
-        let command cmd func state = func () |> Async.RunSynchronously |> should be (equal state)
+//        let command cmd func state = func () |> Async.RunSynchronously |> should be (equal state)
 
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
 
-        use ctx = s.Database.db.CreateContext ()
+        use ctx = s.Database |> Manager.createContext 
         let n = query { for x in ctx.OrdinaryFrns do
                         select x
                         count }
@@ -426,9 +419,11 @@ module StartupTest =
     [<Test>]
     let ``Wow-wow-wow!!!!`` () =
         let dt = DateTime(2014,5,14) 
-
         let x = init [|"0#RUCORP=MM"|] dt
+
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         
-        logger.Info <| s.Database.backup()
+        s.Database 
+        |> Manager.backup 
+        |> logger.Info

@@ -48,14 +48,10 @@ module Startup =
     type Startup (q:Drivers) = 
         let s = Event<_> ()
 
-        let f = q.Factory
         let c = q.Calendar
-        let m = q.Loader
-        let dt = c.Today
-        let g = q.Database
 
         let reload = LoadAndSave q :> Operation<_,_>
-        let connect = EstablishConnection f :> Operation<_,_>
+        let connect = EstablishConnection q.Factory :> Operation<_,_>
         let shutdown = Shutdown () :> Operation<_,_>
 
         let mutable shut = false
@@ -143,8 +139,8 @@ module Startup =
             and doReload t force channel = 
                 async {
                     try
-                        let chainRequests = c.Today
-                                            |> g.chainsInNeed 
+                        let chainRequests = q.Database 
+                                            |> Manager.chainsInNeed c.Today
                                             |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
 
                         let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
