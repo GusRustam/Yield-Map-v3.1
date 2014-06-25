@@ -39,8 +39,8 @@
     <Compile Include="Location.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Tools.fs" />
-    <Compile Include="Settings.fs" />
     <Compile Include="Rating.fs" />
+    <Compile Include="Settings.fs" />
     <None Include="packages.config" />
     <None Include="test.fsx" />
   </ItemGroup>
