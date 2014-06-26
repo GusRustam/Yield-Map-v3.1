@@ -4,9 +4,9 @@ module Manager =
     open Autofac
     open YieldMap.Database
     open YieldMap.Database.Access
-    open YieldMap.Database.StoredProcedures
-    open YieldMap.Database.StoredProcedures.Deletions
-    open YieldMap.Database.StoredProcedures.Additions
+    open YieldMap.Database.Procedures
+    open YieldMap.Database.Procedures.Deletions
+    open YieldMap.Database.Procedures.Additions
 
     open YieldMap.Loader.SdkFactory
     open YieldMap.Loader.LiveQuotes

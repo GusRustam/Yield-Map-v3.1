@@ -2,7 +2,7 @@
 using System.Linq;
 using YieldMap.Database.Access;
 
-namespace YieldMap.Database.StoredProcedures {
+namespace YieldMap.Database.Procedures {
     internal class Refresh : IRefresh {
         private readonly IDbConn _dbConn;
 

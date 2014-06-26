@@ -4,11 +4,11 @@ using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Linq;
 using YieldMap.Database.Access;
-using YieldMap.Database.StoredProcedures.Enums;
+using YieldMap.Database.Procedures.Enums;
 using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
-namespace YieldMap.Database.StoredProcedures.Additions {
+namespace YieldMap.Database.Procedures.Additions {
     internal class ChainRics : IChainRics {
         private readonly IFieldGroups _fieldGroups;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.ChainRics");

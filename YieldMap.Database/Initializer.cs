@@ -1,9 +1,9 @@
 ﻿using Autofac;
 using YieldMap.Database.Access;
-using YieldMap.Database.StoredProcedures;
-using YieldMap.Database.StoredProcedures.Additions;
-using YieldMap.Database.StoredProcedures.Deletions;
-using YieldMap.Database.StoredProcedures.Enums;
+using YieldMap.Database.Procedures;
+using YieldMap.Database.Procedures.Additions;
+using YieldMap.Database.Procedures.Deletions;
+using YieldMap.Database.Procedures.Enums;
 
 namespace YieldMap.Database {
     public static class Initializer {

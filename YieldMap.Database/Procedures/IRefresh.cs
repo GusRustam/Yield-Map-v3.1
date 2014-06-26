@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YieldMap.Database.StoredProcedures {
+namespace YieldMap.Database.Procedures {
     public interface IRefresh {
         bool NeedsReload(DateTime dt);
         Chain[] ChainsInNeed(DateTime dt);

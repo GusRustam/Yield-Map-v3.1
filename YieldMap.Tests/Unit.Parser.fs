@@ -11,7 +11,9 @@ module Language =
     open YieldMap.Language
     open YieldMap.Language.Lexan
     open YieldMap.Language.Syntan
+    open YieldMap.Language.Exceptions
 
+    open YieldMap.Tools.Aux
     open YieldMap.Tools.Ratings
     open YieldMap.Tools.Logging
    
@@ -211,7 +213,7 @@ module Language =
 
     [<Test>]
     let ``Grammar`` () =
-        let a = Lexem.parse "1+2=4" ||> Syntan.grammar |> Seq.toList
+        let a = "1+2=4" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -222,7 +224,7 @@ module Language =
              3, Syntel.Operation "="
             ])
 
-        let a = Lexem.parse "-1+2=4" ||> Syntan.grammar |> Seq.toList
+        let a = "-1+2=4" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -234,7 +236,7 @@ module Language =
              4, Syntel.Operation "="
             ])
 
-        let a = Lexem.parse "not true" ||> Syntan.grammar |> Seq.toList
+        let a = "not true" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -242,7 +244,7 @@ module Language =
              0, Syntel.Operation "not"
             ])
 
-        let a = Lexem.parse "false and not true" ||> Syntan.grammar |> Seq.toList
+        let a = "false and not true" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -252,7 +254,10 @@ module Language =
              6, Syntel.Operation "and"
             ])
 
-        let a = Lexem.parse "1+-2=4" ||> Syntan.grammar |> Seq.toList
+
+        let x = Syntan.grammarize
+
+        let a = "1+-2=4" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -264,7 +269,7 @@ module Language =
              4, Syntel.Operation "="
             ])
 
-        let a = Lexem.parse "(1+2)*3" ||> Syntan.grammar |> Seq.toList
+        let a = "(1+2)*3" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -275,7 +280,7 @@ module Language =
              5, Syntel.Operation "*"
             ])
 
-        let a = Lexem.parse "1+2*3" ||> Syntan.grammar |> Seq.toList
+        let a = "1+2*3" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -287,7 +292,7 @@ module Language =
             ])
 
 
-        let a = Lexem.parse "1+2-3" ||> Syntan.grammar |> Seq.toList
+        let a = "1+2-3" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal 
             [
@@ -298,7 +303,7 @@ module Language =
              1, Syntel.Operation "+"
             ])
 
-        let a = Lexem.parse "(1+2)/(3+4)" ||> Syntan.grammar |> Seq.toList
+        let a = "(1+2)/(3+4)" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal [ 1, Syntel.Value <| Value.Integer 1L
                                 3, Syntel.Value <| Value.Integer 2L
@@ -308,7 +313,7 @@ module Language =
                                 8, Syntel.Operation "+"
                                 5, Syntel.Operation "/"])
 
-        let a = Lexem.parse "(1+2)/((3+4*6)/(12+3*2))" ||> Syntan.grammar |> Seq.toList
+        let a = "(1+2)/((3+4*6)/(12+3*2))" |> Syntan.grammarizeExtended |> Seq.toList
         logger.InfoF "%A" a
         a |> should be (equal [ 1, Syntel.Value <| Value.Integer 1L
                                 3, Syntel.Value <| Value.Integer 2L
@@ -326,19 +331,19 @@ module Language =
                                 14, Syntel.Operation "/"
                                 5, Syntel.Operation "/"])
 
-        let a = Lexem.parse  "OhMyGod()" ||> Syntan.grammar |> Seq.toList
+        let a = "OhMyGod()" |> Syntan.grammarizeExtended |> Seq.toList
         a |> should be (equal [ 0, Syntel.Function "OHMYGOD"])
 
-        let a = Lexem.parse  "OhMyGod(12)" ||> Syntan.grammar |> Seq.toList
+        let a = "OhMyGod(12)" |> Syntan.grammarizeExtended |> Seq.toList
         a |> should be (equal [ 8, Syntel.Value <| Value.Integer 12L
                                 0, Syntel.Function "OHMYGOD"])
 
-        let a = Lexem.parse  "OhMyGod(12, 13)" ||> Syntan.grammar |> Seq.toList
+        let a = "OhMyGod(12, 13)" |> Syntan.grammarizeExtended |> Seq.toList
         a |> should be (equal [ 8, Syntel.Value <| Value.Integer 12L
                                 12, Syntel.Value <| Value.Integer 13L
                                 0, Syntel.Function "OHMYGOD"])
                                 
-        let a = Lexem.parse  "OhMyGod(Hello(12), Bye(23, $alpha.beta_11), $a, false)" ||> Syntan.grammar |> Seq.toList
+        let a = "OhMyGod(Hello(12), Bye(23, $alpha.beta_11), $a, false)" |> Syntan.grammarizeExtended |> Seq.toList
         a |> should be (equal [ 14, Syntel.Value <| Value.Integer 12L
                                 8, Syntel.Function "HELLO"
                                 23, Syntel.Value <| Value.Integer 23L
@@ -351,11 +356,7 @@ module Language =
 
     [<Test>]
     let ``Interpretation`` () =
-        let analyzeAndApply code = 
-            Lexem.parse code
-            ||> Syntan.grammar 
-            |> List.map snd 
-            |> Interpreter.evaluateGrammar      
+        let analyzeAndApply code vars = (code |> Syntan.grammarize, Map.toDict vars) |> Interpreter.evaluate      
                   
         analyzeAndApply "1+2=4" Map.empty |> should be (equal (Value.Bool false))
         analyzeAndApply "2+2=4" Map.empty |> should be (equal (Value.Bool true))
@@ -381,5 +382,6 @@ module Language =
         analyzeAndApply "[BBB]-1 <= [BBB]" Map.empty |> should be (equal (Value.Bool true))
         analyzeAndApply "[BBB]-1 = [BBB]-1" Map.empty |> should be (equal (Value.Bool true))
         analyzeAndApply "[BBB]-1 <> [BBB]-2" Map.empty |> should be (equal (Value.Bool true))
+        analyzeAndApply "true = True" Map.empty |> should be (equal (Value.Bool true))
 
         ["A", box 2] |> Map.ofList |> analyzeAndApply "$a + 1" |> should be (equal (Value.Integer 3L)) 

@@ -7,6 +7,8 @@ open YieldMap.Tools.Logging
 open YieldMap.Tools.Ratings
 open YieldMap.Tools.Response
 
+open Exceptions
+
 module Lexan =
     let logger = LogFactory.create "Language.Lexan"
 

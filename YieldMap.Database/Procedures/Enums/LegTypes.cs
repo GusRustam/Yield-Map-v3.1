@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using YieldMap.Database.Access;
 
-namespace YieldMap.Database.StoredProcedures.Enums {
+namespace YieldMap.Database.Procedures.Enums {
     internal class LegTypes : ILegTypes {
         public LegType Paid { get; private set; }
         public LegType Received { get; private set; }

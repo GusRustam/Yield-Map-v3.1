@@ -8,6 +8,7 @@ open YieldMap.Tools.Logging
 open YieldMap.Tools.Aux
 
 open Lexan
+open Exceptions
 
 module Syntan = 
     let logger = LogFactory.create "Language.Syntan"
@@ -67,7 +68,7 @@ module Syntan =
     // <params> ::= <expression> | <expression>, <params>
     // <value> ::= <int> | <float> | <string> | <rating> | <date>
     // <variable> ::= $<name> | $<name>.<name>
-    let grammar lexems source = 
+    let internal grammar lexems source = 
         let popToBracket operators = 
             let popped, others, found = 
                 ((List.empty, List.empty, false), operators)
@@ -170,3 +171,6 @@ module Syntan =
             let ex = GrammarException { str = source; message = ae.Data0; position = 0 }
             logger.WarnEx "Problem!" ex
             raise ex
+
+    let grammarizeExtended str = str |> Lexem.parse ||> grammar 
+    let grammarize s = s |> grammarizeExtended |> Seq.map snd

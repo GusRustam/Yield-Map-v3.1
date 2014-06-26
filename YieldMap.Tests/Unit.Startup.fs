@@ -72,7 +72,7 @@ module StartupTest =
 
     open YieldMap.Database
     open YieldMap.Database.Access
-    open YieldMap.Database.StoredProcedures 
+    open YieldMap.Database.Procedures 
 
     open YieldMap.Tools.Location
     open YieldMap.Tools.Logging

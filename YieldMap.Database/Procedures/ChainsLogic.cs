@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using YieldMap.Database.Tools;
 
-namespace YieldMap.Database.StoredProcedures {
+namespace YieldMap.Database.Procedures {
     /// Some considerations:
     /// 
     /// BondRics = All rics from Table InstrumentBond

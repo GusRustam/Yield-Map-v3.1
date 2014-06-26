@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using YieldMap.Database.Access;
 
-namespace YieldMap.Database.StoredProcedures.Enums {
+namespace YieldMap.Database.Procedures.Enums {
     internal class FieldGroups : IFieldGroups {
         public FieldGroup Default { get; private set; }
         public FieldGroup Micex { get; private set; }

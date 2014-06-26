@@ -6,12 +6,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using YieldMap.Database.Access;
-using YieldMap.Database.StoredProcedures.Enums;
+using YieldMap.Database.Procedures.Enums;
 using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive;
 
-namespace YieldMap.Database.StoredProcedures.Additions {
+namespace YieldMap.Database.Procedures.Additions {
     internal class Bonds : IBonds {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Bonds");
         private readonly IDbConn _dbConn;

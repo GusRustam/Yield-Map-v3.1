@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Database.StoredProcedures.Enums {
+﻿namespace YieldMap.Database.Procedures.Enums {
     public interface IFieldGroups {
         FieldGroup Default { get; }
         FieldGroup Micex { get; }

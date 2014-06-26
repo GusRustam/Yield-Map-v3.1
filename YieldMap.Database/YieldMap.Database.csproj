@@ -44,6 +44,7 @@
     <Reference Include="EntityFramework">
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
+    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
@@ -99,6 +100,7 @@
     <Compile Include="FieldVsGroup.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Functions\Registry.cs" />
     <Compile Include="Index.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -181,29 +183,29 @@
     <Compile Include="Specimen.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="StoredProcedures\Additions\IBonds.cs" />
-    <Compile Include="StoredProcedures\Additions\IChainRics.cs" />
-    <Compile Include="StoredProcedures\Additions\IRatings.cs" />
-    <Compile Include="StoredProcedures\Additions\Ratings.cs" />
-    <Compile Include="StoredProcedures\Deletions\IEraser.cs" />
-    <Compile Include="StoredProcedures\Enums\FieldGroups.cs" />
-    <Compile Include="StoredProcedures\Enums\IFieldGroups.cs" />
-    <Compile Include="StoredProcedures\Enums\IInstrumentTypes.cs" />
-    <Compile Include="StoredProcedures\Enums\ILegTypes.cs" />
-    <Compile Include="StoredProcedures\Enums\InstrumentTypes.cs" />
-    <Compile Include="StoredProcedures\Enums\LegTypes.cs" />
-    <Compile Include="StoredProcedures\Deletions\Eraser.cs" />
+    <Compile Include="Procedures\Additions\IBonds.cs" />
+    <Compile Include="Procedures\Additions\IChainRics.cs" />
+    <Compile Include="Procedures\Additions\IRatings.cs" />
+    <Compile Include="Procedures\Additions\Ratings.cs" />
+    <Compile Include="Procedures\Deletions\IEraser.cs" />
+    <Compile Include="Procedures\Enums\FieldGroups.cs" />
+    <Compile Include="Procedures\Enums\IFieldGroups.cs" />
+    <Compile Include="Procedures\Enums\IInstrumentTypes.cs" />
+    <Compile Include="Procedures\Enums\ILegTypes.cs" />
+    <Compile Include="Procedures\Enums\InstrumentTypes.cs" />
+    <Compile Include="Procedures\Enums\LegTypes.cs" />
+    <Compile Include="Procedures\Deletions\Eraser.cs" />
     <Compile Include="MainEntities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StoredProcedures\Additions\Bonds.cs" />
-    <Compile Include="StoredProcedures\Additions\ChainRics.cs" />
-    <Compile Include="StoredProcedures\BackupRestore.cs" />
-    <Compile Include="StoredProcedures\ChainsLogic.cs" />
+    <Compile Include="Procedures\Additions\Bonds.cs" />
+    <Compile Include="Procedures\Additions\ChainRics.cs" />
+    <Compile Include="Procedures\BackupRestore.cs" />
+    <Compile Include="Procedures\ChainsLogic.cs" />
     <Compile Include="Mission.cs" />
-    <Compile Include="StoredProcedures\IBackupRestore.cs" />
-    <Compile Include="StoredProcedures\IChainsLogic.cs" />
-    <Compile Include="StoredProcedures\IRefresh.cs" />
-    <Compile Include="StoredProcedures\Refresh.cs" />
+    <Compile Include="Procedures\IBackupRestore.cs" />
+    <Compile Include="Procedures\IChainsLogic.cs" />
+    <Compile Include="Procedures\IRefresh.cs" />
+    <Compile Include="Procedures\Refresh.cs" />
     <Compile Include="SubIndustry.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -243,6 +245,10 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\YieldMap.Language\YieldMap.Language.fsproj">
+      <Project>{8ed0f41e-4146-4875-9ab1-0d5ecf2ca491}</Project>
+      <Name>YieldMap.Language</Name>
+    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Requests\YieldMap.Requests.fsproj">
       <Project>{e773f65f-d9dc-4420-9af5-d148780b531f}</Project>
       <Name>YieldMap.Requests</Name>

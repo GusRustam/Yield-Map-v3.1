@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YieldMap.Database.StoredProcedures.Deletions {
+namespace YieldMap.Database.Procedures.Deletions {
     public interface IEraser {
         void DeleteInstruments(Func<Instrument, bool> selector = null);
         void DeleteFeeds(Func<Feed, bool> selector = null);

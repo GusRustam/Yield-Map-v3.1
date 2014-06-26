@@ -1,16 +1,18 @@
 ﻿namespace YieldMap.Language
 
 open System
+open System.Collections.Generic
 open System.Text
 open System.Text.RegularExpressions
 
 open YieldMap.Tools.Logging
 open YieldMap.Tools.Ratings
 open YieldMap.Tools.Aux
+open YieldMap.Tools.Response
 
 open Lexan
 open Syntan
-open YieldMap.Tools.Response
+open Exceptions
 
 #nowarn "62"
 module Interpreter = 
@@ -33,10 +35,10 @@ module Interpreter =
                 | Value.Rating n, Value.Integer i | Value.Integer i, Value.Rating n -> 
                     match n |> Notch.elevate (int i) with
                     | Answer notch -> notch |> Value.Rating 
-                    | Failure f -> failwith <| sprintf "Rating failure %s" (f.ToString())
+                    | Failure f -> raise <| InterpreterException (sprintf "Rating failure %s" (f.ToString()))
                 | _, Value.Nothing | Value.Nothing, _ -> 
                     Value.Nothing
-                | _ -> failwith <| sprintf "Operation + is not applicable to args %A %A" v1 v2
+                | _ -> raise <| InterpreterException (sprintf "Operation + is not applicable to args %A %A" v1 v2)
             else 
                 match v1, v2 with
                 | Value.Integer n, Value.Integer m -> 
@@ -54,15 +56,15 @@ module Interpreter =
                 | Value.Rating n, Value.Integer i | Value.Integer i, Value.Rating n when op = "-" -> 
                     match n |> Notch.elevate (int -i) with
                     | Answer notch -> notch |> Value.Rating 
-                    | Failure f -> failwith <| sprintf "Rating failure %s" (f.ToString())
-                | _ -> failwith <| sprintf "Operation %s is not applicable to args %A %A" op v1 v2
+                    | Failure f -> raise <| InterpreterException (sprintf "Rating failure %s" (f.ToString()))
+                | _ -> raise <| InterpreterException (sprintf "Operation %s is not applicable to args %A %A" op v1 v2)
 
         let private getLogicalOperation op = 
             match op with
             | ">"  -> (>)   | "<"  -> (<)
             | ">=" -> (>=)  | "<=" -> (<=)
             | "="  -> (=)   | "<>" -> (<>)
-            | _ -> failwith <| sprintf "Unknown logical operation %s" op
+            | _ -> raise <| InterpreterException (sprintf "Unknown logical operation %s" op)
 
         let (|C|_|) v =
             match v with
@@ -70,6 +72,7 @@ module Interpreter =
             | Value.Double d -> Some (d :> IComparable)
             | Value.Date d -> Some (d :> IComparable)
             | Value.Rating n -> Some (n :> IComparable)
+            | Value.Bool b -> Some (b :> IComparable)
             | _ -> None
 
         let applyLogical op v1 v2 =
@@ -80,7 +83,7 @@ module Interpreter =
             | Value.Nothing, _ | _, Value.Nothing -> 
                 Value.Nothing
 
-            | _ -> failwith <| sprintf "Operation %s is not applicable to args %A %A" op v1 v2
+            | _ -> raise <| InterpreterException (sprintf "Operation %s is not applicable to args %A %A" op v1 v2)
                 
         let apply op stack = 
             if op = "_" then
@@ -92,7 +95,7 @@ module Interpreter =
                     (Syntel.Value (Value.Double -d)) :: tail 
 
                 | head :: tail -> 
-                    failwith <| sprintf "Operation - is not applicable to %A" head
+                    raise <| InterpreterException (sprintf "Operation - is not applicable to %A" head)
 
                 | _ -> failwith "Nothing to negate"
 
@@ -102,7 +105,7 @@ module Interpreter =
                     (Syntel.Value (Value.Bool (not b))) :: tail 
 
                 | head :: _ -> 
-                    failwith <| sprintf "Operation 'not' is not applicable to %A" head
+                    raise <| InterpreterException (sprintf "Operation 'not' is not applicable to %A" head)
                 | _ -> 
                     failwith "Nothing to negate"
 
@@ -111,7 +114,7 @@ module Interpreter =
                 | (Syntel.Value v1) :: (Syntel.Value v2) :: tail -> 
                     (Syntel.Value <| applyMath op v2 v1) :: tail 
 
-                | _ -> failwith "Need two values to apply mathematical operation"
+                | _ -> raise <| InterpreterException "Need two values to apply mathematical operation"
 
             elif op |- set [">"; "<"; ">="; "<="; "="; "<>"] then
                 match stack with // TODO =, <> are not directly applicable to doubles!
@@ -125,12 +128,12 @@ module Interpreter =
                 | (Syntel.Value (Value.Bool b1)) :: (Syntel.Value (Value.Bool b2)) :: tail -> 
                     let o = if op = "and" then (&&) 
                             elif op = "or" then (||) 
-                            else failwith <| sprintf "Unknown boolean operation %s" op
+                            else raise <| InterpreterException (sprintf "Unknown boolean operation %s" op)
                     (Syntel.Value <| Value.Bool (o b1 b2)) :: tail 
 
                 | _ -> failwith "Need two values to apply boolean operation"
 
-            else failwith <| sprintf "Unknown operation %s" op
+            else raise <| InterpreterException (sprintf "Unknown operation %s" op)
 
     module internal Functions = 
         let apply name stack = 
@@ -271,9 +274,10 @@ module Interpreter =
                 else Value.Nothing
             else Value.Nothing
 
-    let evaluateGrammar grammar (vars : (string, obj) Map) = 
+    let evaluate (grammar, (vars : (string, obj) Dictionary)) = 
+        let vars = Map.fromDict vars
         let items = 
-            ([], grammar) ||> List.fold (fun progress i -> 
+            ([], grammar) ||> Seq.fold (fun progress i -> 
                 match i with
                 | Syntel.Value v -> 
                     i :: progress
@@ -290,9 +294,9 @@ module Interpreter =
         match items with 
         | (Syntel.Value v) :: [] -> v
         | _ -> failwith "Invalid result"
-
-    let evaluate code = 
-        Lexem.parse code
-        ||> Syntan.grammar 
-        |> List.map snd 
-        |> evaluateGrammar  
+//
+//    let evaluate code = 
+//        Lexem.parse code
+//        ||> Syntan.grammar 
+//        |> List.map snd 
+//        |> evaluateGrammar  

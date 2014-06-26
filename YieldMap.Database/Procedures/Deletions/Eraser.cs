@@ -2,7 +2,7 @@
 using System.Linq;
 using YieldMap.Database.Access;
 
-namespace YieldMap.Database.StoredProcedures.Deletions {
+namespace YieldMap.Database.Procedures.Deletions {
     internal class Eraser : IEraser {
         private readonly MainEntities _context;
 

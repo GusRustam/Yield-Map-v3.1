@@ -5,7 +5,7 @@ using YieldMap.Database.Access;
 using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
-namespace YieldMap.Database.StoredProcedures.Additions {
+namespace YieldMap.Database.Procedures.Additions {
     internal class Ratings : IRatings {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Ratings");
         private readonly IDbConn _dbConn;

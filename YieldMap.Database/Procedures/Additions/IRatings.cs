@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace YieldMap.Database.StoredProcedures.Additions {
+namespace YieldMap.Database.Procedures.Additions {
     public interface IRatings {
         void SaveRatings(IEnumerable<Transitive.Rating> ratings);
     }

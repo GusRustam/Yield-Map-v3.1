@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using YieldMap.Database.Access;
 using YieldMap.Tools.Logging;
 
-namespace YieldMap.Database.StoredProcedures {
+namespace YieldMap.Database.Procedures {
     internal class BackupRestore : IBackupRestore {
 
         private readonly IDbConn _conn;

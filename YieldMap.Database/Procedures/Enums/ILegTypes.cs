@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Database.StoredProcedures.Enums {
+﻿namespace YieldMap.Database.Procedures.Enums {
     public interface ILegTypes {
         LegType Paid { get; }
         LegType Received { get; }

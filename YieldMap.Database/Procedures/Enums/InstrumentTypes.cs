@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using YieldMap.Database.Access;
 
-namespace YieldMap.Database.StoredProcedures.Enums {
+namespace YieldMap.Database.Procedures.Enums {
     public class InstrumentTypes : IInstrumentTypes {
         public InstrumentType Bond { get; private set; }
         public InstrumentType Frn { get; private set; }
