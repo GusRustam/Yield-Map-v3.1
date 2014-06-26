@@ -10,6 +10,7 @@ open YieldMap.Tools.Aux
 
 open Lexan
 open Syntan
+open YieldMap.Tools.Response
 
 #nowarn "62"
 module Interpreter = 
@@ -30,7 +31,9 @@ module Interpreter =
                 | Value.String s1, Value.String s2 -> 
                     Value.String (s1 + s2)
                 | Value.Rating n, Value.Integer i | Value.Integer i, Value.Rating n -> 
-                    n |> Notch.elevate (int i) |> Value.Rating 
+                    match n |> Notch.elevate (int i) with
+                    | Answer notch -> notch |> Value.Rating 
+                    | Failure f -> failwith <| sprintf "Rating failure %s" (f.ToString())
                 | _, Value.Nothing | Value.Nothing, _ -> 
                     Value.Nothing
                 | _ -> failwith <| sprintf "Operation + is not applicable to args %A %A" v1 v2
@@ -49,7 +52,9 @@ module Interpreter =
                 | _, Value.Nothing | Value.Nothing, _ -> 
                     Value.Nothing
                 | Value.Rating n, Value.Integer i | Value.Integer i, Value.Rating n when op = "-" -> 
-                    n |> Notch.elevate (int -i) |> Value.Rating 
+                    match n |> Notch.elevate (int -i) with
+                    | Answer notch -> notch |> Value.Rating 
+                    | Failure f -> failwith <| sprintf "Rating failure %s" (f.ToString())
                 | _ -> failwith <| sprintf "Operation %s is not applicable to args %A %A" op v1 v2
 
         let private getLogicalOperation op = 

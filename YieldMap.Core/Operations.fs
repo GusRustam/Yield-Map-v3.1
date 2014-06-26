@@ -4,9 +4,9 @@ module Operations =
     open YieldMap.Loader.SdkFactory
 
     open YieldMap.Requests
-    open YieldMap.Requests.Responses
 
     open YieldMap.Transitive
+    open YieldMap.Tools.Response
     open YieldMap.Tools.Logging
 
     open System

@@ -12,7 +12,8 @@ module Requests =
     open YieldMap.Requests.Attributes
     open YieldMap.Requests.MetaTables
     open YieldMap.Requests
-    open YieldMap.Requests.Responses
+
+    open YieldMap.Tools.Response
 
     type ChainRequest = { Feed : string; Mode : string; Ric : string; Timeout : int }
 

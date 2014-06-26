@@ -1,8 +1,156 @@
 ﻿namespace YieldMap.Tools
 
 open System
-open System.Text
-open System.Text.RegularExpressions
+
+open Response
+
+module Ratings = 
+    open YieldMap.Tools.Aux
+
+    [<CustomEquality; CustomComparison>]
+    type Notch = { name : string; level : int }
+        with
+            override x.Equals(y) = 
+                if y :? Notch then
+                    let y = y :?> Notch
+                    let { level = l1; name = n1 } = x
+                    let { level = l2; name = n2 } = y
+                    l1 = l2 && n1 = n2
+                else false
+
+            override x.GetHashCode() = 
+                let { level = l1; name = n1 } = x
+                37 * (l1 + 37 * n1.GetHashCode() + 23)
+
+            interface IComparable with
+                member x.CompareTo(y) = 
+                    if y :? Notch then
+                        let y = y :?> Notch
+                        match x, y with 
+                        | { level = l1 }, { level = l2 } -> l1.CompareTo l2
+                    else 1
+
+            static member byName n =
+                match Notch.findLevel n with
+                | Some l -> { name = n; level = l}
+                | None -> failwith <| sprintf "Notch with name %s not found" n
+
+            static member private notches = [
+                27, set ["AAA"]
+                25, set ["AA+"; "Aa1"]
+                24, set ["AA"; "Aa2"]
+                23, set ["AA-"; "Aa3"]
+                22, set ["A+"; "A1"]
+                21, set ["A"; "A2"]
+                20, set ["A-"; "A3"]
+                19, set ["BBB+"; "Baa1"]
+                18, set ["BBB"; "Baa2"]
+                17, set ["BBB-"; "Baa3"]
+                16, set ["BB+"; "Ba1"]
+                15, set ["BB"; "Ba2"]
+                14, set ["BB-"; "Ba3"]
+                13, set ["B+"; "B1"]
+                12, set ["B"; "B2"]
+                11, set ["B-"; "B3"]
+                10, set ["CCC+"; "Caa1"]
+                9, set ["CCC"; "Caa2"]
+                8, set ["CCC-"; "Caa3"]
+                7, set ["CC"; "Ca"]
+                4, set ["C"]
+                3, set ["SD"; "D"]
+            ]
+
+            static member private notchMap = Notch.notches |> Map.ofList
+
+            static member private findLevel name = 
+                let res = 
+                    Notch.notches
+                    |> List.tryFind (fun (_, s) -> s |> Set.contains name) 
+                match res with
+                | Some (level, _) -> Some level
+                | None -> None 
+
+            static member private findName level = 
+                if Notch.notchMap |> Map.containsKey level then
+                    let res = Notch.notchMap.[level]
+                              |> Set.toArray
+                    Some <| res.[0]
+                else None
+
+            static member parse n =
+                let l = Notch.findLevel n
+                match l with
+                | Some l -> Answer { name = n; level = l }
+                | None -> Failure <| Problem (sprintf "%s not a rating" n)
+
+            static member elevate shift (n & { level = l }) = 
+                let n = Notch.findName (l + shift)
+                match n with
+                | Some n -> Answer {name = n; level = l + shift }
+                | None -> Failure <| Problem (sprintf "Invalid shift %d for rating %A" shift n)
+
+    type Rating = {
+        notch : Notch
+        date : DateTime
+    }
+
+//    module Parser = 
+//        let private fromAgencyCode c =
+//            match c with
+//            | "SPI" | "S&P" -> SnP, Long, Foreign
+//            | "MDL" | "MIS" | "MDY" -> Moodys, Long, Foreign
+//            | "FTC" | "FDL" | "FSU" -> Fitch, Long, Foreign
+//            | _ -> failwith <| sprintf "Invalid code %s" c
+//
+//        let private fromName n a t k d =
+//            if a |- set [SnP; Moodys; Fitch] && t = Long && k = Foreign then
+//                let l = 
+//                    if n = "AAA" then 21
+//                    elif n |- set ["AA"; "Aa2"] then 19
+//                    elif n |- set ["AA-"; "Aa3"] then 18
+//                    elif n |- set ["A+"; "A1"] then 17
+//                    elif n |- set ["A"; "A2"] then 16
+//                    elif n |- set ["A-"; "A3"] then 15
+//                    elif n |- set ["BBB+"; "Baa1"] then 14
+//                    elif n |- set ["BBB"; "Baa2"] then 13
+//                    elif n |- set ["BBB-"; "Baa3"] then 12
+//                    elif n |- set ["BB+"; "Ba1"] then 11
+//                    elif n |- set ["BB"; "Ba2"] then 10
+//                    elif n |- set ["BB-"; "Ba3"] then 9
+//                    elif n |- set ["B+"; "B1"] then 8
+//                    elif n |- set ["B"; "B2"] then 7
+//                    elif n |- set ["B-"; "B3"] then 6
+//                    elif n |- set ["CCC+"; "Caa1"] then 5
+//                    elif n |- set ["CCC"; "Caa2"] then 4
+//                    elif n |- set ["CCC-"; "Caa3"] then 3
+//                    elif n |- set ["CC"; "Ca"] then 2
+//                    elif n = "C" then 1
+//                    else 0
+//                { agency = a; term = t; kind = k; name = n; level = l; date = d }
+//            else failwith ""
+//
+//        let elevate node offset = ()
+//
+//        let parse name code = code |> fromAgencyCode
+//                                   |||> fromName name
+
+
+
+//    type Agency = SnP | Moodys | Fitch
+//        with 
+//            override x.ToString() = Agency.toString x
+//            static member abbr a =
+//                match a with
+//                | SnP -> "SNP"
+//                | Moodys -> "MDY"
+//                | Fitch -> "FTC"
+//            static member toString a =
+//                match a with
+//                | SnP -> "S&P"
+//                | Moodys -> "Moody's"
+//                | Fitch -> "Fitch"
+
+
 //module Ratings = 
 //    [<CustomEquality; CustomComparison>]
 //    type Notch = 
@@ -70,147 +218,3 @@ open System.Text.RegularExpressions
 //                        a1.CompareTo a2
 //                    else nc
 //                else dc
-
-module Ratings = 
-    open YieldMap.Tools.Aux
-
-//    type Agency = SnP | Moodys | Fitch
-//        with 
-//            override x.ToString() = Agency.toString x
-//            static member abbr a =
-//                match a with
-//                | SnP -> "SNP"
-//                | Moodys -> "MDY"
-//                | Fitch -> "FTC"
-//            static member toString a =
-//                match a with
-//                | SnP -> "S&P"
-//                | Moodys -> "Moody's"
-//                | Fitch -> "Fitch"
-
-    [<CustomEquality; CustomComparison>]
-    type Notch = { name : string; level : int }
-        with
-            override x.Equals(y) = 
-                if y :? Notch then
-                    let y = y :?> Notch
-                    let { level = l1; name = n1 } = x
-                    let { level = l2; name = n2 } = y
-                    l1 = l2 && n1 = n2
-                else false
-
-            override x.GetHashCode() = 
-                let { level = l1; name = n1 } = x
-                37 * (l1 + 37*n1.GetHashCode() + 23)
-
-            interface IComparable with
-                member x.CompareTo(y) = 
-                    if y :? Notch then
-                        let y = y :?> Notch
-                        match x, y with 
-                        | { level = l1 }, { level = l2 } -> l1.CompareTo l2
-                    else 1
-
-            static member private notches = [
-                27, set ["AAA"]
-                25, set ["AA+"; "Aa1"]
-                24, set ["AA"; "Aa2"]
-                23, set ["AA-"; "Aa3"]
-                22, set ["A+"; "A1"]
-                21, set ["A"; "A2"]
-                20, set ["A-"; "A3"]
-                19, set ["BBB+"; "Baa1"]
-                18, set ["BBB"; "Baa2"]
-                17, set ["BBB-"; "Baa3"]
-                16, set ["BB+"; "Ba1"]
-                15, set ["BB"; "Ba2"]
-                14, set ["BB-"; "Ba3"]
-                13, set ["B+"; "B1"]
-                12, set ["B"; "B2"]
-                11, set ["B-"; "B3"]
-                10, set ["CCC+"; "Caa1"]
-                9, set ["CCC"; "Caa2"]
-                8, set ["CCC-"; "Caa3"]
-                7, set ["CC"; "Ca"]
-                4, set ["C"]
-                3, set ["SD"; "D"]
-            ]
-
-            static member private notchMap = Notch.notches |> Map.ofList
-
-            static member private findLevel name = 
-                let res = 
-                    Notch.notches
-                    |> List.tryFind (fun (_, s) -> s |> Set.contains name) 
-                match res with
-                | Some (level, _) -> Some level
-                | None -> None 
-
-            static member private findName level = 
-                if Notch.notchMap |> Map.containsKey level then
-                    let res = 
-                        Notch.notchMap.[level]
-                        |> Set.toArray
-                    Some <| res.[0]
-                else None
-
-            static member parse str =
-                let m = Regex.Match(str, "\[(?<rating>.*)\]")
-                if m.Success then
-                    let n = m.Groups.Item("rating").Captures.Item(0).Value
-                    let l = Notch.findLevel n
-                    match l with
-                    | Some l -> { name = n; level = l }
-                    | None -> failwith <| sprintf "%s not a rating" str
-                else failwith <| sprintf "%s not a rating" str
-
-            static member elevate shift (n & { level = l }) = 
-                let n = Notch.findName (l + shift)
-                match n with
-                | Some n -> {name = n; level = l + shift }
-                | None -> failwith <| sprintf "Invalid shift %d for rating %A" shift n
-
-    type Rating = {
-        notch : Notch
-        date : DateTime
-    }
-
-//    module Parser = 
-//        let private fromAgencyCode c =
-//            match c with
-//            | "SPI" | "S&P" -> SnP, Long, Foreign
-//            | "MDL" | "MIS" | "MDY" -> Moodys, Long, Foreign
-//            | "FTC" | "FDL" | "FSU" -> Fitch, Long, Foreign
-//            | _ -> failwith <| sprintf "Invalid code %s" c
-//
-//        let private fromName n a t k d =
-//            if a |- set [SnP; Moodys; Fitch] && t = Long && k = Foreign then
-//                let l = 
-//                    if n = "AAA" then 21
-//                    elif n |- set ["AA"; "Aa2"] then 19
-//                    elif n |- set ["AA-"; "Aa3"] then 18
-//                    elif n |- set ["A+"; "A1"] then 17
-//                    elif n |- set ["A"; "A2"] then 16
-//                    elif n |- set ["A-"; "A3"] then 15
-//                    elif n |- set ["BBB+"; "Baa1"] then 14
-//                    elif n |- set ["BBB"; "Baa2"] then 13
-//                    elif n |- set ["BBB-"; "Baa3"] then 12
-//                    elif n |- set ["BB+"; "Ba1"] then 11
-//                    elif n |- set ["BB"; "Ba2"] then 10
-//                    elif n |- set ["BB-"; "Ba3"] then 9
-//                    elif n |- set ["B+"; "B1"] then 8
-//                    elif n |- set ["B"; "B2"] then 7
-//                    elif n |- set ["B-"; "B3"] then 6
-//                    elif n |- set ["CCC+"; "Caa1"] then 5
-//                    elif n |- set ["CCC"; "Caa2"] then 4
-//                    elif n |- set ["CCC-"; "Caa3"] then 3
-//                    elif n |- set ["CC"; "Ca"] then 2
-//                    elif n = "C" then 1
-//                    else 0
-//                { agency = a; term = t; kind = k; name = n; level = l; date = d }
-//            else failwith ""
-//
-//        let elevate node offset = ()
-//
-//        let parse name code = code |> fromAgencyCode
-//                                   |||> fromName name

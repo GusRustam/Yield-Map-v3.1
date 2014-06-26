@@ -9,7 +9,7 @@ module SdkFactory =
     open ThomsonReuters.Interop.RTX
     
     open YieldMap.Requests
-    open YieldMap.Requests.Responses
+    open YieldMap.Tools.Response
     open YieldMap.Tools.Logging
     open YieldMap.Tools.Aux
     

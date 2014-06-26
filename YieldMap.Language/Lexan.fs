@@ -5,6 +5,7 @@ open System.Text
 open System.Text.RegularExpressions
 open YieldMap.Tools.Logging
 open YieldMap.Tools.Ratings
+open YieldMap.Tools.Response
 
 module Lexan =
     let logger = LogFactory.create "Language.Lexan"
@@ -69,7 +70,9 @@ module Lexan =
                 let m = Regex.Match(str, "\[(?<rating>[^\]]*)\]")
                 if m.Success then
                     let rating = m.Groups.Item("rating").Captures.Item(0).Value
-                    rating |> Notch.parse |> Rating
+                    match rating |> Notch.parse with
+                    | Answer notch -> Rating notch
+                    | Failure f -> failwith <| sprintf "Error in rating: %A" (f.ToString())
                 else
                     String str
 
@@ -83,37 +86,41 @@ module Lexan =
                     let dd = Int32.Parse <| m.Groups.Item("dd").Captures.Item(0).Value
                     let mm = Int32.Parse <| m.Groups.Item("mm").Captures.Item(0).Value
                     let yy = Int32.Parse <| m.Groups.Item("yy").Captures.Item(0).Value
-                    (Date <| DateTime(yy, mm, dd), m.Length)
-                else raise <| AnalyzerException "Invalid date"
+                    Answer (Date <| DateTime(yy, mm, dd), m.Length)
+                else Failure (Problem "Invalid date")
             elif ch = '[' then // rating
-                let m = Regex.Match(str, "\[(?<rating>.*)\]")
+                let m = Regex.Match(str, "\[(?<rating>[^\]]*)\]")
                 if m.Success then
                     let rating = m.Groups.Item("rating").Captures.Item(0).Value
-                    (rating |> Notch.parse |> Rating, m.Length)
-                else raise <| AnalyzerException ("Invalid rating")
+                    match rating |> Notch.parse with
+                    | Answer notch -> Answer (Rating notch, m.Length)
+                    | Failure f -> Failure f
+                else Failure (Problem "Invalid rating")
             elif ch = '"' then // string
                 let m = Regex.Match(str, "^\"(?<str>[^\"]*)\"")
                 if m.Success then
                     let str = m.Groups.Item("str").Captures.Item(0).Value
-                    (String str, m.Length)
-                else raise <| AnalyzerException "Invalid string"
+                    Answer (String str, m.Length)
+                else Failure (Problem "Invalid string")
             elif lStr.StartsWith("true") then // bool
-                (Bool true, 4)
+                Answer (Bool true, 4)
             elif lStr.StartsWith("false") then // bool
-                (Bool false, 5)
+                Answer (Bool false, 5)
             else // number
                 let m = Regex.Match(str, "^(?<num>\d+\.\d+|-?\d+)")
                 if m.Success then
                     let str = m.Groups.Item("num").Captures.Item(0).Value
                     if str.IndexOf('.') > 0 then
                         let (success, num) = Double.TryParse(str)
-                        if success then (Double num, m.Length)
-                        else raise <| AnalyzerException "Invalid float"
+                        if success then 
+                            Answer (Double num, m.Length)
+                        else Failure (Problem "Invalid float")
                     else
                         let (success, num) = Int64.TryParse(str)
-                        if success then (Value.Integer num, m.Length)
-                        else raise <| AnalyzerException "Invalid integer"
-                else raise <| AnalyzerException "Invalid number"
+                        if success then 
+                            Answer (Value.Integer num, m.Length)
+                        else Failure (Problem "Invalid integer")
+                else Failure (Problem "Invalid number")
 
     type Variable = 
     | Object of string * string
@@ -189,8 +196,8 @@ module Lexan =
                         |> Helper.extractUntilBracketClose
                     match prms with
                     | Some parameters -> 
-                        let call = Lexem.Function func//{ name = func; parameters = Lexem.parseInternal parameters (basis + func.Length + 1) }
-                        (call, func.Length) // + 1 + parameters.Length + 1
+                        let call = Lexem.Function func
+                        (call, func.Length)
                     | None -> raise <| AnalyzerException ("Failed to parse function: brackets unbalanced")
                 else raise <| AnalyzerException ("Failed to parse function name")
 
@@ -199,8 +206,9 @@ module Lexan =
                 | Some op -> 
                     (Lexem.Operation op, op.Length)
                 | None ->
-                    let (value, length) = Value.extract str
-                    (Lexem.Value value, length)
+                    match Value.extract str with
+                    | Answer (value, length) -> (Lexem.Value value, length)
+                    | Failure f -> raise <| AnalyzerException (sprintf "Failed to parse value: %s" (f.ToString()))
 
         static member private parseInternal (s : string) basis = 
             logger.TraceF "Parsing [%s]" s

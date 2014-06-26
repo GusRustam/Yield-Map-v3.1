@@ -1,6 +1,6 @@
-﻿namespace YieldMap.Requests
+﻿namespace YieldMap.Tools
 
-module Responses =
+module Response =
     type private FailureStatic = Failure
     and Failure = 
         | Problem of string | Error of exn | Timeout

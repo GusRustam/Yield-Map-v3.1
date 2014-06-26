@@ -1,7 +1,7 @@
 ﻿namespace YieldMap.Core
 
 module Notifier = 
-    open YieldMap.Requests.Responses
+    open YieldMap.Tools.Response
     type Severity = Note | Warn | Evil
 
     let private n = Event<string * Failure * Severity> ()

@@ -11,13 +11,15 @@ module Language =
     open YieldMap.Language
     open YieldMap.Language.Lexan
     open YieldMap.Language.Syntan
+
+    open YieldMap.Tools.Ratings
     open YieldMap.Tools.Logging
    
     let logger = LogFactory.create "UnitTests.Language"
 
-    let lexCatch f = 
+    let errorAt str = 
         try 
-            f ()
+            Lexem.parse str |> ignore
             failwith "No error"
         with :? GrammarException as e ->
             e.Data0.position
@@ -67,15 +69,12 @@ module Language =
 
     [<Test>]
     let ``Parsing values: ratings`` () =
-        Lexem.parse "[BBB+]" |> fst |> should be (equal [0, Lexem.Value <| Value.Rating "BBB+"])
-        Lexem.parse "[]" |> fst |> should be (equal [0, Lexem.Value <| Value.Rating ""])
-        Lexem.parse "  [sdf]  [AAA]   [wow!]   [-+-+]" |> fst |> should be (equal 
-            [
-                2, Lexem.Value <| Value.Rating "sdf"
-                9, Lexem.Value <| Value.Rating "AAA"
-                17, Lexem.Value <| Value.Rating "wow!"
-                26, Lexem.Value <| Value.Rating "-+-+"
-            ])
+        Lexem.parse "[BBB+]" |> fst |> should be (equal [0, Lexem.Value <| Value.Rating (Notch.byName "BBB+")])
+        errorAt "[]" |> should be (equal 0)
+        errorAt "  [sdf]  [AAA]   [wow!]   [-+-+]" |> should be (equal 2)
+        Lexem.parse "[AAA] [C]" |> fst |> should be (equal 
+            [0, Lexem.Value <| Value.Rating (Notch.byName "AAA")
+             6, Lexem.Value <| Value.Rating (Notch.byName "C")])
 
     [<Test>]
     let ``Parsing values: strings`` () =
@@ -119,9 +118,9 @@ module Language =
             ])
         
         // invalid variable names
-        lexCatch (fun () -> Lexem.parse "$a.b $c $DDDD.312r4wefr3" |> ignore) |> should be (equal 13)
-        lexCatch (fun () -> Lexem.parse "$1" |> ignore) |> should be (equal 0)
-        lexCatch (fun () -> Lexem.parse "$a $_" |> ignore) |> should be (equal 3)
+        errorAt "$a.b $c $DDDD.312r4wefr3" |> should be (equal 13)
+        errorAt "$1" |> should be (equal 0)
+        errorAt "$a $_"|> should be (equal 3)
 
     [<Test>]
     let ``Parsing lexems: function calls`` () =

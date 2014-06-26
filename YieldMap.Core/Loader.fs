@@ -12,10 +12,10 @@ module Loader =
         
     open YieldMap.Requests
     open YieldMap.Requests.MetaTables
-    open YieldMap.Requests.Responses
 
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Aux.Workflows.Attempt
+    open YieldMap.Tools.Response
     open YieldMap.Tools.Location
     open YieldMap.Tools.Logging
 

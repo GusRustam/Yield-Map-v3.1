@@ -13,8 +13,8 @@ open YieldMap.Loader.MetaChains
 
 open YieldMap.Requests.MetaTables
 open YieldMap.Requests.Requests
-open YieldMap.Requests.Responses
 
+open YieldMap.Tools.Response
 open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
 

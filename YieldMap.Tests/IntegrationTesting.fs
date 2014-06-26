@@ -19,10 +19,10 @@
         open YieldMap.Loader.MetaChains
         
         open YieldMap.Requests.Requests
-        open YieldMap.Requests.Responses
         
         open YieldMap.Requests.MetaTables
         
+        open YieldMap.Tools.Response
         open YieldMap.Tools.Logging
         open YieldMap.Tools.Aux
 

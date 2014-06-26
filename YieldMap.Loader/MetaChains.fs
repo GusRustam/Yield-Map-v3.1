@@ -18,12 +18,12 @@ module MetaChains =
     open YieldMap.Loader.SdkFactory
     
     open YieldMap.Requests
-    open YieldMap.Requests.Responses
     open YieldMap.Requests.Converters
     open YieldMap.Requests.Attributes
     open YieldMap.Requests.MetaTables
 
     open YieldMap.Tools.Aux
+    open YieldMap.Tools.Response
     open YieldMap.Tools.Logging
     open YieldMap.Tools.Location
 

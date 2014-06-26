@@ -15,9 +15,9 @@ module Startup =
     open YieldMap.Loader.MetaChains
     
     open YieldMap.Requests
-    open YieldMap.Requests.Responses
     
     open YieldMap.Tools.Aux
+    open YieldMap.Tools.Response
     open YieldMap.Tools.Logging
 
     open System
