@@ -26,6 +26,11 @@ namespace YieldMap.Database.Tools {
             return new Set<T>(_data.Add(items));
         }
 
+        public Set<T> Add(T item) {
+            var data = new HashSet<T>(_data) {item};
+            return new Set<T>(data);
+        }
+        
         public Set<T> Union(Set<T> another) {
             var res = new HashSet<T>(_data);
             res.UnionWith(another._data);
@@ -56,6 +61,15 @@ namespace YieldMap.Database.Tools {
             if (x == null)
                 return y;
             return y == null ? x : x.Union(y);
+        }
+
+        public static Set<T> operator +(Set<T> x, T t) {
+            if (x != null) 
+                return x.Add(t);
+
+            var res = new Set<T>();
+            res = res.Add(new[] {t});
+            return res;
         }
 
         public static Set<T> operator -(Set<T> x, Set<T> y) {
@@ -104,6 +118,10 @@ namespace YieldMap.Database.Tools {
 
         public static bool operator !=(Set<T> left, Set<T> right) {
             return !Equals(left, right);
+        }
+
+        public bool Contains(T id) {
+            return _data.Contains(id);
         }
     }
 }

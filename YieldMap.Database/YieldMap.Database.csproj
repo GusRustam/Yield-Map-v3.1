@@ -100,7 +100,18 @@
     <Compile Include="FieldVsGroup.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Functions\Grammar.cs" />
+    <Compile Include="Functions\Outcome\Computed.cs" />
+    <Compile Include="Functions\Outcome\OutcomeType.cs" />
+    <Compile Include="Functions\Result\IRegResult.cs" />
+    <Compile Include="Functions\Result\RegFailure.cs" />
+    <Compile Include="Functions\Result\RegInterpreterFailed.cs" />
     <Compile Include="Functions\Registry.cs" />
+    <Compile Include="Functions\Result\RegNoSuchKey.cs" />
+    <Compile Include="Functions\Result\RegParserFailed.cs" />
+    <Compile Include="Functions\Result\RegResult.cs" />
+    <Compile Include="Functions\Result\RegResultType.cs" />
+    <Compile Include="Functions\Result\RegSuccess.cs" />
     <Compile Include="Index.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -265,6 +276,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
