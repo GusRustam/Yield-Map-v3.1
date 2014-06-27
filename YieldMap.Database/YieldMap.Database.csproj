@@ -101,6 +101,7 @@
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Functions\Grammar.cs" />
+    <Compile Include="Functions\IRegistry.cs" />
     <Compile Include="Functions\Outcome\Computed.cs" />
     <Compile Include="Functions\Outcome\OutcomeType.cs" />
     <Compile Include="Functions\Result\IRegResult.cs" />

@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using YieldMap.Language;
+﻿using YieldMap.Language;
 
 namespace YieldMap.Database.Functions.Result {
     public class RegParserFailed : RegFailure {
         private readonly Exceptions.GrammarException _innerException;
 
+        public override string ToString() {
+            return "Failed due to parser exception " + _innerException;
+        }
+        
         public RegParserFailed(Exceptions.GrammarException innerException) {
             _innerException = innerException;
         }
