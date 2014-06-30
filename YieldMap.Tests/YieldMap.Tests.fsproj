@@ -48,6 +48,10 @@
       <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Foq">
+      <HintPath>..\packages\Foq.1.6\Lib\net45\Foq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FsUnit.NUnit">
       <HintPath>..\packages\FsUnit.1.2.1.0\Lib\Net40\FsUnit.NUnit.dll</HintPath>
       <Private>True</Private>
@@ -101,6 +105,8 @@
     <None Include="EMPTY.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="Unit.Registry.fs" />
+    <None Include="Foq.Usage.fsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YieldMap.Core\YieldMap.Core.fsproj">

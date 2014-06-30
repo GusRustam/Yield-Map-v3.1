@@ -49,6 +49,7 @@
     <Compile Include="Manager.fs" />
     <Compile Include="Loader.fs" />
     <Compile Include="Operations.fs" />
+    <Compile Include="Register.fs" />
     <Compile Include="Startup.fs" />
     <None Include="App.config" />
     <None Include="packages.config" />
@@ -99,6 +100,11 @@
     <ProjectReference Include="..\YieldMap.Database\YieldMap.Database.csproj">
       <Name>YieldMap.Database</Name>
       <Project>{21174b80-86bf-491f-9bf5-057d46a39d4c}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\YieldMap.Language\YieldMap.Language.fsproj">
+      <Name>YieldMap.Language</Name>
+      <Project>{8ed0f41e-4146-4875-9ab1-0d5ecf2ca491}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\YieldMap.Loader\YieldMap.Loader.fsproj">

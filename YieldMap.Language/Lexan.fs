@@ -3,6 +3,7 @@
 open System
 open System.Text
 open System.Text.RegularExpressions
+
 open YieldMap.Tools.Logging
 open YieldMap.Tools.Ratings
 open YieldMap.Tools.Response

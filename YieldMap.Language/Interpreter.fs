@@ -274,8 +274,7 @@ module Interpreter =
                 else Value.Nothing
             else Value.Nothing
 
-    let evaluate (grammar, (vars : (string, obj) Dictionary)) = 
-        let vars = Map.fromDict vars
+    let evaluate grammar (vars : (string, obj) Map) = 
         let items = 
             ([], grammar) ||> Seq.fold (fun progress i -> 
                 match i with

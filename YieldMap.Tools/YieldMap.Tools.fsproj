@@ -36,6 +36,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <ItemGroup>
+    <Compile Include="Testability.fs" />
     <Compile Include="Location.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Tools.fs" />
@@ -44,8 +45,17 @@
     <Compile Include="Settings.fs" />
     <None Include="packages.config" />
     <None Include="test.fsx" />
+    <None Include="Foq.Usage.fsx" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Autofac">
+      <HintPath>..\packages\Autofac.3.5.0\lib\net40\Autofac.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Foq">
+      <HintPath>..\packages\Foq.1.6\Lib\net45\Foq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>

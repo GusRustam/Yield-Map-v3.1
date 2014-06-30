@@ -356,7 +356,7 @@ module Language =
 
     [<Test>]
     let ``Interpretation`` () =
-        let analyzeAndApply code vars = (code |> Syntan.grammarize, Map.toDict vars) |> Interpreter.evaluate      
+        let analyzeAndApply code vars = (code |> Syntan.grammarize, vars) ||> Interpreter.evaluate      
                   
         analyzeAndApply "1+2=4" Map.empty |> should be (equal (Value.Bool false))
         analyzeAndApply "2+2=4" Map.empty |> should be (equal (Value.Bool true))
