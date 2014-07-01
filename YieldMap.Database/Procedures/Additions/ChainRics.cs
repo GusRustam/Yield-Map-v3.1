@@ -4,18 +4,17 @@ using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Linq;
 using YieldMap.Database.Access;
-using YieldMap.Database.Procedures.Enums;
 using YieldMap.Database.Tools;
 using YieldMap.Tools.Logging;
 
 namespace YieldMap.Database.Procedures.Additions {
     internal class ChainRics : IChainRics {
-        private readonly IFieldGroups _fieldGroups;
+        private readonly IFieldResolver _resolver;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.ChainRics");
         private readonly MainEntities _context;
 
-        public ChainRics(IDbConn dbConn, IFieldGroups fieldGroups) {
-            _fieldGroups = fieldGroups;
+        public ChainRics(IDbConn dbConn, IFieldResolver resolver) {
+            _resolver = resolver;
             _context = dbConn.CreateContext();
         }
 
@@ -79,7 +78,7 @@ namespace YieldMap.Database.Procedures.Additions {
                     var ric = _rics.ContainsKey(name)
                         ? _rics[name]
                         : ctx.Rics.FirstOrDefault(r => r.Name == name) ??
-                          ctx.Rics.Add(new Ric {Name = name, id_FieldGroup = ResolveFieldGroup(name).id});
+                          ctx.Rics.Add(new Ric {Name = name, id_FieldGroup = _resolver.Resolve(name).id});
 
                     ric.Feed = feed;
                     _rics[name] = ric;
@@ -95,13 +94,6 @@ namespace YieldMap.Database.Procedures.Additions {
                     ctx.Configuration.AutoDetectChangesEnabled = true;
                 }
             }
-        }
-
-        private FieldGroup ResolveFieldGroup(string ric) {
-            if (ric.Contains("=MM")) 
-                return _fieldGroups.Micex;
-
-            return _fieldGroups.Default;
         }
     }
 }

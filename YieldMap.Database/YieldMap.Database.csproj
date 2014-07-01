@@ -143,6 +143,10 @@
     <Compile Include="OrdinaryFrn.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Procedures\Enums\FieldDefinitions.cs" />
+    <Compile Include="Procedures\Enums\FieldSet.cs" />
+    <Compile Include="Procedures\Enums\IFieldDefinitions.cs" />
+    <Compile Include="Procedures\Enums\IFieldSet.cs" />
     <Compile Include="Property.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -215,6 +219,8 @@
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Tools\Extensions.cs" />
+    <Compile Include="Tools\FieldResolver.cs" />
+    <Compile Include="Tools\IFieldResolver.cs" />
     <Compile Include="Tools\RicComparer.cs" />
     <Compile Include="Tools\RicString.cs" />
     <Compile Include="Tools\Set.cs" />

@@ -223,6 +223,22 @@ module Interpreter =
 
                 | _ -> failwith "Invalid Like function call. Use Like(str, regex-str)" 
 
+            elif name = "ISNOTHING" then
+                match stack with 
+                | (Syntel.Value Value.Nothing) :: tail -> (Syntel.Value (Value.Bool true)) :: tail 
+                | _ :: tail -> (Syntel.Value (Value.Bool false)) :: tail 
+                | _ -> failwith "Invalid IsNothing function call. Use Contains(some-value-or-variable))" 
+
+            elif name = "FORMAT" then
+                match stack with 
+                | (Syntel.Value (Value.String format)) :: (Syntel.Value value) :: tail -> 
+                    try
+                        let res = String.Format(format, Value.boxify value)
+                        (Syntel.Value (Value.String res)) :: tail 
+                    with :? FormatException as e ->
+                        failwith "" // TODO
+                | _ -> failwith "Invalid Format function call. Use Foramt(format, some-value-or-variable))" 
+
             elif name = "CONTAINS" then
                 match stack with 
                 | (Syntel.Value (Value.String needle)) :: (Syntel.Value (Value.String haystack)) :: tail -> 

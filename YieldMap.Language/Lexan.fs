@@ -60,6 +60,16 @@ module Lexan =
             | Double d -> sprintf "Double(%f)" d
             | Nothing -> "Nothing"
         
+        static member boxify v =
+            match v with
+            | Date dt -> box dt
+            | Rating n -> null // todo
+            | String str -> box str
+            | Bool b -> box b
+            | Integer i -> box i
+            | Double d -> box d
+            | Nothing -> null
+
         static member interpret (o : obj) =
             match o with
             | :? Int16 as i -> Integer (int64 i)
