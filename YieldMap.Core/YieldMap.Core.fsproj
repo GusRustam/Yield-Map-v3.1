@@ -46,7 +46,7 @@
     <Compile Include="Visual.fs" />
     <Compile Include="Axis.fs" />
     <Compile Include="Program.fs" />
-    <Compile Include="Manager.fs" />
+    <Compile Include="DbManager.fs" />
     <Compile Include="Loader.fs" />
     <Compile Include="Operations.fs" />
     <Compile Include="Register.fs" />

@@ -236,7 +236,7 @@ module Interpreter =
                         let res = String.Format(format, Value.boxify value)
                         (Syntel.Value (Value.String res)) :: tail 
                     with :? FormatException as e ->
-                        failwith "" // TODO
+                        failwith <| sprintf "Invalid format: %s" e.Message
                 | _ -> failwith "Invalid Format function call. Use Foramt(format, some-value-or-variable))" 
 
             elif name = "CONTAINS" then

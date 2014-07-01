@@ -52,13 +52,13 @@ module Lexan =
     with
         override x.ToString () = 
             match x with
-            | Date dt -> sprintf "Date(%s)" (dt.ToString("dd/MM/yyyy"))
-            | Rating n -> sprintf "Rating(%A)" n
-            | String str -> sprintf "String(%s)" str
-            | Bool b -> sprintf "Bool(%s)" (b.ToString())
-            | Integer i -> sprintf "Integer(%d)" i
-            | Double d -> sprintf "Double(%f)" d
-            | Nothing -> "Nothing"
+            | Date dt -> String.Format("#{0:dd/mm/yyyy}#", dt)
+            | Rating n -> sprintf "Rating(%A)" n.name
+            | String str -> str
+            | Bool b -> b.ToString()
+            | Integer i -> sprintf "%d" i
+            | Double d -> sprintf "%f" d
+            | Nothing -> "NULL"
         
         static member boxify v =
             match v with
@@ -69,6 +69,16 @@ module Lexan =
             | Integer i -> box i
             | Double d -> box d
             | Nothing -> null
+
+        member v.asString = 
+            match v with
+            | Date dt -> dt.ToString("dd/MM/yyyy")
+            | Rating n -> sprintf "[%s]" n.name
+            | String str -> sprintf "String(%s)" str
+            | Bool b -> sprintf "Bool(%s)" (b.ToString())
+            | Integer i -> sprintf "Integer(%d)" i
+            | Double d -> sprintf "Double(%f)" d
+            | Nothing -> "Nothing"
 
         static member interpret (o : obj) =
             match o with

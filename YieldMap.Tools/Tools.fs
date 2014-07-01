@@ -53,6 +53,7 @@ module Extensions =
             append keys d Map.empty
 
         let toDict m = Map.fold (fun (d:Dictionary<_,_>)  k v -> d.Add(k, v); d) (Dictionary<_,_> ()) m
+        let toDict2 m = Map.fold (fun (d:Dictionary<_,_>)  k v -> d.Add(k, toDict v); d) (Dictionary<_,_> ()) m
            
         let fromDict2 (d:Dictionary<_,Dictionary<_,_>>) =
             let keys = d.Keys |> List.ofSeq

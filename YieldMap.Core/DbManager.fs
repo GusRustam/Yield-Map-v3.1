@@ -1,6 +1,6 @@
 ﻿namespace YieldMap.Core
 
-module Manager = 
+module DbManager = 
     open Autofac
     open YieldMap.Database
     open YieldMap.Database.Access
@@ -15,7 +15,7 @@ module Manager =
 
     open System
 
-    type Manager (?_container : IContainer) = 
+    type DbManager (?_container : IContainer) = 
         let container = 
             match _container with
             | Some cont -> cont
@@ -30,22 +30,22 @@ module Manager =
         member internal x.refresh = container.Resolve<IRefresh> ()
         member internal x.backupRestore = container.Resolve<IBackupRestore> ()
         
-        static member createContext (x : Manager) = x.db.CreateContext ()
-        static member chainsInNeed dt (x : Manager) = x.refresh.ChainsInNeed dt
-        static member needsRefresh dt (x : Manager) = x.refresh.NeedsReload dt
-        static member saveBonds bonds (x : Manager) = x.bonds.Save bonds
-        static member saveRatings ratings (x : Manager) = x.ratings.SaveRatings ratings
-        static member saveChainRics (x : Manager) chainRic rics feedName expanded prms = 
+        static member createContext (x : DbManager) = x.db.CreateContext ()
+        static member chainsInNeed dt (x : DbManager) = x.refresh.ChainsInNeed dt
+        static member needsRefresh dt (x : DbManager) = x.refresh.NeedsReload dt
+        static member saveBonds bonds (x : DbManager) = x.bonds.Save bonds
+        static member saveRatings ratings (x : DbManager) = x.ratings.SaveRatings ratings
+        static member saveChainRics (x : DbManager) chainRic rics feedName expanded prms = 
             x.chainRics.SaveChainRics (chainRic, rics, feedName, expanded, prms)
-        static member deleteRics selector (x : Manager) = x.eraser.DeleteRics selector
-        static member backup (x : Manager) = x.backupRestore.Backup ()
-        static member restore name (x : Manager) = x.backupRestore.Restore name
-        static member classify (x : Manager) a b = x.chainLogic.Classify (a, b)
+        static member deleteRics selector (x : DbManager) = x.eraser.DeleteRics selector
+        static member backup (x : DbManager) = x.backupRestore.Backup ()
+        static member restore name (x : DbManager) = x.backupRestore.Restore name
+        static member classify (x : DbManager) a b = x.chainLogic.Classify (a, b)
 
     type Drivers = {
         TodayFix : DateTime
         Loader : ChainMetaLoader
         Factory : EikonFactory
         Calendar : Calendar
-        Database : Manager
+        Database : DbManager
     }

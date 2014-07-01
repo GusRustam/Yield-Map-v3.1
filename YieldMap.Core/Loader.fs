@@ -1,7 +1,7 @@
 ﻿namespace YieldMap.Core
 
 module Loader = 
-    open Manager
+    open DbManager
 
     open YieldMap.Database
 
@@ -87,25 +87,25 @@ module Loader =
                     logger.WarnF "Convertibles not supported yet %s" conv.Ric 
                     None)
 
-            db |> Manager.saveBonds (seq toSave)
+            db |> DbManager.saveBonds (seq toSave)
 
             let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
             let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
 
             let iR = (issueRatings |> List.map Rating.Create) @ (issuerRatings |> List.map Rating.Create)
-            db |> Manager.saveRatings iR
+            db |> DbManager.saveRatings iR
                             
         }
 
     let rec reload (s:Drivers) chains force  = 
         let loader, dt, db = s.Loader, s.TodayFix, s.Database
 
-        let needsReload = db |> Manager.needsRefresh s.TodayFix
+        let needsReload = db |> DbManager.needsRefresh s.TodayFix
 
         async {
             if force || force && needsReload then
                 try
-                    backupFile <- Manager.backup db
+                    backupFile <- DbManager.backup db
                     return! load s chains
                 with e -> 
                     logger.ErrorEx "Load failed" e
@@ -125,13 +125,13 @@ module Loader =
                     
 
                 // saving rics and chains
-                ricsByChain |> Array.iter (fun (chain, rics, req) -> Manager.saveChainRics s.Database chain rics req.Feed s.TodayFix req.Mode)
+                ricsByChain |> Array.iter (fun (chain, rics, req) -> DbManager.saveChainRics s.Database chain rics req.Feed s.TodayFix req.Mode)
 
                 // extracting rics
                 let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set
                     
                 // now determine which rics to reload and refresh
-                let classified = Manager.classify s.Database s.TodayFix (chainRics |> Set.toArray) 
+                let classified = DbManager.classify s.Database s.TodayFix (chainRics |> Set.toArray) 
 
                 logger.InfoF "Will reload %d, kill %d and keep %d rics" 
                     (classified.[Mission.ToReload].Length) 
@@ -141,7 +141,7 @@ module Loader =
 // TODO PROPER DELETION USING PROPER RIC COMPARISON
 //                let o = classified.[Mission.Obsolete]
 //                let f = fun (r:Ric) -> Array.exists ((=) r.Name) o
-//                s.Database |> Manager.deleteRics (Func<Ric, bool>(f))
+//                s.Database |> DbManager.deleteRics (Func<Ric, bool>(f))
                     
                 let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                 match res with 
@@ -156,7 +156,7 @@ module Loader =
         logger.Trace "loadFailed ()"
         async {
             try 
-                s.Database |> Manager.restore backupFile
+                s.Database |> DbManager.restore backupFile
                 logger.ErrorF "Failed to reload data, restored successfully: %A" (e.ToString())
                 return Ping.Failure (Problem "Failed to reload data, restored successfully")
             with e ->

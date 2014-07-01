@@ -143,6 +143,7 @@
     <Compile Include="OrdinaryFrn.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="Procedures\Additions\IPropertyStorage.cs" />
     <Compile Include="Procedures\Enums\FieldDefinitions.cs" />
     <Compile Include="Procedures\Enums\FieldSet.cs" />
     <Compile Include="Procedures\Enums\IFieldDefinitions.cs" />

@@ -10,7 +10,7 @@ module Operations =
     open YieldMap.Tools.Logging
 
     open System
-    open Manager
+    open DbManager
 
     let private logger = LogFactory.create "Operations"
 
