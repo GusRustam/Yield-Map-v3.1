@@ -15,25 +15,23 @@ namespace YieldMap.Database
     public partial class FieldVsGroup
     {
         public long id_FieldGroup { get; set; }
-        public string Name { get; set; }
-        public bool IsDefault { get; set; }
-        public string Bid { get; set; }
-        public string Ask { get; set; }
-        public string Last { get; set; }
-        public string Close { get; set; }
-        public string VWAP { get; set; }
-        public string Volume { get; set; }
+        public long id_Field { get; set; }
+        public long id_FieldDefinition { get; set; }
+        public long id_DefaultFieldDefinition { get; set; }
+        public bool DefaultGroup { get; set; }
+        public string FieldGroupName { get; set; }
+        public string SystemName { get; set; }
+        public string InternalName { get; set; }
     	public FieldVsGroup ToPocoSimple() {
     	    return new FieldVsGroup {
     			id_FieldGroup = this.id_FieldGroup,
-    			Name = this.Name,
-    			IsDefault = this.IsDefault,
-    			Bid = this.Bid,
-    			Ask = this.Ask,
-    			Last = this.Last,
-    			Close = this.Close,
-    			VWAP = this.VWAP,
-    			Volume = this.Volume,
+    			id_Field = this.id_Field,
+    			id_FieldDefinition = this.id_FieldDefinition,
+    			id_DefaultFieldDefinition = this.id_DefaultFieldDefinition,
+    			DefaultGroup = this.DefaultGroup,
+    			FieldGroupName = this.FieldGroupName,
+    			SystemName = this.SystemName,
+    			InternalName = this.InternalName,
     		};
     	}
     		}

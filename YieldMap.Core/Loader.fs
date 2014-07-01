@@ -113,7 +113,6 @@ module Loader =
             else return Answer ()
         }
 
-
     and private load (s:Drivers) requests = 
         logger.Trace "load ()"
         async {

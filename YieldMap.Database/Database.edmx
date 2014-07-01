@@ -12,6 +12,7 @@
           <EntitySet Name="Description" EntityType="mainModel.Store.Description" store:Type="Tables" />
           <EntitySet Name="Feed" EntityType="mainModel.Store.Feed" store:Type="Tables" />
           <EntitySet Name="Field" EntityType="mainModel.Store.Field" store:Type="Tables" />
+          <EntitySet Name="FieldDefinition" EntityType="mainModel.Store.FieldDefinition" store:Type="Tables" />
           <EntitySet Name="FieldGroup" EntityType="mainModel.Store.FieldGroup" store:Type="Tables" />
           <EntitySet Name="Index" EntityType="mainModel.Store.Index" store:Type="Tables" />
           <EntitySet Name="Industry" EntityType="mainModel.Store.Industry" store:Type="Tables" />
@@ -39,14 +40,13 @@
           <EntitySet Name="FieldVsGroup" EntityType="mainModel.Store.FieldVsGroup" store:Type="Views" store:Name="FieldVsGroup">
             <DefiningQuery>SELECT 
       [FieldVsGroup].[id_FieldGroup] AS [id_FieldGroup], 
-      [FieldVsGroup].[Name] AS [Name], 
-      [FieldVsGroup].[IsDefault] AS [IsDefault], 
-      [FieldVsGroup].[Bid] AS [Bid], 
-      [FieldVsGroup].[Ask] AS [Ask], 
-      [FieldVsGroup].[Last] AS [Last], 
-      [FieldVsGroup].[Close] AS [Close], 
-      [FieldVsGroup].[VWAP] AS [VWAP], 
-      [FieldVsGroup].[Volume] AS [Volume]
+      [FieldVsGroup].[id_Field] AS [id_Field], 
+      [FieldVsGroup].[id_FieldDefinition] AS [id_FieldDefinition], 
+      [FieldVsGroup].[id_DefaultFieldDefinition] AS [id_DefaultFieldDefinition], 
+      [FieldVsGroup].[DefaultGroup] AS [DefaultGroup], 
+      [FieldVsGroup].[FieldGroupName] AS [FieldGroupName], 
+      [FieldVsGroup].[SystemName] AS [SystemName], 
+      [FieldVsGroup].[InternalName] AS [InternalName]
       FROM [FieldVsGroup] AS [FieldVsGroup]</DefiningQuery>
           </EntitySet>
           <EntitySet Name="InstrumentDescriptionView" EntityType="mainModel.Store.InstrumentDescriptionView" store:Type="Views" store:Name="InstrumentDescriptionView">
@@ -198,8 +198,16 @@
             <End Role="Description" EntitySet="Description" />
           </AssociationSet>
           <AssociationSet Name="FK_Field_0_0" Association="mainModel.Store.FK_Field_0_0">
+            <End Role="FieldDefinition" EntitySet="FieldDefinition" />
+            <End Role="Field" EntitySet="Field" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Field_1_0" Association="mainModel.Store.FK_Field_1_0">
             <End Role="FieldGroup" EntitySet="FieldGroup" />
             <End Role="Field" EntitySet="Field" />
+          </AssociationSet>
+          <AssociationSet Name="FK_FieldGroup_0_0" Association="mainModel.Store.FK_FieldGroup_0_0">
+            <End Role="FieldDefinition" EntitySet="FieldDefinition" />
+            <End Role="FieldGroup" EntitySet="FieldGroup" />
           </AssociationSet>
           <AssociationSet Name="FK_Index_0_0" Association="mainModel.Store.FK_Index_0_0">
             <End Role="Ric" EntitySet="Ric" />
@@ -367,13 +375,16 @@
             <PropertyRef Name="id" />
           </Key>
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Bid" Type="varchar" MaxLength="50" />
-          <Property Name="Ask" Type="varchar" MaxLength="50" />
-          <Property Name="Last" Type="varchar" MaxLength="50" />
-          <Property Name="Close" Type="varchar" MaxLength="50" />
-          <Property Name="VWAP" Type="varchar" MaxLength="50" />
-          <Property Name="Volume" Type="varchar" MaxLength="50" />
+          <Property Name="SystemName" Type="varchar" Nullable="false" MaxLength="50" />
           <Property Name="id_FieldGroup" Type="integer" Nullable="false" />
+          <Property Name="id_FieldDef" Type="integer" Nullable="false" />
+        </EntityType>
+        <EntityType Name="FieldDefinition">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="varchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="FieldGroup">
           <Key>
@@ -381,8 +392,8 @@
           </Key>
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="DefaultField" Type="varchar" MaxLength="50" />
           <Property Name="Default" Type="bit" Nullable="false" />
+          <Property Name="id_DefaultFieldDef" Type="integer" />
         </EntityType>
         <EntityType Name="Index">
           <Key>
@@ -582,23 +593,25 @@
         </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.FieldVsGroup' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
-      warning 6005: The data type '' is currently not supported for the target .NET Framework version; the column 'DefaultField' in table 'main.FieldVsGroup' was excluded.
       -->
         <EntityType Name="FieldVsGroup">
           <Key>
             <PropertyRef Name="id_FieldGroup" />
-            <PropertyRef Name="Name" />
-            <PropertyRef Name="IsDefault" />
+            <PropertyRef Name="id_Field" />
+            <PropertyRef Name="id_FieldDefinition" />
+            <PropertyRef Name="id_DefaultFieldDefinition" />
+            <PropertyRef Name="DefaultGroup" />
+            <PropertyRef Name="FieldGroupName" />
+            <PropertyRef Name="SystemName" />
           </Key>
           <Property Name="id_FieldGroup" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IsDefault" Type="bit" Nullable="false" />
-          <Property Name="Bid" Type="varchar" MaxLength="50" />
-          <Property Name="Ask" Type="varchar" MaxLength="50" />
-          <Property Name="Last" Type="varchar" MaxLength="50" />
-          <Property Name="Close" Type="varchar" MaxLength="50" />
-          <Property Name="VWAP" Type="varchar" MaxLength="50" />
-          <Property Name="Volume" Type="varchar" MaxLength="50" />
+          <Property Name="id_Field" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_FieldDefinition" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="id_DefaultFieldDefinition" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="DefaultGroup" Type="bit" Nullable="false" />
+          <Property Name="FieldGroupName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="SystemName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="InternalName" Type="varchar" MaxLength="50" />
         </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.InstrumentDescriptionView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
@@ -881,6 +894,18 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_Field_0_0">
+          <End Role="FieldDefinition" Type="mainModel.Store.FieldDefinition" Multiplicity="1" />
+          <End Role="Field" Type="mainModel.Store.Field" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldDefinition">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Field">
+              <PropertyRef Name="id_FieldDef" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Field_1_0">
           <End Role="FieldGroup" Type="mainModel.Store.FieldGroup" Multiplicity="1" />
           <End Role="Field" Type="mainModel.Store.Field" Multiplicity="*" />
           <ReferentialConstraint>
@@ -889,6 +914,18 @@
             </Principal>
             <Dependent Role="Field">
               <PropertyRef Name="id_FieldGroup" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_FieldGroup_0_0">
+          <End Role="FieldDefinition" Type="mainModel.Store.FieldDefinition" Multiplicity="0..1" />
+          <End Role="FieldGroup" Type="mainModel.Store.FieldGroup" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldDefinition">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="FieldGroup">
+              <PropertyRef Name="id_DefaultFieldDef" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1225,7 +1262,6 @@
           <EntitySet Name="Countries" EntityType="mainModel.Country" />
           <EntitySet Name="Currencies" EntityType="mainModel.Currency" />
           <EntitySet Name="Feeds" EntityType="mainModel.Feed" />
-          <EntitySet Name="Fields" EntityType="mainModel.Field" />
           <EntitySet Name="Industries" EntityType="mainModel.Industry" />
           <EntitySet Name="InstrumentTypes" EntityType="mainModel.InstrumentType" />
           <EntitySet Name="Isins" EntityType="mainModel.Isin" />
@@ -1369,18 +1405,8 @@
           </AssociationSet>
           <EntitySet Name="OrdinaryBonds" EntityType="mainModel.OrdinaryBond" />
           <EntitySet Name="OrdinaryFrns" EntityType="mainModel.OrdinaryFrn" />
-          <EntitySet Name="FieldVsGroups" EntityType="mainModel.FieldVsGroup" />
           <EntitySet Name="InstrumentRicViews" EntityType="mainModel.InstrumentRicView" />
           <EntitySet Name="InstrumentIBViews" EntityType="mainModel.InstrumentIBView" />
-          <EntitySet Name="FieldGroups" EntityType="mainModel.FieldGroup" />
-          <AssociationSet Name="FK_Field_0_0" Association="mainModel.FK_Field_0_0">
-            <End Role="FieldGroup" EntitySet="FieldGroups" />
-            <End Role="Field" EntitySet="Fields" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Ric_0_0" Association="mainModel.FK_Ric_0_0">
-            <End Role="FieldGroup" EntitySet="FieldGroups" />
-            <End Role="Ric" EntitySet="Rics" />
-          </AssociationSet>
           <EntitySet Name="Properties" EntityType="mainModel.Property" />
           <EntitySet Name="PropertyToInstrumentTypes" EntityType="mainModel.PropertyToInstrumentType" />
           <EntitySet Name="PropertyTypes" EntityType="mainModel.PropertyType" />
@@ -1406,6 +1432,26 @@
             <End Role="PropertyValue" EntitySet="PropertyValues" />
           </AssociationSet>
           <EntitySet Name="InstrumentDescriptionViews" EntityType="mainModel.InstrumentDescriptionView" />
+          <EntitySet Name="Fields" EntityType="mainModel.Field" />
+          <EntitySet Name="FieldDefinitions" EntityType="mainModel.FieldDefinition" />
+          <EntitySet Name="FieldVsGroups" EntityType="mainModel.FieldVsGroup" />
+          <AssociationSet Name="FK_Field_0_0" Association="mainModel.FK_Field_0_0">
+            <End Role="FieldDefinition" EntitySet="FieldDefinitions" />
+            <End Role="Field" EntitySet="Fields" />
+          </AssociationSet>
+          <EntitySet Name="FieldGroups" EntityType="mainModel.FieldGroup" />
+          <AssociationSet Name="FK_Field_1_0" Association="mainModel.FK_Field_1_0">
+            <End Role="FieldGroup" EntitySet="FieldGroups" />
+            <End Role="Field" EntitySet="Fields" />
+          </AssociationSet>
+          <AssociationSet Name="FK_FieldGroup_0_0" Association="mainModel.FK_FieldGroup_0_0">
+            <End Role="FieldDefinition" EntitySet="FieldDefinitions" />
+            <End Role="FieldGroup" EntitySet="FieldGroups" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ric_0_0" Association="mainModel.FK_Ric_0_0">
+            <End Role="FieldGroup" EntitySet="FieldGroups" />
+            <End Role="Ric" EntitySet="Rics" />
+          </AssociationSet>
           </EntityContainer>
         <EntityType Name="Chain">
           <Key>
@@ -1446,20 +1492,6 @@
           <NavigationProperty Name="Isins" Relationship="mainModel.FK_Isin_0_0" FromRole="Feed" ToRole="Isin" />
           <NavigationProperty Name="Rics" Relationship="mainModel.FK_Ric_2_0" FromRole="Feed" ToRole="Ric" />
           </EntityType>
-        <EntityType Name="Field">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Bid" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Ask" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Last" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Close" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="VWAP" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Volume" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_FieldGroup" Nullable="false" />
-          <NavigationProperty Name="FieldGroup" Relationship="mainModel.FK_Field_0_0" FromRole="Field" ToRole="FieldGroup" />
-        </EntityType>
         <EntityType Name="Industry">
           <Key>
             <PropertyRef Name="id" />
@@ -2139,22 +2171,6 @@
           <Property Type="String" Name="IndexName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Type="String" Name="IndexRic" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
-        <EntityType Name="FieldVsGroup">
-          <Key>
-            <PropertyRef Name="id_FieldGroup" />
-            <PropertyRef Name="Name" />
-            <PropertyRef Name="IsDefault" />
-          </Key>
-          <Property Type="Int64" Name="id_FieldGroup" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Boolean" Name="IsDefault" Nullable="false" />
-          <Property Type="String" Name="Bid" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Ask" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Last" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Close" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="VWAP" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Volume" MaxLength="50" FixedLength="false" Unicode="false" />
-        </EntityType>
         <EntityType Name="InstrumentRicView">
           <Key>
             <PropertyRef Name="id_Ric" />
@@ -2179,41 +2195,6 @@
           <Property Type="Int64" Name="id_Issuer" />
           <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
-        <EntityType Name="FieldGroup">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="DefaultField" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Boolean" Name="Default" Nullable="false" />
-          <NavigationProperty Name="Fields" Relationship="mainModel.FK_Field_0_0" FromRole="FieldGroup" ToRole="Field" />
-          <NavigationProperty Name="Rics" Relationship="mainModel.FK_Ric_0_0" FromRole="FieldGroup" ToRole="Ric" />
-        </EntityType>
-        <Association Name="FK_Field_0_0">
-          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="1" />
-          <End Type="mainModel.Field" Role="Field" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="FieldGroup">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Field">
-              <PropertyRef Name="id_FieldGroup" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Ric_0_0">
-          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="0..1" />
-          <End Type="mainModel.Ric" Role="Ric" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="FieldGroup">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Ric">
-              <PropertyRef Name="id_FieldGroup" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <EntityType Name="Property">
           <Key>
             <PropertyRef Name="id" />
@@ -2365,6 +2346,105 @@
           <Property Type="DateTime" Name="IssuerRatingDate" />
           <Property Type="String" Name="IssuerRatingAgency" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
+        <EntityType Name="Field">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="SystemName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_FieldGroup" Nullable="false" />
+          <Property Type="Int64" Name="id_FieldDef" Nullable="false" />
+          <NavigationProperty Name="FieldDefinition" Relationship="mainModel.FK_Field_0_0" FromRole="Field" ToRole="FieldDefinition" />
+          <NavigationProperty Name="FieldGroup" Relationship="mainModel.FK_Field_1_0" FromRole="Field" ToRole="FieldGroup" />
+        </EntityType>
+        <EntityType Name="FieldDefinition">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Fields" Relationship="mainModel.FK_Field_0_0" FromRole="FieldDefinition" ToRole="Field" />
+          <NavigationProperty Name="FieldGroups" Relationship="mainModel.FK_FieldGroup_0_0" FromRole="FieldDefinition" ToRole="FieldGroup" />
+        </EntityType>
+        <EntityType Name="FieldVsGroup">
+          <Key>
+            <PropertyRef Name="id_FieldGroup" />
+            <PropertyRef Name="id_Field" />
+            <PropertyRef Name="id_FieldDefinition" />
+            <PropertyRef Name="id_DefaultFieldDefinition" />
+            <PropertyRef Name="DefaultGroup" />
+            <PropertyRef Name="FieldGroupName" />
+            <PropertyRef Name="SystemName" />
+          </Key>
+          <Property Type="Int64" Name="id_FieldGroup" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Field" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_FieldDefinition" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_DefaultFieldDefinition" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Boolean" Name="DefaultGroup" Nullable="false" />
+          <Property Type="String" Name="FieldGroupName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="SystemName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="InternalName" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <Association Name="FK_Field_0_0">
+          <End Type="mainModel.FieldDefinition" Role="FieldDefinition" Multiplicity="1" />
+          <End Type="mainModel.Field" Role="Field" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldDefinition">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Field">
+              <PropertyRef Name="id_FieldDef" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="FieldGroup">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="Default" Nullable="false" />
+          <Property Type="Int64" Name="id_DefaultFieldDef" />
+          <NavigationProperty Name="Fields" Relationship="mainModel.FK_Field_1_0" FromRole="FieldGroup" ToRole="Field" />
+          <NavigationProperty Name="FieldDefinition" Relationship="mainModel.FK_FieldGroup_0_0" FromRole="FieldGroup" ToRole="FieldDefinition" />
+          <NavigationProperty Name="Rics" Relationship="mainModel.FK_Ric_0_0" FromRole="FieldGroup" ToRole="Ric" />
+        </EntityType>
+        <Association Name="FK_Field_1_0">
+          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="1" />
+          <End Type="mainModel.Field" Role="Field" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldGroup">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Field">
+              <PropertyRef Name="id_FieldGroup" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_FieldGroup_0_0">
+          <End Type="mainModel.FieldDefinition" Role="FieldDefinition" Multiplicity="0..1" />
+          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldDefinition">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="FieldGroup">
+              <PropertyRef Name="id_DefaultFieldDef" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ric_0_0">
+          <End Type="mainModel.FieldGroup" Role="FieldGroup" Multiplicity="0..1" />
+          <End Type="mainModel.Ric" Role="Ric" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="FieldGroup">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Ric">
+              <PropertyRef Name="id_FieldGroup" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2403,20 +2483,6 @@
               <MappingFragment StoreEntitySet="Feed">
                 <ScalarProperty Name="Description" ColumnName="Description" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="Fields">
-            <EntityTypeMapping TypeName="mainModel.Field">
-              <MappingFragment StoreEntitySet="Field">
-                <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
-                <ScalarProperty Name="Volume" ColumnName="Volume" />
-                <ScalarProperty Name="VWAP" ColumnName="VWAP" />
-                <ScalarProperty Name="Close" ColumnName="Close" />
-                <ScalarProperty Name="Last" ColumnName="Last" />
-                <ScalarProperty Name="Ask" ColumnName="Ask" />
-                <ScalarProperty Name="Bid" ColumnName="Bid" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -2692,21 +2758,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="FieldVsGroups">
-            <EntityTypeMapping TypeName="mainModel.FieldVsGroup">
-              <MappingFragment StoreEntitySet="FieldVsGroup">
-                <ScalarProperty Name="Volume" ColumnName="Volume" />
-                <ScalarProperty Name="VWAP" ColumnName="VWAP" />
-                <ScalarProperty Name="Close" ColumnName="Close" />
-                <ScalarProperty Name="Last" ColumnName="Last" />
-                <ScalarProperty Name="Ask" ColumnName="Ask" />
-                <ScalarProperty Name="Bid" ColumnName="Bid" />
-                <ScalarProperty Name="IsDefault" ColumnName="IsDefault" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="InstrumentRicViews">
             <EntityTypeMapping TypeName="mainModel.InstrumentRicView">
               <MappingFragment StoreEntitySet="InstrumentRicView">
@@ -2725,16 +2776,6 @@
                 <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
                 <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
                 <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="FieldGroups">
-            <EntityTypeMapping TypeName="mainModel.FieldGroup">
-              <MappingFragment StoreEntitySet="FieldGroup">
-                <ScalarProperty Name="Default" ColumnName="Default" />
-                <ScalarProperty Name="DefaultField" ColumnName="DefaultField" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -2807,6 +2848,48 @@
                 <ScalarProperty Name="InstrumentTypeName" ColumnName="InstrumentTypeName" />
                 <ScalarProperty Name="InstrumentName" ColumnName="InstrumentName" />
                 <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Fields">
+            <EntityTypeMapping TypeName="mainModel.Field">
+              <MappingFragment StoreEntitySet="Field">
+                <ScalarProperty Name="id_FieldDef" ColumnName="id_FieldDef" />
+                <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
+                <ScalarProperty Name="SystemName" ColumnName="SystemName" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="FieldDefinitions">
+            <EntityTypeMapping TypeName="mainModel.FieldDefinition">
+              <MappingFragment StoreEntitySet="FieldDefinition">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="FieldVsGroups">
+            <EntityTypeMapping TypeName="mainModel.FieldVsGroup">
+              <MappingFragment StoreEntitySet="FieldVsGroup">
+                <ScalarProperty Name="InternalName" ColumnName="InternalName" />
+                <ScalarProperty Name="SystemName" ColumnName="SystemName" />
+                <ScalarProperty Name="FieldGroupName" ColumnName="FieldGroupName" />
+                <ScalarProperty Name="DefaultGroup" ColumnName="DefaultGroup" />
+                <ScalarProperty Name="id_DefaultFieldDefinition" ColumnName="id_DefaultFieldDefinition" />
+                <ScalarProperty Name="id_FieldDefinition" ColumnName="id_FieldDefinition" />
+                <ScalarProperty Name="id_Field" ColumnName="id_Field" />
+                <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="FieldGroups">
+            <EntityTypeMapping TypeName="mainModel.FieldGroup">
+              <MappingFragment StoreEntitySet="FieldGroup">
+                <ScalarProperty Name="id_DefaultFieldDef" ColumnName="id_DefaultFieldDef" />
+                <ScalarProperty Name="Default" ColumnName="Default" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

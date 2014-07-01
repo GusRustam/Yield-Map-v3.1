@@ -7,5 +7,38 @@ INSERT INTO "LegType"("id", "Name") VALUES ('1', 'Received'), ('2', 'Paid'), ('3
 INSERT INTO "InstrumentType"("id", "Name") VALUES ('1', 'Bond'), ('2', 'Frn'), ('3', 'Swap'), ('4', 'Ndf'), ('5', 'Cds')
 INSERT INTO "Ric"("id", "Name", "id_Isin", "id_Feed", "id_FieldGroup") VALUES ('1', 'RUCPI=ECI', NULL, '1', '3'), ('2', 'MOSPRIME3MD=', NULL, '1', '4'), ('3', 'RUSSRR', NULL, '1', '1')
 INSERT INTO "Index"("id", "Name", "id_Ric") VALUES ('1', 'RUCPI1M', '1'), ('2', 'RUSSRR', '3'), ('3', 'MPRIME3M', '2')
-INSERT INTO "FieldGroup"("id", "Name", "DefaultField", "Default") VALUES ('1', 'Micex', 'Last', '0'), ('2', 'Eurobonds', 'Bid', '1'), ('3', 'Russian CPI Index', 'Last', '0'), ('4', 'Mosprime', 'Last', '0')
-INSERT INTO "Field"("id", "Bid", "Ask", "Last", "Close", "VWAP", "Volume", "id_FieldGroup") VALUES ('4', 'BID', 'ASK', 'LAST', 'CLOSE', 'VWAP', 'VOLUME', '1'), ('5', '393', '275', NULL, 'CLOSE', NULL, NULL, '2'), ('6', NULL, NULL, '1053', 'CLOSE', NULL, NULL, '3'), ('7', NULL, NULL, '22', 'CLOSE', NULL, NULL, '4')
+/* Data for table Field */
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (1, 'BID', 1, 1);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (2, 'ASK', 1, 2);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (3, 'LAST', 1, 3);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (4, 'CLOSE', 1, 4);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (5, 'VWAP', 1, 5);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (6, 'VOLUME', 1, 6);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (7, '393', 2, 1);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (8, '275', 2, 2);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (9, 'CLOSE', 2, 4);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (10, '1053', 3, 3);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (11, 'CLOSE', 3, 4);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (12, '393', 4, 1);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (13, 'CLOSE', 4, 4);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (15, '275', 5, 2);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (16, '21', 5, 4);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (17, '1051', 5, 9);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (18, '1003', 4, 8);
+INSERT INTO "Field" (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (19, '393', 5, 1);
+/* Data for table FieldDefinition */
+INSERT INTO "FieldDefinition" (id, Name) VALUES (1, 'BID');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (2, 'ASK');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (3, 'LAST');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (4, 'CLOSE');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (5, 'VWAP');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (6, 'VOLUME');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (7, 'VALUE');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (8, 'TENOR');
+INSERT INTO "FieldDefinition" (id, Name) VALUES (9, 'MATURITY');
+/* Data for table FieldGroup */
+INSERT INTO "FieldGroup" (id, Name, "Default", id_DefaultFieldDef) VALUES (1, 'Micex', 0, NULL);
+INSERT INTO "FieldGroup" (id, Name, "Default", id_DefaultFieldDef) VALUES (2, 'Eurobonds', 1, 1);
+INSERT INTO "FieldGroup" (id, Name, "Default", id_DefaultFieldDef) VALUES (3, 'Russian CPI Index', 0, NULL);
+INSERT INTO "FieldGroup" (id, Name, "Default", id_DefaultFieldDef) VALUES (4, 'Mosprime', 0, NULL);
+INSERT INTO "FieldGroup" (id, Name, "Default", id_DefaultFieldDef) VALUES (5, 'Swaps', 0, NULL);

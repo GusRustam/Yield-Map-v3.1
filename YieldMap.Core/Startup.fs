@@ -1,6 +1,5 @@
 ﻿namespace YieldMap.Core
 
-
 module Startup =
     open Operations
     open Notifier
@@ -132,23 +131,27 @@ module Startup =
             and doClose t channel = 
                 async {
                     let! res = Operation.execute shutdown t
-                    // TODO PARSE
+                    // TODO PARSE THE ANSWER
                     return close channel
                 }
 
             and doReload t force channel = 
                 async {
                     try
-                        let chainRequests = q.Database 
-                                            |> Manager.chainsInNeed c.Today
-                                            |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
+                        let chainRequests = 
+                            q.Database 
+                            |> Manager.chainsInNeed c.Today
+                            |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
 
                         let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
                         match res with
                         | Tweet.Failure f -> 
                             Notifier.notify ("Startup", f, Severity.Warn)
                             return! connected channel
-                        | Tweet.Answer _ -> return! initialized channel
+
+                        | Tweet.Answer _ -> 
+                            return! initialized channel
+
                     with e ->
                         logger.ErrorEx "Primary reload failed" e
                         Notifier.notify ("Startup", Error e, Severity.Warn)

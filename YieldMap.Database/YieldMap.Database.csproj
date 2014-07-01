@@ -94,6 +94,9 @@
     <Compile Include="Field.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
+    <Compile Include="FieldDefinition.cs">
+      <DependentUpon>Database.tt</DependentUpon>
+    </Compile>
     <Compile Include="FieldGroup.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>

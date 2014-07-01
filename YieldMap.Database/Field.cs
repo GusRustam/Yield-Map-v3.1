@@ -15,26 +15,19 @@ namespace YieldMap.Database
     public partial class Field
     {
         public long id { get; set; }
-        public string Bid { get; set; }
-        public string Ask { get; set; }
-        public string Last { get; set; }
-        public string Close { get; set; }
-        public string VWAP { get; set; }
-        public string Volume { get; set; }
+        public string SystemName { get; set; }
         public long id_FieldGroup { get; set; }
+        public long id_FieldDef { get; set; }
     	public Field ToPocoSimple() {
     	    return new Field {
     			id = this.id,
-    			Bid = this.Bid,
-    			Ask = this.Ask,
-    			Last = this.Last,
-    			Close = this.Close,
-    			VWAP = this.VWAP,
-    			Volume = this.Volume,
+    			SystemName = this.SystemName,
     			id_FieldGroup = this.id_FieldGroup,
+    			id_FieldDef = this.id_FieldDef,
     		};
     	}
     		
+        public virtual FieldDefinition FieldDefinition { get; set; }
         public virtual FieldGroup FieldGroup { get; set; }
     }
 }

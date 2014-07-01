@@ -403,8 +403,6 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUCORP=MM"|] dt
 
-//        let command cmd func state = func () |> Async.RunSynchronously |> should be (equal state)
-
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
 

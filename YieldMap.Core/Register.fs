@@ -35,7 +35,19 @@ module Register =
         abstract Items : unit -> (int64, Grammar) Map
         abstract Evaluate : int64 -> (string, obj) Map -> Lexan.Value
 
+    // todo create a couple of swaps and a couple of other instruments so that to test on other types of instruments
+
+    // свопы можно повесить на один и тот же айсин. тогда, кстати, надо удостовериваться, что 
+    // нету дубляжа на уровне айсинов (тест с арменией)
+    // то есть своп - это чейн плюс стуктура. плюс правило для выделения сроков. плюс ноги
+    // так что же - опять xml? Или просто особый порядок загрузки чейнов?
+
+    // todo recalculate functions!
+    // 1) for each instrument get its id and a corresponding expression (from Property table)
+    // 2) for each one extract metadata, pack it into a map, and evaluate expression, and store that value into the property table
+
     type InMemoryRegistry (factory : Func<IContainer>) =
+        let container = factory.Invoke ()
         static let registry = ConcurrentDictionary<int64, Grammar> ()
 
         interface Registry with
@@ -45,7 +57,6 @@ module Register =
                     registry.TryRemove id |> ignore
                     if not <| String.IsNullOrWhiteSpace expr then
                         try
-                            let container = factory.Invoke ()
                             let grammar = container.Resolve<Grammar>(NamedParameter("expr", expr))
                             if not <| registry.TryAdd (id, grammar) then
                                 logger.Warn <| sprintf "Failed to add item with id %d into registry" id

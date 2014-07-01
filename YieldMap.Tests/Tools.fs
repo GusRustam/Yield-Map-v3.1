@@ -19,3 +19,9 @@ module Tools =
     let ``Restore DB to defaults`` () =
         Manager () 
         |> Manager.restore (Path.Combine(Location.path, "../../EMPTY.sql"))
+
+
+    [<Test>]
+    let ``Restore DB to RUCORP`` () =
+        Manager () 
+        |> Manager.restore (Path.Combine(Location.path, "../../RUCORP.sql"))

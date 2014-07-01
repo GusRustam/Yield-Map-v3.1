@@ -12,22 +12,22 @@ module Testability =
         let returnsCall (item : unit -> 'b) (setup : ('a, 'b) ResultBuilder) = setup.Returns(item)
         let create (mock : 'T Mock) = mock.Create()
 
-    module Autofac =
-        // todo create a computational expression for that
-        let create () = 
-            ContainerBuilder ()
-        let register<'T> (cb : ContainerBuilder) = 
-            cb.RegisterType<'T> (), cb
-        let instance<'T> instance (cb : ContainerBuilder) = 
-            cb.RegisterInstance instance, cb
-        let using<'T>  (b : IRegistrationBuilder<'T, SimpleActivatorData, SingleRegistrationStyle>) (cb : ContainerBuilder)  = 
-            b.As<'T> (), cb
-        let externallyOwned  (b : IRegistrationBuilder<'T, SimpleActivatorData, SingleRegistrationStyle>) (cb : ContainerBuilder) = 
-            b.ExternallyOwned (), cb
-        let build _ (cb : ContainerBuilder) = 
-            cb.Build ()
-
-        // todo this workflow is much more complex
+//    module Autofac =
+//        // todo create a computational expression for that
+//        let create () = 
+//            ContainerBuilder ()
+//        let register<'T> (cb : ContainerBuilder) = 
+//            cb.RegisterType<'T> (), cb
+//        let instance<'T> instance (cb : ContainerBuilder) = 
+//            cb.RegisterInstance instance, cb
+//        let using<'T>  (b : IRegistrationBuilder<'T, SimpleActivatorData, SingleRegistrationStyle>) (cb : ContainerBuilder)  = 
+//            b.As<'T> (), cb
+//        let externallyOwned  (b : IRegistrationBuilder<'T, SimpleActivatorData, SingleRegistrationStyle>) (cb : ContainerBuilder) = 
+//            b.ExternallyOwned (), cb
+//        let build _ (cb : ContainerBuilder) = 
+//            cb.Build ()
+//
+//        // todo this workflow is much more complex
 
     //    let private builder = ContainerBuilder ()
     //    let mutable private container = null;
