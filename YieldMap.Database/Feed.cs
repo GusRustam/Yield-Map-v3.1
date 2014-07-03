@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Feed
+    //using YieldMap.Database.Domains;
+    public partial class Feed //: IObjectWithState
     {
         public Feed()
         {
@@ -31,6 +31,8 @@ namespace YieldMap.Database
     			Description = this.Description,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual ICollection<Chain> Chains { get; set; }
         public virtual ICollection<Isin> Isins { get; set; }

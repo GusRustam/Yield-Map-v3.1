@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class OrdinaryFrn
+    //using YieldMap.Database.Domains;
+    public partial class OrdinaryFrn //: IObjectWithState
     {
         public long id_Instrument { get; set; }
         public string Name { get; set; }
@@ -68,5 +68,7 @@ namespace YieldMap.Database
     			IndexRic = this.IndexRic,
     		};
     	}
+    
+    	//public State State {get;set;}
     		}
 }

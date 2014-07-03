@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class FieldGroup
+    //using YieldMap.Database.Domains;
+    public partial class FieldGroup //: IObjectWithState
     {
         public FieldGroup()
         {
@@ -32,6 +32,8 @@ namespace YieldMap.Database
     			id_DefaultFieldDef = this.id_DefaultFieldDef,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual ICollection<Field> Fields { get; set; }
         public virtual FieldDefinition FieldDefinition { get; set; }

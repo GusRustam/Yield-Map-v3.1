@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Seniority
+    //using YieldMap.Database.Domains;
+    public partial class Seniority //: IObjectWithState
     {
         public Seniority()
         {
@@ -27,6 +27,8 @@ namespace YieldMap.Database
     			Name = this.Name,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual ICollection<Description> Descriptions { get; set; }
     }

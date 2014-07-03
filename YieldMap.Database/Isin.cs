@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Isin
+    //using YieldMap.Database.Domains;
+    public partial class Isin //: IObjectWithState
     {
         public Isin()
         {
@@ -30,6 +30,8 @@ namespace YieldMap.Database
     			id_Feed = this.id_Feed,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Feed Feed { get; set; }
         public virtual ICollection<Ric> Rics { get; set; }

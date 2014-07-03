@@ -3,13 +3,14 @@
 open Autofac
 
 open YieldMap.Database
-open YieldMap.Database.Access
-open YieldMap.Database.Procedures.Additions
+open YieldMap.Transitive.Domains.ReadOnly
 
 open YieldMap.Language
 open YieldMap.Language.Exceptions
 open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
+
+
 
 open System.Collections.Concurrent
 open System.Collections.Generic
@@ -21,16 +22,27 @@ open System
 module Register =
     let logger = LogFactory.create "Core.Register"
 
+    type ('a, 'b) KeyValue when 'a : comparison = 
+    | Map of ('a, 'b) Map 
+    | Dict of ('a, 'b) Dictionary
+    with
+        static member containsKey k h = 
+            match h with
+            | Map m -> Map.containsKey k m
+            | Dict d -> d.ContainsKey k
+        static member initDict d = Dict d
+        static member initMap m = Map m
+
     /// Abstract grammar
     type Grammar =
         abstract Expression : string
-        abstract Evaluate : (string, obj) Map -> Lexan.Value
+        abstract Evaluate : (string, obj) Dictionary -> Lexan.Value
 
     type ParsedGrammar (expr) = 
         let syntax = Syntan.grammarize expr
         interface Grammar with
             member x.Expression = expr
-            member x.Evaluate env = Interpreter.evaluate syntax env
+            member x.Evaluate env = Interpreter.evaluate syntax (env |> Map.fromDict)
 
     /// A dictionary of id -> Grammar pairs
     /// The id is id_Property, grammar is result of parsing the expression in that property
@@ -46,10 +58,10 @@ module Register =
         abstract Items : unit -> (int64, Grammar) Map
 
         /// Evaluates specific item against given variables
-        abstract Evaluate : int64 -> (string, obj) Map -> Lexan.Value
+        abstract Evaluate : int64 -> (string, obj) Dictionary -> Lexan.Value
 
         /// Evaluates all items against given variables
-        abstract EvaluateAll : (string, obj) Map -> (int64 * string) list
+        abstract EvaluateAll : (string, obj) Dictionary -> (int64 * string) list
 
     type InMemoryRegistry (factory : Func<IContainer>) =
         let container = factory.Invoke ()
@@ -66,7 +78,7 @@ module Register =
                             if not <| registry.TryAdd (id, grammar) then
                                 logger.Warn <| sprintf "Failed to add item with id %d into registry" id
                         with :? GrammarException as e -> 
-                            logger.WarnEx (sprintf "Failed to interpret an expression %s" expr ) e
+                            logger.WarnEx (sprintf "Failed to interpret an expression %s" expr) e
                 )
 
             member x.Items () = 
@@ -86,64 +98,26 @@ module Register =
             member x.EvaluateAll env = 
                 registry.Keys |> List.ofSeq |> List.map (fun id -> id, ((x :> Registry).Evaluate id env).asString)
 
-    let pack (i : InstrumentDescriptionView) = 
-        [("Name", box i.InstrumentName)
-         ("Borrower.Country", box i.BorrowerCountryName)
-         ("Borrower.Name", box i.BorrowerName)
-         ("Issuer.Country", box i.IssuerCountryName)
-         ("Issuer.Name", box i.IssuerName)
-         ("Industry", box i.IndustryName)
-         ("Issue.Rating", box i.InstrumentRating)
-         ("Issue.RatingAgency", box i.InstrumentRatingAgency)
-         ("Issue.RatingDate", box i.InstrumentRatingDate)
-         ("Issuer.Rating", box i.IssuerRating)
-         ("Issuer.RatingAgency", box i.IssuerRatingAgency)
-         ("Issuer.RatingDate", box i.IssuerRatingDate)
-         ("Isin", box i.IsinName)
-         ("Ric", box i.RicName)
-         ("IssueDate", box i.Issue)
-         ("Maturity", box i.Maturity)
-         ("IssueSize", box i.IssueSize)
-         ("Industry", box i.IndustryName)
-         ("SubIndustry", box i.SubIndustryName)
-         ("Seniority", box i.SeniorityName)
-         ("Series", box i.Series)
-         ("Specimen", box i.SpecimenName)
-         ("Ticker", box i.TickerName)] |> Map.ofList
+    type IPropertyStorage = abstract Save : _ -> unit
 
     type Recounter = abstract member Recount : unit -> unit
     type DbRecounter(cont : Func<IContainer>) = 
         let container = cont.Invoke ()
-        let conn = container.Resolve<IDbConn> ()
         let registry = container.Resolve<Registry> ()
+        let reader = container.Resolve<IInstrumentDescriptionsReader> ()
         let propertySaver = container.Resolve<IPropertyStorage> ()
 
         interface Recounter with
             member x.Recount () = 
-                use ctx = conn.CreateContext ()
-
-
-                ctx.Instruments 
+                reader.Instruments 
                 |> Seq.choose (fun i -> 
-                    let descr = query { for d in ctx.InstrumentDescriptionViews do
+                    let descr = query { for d in reader.InstrumentDescriptionViews do
                                         where (d.id_Instrument = i.id)                                         
-                                        select (pack d) 
+                                        select (reader.PackInstrumentDescription d) 
                                         exactlyOneOrDefault }                
-                    if not <| Map.isEmpty descr 
+                    if descr <> null
                     then Some (i.id, registry.EvaluateAll descr |> Map.ofSeq)
                     else None)
                 |> Map.ofSeq
                 |> Map.toDict2 // (idInstrument (idProperty, value) Dict) Dict
                 |> propertySaver.Save 
-
-    
-    // todo wtf's going on here?
-    let private builder = ContainerBuilder ()
-    let mutable private container = null;
-    builder.RegisterType<ParsedGrammar>().As<Grammar>() |> ignore
-    builder.RegisterType<InMemoryRegistry>().As<Registry>().SingleInstance() |> ignore
-    let private factory = Func<IContainer>(fun () -> container)
-    builder.RegisterInstance factory |> ignore
-    container <- builder.Build ()
-
-    let defaultRegistry = container.Resolve<Registry> () 

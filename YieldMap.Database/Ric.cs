@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Ric
+    //using YieldMap.Database.Domains;
+    public partial class Ric //: IObjectWithState
     {
         public Ric()
         {
@@ -35,6 +35,8 @@ namespace YieldMap.Database
     			id_FieldGroup = this.id_FieldGroup,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Feed Feed { get; set; }
         public virtual Isin Isin { get; set; }

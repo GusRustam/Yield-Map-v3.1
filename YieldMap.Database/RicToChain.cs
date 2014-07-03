@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class RicToChain
+    //using YieldMap.Database.Domains;
+    public partial class RicToChain //: IObjectWithState
     {
         public long id { get; set; }
         public Nullable<long> Ric_id { get; set; }
@@ -24,6 +24,8 @@ namespace YieldMap.Database
     			Chain_id = this.Chain_id,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Chain Chain { get; set; }
         public virtual Ric Ric { get; set; }

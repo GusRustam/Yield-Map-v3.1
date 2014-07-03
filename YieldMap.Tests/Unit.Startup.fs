@@ -17,7 +17,7 @@ module Ops =
     open System.Data.Entity
     open System.Linq
 
-    let cnt (table : 'a DbSet) = 
+    let cnt (table : 'a IDbSet) = 
         query { for x in table do 
                 select x
                 count }
@@ -67,7 +67,7 @@ module StartupTest =
     open YieldMap.Core
     open YieldMap.Core.Loader
     open YieldMap.Core.Startup
-    open YieldMap.Core.Manager
+    open YieldMap.Core.DbManager
     open YieldMap.Core.Notifier
 
     open YieldMap.Database
@@ -144,12 +144,12 @@ module StartupTest =
 
     let mutable (c : Calendar) = Unchecked.defaultof<Calendar>
     let mutable (s : Drivers) = Unchecked.defaultof<Drivers>
-    let m = new Manager ()
+    let m = new DbManager ()
 
     let init chains dt = 
         c <- MockCalendar dt
 
-        use ctx = Manager.createContext m
+        use ctx = DbManager.createContext m
 
         chains |> Array.iter (fun name -> 
             if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
@@ -177,7 +177,7 @@ module StartupTest =
     let teardown () = 
         globalThreshold := LoggingLevel.Warn
         logger.Info "teardown"
-        m |> Manager.restore "EMPTY.sql"
+        m |> DbManager.restore "EMPTY.sql"
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
@@ -239,7 +239,7 @@ module StartupTest =
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        use ctx = s.Database |> Manager.createContext 
+        use ctx = s.Database |> DbManager.createContext 
         cnt ctx.Feeds |> should be (equal 1)
         cnt ctx.Chains |> should be (equal 1)
 
@@ -252,7 +252,7 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUEUROS="|] dt        
         
-        use ctx =  s.Database |> Manager.createContext 
+        use ctx =  s.Database |> DbManager.createContext 
         let initialUnattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
@@ -261,7 +261,7 @@ module StartupTest =
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload true) (State Initialized)
 
-        use ctx = s.Database |> Manager.createContext 
+        use ctx = s.Database |> DbManager.createContext 
         let unattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
@@ -277,7 +277,7 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#US30YSTRIP=PX"|] dt
 
-        use ctx =  s.Database |> Manager.createContext 
+        use ctx =  s.Database |> DbManager.createContext 
         let initialUnattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
@@ -288,7 +288,7 @@ module StartupTest =
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         command "Connect" x.Connect (State Initialized)
 
-        use ctx = s.Database |> Manager.createContext 
+        use ctx = s.Database |> DbManager.createContext 
         let unattachedRics = query {
             for n in ctx.Rics do
             where (n.Isin = null)
@@ -327,7 +327,7 @@ module StartupTest =
         let x = Startup s
         
         // Checking cleanup
-        use ctx = s.Database |> Manager.createContext 
+        use ctx = s.Database |> DbManager.createContext 
         ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
         ctx.SaveChanges () |> ignore
 
@@ -339,7 +339,7 @@ module StartupTest =
         let assertAmounts dt t o r k =
             // todo secure proprtions
             let proportions = 
-                Manager.classify s.Database dt [||]
+                DbManager.classify s.Database dt [||]
                 |> Map.fromDict
                 |> Map.map (fun _ -> Array.length)
 
@@ -406,7 +406,7 @@ module StartupTest =
         command "Connect" x.Connect (State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
 
-        use ctx = s.Database |> Manager.createContext 
+        use ctx = s.Database |> DbManager.createContext 
         let n = query { for x in ctx.OrdinaryFrns do
                         select x
                         count }
@@ -423,5 +423,5 @@ module StartupTest =
         command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
         
         s.Database 
-        |> Manager.backup 
+        |> DbManager.backup 
         |> logger.Info

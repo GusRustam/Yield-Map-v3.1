@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class PropertyType
+    //using YieldMap.Database.Domains;
+    public partial class PropertyType //: IObjectWithState
     {
         public PropertyType()
         {
@@ -27,6 +27,8 @@ namespace YieldMap.Database
     			Name = this.Name,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual ICollection<Property> Properties { get; set; }
     }

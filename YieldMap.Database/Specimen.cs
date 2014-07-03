@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Specimen
+    //using YieldMap.Database.Domains;
+    public partial class Specimen //: IObjectWithState
     {
         public Specimen()
         {
@@ -27,6 +27,8 @@ namespace YieldMap.Database
     			name = this.name,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual ICollection<Description> Descriptions { get; set; }
     }

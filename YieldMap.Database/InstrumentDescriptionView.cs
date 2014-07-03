@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class InstrumentDescriptionView
+    //using YieldMap.Database.Domains;
+    public partial class InstrumentDescriptionView //: IObjectWithState
     {
         public long id_Instrument { get; set; }
         public string InstrumentName { get; set; }
@@ -70,5 +70,7 @@ namespace YieldMap.Database
     			IssuerRatingAgency = this.IssuerRatingAgency,
     		};
     	}
+    
+    	//public State State {get;set;}
     		}
 }

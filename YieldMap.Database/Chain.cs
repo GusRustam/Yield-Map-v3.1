@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Chain
+    //using YieldMap.Database.Domains;
+    public partial class Chain //: IObjectWithState
     {
         public Chain()
         {
@@ -33,6 +33,8 @@ namespace YieldMap.Database
     			Params = this.Params,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Feed Feed { get; set; }
         public virtual ICollection<RicToChain> RicToChains { get; set; }

@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Leg
+    //using YieldMap.Database.Domains;
+    public partial class Leg //: IObjectWithState
     {
         public long id { get; set; }
         public string Structure { get; set; }
@@ -38,6 +38,8 @@ namespace YieldMap.Database
     			Margin = this.Margin,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual LegType LegType { get; set; }
         public virtual Currency Currency { get; set; }

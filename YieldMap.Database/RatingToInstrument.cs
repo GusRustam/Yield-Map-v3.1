@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class RatingToInstrument
+    //using YieldMap.Database.Domains;
+    public partial class RatingToInstrument //: IObjectWithState
     {
         public long id { get; set; }
         public long id_Rating { get; set; }
@@ -26,6 +26,8 @@ namespace YieldMap.Database
     			RatingDate = this.RatingDate,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Rating Rating { get; set; }
         public virtual Instrument Instrument { get; set; }

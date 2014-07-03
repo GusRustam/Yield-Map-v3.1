@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class PropertyValue
+    //using YieldMap.Database.Domains;
+    public partial class PropertyValue //: IObjectWithState
     {
         public long id { get; set; }
         public Nullable<long> id_Property { get; set; }
@@ -30,6 +30,8 @@ namespace YieldMap.Database
     			FloatValue = this.FloatValue,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Instrument Instrument { get; set; }
         public virtual Property Property { get; set; }

@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Currency
+    //using YieldMap.Database.Domains;
+    public partial class Currency //: IObjectWithState
     {
         public Currency()
         {
@@ -27,6 +27,8 @@ namespace YieldMap.Database
     			Name = this.Name,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual ICollection<Leg> Legs { get; set; }
     }

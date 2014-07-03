@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Description
+    //using YieldMap.Database.Domains;
+    public partial class Description //: IObjectWithState
     {
         public Description()
         {
@@ -53,6 +53,8 @@ namespace YieldMap.Database
     			NextCoupon = this.NextCoupon,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual LegalEntity Issuer { get; set; }
         public virtual Specimen Specimen { get; set; }

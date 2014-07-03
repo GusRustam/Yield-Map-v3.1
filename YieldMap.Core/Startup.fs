@@ -141,7 +141,8 @@ module Startup =
                         let chainRequests = 
                             q.Database 
                             |> DbManager.chainsInNeed c.Today
-                            |> Array.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
+                            |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
+                            |> Array.ofSeq
 
                         let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
                         match res with

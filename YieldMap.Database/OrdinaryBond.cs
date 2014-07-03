@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class OrdinaryBond
+    //using YieldMap.Database.Domains;
+    public partial class OrdinaryBond //: IObjectWithState
     {
         public long id_Instrument { get; set; }
         public string Name { get; set; }
@@ -60,5 +60,7 @@ namespace YieldMap.Database
     			id_Currency = this.id_Currency,
     		};
     	}
+    
+    	//public State State {get;set;}
     		}
 }

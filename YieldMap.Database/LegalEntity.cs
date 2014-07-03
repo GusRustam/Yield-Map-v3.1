@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class LegalEntity
+    //using YieldMap.Database.Domains;
+    public partial class LegalEntity //: IObjectWithState
     {
         public LegalEntity()
         {
@@ -31,6 +31,8 @@ namespace YieldMap.Database
     			id_Country = this.id_Country,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Country Country { get; set; }
         public virtual ICollection<RatingToLegalEntity> RatingToLegalEntities { get; set; }

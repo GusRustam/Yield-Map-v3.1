@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Index
+    //using YieldMap.Database.Domains;
+    public partial class Index //: IObjectWithState
     {
         public Index()
         {
@@ -29,6 +29,8 @@ namespace YieldMap.Database
     			id_Ric = this.id_Ric,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Ric Ric { get; set; }
         public virtual ICollection<Leg> Legs { get; set; }

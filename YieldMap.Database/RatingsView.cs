@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class RatingsView
+    //using YieldMap.Database.Domains;
+    public partial class RatingsView //: IObjectWithState
     {
         public long id_Rating { get; set; }
         public long id_RatingAgency { get; set; }
@@ -32,5 +32,7 @@ namespace YieldMap.Database
     			AgencyCode = this.AgencyCode,
     		};
     	}
+    
+    	//public State State {get;set;}
     		}
 }

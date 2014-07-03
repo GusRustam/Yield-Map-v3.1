@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class Ticker
+    //using YieldMap.Database.Domains;
+    public partial class Ticker //: IObjectWithState
     {
         public Ticker()
         {
@@ -30,6 +30,8 @@ namespace YieldMap.Database
     			id_ParentTicker = this.id_ParentTicker,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual ICollection<Ticker> Child { get; set; }
         public virtual Ticker Parent { get; set; }

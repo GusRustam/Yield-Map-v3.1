@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class RatingAgencyCode
+    //using YieldMap.Database.Domains;
+    public partial class RatingAgencyCode //: IObjectWithState
     {
         public long id { get; set; }
         public string Name { get; set; }
@@ -24,6 +24,8 @@ namespace YieldMap.Database
     			id_RatingAgency = this.id_RatingAgency,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual RatingAgency RatingAgency { get; set; }
     }

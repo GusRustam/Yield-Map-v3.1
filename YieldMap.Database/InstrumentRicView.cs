@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class InstrumentRicView
+    //using YieldMap.Database.Domains;
+    public partial class InstrumentRicView //: IObjectWithState
     {
         public long id_Ric { get; set; }
         public long id_Instrument { get; set; }
@@ -26,5 +26,7 @@ namespace YieldMap.Database
     			Name = this.Name,
     		};
     	}
+    
+    	//public State State {get;set;}
     		}
 }

@@ -11,8 +11,8 @@ namespace YieldMap.Database
 {
     using System;
     using System.Collections.Generic;
-    
-    public partial class SubIndustry
+    //using YieldMap.Database.Domains;
+    public partial class SubIndustry //: IObjectWithState
     {
         public SubIndustry()
         {
@@ -29,6 +29,8 @@ namespace YieldMap.Database
     			id_Industry = this.id_Industry,
     		};
     	}
+    
+    	//public State State {get;set;}
     		
         public virtual Industry Industry { get; set; }
         public virtual ICollection<Description> Descriptions { get; set; }

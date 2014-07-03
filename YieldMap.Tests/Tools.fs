@@ -9,7 +9,7 @@ open FsUnit
 open YieldMap.Tools.Location
 open YieldMap.Tools.Logging
 
-open YieldMap.Core.Manager
+open YieldMap.Core.DbManager
 
 
 module Tools =
@@ -17,11 +17,11 @@ module Tools =
 
     [<Test>]
     let ``Restore DB to defaults`` () =
-        Manager () 
-        |> Manager.restore (Path.Combine(Location.path, "../../EMPTY.sql"))
+        DbManager () 
+        |> DbManager.restore (Path.Combine(Location.path, "../../EMPTY.sql"))
 
 
     [<Test>]
     let ``Restore DB to RUCORP`` () =
-        Manager () 
-        |> Manager.restore (Path.Combine(Location.path, "../../RUCORP.sql"))
+        DbManager () 
+        |> DbManager.restore (Path.Combine(Location.path, "../../RUCORP.sql"))
