@@ -13,7 +13,7 @@ namespace YieldMap.Transitive.Registry {
             _container = container;
         }
 
-        public void Recalculate() {
+        public bool Recalculate() {
             var reader = _container.Resolve<IInstrumentDescriptionsReader>();
             var registry = _container.Resolve<IFunctionRegistry>();
             
@@ -44,6 +44,7 @@ namespace YieldMap.Transitive.Registry {
                 }
                 ctx.SaveChanges();
             }
+            return true;
         }
     }
 }

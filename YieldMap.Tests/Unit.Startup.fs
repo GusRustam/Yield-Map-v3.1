@@ -171,20 +171,22 @@ module StartupTest =
 
     [<SetUp>]
     let setup () = 
+        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
+
         globalThreshold := LoggingLevel.Debug
 
     [<TearDown>]
     let teardown () = 
         globalThreshold := LoggingLevel.Warn
         logger.Info "teardown"
+        DbTracing.Disable ()
         m |> DbManager.restore "EMPTY.sql"
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
     let ``Startup with one chain`` xxx =             
-        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
-        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
-        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
 
         let { date = dt; chains = prms } = xxx
         logger.WarnF "Starting test with chains %A" prms
