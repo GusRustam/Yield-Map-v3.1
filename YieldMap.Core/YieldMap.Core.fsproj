@@ -49,7 +49,6 @@
     <Compile Include="DbManager.fs" />
     <Compile Include="Loader.fs" />
     <Compile Include="Operations.fs" />
-    <Compile Include="Register.fs" />
     <Compile Include="Container.fs" />
     <Compile Include="Startup.fs" />
     <None Include="App.config" />

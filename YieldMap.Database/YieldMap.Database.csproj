@@ -224,10 +224,6 @@
       <Project>{8ed0f41e-4146-4875-9ab1-0d5ecf2ca491}</Project>
       <Name>YieldMap.Language</Name>
     </ProjectReference>
-    <ProjectReference Include="..\YieldMap.Requests\YieldMap.Requests.fsproj">
-      <Project>{e773f65f-d9dc-4420-9af5-d148780b531f}</Project>
-      <Name>YieldMap.Requests</Name>
-    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Tools\YieldMap.Tools.fsproj">
       <Project>{41cf2e5f-752e-4e65-8773-ae7061242ba9}</Project>
       <Name>YieldMap.Tools</Name>

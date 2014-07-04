@@ -3,7 +3,7 @@ using YieldMap.Transitive.Domains.Enums;
 using YieldMap.Transitive.Domains.Procedures;
 using YieldMap.Transitive.Domains.Queries;
 
-namespace YieldMap.Transitive {
+namespace YieldMap.Transitive.MediatorTypes {
     public static class Initializer {
         public static readonly IContainer Container;
 

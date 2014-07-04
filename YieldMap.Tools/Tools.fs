@@ -3,6 +3,8 @@
 open System.Runtime.InteropServices
 open System.Collections.Generic
 
+#nowarn "62"
+
 [<AutoOpen>]
 module Extensions =
     open System
@@ -18,6 +20,18 @@ module Extensions =
     type Agent<'T> = MailboxProcessor<'T>
 
     let cross f a b = f b a
+
+    // todo kill or use
+    type ('a, 'b) KeyValue when 'a : comparison = 
+    | Map of ('a, 'b) Map 
+    | Dict of ('a, 'b) Dictionary
+    with
+        static member containsKey k h = 
+            match h with
+            | Map m -> Map.containsKey k m
+            | Dict d -> d.ContainsKey k
+        static member initDict d = Dict d
+        static member initMap m = Map m
 
     // Some operators
     let inline ( |- ) item items = Set.contains item items // belongs

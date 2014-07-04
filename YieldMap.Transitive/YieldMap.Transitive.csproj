@@ -50,13 +50,12 @@
     <Reference Include="YieldMap.Requests">
       <HintPath>..\YieldMap.Tests\bin\Debug\YieldMap.Requests.dll</HintPath>
     </Reference>
-    <Reference Include="YieldMap.Tools, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\YieldMap.Requests\bin\Debug\YieldMap.Tools.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bond.cs" />
+    <Compile Include="Domains\Procedures\EvaluatableExpression.cs" />
+    <Compile Include="Domains\Procedures\FunctionRegistry.cs" />
+    <Compile Include="Domains\Procedures\IFunctionRegistry.cs" />
+    <Compile Include="MediatorTypes\Bond.cs" />
     <Compile Include="Domains\ContextHelper.cs" />
     <Compile Include="Domains\Contexts\BaseContext.cs" />
     <Compile Include="Domains\Contexts\BondAdditionContext.cs" />
@@ -65,7 +64,9 @@
     <Compile Include="Domains\Contexts\EmptyContext.cs" />
     <Compile Include="Domains\Contexts\EnumerationsContext.cs" />
     <Compile Include="Domains\Contexts\InstrumentDescriptionContext.cs" />
+    <Compile Include="Domains\Contexts\PropertiesContext.cs" />
     <Compile Include="Domains\Contexts\RatingContext.cs" />
+    <Compile Include="Domains\Procedures\PropertiesUpdater.cs" />
     <Compile Include="Domains\ReadOnly\EikonEntitiesReader.cs" />
     <Compile Include="Domains\ReadOnly\IEikonEntitiesReader.cs" />
     <Compile Include="Domains\ReadOnly\IInstrumentDescriptionsReader.cs" />
@@ -79,9 +80,9 @@
     <Compile Include="Domains\Queries\ReadOnlyRepository.cs" />
     <Compile Include="Domains\Repositories\InstrumentRepository.cs" />
     <Compile Include="Domains\Repositories\Interfaces.cs" />
-    <Compile Include="Frn.cs" />
-    <Compile Include="Initializer.cs" />
-    <Compile Include="InstrumentDescription.cs" />
+    <Compile Include="MediatorTypes\Frn.cs" />
+    <Compile Include="MediatorTypes\Initializer.cs" />
+    <Compile Include="MediatorTypes\InstrumentDescription.cs" />
     <Compile Include="Domains\Procedures\Bonds.cs" />
     <Compile Include="Domains\Procedures\ChainRics.cs" />
     <Compile Include="Domains\Procedures\IBonds.cs" />
@@ -102,7 +103,7 @@
     <Compile Include="Domains\Enums\LegTypes.cs" />
     <Compile Include="Domains\Queries\IBackupRestore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rating.cs" />
+    <Compile Include="MediatorTypes\Rating.cs" />
     <Compile Include="Tools\Extensions.cs" />
     <Compile Include="Tools\FieldResolver.cs" />
     <Compile Include="Tools\IFieldResolver.cs" />
@@ -118,6 +119,14 @@
     <ProjectReference Include="..\YieldMap.Database\YieldMap.Database.csproj">
       <Project>{21174B80-86BF-491F-9BF5-057D46A39D4C}</Project>
       <Name>YieldMap.Database</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\YieldMap.Language\YieldMap.Language.fsproj">
+      <Project>{8ed0f41e-4146-4875-9ab1-0d5ecf2ca491}</Project>
+      <Name>YieldMap.Language</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\YieldMap.Tools\YieldMap.Tools.fsproj">
+      <Project>{41cf2e5f-752e-4e65-8773-ae7061242ba9}</Project>
+      <Name>YieldMap.Tools</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

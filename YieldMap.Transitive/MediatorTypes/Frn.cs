@@ -1,6 +1,6 @@
 ﻿using YieldMap.Requests.MetaTables;
 
-namespace YieldMap.Transitive {
+namespace YieldMap.Transitive.MediatorTypes {
     public class Frn : InstrumentDescription {
         public string FrnStructure{ get; private set; }
 

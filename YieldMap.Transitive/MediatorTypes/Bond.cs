@@ -1,6 +1,6 @@
 ﻿using YieldMap.Requests.MetaTables;
 
-namespace YieldMap.Transitive {
+namespace YieldMap.Transitive.MediatorTypes {
     public class Bond : InstrumentDescription {
         public string BondStructure{ get; private set; }
         public double? Coupon{ get; private set; }

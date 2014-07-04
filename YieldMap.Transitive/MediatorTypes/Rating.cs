@@ -2,7 +2,7 @@
 using System.IO;
 using YieldMap.Requests.MetaTables;
 
-namespace YieldMap.Transitive {
+namespace YieldMap.Transitive.MediatorTypes {
     public class Rating {
         public bool Issuer { get; private set; }
         public string RatingName { get; private set; }

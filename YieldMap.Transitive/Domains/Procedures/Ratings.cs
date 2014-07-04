@@ -5,6 +5,7 @@ using YieldMap.Database;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Tools;
+using Rating = YieldMap.Transitive.MediatorTypes.Rating;
 
 namespace YieldMap.Transitive.Domains.Procedures {
     internal class Ratings : IRatings {

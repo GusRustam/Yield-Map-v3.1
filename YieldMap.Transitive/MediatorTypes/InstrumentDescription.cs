@@ -1,7 +1,7 @@
 ﻿using System;
 using YieldMap.Requests.MetaTables;
 
-namespace YieldMap.Transitive {
+namespace YieldMap.Transitive.MediatorTypes {
     public class InstrumentDescription {
         public string Ric{ get; private set; }
         public string Isin{ get; private set; }

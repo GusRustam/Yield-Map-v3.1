@@ -290,7 +290,8 @@ module Interpreter =
                 else Value.Nothing
             else Value.Nothing
 
-    let evaluate grammar (vars : (string, obj) Map) = 
+    let evaluate (grammar, vars : (string, obj) Dictionary) = 
+        let vars = vars |> Map.fromDict
         let items = 
             ([], grammar) ||> Seq.fold (fun progress i -> 
                 match i with
@@ -309,9 +310,3 @@ module Interpreter =
         match items with 
         | (Syntel.Value v) :: [] -> v
         | _ -> failwith "Invalid result"
-//
-//    let evaluate code = 
-//        Lexem.parse code
-//        ||> Syntan.grammar 
-//        |> List.map snd 
-//        |> evaluateGrammar  
