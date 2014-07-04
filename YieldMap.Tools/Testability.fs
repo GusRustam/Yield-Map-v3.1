@@ -9,7 +9,7 @@ module Testability =
     module Foq =
         let setup f (mock : 'T Mock) = mock.Setup f
         let returns (item : 'b) (setup : ('a, 'b) ResultBuilder) = setup.Returns(item)
-        let calls<'T> (item : 'T -> 'b) (setup : ('a, 'b) ResultBuilder) = setup.Calls<'T>(item)
+        let calls<'a when 'a : not struct> (item : 'a -> 'b) (setup : ('a, 'b) ResultBuilder) = setup.Calls<'a>(item)
         let create (mock : 'T Mock) = mock.Create()
 
 //    module Autofac =

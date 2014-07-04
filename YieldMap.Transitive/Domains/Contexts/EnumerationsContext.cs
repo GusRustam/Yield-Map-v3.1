@@ -6,6 +6,8 @@ namespace YieldMap.Transitive.Domains.Contexts {
         public DbSet<InstrumentType> InstrumentTypes;
         public DbSet<FieldGroup> FieldGroups;
         public DbSet<FieldDefinition> FieldDefinitions;
+        public DbSet<OrdinaryFrn> OrdinaryFrn;
+        public DbSet<OrdinaryBond> OrdinaryBond;
         public DbSet<FieldVsGroup> FieldVsGroups;
         public DbSet<LegType> LegTypes;
     }

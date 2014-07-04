@@ -52,9 +52,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Domains\Procedures\EvaluatableExpression.cs" />
-    <Compile Include="Domains\Procedures\FunctionRegistry.cs" />
-    <Compile Include="Domains\Procedures\IFunctionRegistry.cs" />
+    <Compile Include="Domains\Contexts\InstrumentContext.cs" />
+    <Compile Include="Registry\Evaluatable.cs" />
+    <Compile Include="Registry\FunctionRegistry.cs" />
+    <Compile Include="Registry\IFunctionRegistry.cs" />
     <Compile Include="MediatorTypes\Bond.cs" />
     <Compile Include="Domains\ContextHelper.cs" />
     <Compile Include="Domains\Contexts\BaseContext.cs" />
@@ -66,7 +67,8 @@
     <Compile Include="Domains\Contexts\InstrumentDescriptionContext.cs" />
     <Compile Include="Domains\Contexts\PropertiesContext.cs" />
     <Compile Include="Domains\Contexts\RatingContext.cs" />
-    <Compile Include="Domains\Procedures\PropertiesUpdater.cs" />
+    <Compile Include="Registry\IPropertiesUpdater.cs" />
+    <Compile Include="Registry\PropertiesUpdater.cs" />
     <Compile Include="Domains\ReadOnly\EikonEntitiesReader.cs" />
     <Compile Include="Domains\ReadOnly\IEikonEntitiesReader.cs" />
     <Compile Include="Domains\ReadOnly\IInstrumentDescriptionsReader.cs" />
@@ -78,7 +80,6 @@
     <Compile Include="Domains\IRepository.cs" />
     <Compile Include="Domains\IUnitOfWork.cs" />
     <Compile Include="Domains\Queries\ReadOnlyRepository.cs" />
-    <Compile Include="Domains\Repositories\InstrumentRepository.cs" />
     <Compile Include="Domains\Repositories\Interfaces.cs" />
     <Compile Include="MediatorTypes\Frn.cs" />
     <Compile Include="MediatorTypes\Initializer.cs" />

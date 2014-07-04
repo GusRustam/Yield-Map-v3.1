@@ -10,14 +10,13 @@ module Ops =
     open System.Data.Entity
     open YieldMap.Core.Startup
     open YieldMap.Database
-    open YieldMap.Database.Access
     open YieldMap.Loader.Calendar
     open YieldMap.Loader.MetaChains
     open YieldMap.Loader.SdkFactory
     open System.Data.Entity
     open System.Linq
 
-    let cnt (table : 'a IDbSet) = 
+    let cnt (table : 'a IQueryable) = 
         query { for x in table do 
                 select x
                 count }
@@ -59,6 +58,7 @@ module Ops =
 
 module StartupTest = 
     open Ops
+    open Autofac
 
     open YieldMap.Loader.Calendar
     open YieldMap.Loader.MetaChains
@@ -70,12 +70,11 @@ module StartupTest =
     open YieldMap.Core.DbManager
     open YieldMap.Core.Notifier
 
-    open YieldMap.Database
-    open YieldMap.Database.Access
-    open YieldMap.Database.Procedures 
-
     open YieldMap.Tools.Location
     open YieldMap.Tools.Logging
+    open YieldMap.Database
+    open YieldMap.Transitive.Domains.Repositories
+    open YieldMap.Transitive.Domains.Queries
 
     open System.Data.Entity
     open System.Linq
@@ -141,22 +140,23 @@ module StartupTest =
         { chains = [|   "0#RUTSY=MM";"0#RUMOSB=MM";"0#RUSOVB=MM";"0#RFGOVBONDS=";"QDSDADS" |]; date = DateTime(2014,5,14) }
     ]
 
+    let container = ContainerBuilder().Build() // TODO!!!
+
 
     let mutable (c : Calendar) = Unchecked.defaultof<Calendar>
     let mutable (s : Drivers) = Unchecked.defaultof<Drivers>
-    let m = new DbManager ()
+    let m = DbManager container
 
     let init chains dt = 
         c <- MockCalendar dt
 
-        use ctx = DbManager.createContext m
+        use uow = container.Resolve<IChainRicUnitOfWork>()
+        use repo = container.Resolve<IChainRepository>(NamedParameter("uow", uow))
 
         chains |> Array.iter (fun name -> 
-            if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
-                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
-                ctx.SaveChanges () |> ignore
-        )
-        ctx.SaveChanges () |> ignore
+            if not <| repo.FindBy(fun (x:Chain) -> x.Name = name).Any() then
+                repo.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "", State = State.Added) |> ignore)
+        uow.Save () |> ignore 
 
         s <- {
             Factory = MockFactory ()
@@ -201,13 +201,13 @@ module StartupTest =
             m "MSG: @%A %s" state (fail.ToString())
         )
 
-        command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
-        command "Connect" x.Connect (State Initialized)
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
+        command "Connect" x.Connect (Startup.State Initialized)
 
         logger.Error " =============== SECOND RELOAD ====================="
-        command "Reload" (fun () -> x.Reload true) (State Initialized)
-        command "Close" x.Close (State Closed)
+        command "Reload" (fun () -> x.Reload true) (Startup.State Initialized)
+        command "Close" x.Close (Startup.State Closed)
 
         checkData (Array.length prms) dt
 
@@ -229,21 +229,23 @@ module StartupTest =
             m "MSG: @%A %s" state (fail.ToString())
         )
 
-        command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
-        command "Connect" x.Connect (State Initialized)
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
+        command "Connect" x.Connect (Startup.State Initialized)
 
         logger.Error " =============== SECOND RELOAD ====================="
-        command "Reload" (fun () -> x.Reload true) (State Initialized)
-        command "Close" x.Close (State Closed)
+        command "Reload" (fun () -> x.Reload true) (Startup.State Initialized)
+        command "Close" x.Close (Startup.State Closed)
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        use ctx = s.Database |> DbManager.createContext 
-        cnt ctx.Feeds |> should be (equal 1)
-        cnt ctx.Chains |> should be (equal 1)
+        let feeds = container.Resolve<IFeedRepository>().FindAll()
+        let chains = container.Resolve<IChainRepository>().FindAll()
+        
+        cnt feeds |> should be (equal 1)
+        cnt chains  |> should be (equal 1)
 
-        ctx.Chains |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal dt))
+        chains |> Seq.iter (fun ch -> ch.Expanded.Value |> should be (equal dt))
 
 
     (* ========================= ============================= *)
@@ -252,18 +254,17 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUEUROS="|] dt        
         
-        use ctx =  s.Database |> DbManager.createContext 
+        use ctx = container.Resolve<IRicRepository>()
         let initialUnattachedRics = query {
-            for n in ctx.Rics do
+            for n in ctx.FindAll() do
             where (n.Isin = null)
             count}
 
-        command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload true) (State Initialized)
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload true) (Startup.State Initialized)
 
-        use ctx = s.Database |> DbManager.createContext 
         let unattachedRics = query {
-            for n in ctx.Rics do
+            for n in ctx.FindAll() do
             where (n.Isin = null)
             count
         }
@@ -277,23 +278,20 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#US30YSTRIP=PX"|] dt
 
-        use ctx =  s.Database |> DbManager.createContext 
+        use ctx = container.Resolve<IRicRepository>()
         let initialUnattachedRics = query {
-            for n in ctx.Rics do
+            for n in ctx.FindAll() do
             where (n.Isin = null)
-            count
-        }
+            count}
 
-        command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
-        command "Connect" x.Connect (State Initialized)
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
+        command "Connect" x.Connect (Startup.State Initialized)
 
-        use ctx = s.Database |> DbManager.createContext 
         let unattachedRics = query {
-            for n in ctx.Rics do
+            for n in ctx.FindAll() do
             where (n.Isin = null)
-            select n
-        }
+            select n}
 
         let unattachedRics = unattachedRics.ToArray()
 
@@ -326,14 +324,15 @@ module StartupTest =
 
         let x = Startup s
         
-        // Checking cleanup
-        use ctx = s.Database |> DbManager.createContext 
-        ctx.Chains.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
-        ctx.SaveChanges () |> ignore
+        use uow = container.Resolve<IChainRicUnitOfWork>()
+        use repo = container.Resolve<IChainRepository>(NamedParameter("uow", uow))
 
-        command "Connect" x.Connect (State Connected)
+        repo.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "", State = State.Added) |> ignore
+        uow.Save () |> ignore
+
+        command "Connect" x.Connect (Startup.State Connected)
         logger.Info "Reloading"
-        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
         logger.Info "Reloaded"
 
         let assertAmounts dt t o r k =
@@ -350,7 +349,8 @@ module StartupTest =
                 proportions.[Mission.ToReload] +
                 proportions.[Mission.Keep]
 
-            let totalCount = query { for x in ctx.Instruments do
+            use ctx = container.Resolve<IInstrumentRepository>()
+            let totalCount = query { for x in ctx.FindAll() do
                                      count }
 
             total |> should be (equal t)
@@ -375,7 +375,7 @@ module StartupTest =
         clndr.NewDay |> Observable.add (fun dt ->
             assertAmounts dt 923 8 48 867
 
-            command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+            command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
             logger.Info "Reloaded2"
 
             e.Trigger ()
@@ -403,11 +403,10 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUCORP=MM"|] dt
 
-        command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
-
-        use ctx = s.Database |> DbManager.createContext 
-        let n = query { for x in ctx.OrdinaryFrns do
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
+        use ctx = container.Resolve<IOrdinaryFrnRepository>()
+        let n = query { for x in ctx.FindAll() do
                         select x
                         count }
 
@@ -419,8 +418,8 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUCORP=MM"|] dt
 
-        command "Connect" x.Connect (State Connected)
-        command "Reload" (fun () -> x.Reload (true, 100000000)) (State Initialized)
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
         
         s.Database 
         |> DbManager.backup 

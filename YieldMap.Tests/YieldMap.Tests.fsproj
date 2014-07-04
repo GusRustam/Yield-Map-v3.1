@@ -95,6 +95,7 @@
     <Compile Include="Unit.Api.fs" />
     <Compile Include="Unit.Calendar.fs" />
     <Compile Include="Unit.Parser.fs" />
+    <Compile Include="Unit.Registry.fs" />
     <Compile Include="IntegrationTesting.fs" />
     <Compile Include="Tools.fs" />
     <None Include="packages.config" />
@@ -105,7 +106,6 @@
     <None Include="EMPTY.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="Unit.Registry.fs" />
     <None Include="Foq.Usage.fsx" />
   </ItemGroup>
   <ItemGroup>

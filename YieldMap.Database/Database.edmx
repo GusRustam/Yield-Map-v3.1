@@ -23,8 +23,6 @@
           <EntitySet Name="LegalEntity" EntityType="mainModel.Store.LegalEntity" store:Type="Tables" />
           <EntitySet Name="LegType" EntityType="mainModel.Store.LegType" store:Type="Tables" />
           <EntitySet Name="Property" EntityType="mainModel.Store.Property" store:Type="Tables" />
-          <EntitySet Name="PropertyToInstrumentType" EntityType="mainModel.Store.PropertyToInstrumentType" store:Type="Tables" />
-          <EntitySet Name="PropertyType" EntityType="mainModel.Store.PropertyType" store:Type="Tables" />
           <EntitySet Name="PropertyValue" EntityType="mainModel.Store.PropertyValue" store:Type="Tables" />
           <EntitySet Name="Rating" EntityType="mainModel.Store.Rating" store:Type="Tables" />
           <EntitySet Name="RatingAgency" EntityType="mainModel.Store.RatingAgency" store:Type="Tables" />
@@ -245,24 +243,12 @@
             <End Role="Country" EntitySet="Country" />
             <End Role="LegalEntity" EntitySet="LegalEntity" />
           </AssociationSet>
-          <AssociationSet Name="FK_Property_0_0" Association="mainModel.Store.FK_Property_0_0">
-            <End Role="PropertyType" EntitySet="PropertyType" />
-            <End Role="Property" EntitySet="Property" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PropertyToInstrumentType_0_0" Association="mainModel.Store.FK_PropertyToInstrumentType_0_0">
-            <End Role="Property" EntitySet="Property" />
-            <End Role="PropertyToInstrumentType" EntitySet="PropertyToInstrumentType" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PropertyToInstrumentType_1_0" Association="mainModel.Store.FK_PropertyToInstrumentType_1_0">
-            <End Role="InstrumentType" EntitySet="InstrumentType" />
-            <End Role="PropertyToInstrumentType" EntitySet="PropertyToInstrumentType" />
-          </AssociationSet>
           <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.Store.FK_PropertyValue_0_0">
-            <End Role="Instrument" EntitySet="Instrument" />
+            <End Role="Property" EntitySet="Property" />
             <End Role="PropertyValue" EntitySet="PropertyValue" />
           </AssociationSet>
           <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.Store.FK_PropertyValue_1_0">
-            <End Role="Property" EntitySet="Property" />
+            <End Role="Instrument" EntitySet="Instrument" />
             <End Role="PropertyValue" EntitySet="PropertyValue" />
           </AssociationSet>
           <AssociationSet Name="FK_Rating_0_0" Association="mainModel.Store.FK_Rating_0_0">
@@ -472,22 +458,6 @@
           <Property Name="Name" Type="varchar" MaxLength="50" />
           <Property Name="Description" Type="varchar" MaxLength="50" />
           <Property Name="Expression" Type="varchar" MaxLength="300" />
-          <Property Name="id_PropertyType" Type="integer" />
-        </EntityType>
-        <EntityType Name="PropertyToInstrumentType">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_InstrumentType" Type="integer" />
-          <Property Name="id_Property" Type="integer" />
-        </EntityType>
-        <EntityType Name="PropertyType">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="varchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="PropertyValue">
           <Key>
@@ -496,9 +466,7 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="id_Property" Type="integer" />
           <Property Name="id_Instrument" Type="integer" />
-          <Property Name="StringValue" Type="varchar" MaxLength="300" />
-          <Property Name="IntValue" Type="integer" />
-          <Property Name="FloatValue" Type="real" />
+          <Property Name="Value" Type="varchar" MaxLength="300" />
         </EntityType>
         <EntityType Name="Rating">
           <Key>
@@ -1037,43 +1005,19 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Property_0_0">
-          <End Role="PropertyType" Type="mainModel.Store.PropertyType" Multiplicity="0..1" />
-          <End Role="Property" Type="mainModel.Store.Property" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="PropertyType">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Property">
-              <PropertyRef Name="id_PropertyType" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_PropertyToInstrumentType_0_0">
+        <Association Name="FK_PropertyValue_0_0">
           <End Role="Property" Type="mainModel.Store.Property" Multiplicity="0..1" />
-          <End Role="PropertyToInstrumentType" Type="mainModel.Store.PropertyToInstrumentType" Multiplicity="*" />
+          <End Role="PropertyValue" Type="mainModel.Store.PropertyValue" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Property">
               <PropertyRef Name="id" />
             </Principal>
-            <Dependent Role="PropertyToInstrumentType">
+            <Dependent Role="PropertyValue">
               <PropertyRef Name="id_Property" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_PropertyToInstrumentType_1_0">
-          <End Role="InstrumentType" Type="mainModel.Store.InstrumentType" Multiplicity="0..1" />
-          <End Role="PropertyToInstrumentType" Type="mainModel.Store.PropertyToInstrumentType" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="InstrumentType">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="PropertyToInstrumentType">
-              <PropertyRef Name="id_InstrumentType" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_PropertyValue_0_0">
+        <Association Name="FK_PropertyValue_1_0">
           <End Role="Instrument" Type="mainModel.Store.Instrument" Multiplicity="0..1" />
           <End Role="PropertyValue" Type="mainModel.Store.PropertyValue" Multiplicity="*" />
           <ReferentialConstraint>
@@ -1082,18 +1026,6 @@
             </Principal>
             <Dependent Role="PropertyValue">
               <PropertyRef Name="id_Instrument" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_PropertyValue_1_0">
-          <End Role="Property" Type="mainModel.Store.Property" Multiplicity="0..1" />
-          <End Role="PropertyValue" Type="mainModel.Store.PropertyValue" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Property">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="PropertyValue">
-              <PropertyRef Name="id_Property" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1407,30 +1339,6 @@
           <EntitySet Name="OrdinaryFrns" EntityType="mainModel.OrdinaryFrn" />
           <EntitySet Name="InstrumentRicViews" EntityType="mainModel.InstrumentRicView" />
           <EntitySet Name="InstrumentIBViews" EntityType="mainModel.InstrumentIBView" />
-          <EntitySet Name="Properties" EntityType="mainModel.Property" />
-          <EntitySet Name="PropertyToInstrumentTypes" EntityType="mainModel.PropertyToInstrumentType" />
-          <EntitySet Name="PropertyTypes" EntityType="mainModel.PropertyType" />
-          <EntitySet Name="PropertyValues" EntityType="mainModel.PropertyValue" />
-          <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.FK_PropertyValue_0_0">
-            <End Role="Instrument" EntitySet="Instruments" />
-            <End Role="PropertyValue" EntitySet="PropertyValues" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PropertyToInstrumentType_1_0" Association="mainModel.FK_PropertyToInstrumentType_1_0">
-            <End Role="InstrumentType" EntitySet="InstrumentTypes" />
-            <End Role="PropertyToInstrumentType" EntitySet="PropertyToInstrumentTypes" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Property_0_0" Association="mainModel.FK_Property_0_0">
-            <End Role="PropertyType" EntitySet="PropertyTypes" />
-            <End Role="Property" EntitySet="Properties" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PropertyToInstrumentType_0_0" Association="mainModel.FK_PropertyToInstrumentType_0_0">
-            <End Role="Property" EntitySet="Properties" />
-            <End Role="PropertyToInstrumentType" EntitySet="PropertyToInstrumentTypes" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.FK_PropertyValue_1_0">
-            <End Role="Property" EntitySet="Properties" />
-            <End Role="PropertyValue" EntitySet="PropertyValues" />
-          </AssociationSet>
           <EntitySet Name="InstrumentDescriptionViews" EntityType="mainModel.InstrumentDescriptionView" />
           <EntitySet Name="Fields" EntityType="mainModel.Field" />
           <EntitySet Name="FieldDefinitions" EntityType="mainModel.FieldDefinition" />
@@ -1451,6 +1359,16 @@
           <AssociationSet Name="FK_Ric_0_0" Association="mainModel.FK_Ric_0_0">
             <End Role="FieldGroup" EntitySet="FieldGroups" />
             <End Role="Ric" EntitySet="Rics" />
+          </AssociationSet>
+          <EntitySet Name="Properties" EntityType="mainModel.Property" />
+          <EntitySet Name="PropertyValues" EntityType="mainModel.PropertyValue" />
+          <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.FK_PropertyValue_1_0">
+            <End Role="Instrument" EntitySet="Instruments" />
+            <End Role="PropertyValue" EntitySet="PropertyValues" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.FK_PropertyValue_0_0">
+            <End Role="Property" EntitySet="Properties" />
+            <End Role="PropertyValue" EntitySet="PropertyValues" />
           </AssociationSet>
           </EntityContainer>
         <EntityType Name="Chain">
@@ -1507,7 +1425,6 @@
           <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="Instruments" Relationship="mainModel.FK_Instrument_1_0" FromRole="InstrumentType" ToRole="Instrument" />
-          <NavigationProperty Name="PropertyToInstrumentTypes" Relationship="mainModel.FK_PropertyToInstrumentType_1_0" FromRole="InstrumentType" ToRole="PropertyToInstrumentType" />
         </EntityType>
         <EntityType Name="Isin">
           <Key>
@@ -1959,7 +1876,7 @@
           <NavigationProperty Name="InstrumentType" Relationship="mainModel.FK_Instrument_1_0" FromRole="Instrument" ToRole="InstrumentType" />
           <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_2_0" FromRole="Instrument" ToRole="Leg" />
           <NavigationProperty Name="RatingToInstruments" Relationship="mainModel.FK_RatingToInstrument_1_0" FromRole="Instrument" ToRole="RatingToInstrument" />
-          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="Instrument" ToRole="PropertyValue" />
+          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="Instrument" ToRole="PropertyValue" />
         </EntityType>
         <Association Name="FK_Description_0_0">
           <End Type="mainModel.LegalEntity" Role="LegalEntity" Multiplicity="0..1" />
@@ -2195,110 +2112,6 @@
           <Property Type="Int64" Name="id_Issuer" />
           <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
-        <EntityType Name="Property">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Description" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Expression" MaxLength="300" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_PropertyType" />
-          <NavigationProperty Name="PropertyType" Relationship="mainModel.FK_Property_0_0" FromRole="Property" ToRole="PropertyType" />
-          <NavigationProperty Name="PropertyToInstrumentTypes" Relationship="mainModel.FK_PropertyToInstrumentType_0_0" FromRole="Property" ToRole="PropertyToInstrumentType" />
-          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="Property" ToRole="PropertyValue" />
-        </EntityType>
-        <EntityType Name="PropertyToInstrumentType">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_InstrumentType" />
-          <Property Type="Int64" Name="id_Property" />
-          <NavigationProperty Name="InstrumentType" Relationship="mainModel.FK_PropertyToInstrumentType_1_0" FromRole="PropertyToInstrumentType" ToRole="InstrumentType" />
-          <NavigationProperty Name="Property" Relationship="mainModel.FK_PropertyToInstrumentType_0_0" FromRole="PropertyToInstrumentType" ToRole="Property" />
-        </EntityType>
-        <EntityType Name="PropertyType">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="Properties" Relationship="mainModel.FK_Property_0_0" FromRole="PropertyType" ToRole="Property" />
-        </EntityType>
-        <EntityType Name="PropertyValue">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Property" />
-          <Property Type="Int64" Name="id_Instrument" />
-          <Property Type="String" Name="StringValue" MaxLength="300" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="IntValue" />
-          <Property Type="Double" Name="FloatValue" />
-          <NavigationProperty Name="Instrument" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="PropertyValue" ToRole="Instrument" />
-          <NavigationProperty Name="Property" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="PropertyValue" ToRole="Property" />
-        </EntityType>
-        <Association Name="FK_PropertyValue_0_0">
-          <End Type="mainModel.Instrument" Role="Instrument" Multiplicity="0..1" />
-          <End Type="mainModel.PropertyValue" Role="PropertyValue" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Instrument">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="PropertyValue">
-              <PropertyRef Name="id_Instrument" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_PropertyToInstrumentType_1_0">
-          <End Type="mainModel.InstrumentType" Role="InstrumentType" Multiplicity="0..1" />
-          <End Type="mainModel.PropertyToInstrumentType" Role="PropertyToInstrumentType" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="InstrumentType">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="PropertyToInstrumentType">
-              <PropertyRef Name="id_InstrumentType" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Property_0_0">
-          <End Type="mainModel.PropertyType" Role="PropertyType" Multiplicity="0..1" />
-          <End Type="mainModel.Property" Role="Property" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="PropertyType">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Property">
-              <PropertyRef Name="id_PropertyType" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_PropertyToInstrumentType_0_0">
-          <End Type="mainModel.Property" Role="Property" Multiplicity="0..1" />
-          <End Type="mainModel.PropertyToInstrumentType" Role="PropertyToInstrumentType" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Property">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="PropertyToInstrumentType">
-              <PropertyRef Name="id_Property" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_PropertyValue_1_0">
-          <End Type="mainModel.Property" Role="Property" Multiplicity="0..1" />
-          <End Type="mainModel.PropertyValue" Role="PropertyValue" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Property">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="PropertyValue">
-              <PropertyRef Name="id_Property" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <EntityType Name="InstrumentDescriptionView">
           <Key>
             <PropertyRef Name="id_Instrument" />
@@ -2442,6 +2255,51 @@
             </Principal>
             <Dependent Role="Ric">
               <PropertyRef Name="id_FieldGroup" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Property">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Description" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Expression" MaxLength="300" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="Property" ToRole="PropertyValue" />
+        </EntityType>
+        <EntityType Name="PropertyValue">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="id_Property" />
+          <Property Type="Int64" Name="id_Instrument" />
+          <Property Type="String" Name="Value" MaxLength="300" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Instrument" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="PropertyValue" ToRole="Instrument" />
+          <NavigationProperty Name="Property" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="PropertyValue" ToRole="Property" />
+        </EntityType>
+        <Association Name="FK_PropertyValue_1_0">
+          <End Type="mainModel.Instrument" Role="Instrument" Multiplicity="0..1" />
+          <End Type="mainModel.PropertyValue" Role="PropertyValue" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Instrument">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="PropertyValue">
+              <PropertyRef Name="id_Instrument" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PropertyValue_0_0">
+          <End Type="mainModel.Property" Role="Property" Multiplicity="0..1" />
+          <End Type="mainModel.PropertyValue" Role="PropertyValue" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Property">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="PropertyValue">
+              <PropertyRef Name="id_Property" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -2779,46 +2637,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Properties">
-            <EntityTypeMapping TypeName="mainModel.Property">
-              <MappingFragment StoreEntitySet="Property">
-                <ScalarProperty Name="id_PropertyType" ColumnName="id_PropertyType" />
-                <ScalarProperty Name="Expression" ColumnName="Expression" />
-                <ScalarProperty Name="Description" ColumnName="Description" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="PropertyToInstrumentTypes">
-            <EntityTypeMapping TypeName="mainModel.PropertyToInstrumentType">
-              <MappingFragment StoreEntitySet="PropertyToInstrumentType">
-                <ScalarProperty Name="id_Property" ColumnName="id_Property" />
-                <ScalarProperty Name="id_InstrumentType" ColumnName="id_InstrumentType" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="PropertyTypes">
-            <EntityTypeMapping TypeName="mainModel.PropertyType">
-              <MappingFragment StoreEntitySet="PropertyType">
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="PropertyValues">
-            <EntityTypeMapping TypeName="mainModel.PropertyValue">
-              <MappingFragment StoreEntitySet="PropertyValue">
-                <ScalarProperty Name="FloatValue" ColumnName="FloatValue" />
-                <ScalarProperty Name="IntValue" ColumnName="IntValue" />
-                <ScalarProperty Name="StringValue" ColumnName="StringValue" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-                <ScalarProperty Name="id_Property" ColumnName="id_Property" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="InstrumentDescriptionViews">
             <EntityTypeMapping TypeName="mainModel.InstrumentDescriptionView">
               <MappingFragment StoreEntitySet="InstrumentDescriptionView">
@@ -2889,6 +2707,26 @@
                 <ScalarProperty Name="id_DefaultFieldDef" ColumnName="id_DefaultFieldDef" />
                 <ScalarProperty Name="Default" ColumnName="Default" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Properties">
+            <EntityTypeMapping TypeName="mainModel.Property">
+              <MappingFragment StoreEntitySet="Property">
+                <ScalarProperty Name="Expression" ColumnName="Expression" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PropertyValues">
+            <EntityTypeMapping TypeName="mainModel.PropertyValue">
+              <MappingFragment StoreEntitySet="PropertyValue">
+                <ScalarProperty Name="Value" ColumnName="Value" />
+                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
+                <ScalarProperty Name="id_Property" ColumnName="id_Property" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>

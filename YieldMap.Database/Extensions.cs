@@ -44,4 +44,10 @@
     public partial class Index : IObjectWithState {
         public State State { get; set; }
     }
+    public partial class Property : IObjectWithState {
+        public State State { get; set; }
+    }
+    public partial class PropertyValue : IObjectWithState {
+        public State State { get; set; }
+    }
 }

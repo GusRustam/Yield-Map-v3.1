@@ -16,7 +16,6 @@ namespace YieldMap.Database
     {
         public Property()
         {
-            this.PropertyToInstrumentTypes = new HashSet<PropertyToInstrumentType>();
             this.PropertyValues = new HashSet<PropertyValue>();
         }
     
@@ -24,21 +23,17 @@ namespace YieldMap.Database
         public string Name { get; set; }
         public string Description { get; set; }
         public string Expression { get; set; }
-        public Nullable<long> id_PropertyType { get; set; }
     	public Property ToPocoSimple() {
     	    return new Property {
     			id = this.id,
     			Name = this.Name,
     			Description = this.Description,
     			Expression = this.Expression,
-    			id_PropertyType = this.id_PropertyType,
     		};
     	}
     
     	//public State State {get;set;}
     		
-        public virtual PropertyType PropertyType { get; set; }
-        public virtual ICollection<PropertyToInstrumentType> PropertyToInstrumentTypes { get; set; }
         public virtual ICollection<PropertyValue> PropertyValues { get; set; }
     }
 }

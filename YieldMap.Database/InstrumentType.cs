@@ -17,7 +17,6 @@ namespace YieldMap.Database
         public InstrumentType()
         {
             this.Instruments = new HashSet<Instrument>();
-            this.PropertyToInstrumentTypes = new HashSet<PropertyToInstrumentType>();
         }
     
         public long id { get; set; }
@@ -32,6 +31,5 @@ namespace YieldMap.Database
     	//public State State {get;set;}
     		
         public virtual ICollection<Instrument> Instruments { get; set; }
-        public virtual ICollection<PropertyToInstrumentType> PropertyToInstrumentTypes { get; set; }
     }
 }

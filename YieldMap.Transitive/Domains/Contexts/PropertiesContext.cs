@@ -4,5 +4,6 @@ using YieldMap.Database;
 namespace YieldMap.Transitive.Domains.Contexts {
     public class PropertiesContext : BaseContext<PropertiesContext> {
         public DbSet<Property> Properties;
+        public DbSet<PropertyValue> PropertyValues;
     }
 }

@@ -17,17 +17,13 @@ namespace YieldMap.Database
         public long id { get; set; }
         public Nullable<long> id_Property { get; set; }
         public Nullable<long> id_Instrument { get; set; }
-        public string StringValue { get; set; }
-        public Nullable<long> IntValue { get; set; }
-        public Nullable<double> FloatValue { get; set; }
+        public string Value { get; set; }
     	public PropertyValue ToPocoSimple() {
     	    return new PropertyValue {
     			id = this.id,
     			id_Property = this.id_Property,
     			id_Instrument = this.id_Instrument,
-    			StringValue = this.StringValue,
-    			IntValue = this.IntValue,
-    			FloatValue = this.FloatValue,
+    			Value = this.Value,
     		};
     	}
     

@@ -142,12 +142,6 @@
     <Compile Include="Property.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="PropertyToInstrumentType.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="PropertyType.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
     <Compile Include="PropertyValue.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
