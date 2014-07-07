@@ -52,7 +52,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />
+    <Compile Include="Domains\Repositories\ChainRepository.cs" />
+    <Compile Include="Domains\Repositories\ChainRicUnitOfWork.cs" />
+    <Compile Include="Domains\Repositories\IChainRicUnitOfWork.cs" />
+    <Compile Include="Domains\Repositories\IInstrumentRepository.cs" />
+    <Compile Include="Domains\Repositories\InstrumentRepository.cs" />
+    <Compile Include="Domains\ReadOnly\IOrdinaryFrnRepository.cs" />
+    <Compile Include="Domains\Repositories\IRicRepository.cs" />
+    <Compile Include="Domains\ReadOnly\OrdinaryFrnRepository.cs" />
+    <Compile Include="Domains\Repositories\RicRepository.cs" />
     <Compile Include="Registry\Evaluatable.cs" />
     <Compile Include="Registry\FunctionRegistry.cs" />
     <Compile Include="Registry\IFunctionRegistry.cs" />
@@ -73,13 +83,13 @@
     <Compile Include="Domains\ReadOnly\IEikonEntitiesReader.cs" />
     <Compile Include="Domains\ReadOnly\IInstrumentDescriptionsReader.cs" />
     <Compile Include="Domains\ReadOnly\InstrumentDescriptionsReader.cs" />
-    <Compile Include="Domains\Queries\IUpdatesRepository.cs" />
+    <Compile Include="Domains\Queries\IDbUpdates.cs" />
     <Compile Include="Domains\Queries\Mission.cs" />
-    <Compile Include="Domains\Queries\UpdatesRepository.cs" />
+    <Compile Include="Domains\Queries\DbUpdates.cs" />
     <Compile Include="Domains\Repositories\FeedRepository.cs" />
     <Compile Include="Domains\IRepository.cs" />
     <Compile Include="Domains\IUnitOfWork.cs" />
-    <Compile Include="Domains\Queries\ReadOnlyRepository.cs" />
+    <Compile Include="Domains\ReadOnlyRepository.cs" />
     <Compile Include="Domains\Repositories\Interfaces.cs" />
     <Compile Include="MediatorTypes\Frn.cs" />
     <Compile Include="MediatorTypes\Initializer.cs" />

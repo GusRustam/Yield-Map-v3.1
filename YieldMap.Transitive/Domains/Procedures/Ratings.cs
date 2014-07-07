@@ -11,7 +11,7 @@ namespace YieldMap.Transitive.Domains.Procedures {
     internal class Ratings : IRatings {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.Ratings");
 
-        public void SaveRatings(IEnumerable<Rating> ratings) {
+        public void Save(IEnumerable<Rating> ratings) {
             var rtis = new Dictionary<Tuple<long, long, DateTime>, RatingToInstrument>();
             var rtcs = new Dictionary<Tuple<long, long, DateTime>, RatingToLegalEntity>();
             using (var context = new RatingContext()) {

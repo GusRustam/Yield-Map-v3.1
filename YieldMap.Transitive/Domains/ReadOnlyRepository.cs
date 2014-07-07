@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Entity;
 
-namespace YieldMap.Transitive.Domains.Queries {
+namespace YieldMap.Transitive.Domains {
     public abstract class ReadOnlyRepository<TContext> : IDisposable where TContext : DbContext, new() {
         private readonly TContext _context;
 

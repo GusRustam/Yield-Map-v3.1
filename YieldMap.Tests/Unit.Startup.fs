@@ -75,6 +75,7 @@ module StartupTest =
     open YieldMap.Database
     open YieldMap.Transitive.Domains.Repositories
     open YieldMap.Transitive.Domains.Queries
+    open YieldMap.Transitive.Domains.ReadOnly
 
     open System.Data.Entity
     open System.Linq

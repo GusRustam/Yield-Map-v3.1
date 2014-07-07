@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using YieldMap.Database;
 
 namespace YieldMap.Transitive.Domains.Queries {
-    public interface IUpdatesRepository {
+    public interface IDbUpdates {
         bool NeedsReload(DateTime dt);
         IEnumerable<Chain> ChainsInNeed(DateTime dt);
 

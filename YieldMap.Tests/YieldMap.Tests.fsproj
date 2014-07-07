@@ -91,6 +91,7 @@
     <Compile Include="Common.fs" />
     <Compile Include="Unit.Subscription.fs" />
     <Compile Include="Unit.Startup.fs" />
+    <Compile Include="Unit.Database.fs" />
     <Compile Include="Unit.Others.fs" />
     <Compile Include="Unit.Api.fs" />
     <Compile Include="Unit.Calendar.fs" />

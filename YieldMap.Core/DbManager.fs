@@ -21,14 +21,14 @@ module DbManager =
         member internal x.bonds = container.Resolve<IBonds> ()
         member internal x.chainRics = container.Resolve<IChainRics> ()
         member internal x.ratings = container.Resolve<IRatings> ()
-        member internal x.updates = container.Resolve<IUpdatesRepository> ()
+        member internal x.updates = container.Resolve<IDbUpdates> ()
         member internal x.backupRestore = container.Resolve<IBackupRestore> ()
         
         static member chainsInNeed dt (x : DbManager) = x.updates.ChainsInNeed dt
         static member needsRefresh dt (x : DbManager) = x.updates.NeedsReload dt
         static member classify (x : DbManager) a b = x.updates.Classify (a, b)
         static member saveBonds bonds (x : DbManager) = x.bonds.Save bonds
-        static member saveRatings ratings (x : DbManager) = x.ratings.SaveRatings ratings
+        static member saveRatings ratings (x : DbManager) = x.ratings.Save ratings
         static member saveChainRics (x : DbManager) chainRic rics feedName expanded prms = 
             x.chainRics.SaveChainRics (chainRic, rics, feedName, expanded, prms)
         static member backup (x : DbManager) = x.backupRestore.Backup ()

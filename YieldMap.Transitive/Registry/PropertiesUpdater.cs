@@ -9,8 +9,8 @@ namespace YieldMap.Transitive.Registry {
     public class PropertiesUpdater : IPropertiesUpdater {
         private readonly IContainer _container;
 
-        public PropertiesUpdater(IContainer container) {
-            _container = container;
+        public PropertiesUpdater(Func<IContainer> container) {
+            _container = container.Invoke();
         }
 
         public bool Recalculate() {
