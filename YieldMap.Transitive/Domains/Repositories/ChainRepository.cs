@@ -36,20 +36,23 @@ namespace YieldMap.Transitive.Domains.Repositories {
             return _context.Chains.Find(id);
         }
 
-        public void Insert(Chain item) {
+        public int Insert(Chain item) {
             _context.Chains.Add(item);
             if (item.State != State.Added) 
                 _context.ApplyStateChanges();
+            return 0;
         }
 
-        public void Add(Chain item) {
+        public int Add(Chain item) {
             _context.Entry(item).State = item.id == default(long) ? 
                 EntityState.Added : 
                 EntityState.Modified;
+            return 0;
         }
 
-        public void Remove(Chain item) {
+        public int Remove(Chain item) {
             _context.Chains.Remove(item);
+            return 0;
         }
 
         public void Dispose() {

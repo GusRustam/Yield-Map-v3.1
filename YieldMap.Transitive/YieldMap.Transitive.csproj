@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />
+    <Compile Include="Domains\IReadOnlyRepository.cs" />
     <Compile Include="Domains\Repositories\ChainRepository.cs" />
     <Compile Include="Domains\Repositories\ChainRicUnitOfWork.cs" />
     <Compile Include="Domains\Repositories\IChainRicUnitOfWork.cs" />
