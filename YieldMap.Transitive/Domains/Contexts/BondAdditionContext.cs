@@ -3,18 +3,18 @@ using YieldMap.Database;
 
 namespace YieldMap.Transitive.Domains.Contexts {
     public class BondAdditionContext : BaseContext<BondAdditionContext> {
-        public DbSet<Description> Descriptions;
-        public DbSet<Country> Countries;
-        public DbSet<LegalEntity> LegalEntities;
-        public DbSet<Ticker> Tickers;
-        public DbSet<Industry> Industries;
-        public DbSet<SubIndustry> SubIndustries;
-        public DbSet<Specimen> Specimens;
-        public DbSet<Seniority> Seniorities;
-        public DbSet<Instrument> Instruments;
-        public DbSet<InstrumentType> InstrumentTypes;
-        public DbSet<Currency> Currencies;
-        public DbSet<Index> Indices; // todo ??
-        public DbSet<Ric> Rics; // todo ??
+        public DbSet<Description> Descriptions { get; set; }
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<LegalEntity> LegalEntities { get; set; }
+        public DbSet<Ticker> Tickers { get; set; }
+        public DbSet<Industry> Industries { get; set; }
+        public DbSet<SubIndustry> SubIndustries { get; set; }
+        public DbSet<Specimen> Specimens { get; set; }
+        public DbSet<Seniority> Seniorities { get; set; }
+        public DbSet<Instrument> Instruments { get; set; }
+        public DbSet<InstrumentType> InstrumentTypes { get; set; }
+        public DbSet<Currency> Currencies { get; set; }
+        public DbSet<Index> Indices { get; set; } // todo ??
+        public DbSet<Ric> Rics { get; set; } // todo ??
     }
 }
