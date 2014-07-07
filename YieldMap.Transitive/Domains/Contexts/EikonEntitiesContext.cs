@@ -3,12 +3,11 @@ using YieldMap.Database;
 
 namespace YieldMap.Transitive.Domains.Contexts {
     public class EikonEntitiesContext : BaseContext<EikonEntitiesContext> {
-        // todo create reference entities for externals
-        public DbSet<Chain> Chains;
-        public DbSet<Ric> Rics;
-        public DbSet<Feed> Feeds;
-        public DbSet<RicToChain> RicToChains;
-        public DbSet<Index> Indices;
-        public DbSet<Isin> Isins;
+        public DbSet<Chain> Chains { get; set; }
+        public DbSet<Ric> Rics { get; set; }
+        public DbSet<Feed> Feeds { get; set; }
+        public DbSet<RicToChain> RicToChains { get; set; }
+        public DbSet<Index> Indices { get; set; }
+        public DbSet<Isin> Isins { get; set; }
     }
 }

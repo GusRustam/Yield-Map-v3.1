@@ -7,11 +7,15 @@ using YieldMap.Database;
 using YieldMap.Transitive.Domains.Contexts;
 
 namespace YieldMap.Transitive.Domains.Repositories {
-    class FeedRepository : IFeedRepository {
+    public class FeedRepository : IFeedRepository {
         private readonly EikonEntitiesContext _context;
 
         public FeedRepository(IUnitOfWork<EikonEntitiesContext> uow) {
             _context = uow.Context;
+        }
+
+        public FeedRepository() {
+            _context = new EikonEntitiesContext();
         }
 
         public IQueryable<Feed> FindAll() {
