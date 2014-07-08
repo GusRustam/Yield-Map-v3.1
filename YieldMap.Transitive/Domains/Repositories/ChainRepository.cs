@@ -10,7 +10,7 @@ namespace YieldMap.Transitive.Domains.Repositories {
     public class ChainRepository : IChainRepository {
         private readonly ChainRicContext _context;
 
-        public ChainRepository(IUnitOfWork<ChainRicContext> uow) {
+        public ChainRepository(IChainRicUnitOfWork uow) {
             _context = uow.Context;
         }
 

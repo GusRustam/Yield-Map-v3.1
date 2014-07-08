@@ -21,7 +21,9 @@ namespace YieldMap.Transitive.Domains.Enums {
             return item != null ? item.InternalName : String.Empty;
         }
 
-        public FieldSet(EnumerationsContext ctx, IFieldDefinitions defs, long idFieldGroup) {
+        public FieldSet(IFieldDefinitions defs, long idFieldGroup) {
+            var ctx = new EnumerationsContext();
+
             var items = ctx.FieldVsGroups.Where(x => x.id_FieldGroup == idFieldGroup);
             Bid = GetById(items, defs.Bid.id);
             Ask = GetById(items, defs.Ask.id);

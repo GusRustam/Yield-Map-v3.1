@@ -19,7 +19,8 @@ namespace YieldMap.Transitive.Domains.Procedures {
         private readonly ILegTypes _legTypes;
         private readonly IInstrumentTypes _instrumentTypes;
 
-        public Bonds(IContainer container) {
+        public Bonds(Func<IContainer> containerF) {
+            var container = containerF.Invoke();
             _legTypes = container.Resolve<ILegTypes>();
             _instrumentTypes = container.Resolve<IInstrumentTypes>();
         }

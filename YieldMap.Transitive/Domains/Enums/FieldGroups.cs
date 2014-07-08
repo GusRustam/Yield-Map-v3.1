@@ -11,7 +11,9 @@ namespace YieldMap.Transitive.Domains.Enums {
         public FieldGroup Mosprime { get; private set; }
         public FieldGroup Swaps { get; private set; }
 
-        public FieldGroups(EnumerationsContext ctx) {
+        public FieldGroups() {
+            var ctx = new EnumerationsContext();
+
             var items = ctx.FieldGroups.ToList();
             Default = items.First(x => x.Default).ToPocoSimple();
             Micex = items.First(x => x.Name == "Micex").ToPocoSimple();

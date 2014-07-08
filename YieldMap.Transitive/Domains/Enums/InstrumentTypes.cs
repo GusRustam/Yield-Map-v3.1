@@ -10,7 +10,8 @@ namespace YieldMap.Transitive.Domains.Enums {
         public InstrumentType Ndf { get; private set; }
         public InstrumentType Cds { get; private set; }
 
-        public InstrumentTypes(EnumerationsContext ctx) {
+        public InstrumentTypes() {
+            var ctx = new EnumerationsContext();
             Bond = ctx.InstrumentTypes.First(i => i.Name == "Bond").ToPocoSimple();
             Frn = ctx.InstrumentTypes.First(i => i.Name == "Frn").ToPocoSimple();
             Swap = ctx.InstrumentTypes.First(i => i.Name == "Swap").ToPocoSimple();

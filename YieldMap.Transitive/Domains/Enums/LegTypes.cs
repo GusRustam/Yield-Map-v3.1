@@ -8,7 +8,8 @@ namespace YieldMap.Transitive.Domains.Enums {
         public LegType Received { get; private set; }
         public LegType Both { get; private set; }
 
-        public LegTypes(EnumerationsContext ctx) {
+        public LegTypes() {
+            var ctx = new EnumerationsContext();
             Paid = ctx.LegTypes.First(i => i.Name == "Paid").ToPocoSimple();
             Received = ctx.LegTypes.First(i => i.Name == "Received").ToPocoSimple();
             Both = ctx.LegTypes.First(i => i.Name == "Both").ToPocoSimple();

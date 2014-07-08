@@ -57,10 +57,14 @@
     <Compile Include="Domains\IReadOnlyRepository.cs" />
     <Compile Include="Domains\Repositories\ChainRepository.cs" />
     <Compile Include="Domains\Repositories\ChainRicUnitOfWork.cs" />
+    <Compile Include="Domains\Repositories\FeedUnitOfWork.cs" />
     <Compile Include="Domains\Repositories\IChainRicUnitOfWork.cs" />
+    <Compile Include="Domains\Repositories\IFeedUnitOfWork.cs" />
     <Compile Include="Domains\Repositories\IInstrumentRepository.cs" />
+    <Compile Include="Domains\Repositories\IInstrumentUnitOfWork.cs" />
     <Compile Include="Domains\Repositories\InstrumentRepository.cs" />
     <Compile Include="Domains\ReadOnly\IOrdinaryFrnRepository.cs" />
+    <Compile Include="Domains\Repositories\InstrumentUnitOfWork.cs" />
     <Compile Include="Domains\Repositories\IRicRepository.cs" />
     <Compile Include="Domains\ReadOnly\OrdinaryFrnRepository.cs" />
     <Compile Include="Domains\Repositories\RicRepository.cs" />

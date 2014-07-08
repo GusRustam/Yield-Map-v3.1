@@ -14,8 +14,8 @@ namespace YieldMap.Transitive.Domains.Procedures {
         private readonly IFieldResolver _resolver;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.Additions.ChainRics");
 
-        public ChainRics(IContainer container) {
-            _resolver = container.Resolve<IFieldResolver>();
+        public ChainRics(Func<IContainer> container) {
+            _resolver = container.Invoke().Resolve<IFieldResolver>();
         }
 
         private readonly Dictionary<string, Ric> _rics = new Dictionary<string, Ric>();

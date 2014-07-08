@@ -14,12 +14,15 @@ namespace YieldMap.Transitive.Domains.Enums {
         public FieldDefinition Tenor { get; private set; }
         public FieldDefinition Maturity { get; private set; }
 
-        public FieldDefinitions(EnumerationsContext ctx) {
+        public FieldDefinitions() {
+            var ctx = new EnumerationsContext();
+
             var items = ctx.FieldDefinitions.ToList();
             Bid = items.First(x => x.Name == "BID").ToPocoSimple();
             Ask = items.First(x => x.Name == "ASK").ToPocoSimple();
             Last = items.First(x => x.Name == "LAST").ToPocoSimple();
             Close = items.First(x => x.Name == "CLOSE").ToPocoSimple();
+            Vwap = items.First(x => x.Name == "VWAP").ToPocoSimple();
             Volume = items.First(x => x.Name == "VOLUME").ToPocoSimple();
             Value = items.First(x => x.Name == "VALUE").ToPocoSimple();
             Tenor = items.First(x => x.Name == "TENOR").ToPocoSimple();
