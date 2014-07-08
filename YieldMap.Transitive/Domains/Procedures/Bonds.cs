@@ -193,7 +193,7 @@ namespace YieldMap.Transitive.Domains.Procedures {
             // Legs
             using (var ctx = new BondAdditionContext()) {
                 try {
-                    ctx.Configuration.AutoDetectChangesEnabled = false;
+                    //ctx.Configuration.AutoDetectChangesEnabled = false;
                     var legs = new Dictionary<string, Leg>();
                     foreach (var bond in bonds.Where(bond => !bond.RateStructure.StartsWith("Unable"))) {
                         try {
@@ -219,7 +219,7 @@ namespace YieldMap.Transitive.Domains.Procedures {
                         }, 500);
                     }
                 } finally {
-                    ctx.Configuration.AutoDetectChangesEnabled = true;
+                    //ctx.Configuration.AutoDetectChangesEnabled = true;
                 }
             }
         }

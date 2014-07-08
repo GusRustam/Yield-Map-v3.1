@@ -141,7 +141,7 @@ module StartupTest =
         { chains = [|   "0#RUTSY=MM";"0#RUMOSB=MM";"0#RUSOVB=MM";"0#RFGOVBONDS=";"QDSDADS" |]; date = DateTime(2014,5,14) }
     ]
 
-    let container = ContainerBuilder().Build() // TODO!!!
+    let container = YieldMap.Transitive.DatabaseBuilder.Container
 
 
     let mutable (c : Calendar) = Unchecked.defaultof<Calendar>
@@ -169,14 +169,13 @@ module StartupTest =
 
         Startup s
 
-
     [<SetUp>]
     let setup () = 
         let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
         let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
         DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
 
-        globalThreshold := LoggingLevel.Debug
+        //globalThreshold := LoggingLevel.Debug
 
     [<TearDown>]
     let teardown () = 
@@ -218,7 +217,7 @@ module StartupTest =
     [<Test>]
     let ``Simple startup and states`` () =
         let dt = DateTime(2014,5,14) 
-        let prms = "0#RUCORP=MM"
+        let prms = "0#RUELG=MM"
         
         let x = init [|prms|] dt
         x.StateChanged |> Observable.add (fun state -> logger.InfoF " => %A" state)
