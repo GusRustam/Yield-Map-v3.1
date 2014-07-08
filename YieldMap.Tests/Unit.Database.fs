@@ -175,8 +175,7 @@ module Database =
             chains.Remove chain |> should be (equal 0)
             let ric = rics.FindById !ricId
             rics.Remove ric |> should be (equal 0)
-            uow.Save() |> should be (equal 2)
-        )))
+            uow.Save() |> should be (equal 2) )))
 
         using (container.Resolve<IChainRepository>()) (fun chains ->
             chains.FindAll().Count() |> should be (equal 0))
@@ -187,12 +186,15 @@ module Database =
     let ``Create a bond, save it to real db, and then remove it`` () = 
         let container = DatabaseBuilder.Container
 
+        let chainRicSaver = container.Resolve<IChainRics> ()
+        chainRicSaver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
+
         using (container.Resolve<IInstrumentRepository>()) (fun instruments ->
             instruments.FindAll().Count() |> should be (equal 0) |> ignore)
 
         let bondSaver = container.Resolve<IBonds>()
         
-        let bond = MetaTables.BondDescr(BondStructure = "BondStructure", Description = "Description", Ric = "TESTRIC")
+        let bond = MetaTables.BondDescr(BondStructure = "BondStructure", Description = "Description", Ric = "TESTRIC", Currency = "RUB")
                    |> Bond.Create 
 
         bondSaver.Save [bond]
@@ -204,10 +206,20 @@ module Database =
             id := all.First().id)
 
         using (container.Resolve<IInstrumentUnitOfWork>()) (fun uow ->
-            using (container.Resolve<IInstrumentRepository>(NamedParameter("uow", uow))) (fun instruments ->
-                let bnd = instruments.FindById !id
-                instruments.Remove bnd |> should be (equal 0)
-                uow.Save () |> should be (equal 1)))
+        using (container.Resolve<IInstrumentRepository>(NamedParameter("uow", uow))) (fun instruments ->
+            let bnd = instruments.FindById !id
+            instruments.Remove bnd |> should be (equal 0)
+            uow.Save () |> should be (equal 1) ))
 
         using (container.Resolve<IInstrumentRepository>()) (fun instruments ->
             instruments.FindAll().Count() |> should be (equal 0) |> ignore)
+
+        using (container.Resolve<IChainRicUnitOfWork>()) (fun uow ->
+        using (container.Resolve<IChainRepository>(NamedParameter("uow", uow))) (fun chains ->
+        using (container.Resolve<IRicRepository>(NamedParameter("uow", uow))) (fun rics -> 
+            let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
+            chains.Remove chain |> should be (equal 0)
+            let ric = rics.FindBy(fun r -> r.Name = "TESTRIC").ToList().First()
+            rics.Remove ric |> should be (equal 0)
+            uow.Save() |> should be (equal 2)
+        )))
