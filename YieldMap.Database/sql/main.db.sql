@@ -106,25 +106,35 @@ CREATE TABLE Feed (
 
 CREATE TABLE Field (
   id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Bid            varchar(50),
-  Ask            varchar(50),
-  Last           varchar(50),
-  Close          varchar(50),
-  VWAP           varchar(50),
-  Volume         varchar(50),
+  SystemName     varchar(50) NOT NULL,
   id_FieldGroup  integer NOT NULL,
+  id_FieldDef    integer NOT NULL,
   /* Foreign keys */
+  FOREIGN KEY (id_FieldDef)
+    REFERENCES FieldDefinition(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
   FOREIGN KEY (id_FieldGroup)
     REFERENCES FieldGroup(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
 
+CREATE TABLE FieldDefinition (
+  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name  varchar(50) UNIQUE
+);
+
 CREATE TABLE FieldGroup (
-  id            integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name          varchar(50) NOT NULL UNIQUE,
-  DefaultField  varchar(50),
-  "Default"     bit NOT NULL DEFAULT 0
+  id                  integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name                varchar(50) NOT NULL UNIQUE,
+  "Default"           bit NOT NULL DEFAULT 0,
+  id_DefaultFieldDef  integer,
+  /* Foreign keys */
+  FOREIGN KEY (id_DefaultFieldDef)
+    REFERENCES FieldDefinition(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE TRIGGER FieldGroup_AfterUpdate
@@ -280,16 +290,10 @@ CREATE INDEX Borrower01_Index03
   (id);
 
 CREATE TABLE Property (
-  id               integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name             varchar(50) UNIQUE,
-  Description      varchar(50),
-  Expression       varchar(300),
-  id_PropertyType  integer,
-  /* Foreign keys */
-  FOREIGN KEY (id_PropertyType)
-    REFERENCES PropertyType(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+  id           integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+  Name         varchar(50) UNIQUE,
+  Description  varchar(50),
+  Expression   varchar(300)
 );
 
 CREATE INDEX CustomProperty_Index01
@@ -300,56 +304,18 @@ CREATE INDEX CustomProperty_Index02
   ON Property
   (Name);
 
-CREATE TABLE PropertyToInstrumentType (
-  id                 integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  id_InstrumentType  integer,
-  id_Property        integer,
-  /* Foreign keys */
-  FOREIGN KEY (id_Property)
-    REFERENCES Property(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
-  FOREIGN KEY (id_InstrumentType)
-    REFERENCES InstrumentType(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-);
-
-CREATE INDEX CustomPropertyToInstrumentType_Index01
-  ON PropertyToInstrumentType
-  (id);
-
-CREATE UNIQUE INDEX CustomPropertyToInstrumentType_Index02
-  ON PropertyToInstrumentType
-  (id_InstrumentType, id_Property);
-
-CREATE TABLE PropertyType (
-  id    integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-  Name  varchar(50) UNIQUE
-);
-
-CREATE INDEX CustomPropertyType_Index01
-  ON PropertyType
-  (id);
-
-CREATE INDEX CustomPropertyType_Index02
-  ON PropertyType
-  (Name);
-
 CREATE TABLE PropertyValue (
   id             integer PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
   id_Property    integer,
   id_Instrument  integer,
-  StringValue    varchar(300),
-  IntValue       integer,
-  FloatValue     float(50),
+  Value          varchar(300),
   /* Foreign keys */
-  FOREIGN KEY (id_Instrument)
-    REFERENCES Instrument(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE, 
   FOREIGN KEY (id_Property)
     REFERENCES Property(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+  FOREIGN KEY (id_Instrument)
+    REFERENCES Instrument(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
@@ -573,25 +539,51 @@ INSERT INTO Feed (id, Name, Description) VALUES (1, 'Q', 'Main Eikon data feed')
 
 
 /* Data for table Field */
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (4, 'BID', 'ASK', 'LAST', 'CLOSE', 'VWAP', 'VOLUME', 1);
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (5, '393', '275', NULL, 'CLOSE', NULL, NULL, 2);
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (6, NULL, NULL, '1053', 'CLOSE', NULL, NULL, 3);
-INSERT INTO Field (id, Bid, Ask, Last, Close, VWAP, Volume, id_FieldGroup) VALUES (7, NULL, NULL, '22', 'CLOSE', NULL, NULL, 4);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (1, 'BID', 1, 1);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (2, 'ASK', 1, 2);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (3, 'LAST', 1, 3);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (4, 'CLOSE', 1, 4);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (5, 'VWAP', 1, 5);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (6, 'VOLUME', 1, 6);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (7, '393', 2, 1);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (8, '275', 2, 2);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (9, 'CLOSE', 2, 4);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (10, '1053', 3, 3);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (11, 'CLOSE', 3, 4);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (12, '393', 4, 1);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (13, 'CLOSE', 4, 4);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (15, '275', 5, 2);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (16, '21', 5, 4);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (17, '1051', 5, 9);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (18, '1003', 4, 8);
+INSERT INTO Field (id, SystemName, id_FieldGroup, id_FieldDef) VALUES (19, '393', 5, 1);
+
+
+
+/* Data for table FieldDefinition */
+INSERT INTO FieldDefinition (id, Name) VALUES (1, 'BID');
+INSERT INTO FieldDefinition (id, Name) VALUES (2, 'ASK');
+INSERT INTO FieldDefinition (id, Name) VALUES (3, 'LAST');
+INSERT INTO FieldDefinition (id, Name) VALUES (4, 'CLOSE');
+INSERT INTO FieldDefinition (id, Name) VALUES (5, 'VWAP');
+INSERT INTO FieldDefinition (id, Name) VALUES (6, 'VOLUME');
+INSERT INTO FieldDefinition (id, Name) VALUES (7, 'VALUE');
+INSERT INTO FieldDefinition (id, Name) VALUES (8, 'TENOR');
+INSERT INTO FieldDefinition (id, Name) VALUES (9, 'MATURITY');
 
 
 
 /* Data for table FieldGroup */
-INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (1, 'Micex', 'Last', 0);
-INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (2, 'Eurobonds', 'Bid', 1);
-INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (3, 'Russian CPI Index', 'Last', 0);
-INSERT INTO FieldGroup (id, Name, DefaultField, "Default") VALUES (4, 'Mosprime', 'Last', 0);
+INSERT INTO FieldGroup (id, Name, "Default", id_DefaultFieldDef) VALUES (1, 'Micex', 0, NULL);
+INSERT INTO FieldGroup (id, Name, "Default", id_DefaultFieldDef) VALUES (2, 'Eurobonds', 1, 1);
+INSERT INTO FieldGroup (id, Name, "Default", id_DefaultFieldDef) VALUES (3, 'Russian CPI Index', 0, NULL);
+INSERT INTO FieldGroup (id, Name, "Default", id_DefaultFieldDef) VALUES (4, 'Mosprime', 0, NULL);
+INSERT INTO FieldGroup (id, Name, "Default", id_DefaultFieldDef) VALUES (5, 'Swaps', 0, NULL);
 
 
 
 /* Data for table Index */
-INSERT INTO "Index" (id, Name, id_Ric) VALUES (1, 'RUCPI1M', 1);
-INSERT INTO "Index" (id, Name, id_Ric) VALUES (2, 'RUSSRR', 3);
-INSERT INTO "Index" (id, Name, id_Ric) VALUES (3, 'MPRIME3M', 2);
+
 
 
 
@@ -637,17 +629,8 @@ INSERT INTO LegType (id, Name) VALUES (3, 'Both');
 
 
 /* Data for table Property */
-
-
-
-
-/* Data for table PropertyToInstrumentType */
-
-
-
-
-/* Data for table PropertyType */
-
+INSERT INTO Property (id, Name, Description, Expression) VALUES (1, 'Issuer-Series', 'Label', 'InstrumentName + \" \" + Series');
+INSERT INTO Property (id, Name, Description, Expression) VALUES (2, 'Issuer-Coupon-Maturity', 'Label', 'InstrumentName + IIf(Not IsNothing(Coupon), \" \" + Format(\"{0:0.00}\", Coupon), \"\") + IIf(Not IsNothing(Maturity), \" ''\" + Format(\"{0:MMM-yy}\", Maturity))');
 
 
 
@@ -755,9 +738,7 @@ INSERT INTO RatingAgencyCode (id, Name, id_RatingAgency) VALUES (8, 'FSU', 3);
 
 
 /* Data for table Ric */
-INSERT INTO Ric (id, Name, id_Isin, id_Feed, id_FieldGroup) VALUES (1, 'RUCPI=ECI', NULL, 1, 3);
-INSERT INTO Ric (id, Name, id_Isin, id_Feed, id_FieldGroup) VALUES (2, 'MOSPRIME3MD=', NULL, 1, 4);
-INSERT INTO Ric (id, Name, id_Isin, id_Feed, id_FieldGroup) VALUES (3, 'RUSSRR', NULL, 1, 1);
+
 
 
 
