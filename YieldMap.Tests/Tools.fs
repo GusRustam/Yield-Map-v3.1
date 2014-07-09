@@ -15,7 +15,7 @@ open YieldMap.Core.DbManager
 
 module Tools =
     let logger = LogFactory.create "Tools"
-    let container = ContainerBuilder().Build() // TODO!!!
+    let container = YieldMap.Transitive.DatabaseBuilder.Container
 
     [<Test>]
     let ``Restore DB to defaults`` () =

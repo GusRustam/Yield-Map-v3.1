@@ -14,8 +14,14 @@ open YieldMap.Transitive.Domains.UnitsOfWork
 open YieldMap.Transitive.Procedures
 open YieldMap.Transitive.Repositories
 open YieldMap.Transitive.MediatorTypes
+open YieldMap.Tools.Logging
 
 module Database =
+    let logger = LogFactory.create "UnitTests.Database"
+    let str (z : TimeSpan Nullable) = 
+        if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
+        else "N/A"
+
     let mockFeedRepo (feeds : Feed seq)= 
         let mock = MockRepository.GenerateMock<IFeedRepository>()
         RhinoMocksExtensions
@@ -224,3 +230,38 @@ module Database =
             rics.Remove ric |> should be (equal 0)
             uow.Save() |> should be (equal 2)
         )))
+
+    open Clutch.Diagnostics.EntityFramework
+    [<Test>]
+    let ``Properties are tested`` () = 
+        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
+
+        let container = DatabaseBuilder.Container
+
+        using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
+            pvRepo.FindAll().Count() |> should be (equal 0)
+            () )
+
+        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
+        using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
+            let pv = PropertyValue(Value = "12")
+            pvRepo.Add pv |> should be (equal 0)
+            uow.Save () |> should be (equal 1)
+            () ))
+
+        using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
+            pvRepo.FindAll().Count() |> should be (equal 1)
+            () )
+
+        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
+        using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
+            let pv = pvRepo.FindAll().First()
+            pvRepo.Remove pv |> should be (equal 0)
+            uow.Save () |> should be (equal 1)
+            () ))
+
+        using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
+            pvRepo.FindAll().Count() |> should be (equal 0)
+            () )

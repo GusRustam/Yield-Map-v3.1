@@ -34,6 +34,9 @@ namespace YieldMap.Transitive.Tools {
         public static void ChunkedForEach<T>(this IEnumerable<T> items, Action<IEnumerable<T>> action, int chunkSize) {
             var list = items.ToList();
             var length = list.Count();
+
+            if (length == 0) return;
+
             var iteration = 0;
             bool finished;
 

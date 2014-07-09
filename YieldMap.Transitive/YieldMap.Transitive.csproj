@@ -55,6 +55,11 @@
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />
     <Compile Include="Domains\IReadOnlyRepository.cs" />
+    <Compile Include="Registry\IFunctionRegistry.cs" />
+    <Compile Include="Domains\UnitsOfWork\IPropertiesUnitOfWork.cs" />
+    <Compile Include="Domains\UnitsOfWork\PropertiesUnitOfWork.cs" />
+    <Compile Include="Repositories\IPropertyValuesRepostiory.cs" />
+    <Compile Include="Repositories\PropertyValuesRepostiory.cs" />
     <Compile Include="Repositories\ChainRepository.cs" />
     <Compile Include="Domains\UnitsOfWork\ChainRicUnitOfWork.cs" />
     <Compile Include="Domains\UnitsOfWork\EikonEntitiesUnitOfWork.cs" />
@@ -70,7 +75,6 @@
     <Compile Include="Repositories\RicRepository.cs" />
     <Compile Include="Registry\Evaluatable.cs" />
     <Compile Include="Registry\FunctionRegistry.cs" />
-    <Compile Include="Registry\IFunctionRegistry.cs" />
     <Compile Include="MediatorTypes\Bond.cs" />
     <Compile Include="Domains\ContextHelper.cs" />
     <Compile Include="Domains\Contexts\BaseContext.cs" />

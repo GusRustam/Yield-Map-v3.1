@@ -67,6 +67,9 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<BondAdditionUnitOfWork>().As<IBondAdditionUnitOfWork>();
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
 
+            Builder.RegisterType<PropertyValuesRepostiory>().As<IPropertyValuesRepostiory>();
+            Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>();
+
             Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
             
         }
