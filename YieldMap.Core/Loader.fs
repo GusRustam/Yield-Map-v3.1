@@ -20,7 +20,7 @@ module Loader =
     open YieldMap.Tools.Logging
 
     open YieldMap.Transitive.MediatorTypes
-    open YieldMap.Transitive.Domains.Queries
+    open YieldMap.Transitive.Queries
 
     open System
     open System.Collections.Generic

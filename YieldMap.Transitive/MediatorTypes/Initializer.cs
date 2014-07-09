@@ -1,7 +1,7 @@
 ﻿using Autofac;
-using YieldMap.Transitive.Domains.Enums;
-using YieldMap.Transitive.Domains.Procedures;
-using YieldMap.Transitive.Domains.Queries;
+using YieldMap.Transitive.Enums;
+using YieldMap.Transitive.Procedures;
+using YieldMap.Transitive.Queries;
 
 namespace YieldMap.Transitive.MediatorTypes {
     public static class Initializer {

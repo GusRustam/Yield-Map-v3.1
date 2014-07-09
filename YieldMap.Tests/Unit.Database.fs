@@ -10,8 +10,9 @@ open System.Linq
 open YieldMap.Database
 open YieldMap.Requests.MetaTables
 open YieldMap.Transitive
-open YieldMap.Transitive.Domains.Procedures
-open YieldMap.Transitive.Domains.Repositories
+open YieldMap.Transitive.Domains.UnitsOfWork
+open YieldMap.Transitive.Procedures
+open YieldMap.Transitive.Repositories
 open YieldMap.Transitive.MediatorTypes
 
 module Database =
@@ -119,7 +120,7 @@ module Database =
     let ``Add feed to real database, save and then remove it`` () =
         let container = DatabaseBuilder.Container
 
-        use uow = container.Resolve<IFeedUnitOfWork>()
+        use uow = container.Resolve<IEikonEntitiesUnitOfWork>()
         use feeds = container.Resolve<IFeedRepository>(NamedParameter("uow", uow))
 
         let feed = feeds.FindById 1L
@@ -205,7 +206,7 @@ module Database =
             all.Count() |> should be (equal 1) |> ignore
             id := all.First().id)
 
-        using (container.Resolve<IInstrumentUnitOfWork>()) (fun uow ->
+        using (container.Resolve<IBondAdditionUnitOfWork>()) (fun uow ->
         using (container.Resolve<IInstrumentRepository>(NamedParameter("uow", uow))) (fun instruments ->
             let bnd = instruments.FindById !id
             instruments.Remove bnd |> should be (equal 0)

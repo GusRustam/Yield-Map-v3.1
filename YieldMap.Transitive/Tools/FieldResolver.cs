@@ -1,6 +1,6 @@
 ﻿using System;
 using YieldMap.Database;
-using YieldMap.Transitive.Domains.Enums;
+using YieldMap.Transitive.Enums;
 
 namespace YieldMap.Transitive.Tools {
     public class FieldResolver : IFieldResolver {

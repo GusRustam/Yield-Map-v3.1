@@ -1,11 +1,13 @@
 ﻿using System;
 using Autofac;
-using YieldMap.Transitive.Domains.Enums;
-using YieldMap.Transitive.Domains.Procedures;
-using YieldMap.Transitive.Domains.Queries;
-using YieldMap.Transitive.Domains.ReadOnly;
-using YieldMap.Transitive.Domains.Repositories;
+using YieldMap.Transitive.Domains;
+using YieldMap.Transitive.Domains.Readers;
+using YieldMap.Transitive.Domains.UnitsOfWork;
+using YieldMap.Transitive.Enums;
+using YieldMap.Transitive.Procedures;
+using YieldMap.Transitive.Queries;
 using YieldMap.Transitive.Registry;
+using YieldMap.Transitive.Repositories;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive {
@@ -59,10 +61,10 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<RicRepository>().As<IRicRepository>();
             Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>();
 
-            Builder.RegisterType<FeedUnitOfWork>().As<IFeedUnitOfWork>();
+            Builder.RegisterType<EikonEntitiesUnitOfWork>().As<IEikonEntitiesUnitOfWork>();
             Builder.RegisterType<FeedRepository>().As<IFeedRepository>();
 
-            Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>();
+            Builder.RegisterType<BondAdditionUnitOfWork>().As<IBondAdditionUnitOfWork>();
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
         }
 

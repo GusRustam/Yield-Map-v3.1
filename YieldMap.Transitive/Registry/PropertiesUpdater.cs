@@ -2,8 +2,9 @@
 using System.Linq;
 using Autofac;
 using YieldMap.Database;
+using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Domains.Contexts;
-using YieldMap.Transitive.Domains.ReadOnly;
+using YieldMap.Transitive.Domains.Readers;
 
 namespace YieldMap.Transitive.Registry {
     public class PropertiesUpdater : IPropertiesUpdater {

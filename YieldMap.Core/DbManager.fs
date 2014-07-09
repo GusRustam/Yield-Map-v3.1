@@ -2,8 +2,8 @@
 
 module DbManager = 
     open Autofac
-    open YieldMap.Transitive.Domains.Procedures
-    open YieldMap.Transitive.Domains.Queries
+    open YieldMap.Transitive.Procedures
+    open YieldMap.Transitive.Queries
 
     open YieldMap.Loader.SdkFactory
     open YieldMap.Loader.LiveQuotes
