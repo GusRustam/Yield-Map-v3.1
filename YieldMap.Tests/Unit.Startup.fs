@@ -38,17 +38,6 @@ module Ops =
         if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
         else "N/A"
 
-
-//    let init chains dt =
-//        use ctx = Manager.CreateDbConn().CreateContext ()
-//
-//        chains |> Array.iter (fun name -> 
-//            if not <| ctx.Chains.Any(fun (x:Chain) -> x.Name = name) then
-//                ctx.Chains.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore
-//                ctx.SaveChanges () |> ignore
-//        )
-//        ctx.SaveChanges () |> ignore
-
     let command cmd func state = 
         logger.InfoF "===> %s " cmd
         let res = func () |> Async.RunSynchronously  
@@ -176,7 +165,7 @@ module StartupTest =
         let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
         DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
 
-        //globalThreshold := LoggingLevel.Debug
+        globalThreshold := LoggingLevel.Debug
 
     [<TearDown>]
     let teardown () = 

@@ -8,7 +8,6 @@ using System.Linq;
 using Autofac;
 using YieldMap.Database;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.MediatorTypes;
@@ -54,14 +53,17 @@ namespace YieldMap.Transitive.Procedures {
             throw new InvalidDataException();
         }
 
-        private static Index EnsureIndex(BondAdditionContext ctx, string ind) {
-            if (String.IsNullOrWhiteSpace(ind))
+        private Index EnsureIndex(BondAdditionContext ctx, string name) {
+            if (String.IsNullOrWhiteSpace(name))
                 return null;
 
-            var index =
-                ctx.Indices.FirstOrDefault(t => t.Name == ind) ?? // TODO WHO AND WHY CREATES RICS FOR THOSE? WHO AND WHY AND WHERE LINKS THEM? TODO WHY ERRORS?
-                ctx.Indices.Add(new Index { Name = ind });
+            if (_indices.ContainsKey(name))
+                return _indices[name];
 
+            var index = ctx.Indices.FirstOrDefault(t => t.Name == name) ??
+                     ctx.Indices.Add(new Index { Name = name });
+
+            _indices[name] = index;
             return index;
         }
 
@@ -193,34 +195,29 @@ namespace YieldMap.Transitive.Procedures {
 
             // Legs
             using (var ctx = new BondAdditionContext()) {
-                try {
-                    //ctx.Configuration.AutoDetectChangesEnabled = false;
-                    var legs = new Dictionary<string, Leg>();
-                    foreach (var bond in bonds.Where(bond => !bond.RateStructure.StartsWith("Unable"))) {
-                        try {
-                            legs.Add(bond.Ric, CreateLeg(ctx, descrIds[bond.Ric], bond));
-                        } catch (Exception e) {
-                            Logger.ErrorEx("Instrument", e);
-                        }
+                var legs = new Dictionary<string, Leg>();
+                foreach (var bond in bonds.Where(bond => !bond.RateStructure.StartsWith("Unable"))) {
+                    try {
+                        legs.Add(bond.Ric, CreateLeg(ctx, descrIds[bond.Ric], bond));
+                    } catch (Exception e) {
+                        Logger.ErrorEx("Instrument", e);
                     }
+                }
 
-                    if (legs.Any()) {
-                        try {
-                            ctx.SaveChanges();
-                        } catch (DbEntityValidationException e) {
-                            Logger.Report("Saving legs failed", e);
-                            throw;
-                        }
-                        
-                        var peggedContext = ctx;
-                        legs.Values.ChunkedForEach(x => {
-                            var sql = BulkInsertLegs(x);
-                            Logger.Info(String.Format("Sql is {0}", sql));
-                            peggedContext.Database.ExecuteSqlCommand(sql);
-                        }, 500);
+                if (legs.Any()) {
+                    try {
+                        ctx.SaveChanges();
+                    } catch (DbEntityValidationException e) {
+                        Logger.Report("Saving legs failed", e);
+                        throw;
                     }
-                } finally {
-                    //ctx.Configuration.AutoDetectChangesEnabled = true;
+                        
+                    var peggedContext = ctx;
+                    legs.Values.ChunkedForEach(x => {
+                        var sql = BulkInsertLegs(x);
+                        Logger.Info(String.Format("Sql is {0}", sql));
+                        peggedContext.Database.ExecuteSqlCommand(sql);
+                    }, 500);
                 }
             }
         }
@@ -295,6 +292,7 @@ namespace YieldMap.Transitive.Procedures {
             return isin;
         }
 
+        private readonly Dictionary<string, Index> _indices = new Dictionary<string, Index>();
         private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();
         private readonly Dictionary<string, Currency> _currencies = new Dictionary<string, Currency>();
         private readonly Dictionary<string, LegalEntity> _legalEntities = new Dictionary<string, LegalEntity>();
