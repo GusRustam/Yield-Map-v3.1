@@ -244,11 +244,11 @@
             <End Role="LegalEntity" EntitySet="LegalEntity" />
           </AssociationSet>
           <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.Store.FK_PropertyValue_0_0">
-            <End Role="Property" EntitySet="Property" />
+            <End Role="Instrument" EntitySet="Instrument" />
             <End Role="PropertyValue" EntitySet="PropertyValue" />
           </AssociationSet>
           <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.Store.FK_PropertyValue_1_0">
-            <End Role="Instrument" EntitySet="Instrument" />
+            <End Role="Property" EntitySet="Property" />
             <End Role="PropertyValue" EntitySet="PropertyValue" />
           </AssociationSet>
           <AssociationSet Name="FK_Rating_0_0" Association="mainModel.Store.FK_Rating_0_0">
@@ -464,9 +464,9 @@
             <PropertyRef Name="id" />
           </Key>
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Property" Type="integer" />
-          <Property Name="id_Instrument" Type="integer" />
-          <Property Name="Value" Type="varchar" MaxLength="300" />
+          <Property Name="id_Property" Type="integer" Nullable="false" />
+          <Property Name="id_Instrument" Type="integer" Nullable="false" />
+          <Property Name="Value" Type="varchar" Nullable="false" MaxLength="300" />
         </EntityType>
         <EntityType Name="Rating">
           <Key>
@@ -1006,19 +1006,7 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PropertyValue_0_0">
-          <End Role="Property" Type="mainModel.Store.Property" Multiplicity="0..1" />
-          <End Role="PropertyValue" Type="mainModel.Store.PropertyValue" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Property">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="PropertyValue">
-              <PropertyRef Name="id_Property" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_PropertyValue_1_0">
-          <End Role="Instrument" Type="mainModel.Store.Instrument" Multiplicity="0..1" />
+          <End Role="Instrument" Type="mainModel.Store.Instrument" Multiplicity="1" />
           <End Role="PropertyValue" Type="mainModel.Store.PropertyValue" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Instrument">
@@ -1026,6 +1014,18 @@
             </Principal>
             <Dependent Role="PropertyValue">
               <PropertyRef Name="id_Instrument" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PropertyValue_1_0">
+          <End Role="Property" Type="mainModel.Store.Property" Multiplicity="1" />
+          <End Role="PropertyValue" Type="mainModel.Store.PropertyValue" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Property">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="PropertyValue">
+              <PropertyRef Name="id_Property" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1362,11 +1362,11 @@
           </AssociationSet>
           <EntitySet Name="Properties" EntityType="mainModel.Property" />
           <EntitySet Name="PropertyValues" EntityType="mainModel.PropertyValue" />
-          <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.FK_PropertyValue_1_0">
+          <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.FK_PropertyValue_0_0">
             <End Role="Instrument" EntitySet="Instruments" />
             <End Role="PropertyValue" EntitySet="PropertyValues" />
           </AssociationSet>
-          <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.FK_PropertyValue_0_0">
+          <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.FK_PropertyValue_1_0">
             <End Role="Property" EntitySet="Properties" />
             <End Role="PropertyValue" EntitySet="PropertyValues" />
           </AssociationSet>
@@ -1876,7 +1876,7 @@
           <NavigationProperty Name="InstrumentType" Relationship="mainModel.FK_Instrument_1_0" FromRole="Instrument" ToRole="InstrumentType" />
           <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_2_0" FromRole="Instrument" ToRole="Leg" />
           <NavigationProperty Name="RatingToInstruments" Relationship="mainModel.FK_RatingToInstrument_1_0" FromRole="Instrument" ToRole="RatingToInstrument" />
-          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="Instrument" ToRole="PropertyValue" />
+          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="Instrument" ToRole="PropertyValue" />
         </EntityType>
         <Association Name="FK_Description_0_0">
           <End Type="mainModel.LegalEntity" Role="LegalEntity" Multiplicity="0..1" />
@@ -2266,21 +2266,21 @@
           <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Type="String" Name="Description" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Type="String" Name="Expression" MaxLength="300" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="Property" ToRole="PropertyValue" />
+          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="Property" ToRole="PropertyValue" />
         </EntityType>
         <EntityType Name="PropertyValue">
           <Key>
             <PropertyRef Name="id" />
           </Key>
           <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Property" />
-          <Property Type="Int64" Name="id_Instrument" />
-          <Property Type="String" Name="Value" MaxLength="300" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="Instrument" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="PropertyValue" ToRole="Instrument" />
-          <NavigationProperty Name="Property" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="PropertyValue" ToRole="Property" />
+          <Property Type="Int64" Name="id_Property" Nullable="false" />
+          <Property Type="Int64" Name="id_Instrument" Nullable="false" />
+          <Property Type="String" Name="Value" Nullable="false" MaxLength="300" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Instrument" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="PropertyValue" ToRole="Instrument" />
+          <NavigationProperty Name="Property" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="PropertyValue" ToRole="Property" />
         </EntityType>
-        <Association Name="FK_PropertyValue_1_0">
-          <End Type="mainModel.Instrument" Role="Instrument" Multiplicity="0..1" />
+        <Association Name="FK_PropertyValue_0_0">
+          <End Type="mainModel.Instrument" Role="Instrument" Multiplicity="1" />
           <End Type="mainModel.PropertyValue" Role="PropertyValue" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Instrument">
@@ -2291,8 +2291,8 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_PropertyValue_0_0">
-          <End Type="mainModel.Property" Role="Property" Multiplicity="0..1" />
+        <Association Name="FK_PropertyValue_1_0">
+          <End Type="mainModel.Property" Role="Property" Multiplicity="1" />
           <End Type="mainModel.PropertyValue" Role="PropertyValue" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Property">

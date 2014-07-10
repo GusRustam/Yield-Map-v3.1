@@ -7,7 +7,6 @@ using YieldMap.Database;
 using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Domains.UnitsOfWork;
-using YieldMap.Transitive.Registry;
 
 namespace YieldMap.Transitive.Repositories {
     public class PropertyValuesRepostiory : IPropertyValuesRepostiory {

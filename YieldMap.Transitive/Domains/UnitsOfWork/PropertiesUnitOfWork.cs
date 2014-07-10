@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using YieldMap.Database;
 using YieldMap.Tools.Logging;
@@ -63,6 +62,8 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
                 changedPvs.Where(e => e.State == EntityState.Deleted).ToList().ForEach(e => e.State = EntityState.Unchanged);
             }
 
+            //((IObjectContextAdapter)Context).ObjectContext.Refresh(RefreshMode.StoreWins, Context.PropertyValues);
+
             var dbEntityEntries = Context.ChangeTracker.Entries<PropertyValue>().ToList();
             Debug.Assert(dbEntityEntries.All(e => e.State != EntityState.Added));
             Debug.Assert(dbEntityEntries.All(e => e.State != EntityState.Deleted));
@@ -74,11 +75,7 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
         private static string BulkInsertPropertyValues(IEnumerable<PropertyValue> pvs) {
             var res = pvs.Aggregate(
                 "INSERT INTO PropertyValue(id_Instrument, id_Property, 'Value') SELECT ",
-                (current, i) => {
-                    var idInstrument = i.id_Instrument.HasValue ? i.id_Instrument.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idProperty = i.id_Property.HasValue ? i.id_Property.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    return current + String.Format("{0}, {1}, '{2}' UNION SELECT ", idInstrument, idProperty, i.Value);
-                });
+                (current, i) => current + String.Format("{0}, {1}, '{2}' UNION SELECT ", i.id_Instrument, i.id_Property, i.Value));
             return res.Substring(0, res.Length - "UNION SELECT ".Length);
         }
 

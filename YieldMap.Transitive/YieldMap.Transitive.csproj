@@ -58,7 +58,9 @@
     <Compile Include="Registry\IFunctionRegistry.cs" />
     <Compile Include="Domains\UnitsOfWork\IPropertiesUnitOfWork.cs" />
     <Compile Include="Domains\UnitsOfWork\PropertiesUnitOfWork.cs" />
+    <Compile Include="Repositories\IPropertiesRepository.cs" />
     <Compile Include="Repositories\IPropertyValuesRepostiory.cs" />
+    <Compile Include="Repositories\PropertiesRepository.cs" />
     <Compile Include="Repositories\PropertyValuesRepostiory.cs" />
     <Compile Include="Repositories\ChainRepository.cs" />
     <Compile Include="Domains\UnitsOfWork\ChainRicUnitOfWork.cs" />

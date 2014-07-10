@@ -14,5 +14,5 @@ namespace YieldMap.Transitive.Repositories {
     public interface IInstrumentTypeRepository : IRepository<InstrumentType> {}
     public interface IChainRepository : IRepository<Chain> {}
     public interface IRicToChainRepository : IRepository<RicToChain> {}
-    public interface IIndexRepository : IRepository<Index> {}
+    public interface IIndexRepository : IRepository<Index> { }
 }

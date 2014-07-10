@@ -15,8 +15,8 @@ namespace YieldMap.Database
     public partial class PropertyValue //: IObjectWithState
     {
         public long id { get; set; }
-        public Nullable<long> id_Property { get; set; }
-        public Nullable<long> id_Instrument { get; set; }
+        public long id_Property { get; set; }
+        public long id_Instrument { get; set; }
         public string Value { get; set; }
     	public PropertyValue ToPocoSimple() {
     	    return new PropertyValue {

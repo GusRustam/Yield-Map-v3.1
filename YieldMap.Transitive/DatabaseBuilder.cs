@@ -57,6 +57,8 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<DbUpdates>().As<IDbUpdates>();
             Builder.RegisterType<BackupRestore>().As<IBackupRestore>();
             
+            // Repos and their units of work.
+            // And then - their readers
             Builder.RegisterType<ChainRepository>().As<IChainRepository>();
             Builder.RegisterType<RicRepository>().As<IRicRepository>();
             Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>();
@@ -67,6 +69,8 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<BondAdditionUnitOfWork>().As<IBondAdditionUnitOfWork>();
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
 
+
+            Builder.RegisterType<PropertiesRepository>().As<IPropertiesRepository>();
             Builder.RegisterType<PropertyValuesRepostiory>().As<IPropertyValuesRepostiory>();
             Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>();
 
