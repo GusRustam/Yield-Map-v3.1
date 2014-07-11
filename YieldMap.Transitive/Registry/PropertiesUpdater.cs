@@ -3,6 +3,7 @@ using System.Linq;
 using Autofac;
 using YieldMap.Database;
 using YieldMap.Language;
+using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
@@ -11,12 +12,14 @@ using YieldMap.Transitive.Repositories;
 namespace YieldMap.Transitive.Registry {
     public class PropertiesUpdater : IPropertiesUpdater {
         private readonly IContainer _container;
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Transitive.Registry");
 
         public PropertiesUpdater(Func<IContainer> container) {
             _container = container.Invoke();
         }
 
         public int Recalculate(Func<InstrumentDescriptionView, bool> predicate = null) {
+            Logger.Trace("Recalculate()");
             var reader = _container.Resolve<IInstrumentDescriptionsReader>();
             var registry = _container.Resolve<IFunctionRegistry>();
             var properties = registry.Items;
@@ -68,9 +71,9 @@ namespace YieldMap.Transitive.Registry {
                                     else item.Value = strValue;
                                 }
                             });
-                        });                    
+                        });
+                    uow.Save();
                 }
-                uow.Save();
             }
                 
             return 0;

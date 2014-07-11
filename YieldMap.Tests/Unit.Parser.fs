@@ -303,7 +303,7 @@ module Language =
              1, Syntel.Operation "+"
             ])
 
-        let a = "(1+2)/(3+4)" |> Syntan.grammarizeExtended |> Seq.toList
+        let a = "(1+2)/(3+4)" |> Syntan.grammarizeExtended 
         logger.InfoF "%A" a
         a |> should be (equal [ 1, Syntel.Value <| Value.Integer 1L
                                 3, Syntel.Value <| Value.Integer 2L
@@ -313,7 +313,7 @@ module Language =
                                 8, Syntel.Operation "+"
                                 5, Syntel.Operation "/"])
 
-        let a = "(1+2)/((3+4*6)/(12+3*2))" |> Syntan.grammarizeExtended |> Seq.toList
+        let a = "(1+2)/((3+4*6)/(12+3*2))" |> Syntan.grammarizeExtended 
         logger.InfoF "%A" a
         a |> should be (equal [ 1, Syntel.Value <| Value.Integer 1L
                                 3, Syntel.Value <| Value.Integer 2L
@@ -331,19 +331,19 @@ module Language =
                                 14, Syntel.Operation "/"
                                 5, Syntel.Operation "/"])
 
-        let a = "OhMyGod()" |> Syntan.grammarizeExtended |> Seq.toList
+        let a = "OhMyGod()" |> Syntan.grammarizeExtended 
         a |> should be (equal [ 0, Syntel.Function "OHMYGOD"])
 
-        let a = "OhMyGod(12)" |> Syntan.grammarizeExtended |> Seq.toList
+        let a = "OhMyGod(12)" |> Syntan.grammarizeExtended 
         a |> should be (equal [ 8, Syntel.Value <| Value.Integer 12L
                                 0, Syntel.Function "OHMYGOD"])
 
-        let a = "OhMyGod(12, 13)" |> Syntan.grammarizeExtended |> Seq.toList
+        let a = "OhMyGod(12, 13)" |> Syntan.grammarizeExtended 
         a |> should be (equal [ 8, Syntel.Value <| Value.Integer 12L
                                 12, Syntel.Value <| Value.Integer 13L
                                 0, Syntel.Function "OHMYGOD"])
                                 
-        let a = "OhMyGod(Hello(12), Bye(23, $alpha.beta_11), $a, false)" |> Syntan.grammarizeExtended |> Seq.toList
+        let a = "OhMyGod(Hello(12), Bye(23, $alpha.beta_11), $a, false)" |> Syntan.grammarizeExtended 
         a |> should be (equal [ 14, Syntel.Value <| Value.Integer 12L
                                 8, Syntel.Function "HELLO"
                                 23, Syntel.Value <| Value.Integer 23L
@@ -354,10 +354,10 @@ module Language =
                                 0, Syntel.Function "OHMYGOD"])
 
 
+    let analyzeAndApply code vars = (code |> Syntan.grammarize, vars |> Map.toDict) |> Interpreter.evaluate      
+
     [<Test>]
     let ``Interpretation`` () =
-        let analyzeAndApply code vars = (code |> Syntan.grammarize, vars |> Map.toDict) |> Interpreter.evaluate      
-                  
         analyzeAndApply "1+2=4" Map.empty |> should be (equal (Value.Bool false))
         analyzeAndApply "2+2=4" Map.empty |> should be (equal (Value.Bool true))
         analyzeAndApply "not true" Map.empty |> should be (equal (Value.Bool false))
@@ -385,3 +385,89 @@ module Language =
         analyzeAndApply "true = True" Map.empty |> should be (equal (Value.Bool true))
 
         ["A", box 2] |> Map.ofList |> analyzeAndApply "$a + 1" |> should be (equal (Value.Integer 3L)) 
+
+    [<Test>]
+    let ``Complex examples`` () =
+    
+        let doExpression expr res =
+            [("InstrumentName", box "Name")
+             ("$Coupon", box 5)] 
+            |> Map.ofList 
+            |> analyzeAndApply expr 
+            |> should be (equal (Value.String res))
+
+        let expression = "$InstrumentName + IIf(Not IsNothing($Maturity), \" '\" + Format(\"{0:MMM-yy}\", $Maturity), \"\")"
+        let grammar = expression |> Syntan.grammarizeExtended
+        logger.InfoF "Grammar is %A" grammar
+        
+        grammar |> should be (equal 
+            [(0, Variable (Global "INSTRUMENTNAME"))
+             (36, Variable (Global "MATURITY"))
+             (26, Function "ISNOTHING")
+             (22, Operation "not")
+             (48, Value (String " '"))
+             (62, Value (String "{0:MMM-yy}"))
+             (76, Variable (Global "MATURITY"))
+             (55, Function "FORMAT")
+             (53, Operation "+")
+             (88, Value (String ""))
+             (18, Function "IIF")
+             (16, Operation "+")
+            ])
+
+        doExpression expression ""
+
+        let expression = "$InstrumentName + IIf(Not IsNothing($Coupon), \" \" + Format(\"{0:0.00}\", $Coupon), \"\")"
+        let grammar = expression |> Syntan.grammarizeExtended
+        logger.InfoF "Grammar is %A" grammar
+
+        grammar |> should be (equal 
+            [(0, Variable (Global "INSTRUMENTNAME"))
+             (36, Variable (Global "COUPON"))
+             (26, Function "ISNOTHING")
+             (22, Operation "not")
+             (46, Value (String " "))
+             (59, Value (String "{0:0.00}"))
+             (71, Variable (Global "COUPON"))
+             (52, Function "FORMAT")
+             (50, Operation "+")
+             (81, Value (String ""))
+             (18, Function "IIF")
+             (16, Operation "+")
+            ])
+
+        doExpression expression ""
+
+
+        let expression = "$InstrumentName + IIf(Not IsNothing($Coupon), \" \" + Format(\"{0:0.00}\", $Coupon), \"\") + IIf(Not IsNothing($Maturity), \" '\" + Format(\"{0:MMM-yy}\", $Maturity))"
+        
+        let grammar = expression |> Syntan.grammarizeExtended
+        logger.InfoF "Grammar is %A" grammar
+
+        grammar |> should be (equal 
+            [(0, Variable (Global "INSTRUMENTNAME"))
+             (36, Variable (Global "COUPON"))
+             (26, Function "ISNOTHING")
+             (22, Operation "not")
+             (46, Value (String " "))
+             (59, Value (String "{0:0.00}"))
+             (71, Variable (Global "COUPON"))
+             (52, Function "FORMAT")
+             (50, Operation "+")
+             (81, Value (String ""))
+             (18, Function "IIF")
+             (105, Variable (Global "MATURITY"))
+             (95, Function "ISNOTHING")
+             (91, Operation "not")
+             (117, Value (String " '"))
+             (131, Value (String "{0:MMM-yy}"))
+             (145, Variable (Global "MATURITY"))
+             (124, Function "FORMAT")
+             (122, Operation "+")
+             (87, Function "IIF")
+             (85, Operation "+")
+             (16, Operation "+")
+            ])
+
+
+        doExpression expression ""

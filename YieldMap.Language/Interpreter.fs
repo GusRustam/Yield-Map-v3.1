@@ -16,12 +16,14 @@ open Exceptions
 
 #nowarn "62"
 module Interpreter = 
+    let logger = LogFactory.create "YieldMap.Language.Interpreter"
     // LAZY FUNCTIONS POSSIBLE ONLY IF I FIRST CREATE A TREE FROM A STACK
     // FUNCTIONS WITH VARIABLE NUMBER OF ARGS (OR DIFFERING NUMBER OF ARGS)
     //   ARE NOT IMPLEMENTABLE UNLESS I ADD SOME CALL DELIMITER TO SYNTAX PARSER OUTPUT
 
     module private Operations = 
         let applyMath op v1 v2 =
+            logger.TraceF "applyMath %s %A %A" op v1 v2
             if op = "+" then
                 match v1, v2 with
                 | Value.Integer i1, Value.Integer i2 -> 
@@ -76,6 +78,7 @@ module Interpreter =
             | _ -> None
 
         let applyLogical op v1 v2 =
+            logger.TraceF "applyLogical %s %A %A" op v1 v2
             match v1, v2 with
             | C n, C m -> 
                 Value.Bool <| (getLogicalOperation op) n m
@@ -86,6 +89,7 @@ module Interpreter =
             | _ -> raise <| InterpreterException (sprintf "Operation %s is not applicable to args %A %A" op v1 v2)
                 
         let apply op stack = 
+            logger.TraceF "apply %s" op
             if op = "_" then
                 match stack with
                 | (Syntel.Value (Value.Integer i)) :: tail -> 
@@ -137,6 +141,7 @@ module Interpreter =
 
     module internal Functions = 
         let apply name stack = 
+            logger.TraceF "apply function %s" name
             // functions: 
             //  - control : iif
             //  - math : round, floor, ceil, abs
@@ -273,7 +278,7 @@ module Interpreter =
 
                 | _ -> failwith <| sprintf "Invalid %s function call. Use %s(date, int)" name name
 
-            else failwith "Unknown function" 
+            else failwith <| sprintf "Unknown function %s" name
             
     let private getVariable (vars : (string, obj) Map) var = 
         match var with

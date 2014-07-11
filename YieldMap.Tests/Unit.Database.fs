@@ -1,9 +1,11 @@
 ﻿namespace YieldMap.Tests.Unit
 
 open Autofac
+open Clutch.Diagnostics.EntityFramework
 open FsUnit
 open NUnit.Framework
 open Rhino.Mocks
+
 open System
 open System.Linq
 
@@ -14,6 +16,7 @@ open YieldMap.Transitive.Domains
 open YieldMap.Transitive.Domains.UnitsOfWork
 open YieldMap.Transitive.Procedures
 open YieldMap.Transitive.Repositories
+open YieldMap.Transitive.Registry
 open YieldMap.Transitive.MediatorTypes
 open YieldMap.Tools.Logging
 
@@ -31,7 +34,6 @@ module Database =
             |> ignore
         mock
 
-
     let inline getCount<'U, ^T when ^T :> IDisposable 
                                  and ^T : (member FindAll : unit -> IQueryable<'U>)> () =
         let container = DatabaseBuilder.Container
@@ -48,20 +50,30 @@ module Database =
         checkExact<'U, ^T> 0
 
 
-    let createChainRicInstrument () =
+    let createChainRicInstrument chainName chainRics descrs =
         let container = DatabaseBuilder.Container
-        let theInstrument = ref null
         // Setting up, adding chain and ric
         let chainRicSaver = container.Resolve<IChainRics> ()
-        chainRicSaver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
+        chainRicSaver.SaveChainRics(chainName, chainRics, "Q", DateTime.Today, "")
 
         // Setting up, adding instrument
         let bondSaver = container.Resolve<IBonds>()
-        let bond = MetaTables.BondDescr(BondStructure = "BondStructure", Description = "Description", Ric = "TESTRIC", Currency = "RUB")
-                   |> Bond.Create 
-        bondSaver.Save [bond]
-        using (container.Resolve<IInstrumentRepository>()) (fun repo -> theInstrument := repo.FindAll().First())
-        theInstrument.contents.id
+
+        let bond = descrs
+                   |> Seq.map Bond.Create 
+                   |> Seq.map (fun x -> x :> InstrumentDescription)
+
+        bondSaver.Save bond
+
+        let ids = ref []
+
+        using (container.Resolve<IInstrumentRepository>()) (fun repo -> 
+            let instruments = repo.FindAll().ToList()
+            ids := descrs 
+                   |> List.map (fun descr -> instruments.FirstOrDefault(fun i -> i.Name = descr.ShortName))
+                   |> List.map (fun i -> if i = null then -1L else i.id))
+
+        !ids
 
 
     let createProperty name =
@@ -296,9 +308,6 @@ module Database =
             uow.Save() |> should be (equal 2)
         )))
 
-
-
-    open Clutch.Diagnostics.EntityFramework
     [<Test>]
     let ``Property values simple addition / deletion`` () = 
 //        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
@@ -307,41 +316,36 @@ module Database =
 
         let container = DatabaseBuilder.Container
 
-
         // Setting up, adding property
-        let instrumentId = createChainRicInstrument ()
+
+        let [instrumentId] = [MetaTables.BondDescr(BondStructure = "BondStructure", Description = "Description", Ric = "TESTRIC", Currency = "RUB")] 
+                             |> createChainRicInstrument "TESTCHAIN" [|"TESTRIC"|] 
         let propertyId = createProperty "TESTPROP"
             
         // TESTING
         using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
-            pvRepo.FindAll().Count() |> should be (equal 0)
-            () )
+            pvRepo.FindAll().Count() |> should be (equal 0))
 
         using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
         using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
             let pv = PropertyValue(Value = "12", id_Property = propertyId, id_Instrument = instrumentId)
             pvRepo.Add pv |> should be (equal 0)
-            uow.Save () |> should be (equal 1)
-            () ))
+            uow.Save () |> should be (equal 1)))
 
         using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
-            pvRepo.FindAll().Count() |> should be (equal 1)
-            () )
+            pvRepo.FindAll().Count() |> should be (equal 1) )
 
         using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
         using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
             let pv = pvRepo.FindAll().First()
             pvRepo.Remove pv |> should be (equal 0)
-            uow.Save () |> should be (equal 1)
-            () ))
+            uow.Save () |> should be (equal 1) ))
 
         using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
-            pvRepo.FindAll().Count() |> should be (equal 0)
-            () )
+            pvRepo.FindAll().Count() |> should be (equal 0))
 
         deleteChainRicInstrument ()
         deleteProperty propertyId
-        
 
     [<Test>]
     let ``Properties simple addition / deletion`` () = 
@@ -369,7 +373,6 @@ module Database =
 
         checkExact<Property, IPropertiesRepository> cnt
 
-
     [<Test>]
     let ``Property values simultaneous addition / deletion`` () = 
         let container = DatabaseBuilder.Container
@@ -378,8 +381,8 @@ module Database =
         let id13 = ref 0L
         let id14 = ref 0L
 
-        // TODO ADD TEMP PROPERTY AND INSTRUMENT
-        let instrumentId = createChainRicInstrument ()
+        let [instrumentId] = [MetaTables.BondDescr(BondStructure = "BondStructure", Description = "Description", Ric = "TESTRIC", Currency = "RUB")] 
+                             |> createChainRicInstrument "TESTCHAIN" [|"TESTRIC"|] 
         let propertyId = createProperty "P1"
         let propertyId2 = createProperty "P2"
 
@@ -417,9 +420,38 @@ module Database =
             |> Seq.iter(fun pv -> pvRepo.Remove pv |> should be (equal 0))
             uow.Save () |> should be (equal 2)))
 
-        // TODO REMOVE TEMP PROPERTY AND INSTRUMENT
         deleteChainRicInstrument ()
         deleteProperty propertyId
         deleteProperty propertyId2
 
         checkZero<PropertyValue, IPropertyValuesRepostiory> ()
+
+    [<Test>]
+    let ``Recalculating property values on changes in instruments`` () = 
+        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
+        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
+
+        let container = DatabaseBuilder.Container
+        let [inst1id; instr2id] = 
+            [MetaTables.BondDescr(BondStructure = "BondStructure1", Description = "Description1", Ric = "TESTRIC1", Currency = "RUB", ShortName = "Wow1", Series = "S1")
+             MetaTables.BondDescr(BondStructure = "BondStructure2", Description = "Description2", Ric = "TESTRIC2", Currency = "RUB", ShortName = "Wow2", Series = "S1")] 
+            |> createChainRicInstrument "TESTCHAIN" [|"TESTRIC1"; "TESTRIC2"|] 
+
+        let registry = container.Resolve<IFunctionRegistry>()
+        let updater = container.Resolve<IPropertiesUpdater>()
+        let properyReader = container.Resolve<IPropertiesRepository> ()
+        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
+
+        properyValueReader.FindAll().Count() |> should be (equal 0)
+        
+        properyReader
+            .FindAll()
+            .ToList()
+            |> Seq.iter(fun p -> registry.Add(p.id, p.Expression))
+
+        updater.Recalculate () |> should be (equal 0)
+
+        properyValueReader.FindAll().Count() |> should be (equal 4)
+
+        deleteChainRicInstrument ()
