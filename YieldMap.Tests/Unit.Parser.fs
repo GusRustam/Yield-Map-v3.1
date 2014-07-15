@@ -354,7 +354,7 @@ module Language =
                                 0, Syntel.Function "OHMYGOD"])
 
 
-    let analyzeAndApply code vars = (code |> Syntan.grammarize, vars |> Map.toDict) |> Interpreter.evaluate      
+    let analyzeAndApply code vars = (code |> Syntan.grammarizeExtended, code, vars |> Map.toDict) |> Interpreter.evaluate      
 
     [<Test>]
     let ``Interpretation`` () =
@@ -394,7 +394,7 @@ module Language =
              ("$Coupon", box 5)] 
             |> Map.ofList 
             |> analyzeAndApply expr 
-            |> should be (equal (Value.String res))
+            |> should be (equal res)
 
         let expression = "$InstrumentName + IIf(Not IsNothing($Maturity), \" '\" + Format(\"{0:MMM-yy}\", $Maturity), \"\")"
         let grammar = expression |> Syntan.grammarizeExtended
@@ -415,7 +415,7 @@ module Language =
              (16, Operation "+")
             ])
 
-        doExpression expression ""
+        doExpression expression Value.Nothing
 
         let expression = "$InstrumentName + IIf(Not IsNothing($Coupon), \" \" + Format(\"{0:0.00}\", $Coupon), \"\")"
         let grammar = expression |> Syntan.grammarizeExtended
@@ -436,8 +436,7 @@ module Language =
              (16, Operation "+")
             ])
 
-        doExpression expression ""
-
+        doExpression expression Value.Nothing
 
         let expression = "$InstrumentName + IIf(Not IsNothing($Coupon), \" \" + Format(\"{0:0.00}\", $Coupon), \"\") + IIf(Not IsNothing($Maturity), \" '\" + Format(\"{0:MMM-yy}\", $Maturity))"
         
@@ -469,5 +468,10 @@ module Language =
              (16, Operation "+")
             ])
 
-
-        doExpression expression ""
+        try
+            doExpression expression Value.Nothing
+            Assert.Fail "There must have been an error"
+        with :? GrammarException as e ->
+            let info = e.Data0
+            logger.InfoEx "Failed" e
+            info.position |> should be (equal 87)

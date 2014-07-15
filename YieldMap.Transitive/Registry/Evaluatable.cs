@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using YieldMap.Language;
 
+
 namespace YieldMap.Transitive.Registry {
+    using Syntax = IEnumerable<Tuple<int, Syntan.Syntel>>;
+
     public class Evaluatable {
         private readonly string _expression;
-        private readonly IEnumerable<Syntan.Syntel> _grammar;
+        private readonly Syntax _grammar;
 
         public override string ToString() {
             return string.Format("Expr {0}", Expression);
@@ -12,14 +16,14 @@ namespace YieldMap.Transitive.Registry {
 
         public Evaluatable(string expression) {
             _expression = expression;
-            _grammar = Syntan.grammarize(expression);
+            _grammar = Syntan.grammarizeExtended(expression);
         }
 
         public string Expression {
             get { return _expression; }
         }
 
-        public IEnumerable<Syntan.Syntel> Grammar {
+        public Syntax Grammar {
             get { return _grammar; }
         }
     }

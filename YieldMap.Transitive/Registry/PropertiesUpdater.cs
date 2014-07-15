@@ -46,7 +46,7 @@ namespace YieldMap.Transitive.Registry {
                                 var propertyId = kvp.Key;
                                 var grammar = kvp.Value;
                                 // evaluate property for that instrument
-                                var value = Interpreter.evaluate(grammar.Grammar, environment);
+                                var value = Interpreter.evaluate(grammar.Grammar, grammar.Expression, environment);
 
                                 // is there any value for this property and instrument?
                                 var item = propertiesRepo
@@ -72,11 +72,9 @@ namespace YieldMap.Transitive.Registry {
                                 }
                             });
                         });
-                    uow.Save();
+                    return uow.Save();
                 }
             }
-                
-            return 0;
         }
 
         public int Refresh() {

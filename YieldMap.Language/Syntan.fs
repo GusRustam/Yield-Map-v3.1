@@ -172,5 +172,5 @@ module Syntan =
             logger.WarnEx "Problem!" ex
             raise ex
 
-    let grammarizeExtended str = str |> Lexem.parse ||> grammar 
+    let grammarizeExtended str = str |> Lexem.parse ||> grammar |> Seq.ofList
     let grammarize s = s |> grammarizeExtended |> Seq.map snd

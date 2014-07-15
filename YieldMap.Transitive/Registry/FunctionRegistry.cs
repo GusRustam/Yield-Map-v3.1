@@ -9,11 +9,12 @@ namespace YieldMap.Transitive.Registry {
         private readonly ConcurrentDictionary<long, Evaluatable> _registry = 
             new ConcurrentDictionary<long, Evaluatable>();
 
-        public void Clear() {
+        public int Clear() {
             _registry.Clear();
+            return 0;
         }
 
-        public void Add(long propId, string expr) {
+        public int Add(long propId, string expr) {
             if (_registry.ContainsKey(propId)) {
                 Evaluatable value;
                 if (_registry.TryGetValue(propId, out value) && value.Expression != expr && !_registry.TryRemove(propId, out value))
@@ -27,8 +28,10 @@ namespace YieldMap.Transitive.Registry {
                         Logger.Warn(string.Format("Failed to add an expression for property {0} to registry {1}", propId, x));
                 } catch (Exceptions.GrammarException e) {
                     Logger.WarnEx("Failed to parse", e);
+                    return -1;
                 }
             }
+            return 0;
         }
 
 

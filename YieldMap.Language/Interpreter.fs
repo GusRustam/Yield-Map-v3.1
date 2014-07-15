@@ -98,10 +98,10 @@ module Interpreter =
                 | (Syntel.Value (Value.Double d)) :: tail -> 
                     (Syntel.Value (Value.Double -d)) :: tail 
 
-                | head :: tail -> 
+                | head :: _ -> 
                     raise <| InterpreterException (sprintf "Operation - is not applicable to %A" head)
 
-                | _ -> failwith "Nothing to negate"
+                | _ -> raise <| InterpreterException "Nothing to negate"
 
             elif op = "not" then
                 match stack with
@@ -111,7 +111,7 @@ module Interpreter =
                 | head :: _ -> 
                     raise <| InterpreterException (sprintf "Operation 'not' is not applicable to %A" head)
                 | _ -> 
-                    failwith "Nothing to negate"
+                    raise <| InterpreterException "Nothing to negate"
 
             elif op |- set ["+"; "-"; "*"; "/"] then
                 match stack with
@@ -125,7 +125,7 @@ module Interpreter =
                 | (Syntel.Value v1) :: (Syntel.Value v2) :: tail -> 
                     (Syntel.Value <| applyLogical op v2 v1) :: tail 
 
-                | _ -> failwith "Need two values to apply logical operation"
+                | _ -> raise <| InterpreterException "Need two values to apply logical operation"
 
             elif op |- set ["and"; "or"] then
                 match stack with
@@ -135,7 +135,7 @@ module Interpreter =
                             else raise <| InterpreterException (sprintf "Unknown boolean operation %s" op)
                     (Syntel.Value <| Value.Bool (o b1 b2)) :: tail 
 
-                | _ -> failwith "Need two values to apply boolean operation"
+                | _ -> raise <| InterpreterException "Need two values to apply boolean operation"
 
             else raise <| InterpreterException (sprintf "Unknown operation %s" op)
 
@@ -156,8 +156,8 @@ module Interpreter =
                     match condition with
                     | Value.Bool cond -> Syntel.Value (if cond then ``if-true`` else ``if-false``) :: tail
                     | Value.Nothing -> Syntel.Value condition :: tail
-                    | _ -> failwith <| sprintf "Invalid Iif function call. Use Iif(bool, value-if-true, value-if-false)" 
-                | _ -> failwith <| sprintf "Invalid Iif function call. Use Iif(bool, value-if-true, value-if-false)" 
+                    | _ -> raise <| InterpreterException (sprintf "Invalid Iif function call. Use Iif(bool, value-if-true, value-if-false)")
+                | _ -> raise <| InterpreterException (sprintf "Invalid Iif function call. Use Iif(bool, value-if-true, value-if-false)")
             
             elif name = "ROUND" then
                 match stack with 
@@ -171,7 +171,7 @@ module Interpreter =
                 | (Syntel.Value (Value.Integer _)) :: _ | (Syntel.Value (Value.Nothing)) :: _ -> 
                     stack
                                         
-                | _ -> failwith <| sprintf "Invalid Round function call. Use Round(double)" 
+                | _ -> raise <| InterpreterException (sprintf "Invalid Round function call. Use Round(double)")
 
             elif name |- set ["FLOOR"; "CEIL"; "ABS"] then
                 match stack with 
@@ -196,7 +196,7 @@ module Interpreter =
                 | (Syntel.Value (Value.Integer _)) :: _ -> 
                     stack
                                         
-                | _ -> failwith <| sprintf "Invalid %s function call. Use %s(double)" name name
+                | _ -> raise <| InterpreterException (sprintf "Invalid %s function call. Use %s(double)" name name)
 
             elif name = "FORMAT" then
                 match stack with 
@@ -214,7 +214,7 @@ module Interpreter =
                 | _ :: Syntel.Value Value.Nothing :: _ -> 
                     stack
 
-                | _ -> failwith "Invalid Format function call. Use Format(format, value)" 
+                | _ -> raise <| InterpreterException "Invalid Format function call. Use Format(format, value)" 
 
             elif name = "LIKE" then
                 match stack with 
@@ -226,13 +226,13 @@ module Interpreter =
                 | _ :: Syntel.Value Value.Nothing :: _ -> 
                     stack
 
-                | _ -> failwith "Invalid Like function call. Use Like(str, regex-str)" 
+                | _ -> raise <| InterpreterException "Invalid Like function call. Use Like(str, regex-str)" 
 
             elif name = "ISNOTHING" then
                 match stack with 
                 | (Syntel.Value Value.Nothing) :: tail -> (Syntel.Value (Value.Bool true)) :: tail 
                 | _ :: tail -> (Syntel.Value (Value.Bool false)) :: tail 
-                | _ -> failwith "Invalid IsNothing function call. Use Contains(some-value-or-variable))" 
+                | _ -> raise <| InterpreterException "Invalid IsNothing function call. Use Contains(some-value-or-variable))" 
 
             elif name = "FORMAT" then
                 match stack with 
@@ -241,8 +241,8 @@ module Interpreter =
                         let res = String.Format(format, Value.boxify value)
                         (Syntel.Value (Value.String res)) :: tail 
                     with :? FormatException as e ->
-                        failwith <| sprintf "Invalid format: %s" e.Message
-                | _ -> failwith "Invalid Format function call. Use Foramt(format, some-value-or-variable))" 
+                        raise <| InterpreterException(sprintf "Invalid format: %s" e.Message)
+                | _ -> raise <| InterpreterException "Invalid Format function call. Use Foramt(format, some-value-or-variable))" 
 
             elif name = "CONTAINS" then
                 match stack with 
@@ -253,7 +253,7 @@ module Interpreter =
                 | _ :: Syntel.Value Value.Nothing :: _ -> 
                     stack
 
-                | _ -> failwith "Invalid Contains function call. Use Contains(haystack-string, needle-string)" 
+                | _ -> raise <| InterpreterException "Invalid Contains function call. Use Contains(haystack-string, needle-string)" 
                 
             elif name |- set ["ADDDAYS"; "ADDMONTHS"; "ADDYEARS"] then
                 match stack with 
@@ -267,7 +267,7 @@ module Interpreter =
                         | "ADDDAYS" -> dt.AddDays << float
                         | "ADDMONTHS" -> dt.AddMonths
                         | "ADDYEARS" -> dt.AddYears
-                        | _ -> failwith ""
+                        | _ -> raise <| InterpreterException (sprintf "Unexpected call to %s" name)
 
                     let newDate = num |> int 
                                       |> add 
@@ -276,7 +276,7 @@ module Interpreter =
 
                     newDate :: tail
 
-                | _ -> failwith <| sprintf "Invalid %s function call. Use %s(date, int)" name name
+                | _ -> raise <| InterpreterException (sprintf "Invalid %s function call. Use %s(date, int)" name name)
 
             else failwith <| sprintf "Unknown function %s" name
             
@@ -295,23 +295,31 @@ module Interpreter =
                 else Value.Nothing
             else Value.Nothing
 
-    let evaluate (grammar, vars : (string, obj) Dictionary) = 
+    let evaluate (grammar, expr, vars : (string, obj) Dictionary) = 
         let vars = vars |> Map.fromDict
+        
         let items = 
-            ([], grammar) ||> Seq.fold (fun progress i -> 
-                match i with
-                | Syntel.Value v -> 
-                    i :: progress
+            ([], grammar)
+            ||> Seq.fold (fun progress i -> 
+                match snd i with
+                | Syntel.Value _ & output -> 
+                    output :: progress
 
                 | Syntel.Variable var -> 
                     (Syntel.Value <| getVariable vars var) :: progress
 
                 | Syntel.Operation op -> 
-                    Operations.apply op progress
+                    try
+                        Operations.apply op progress
+                    with :? InterpreterException as e ->
+                        raise <| GrammarException { str = expr; message = e.Data0; position = fst i }
 
                 | Syntel.Function name -> 
-                    Functions.apply name progress) 
+                    try
+                        Functions.apply name progress
+                    with :? InterpreterException as e ->
+                        raise <| GrammarException { str = expr; message = e.Data0; position = fst i })
         
         match items with 
         | (Syntel.Value v) :: [] -> v
-        | _ -> failwith "Invalid result"
+        | _ ->  raise <| GrammarException { str = expr; message = "Function not fully evaluated"; position = 0 }
