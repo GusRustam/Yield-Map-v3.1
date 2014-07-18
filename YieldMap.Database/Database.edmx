@@ -35,6 +35,38 @@
           <EntitySet Name="Specimen" EntityType="mainModel.Store.Specimen" store:Type="Tables" />
           <EntitySet Name="SubIndustry" EntityType="mainModel.Store.SubIndustry" store:Type="Tables" />
           <EntitySet Name="Ticker" EntityType="mainModel.Store.Ticker" store:Type="Tables" />
+          <EntitySet Name="BondDescriptionView" EntityType="mainModel.Store.BondDescriptionView" store:Type="Views" store:Name="BondDescriptionView">
+            <DefiningQuery>SELECT 
+      [BondDescriptionView].[id_Instrument] AS [id_Instrument], 
+      [BondDescriptionView].[InstrumentName] AS [InstrumentName], 
+      [BondDescriptionView].[InstrumentTypeName] AS [InstrumentTypeName], 
+      [BondDescriptionView].[id_InstrumentType] AS [id_InstrumentType], 
+      [BondDescriptionView].[IssueSize] AS [IssueSize], 
+      [BondDescriptionView].[Series] AS [Series], 
+      [BondDescriptionView].[Issue] AS [Issue], 
+      [BondDescriptionView].[Maturity] AS [Maturity], 
+      [BondDescriptionView].[NextCoupon] AS [NextCoupon], 
+      [BondDescriptionView].[TickerName] AS [TickerName], 
+      [BondDescriptionView].[SubIndustryName] AS [SubIndustryName], 
+      [BondDescriptionView].[IndustryName] AS [IndustryName], 
+      [BondDescriptionView].[SpecimenName] AS [SpecimenName], 
+      [BondDescriptionView].[SeniorityName] AS [SeniorityName], 
+      [BondDescriptionView].[RicName] AS [RicName], 
+      [BondDescriptionView].[IsinName] AS [IsinName], 
+      [BondDescriptionView].[BorrowerName] AS [BorrowerName], 
+      [BondDescriptionView].[BorrowerCountryName] AS [BorrowerCountryName], 
+      [BondDescriptionView].[IssuerName] AS [IssuerName], 
+      [BondDescriptionView].[IssuerCountryName] AS [IssuerCountryName], 
+      [BondDescriptionView].[InstrumentRating] AS [InstrumentRating], 
+      [BondDescriptionView].[InstrumentRatingDate] AS [InstrumentRatingDate], 
+      [BondDescriptionView].[InstrumentRatingAgency] AS [InstrumentRatingAgency], 
+      [BondDescriptionView].[IssuerRating] AS [IssuerRating], 
+      [BondDescriptionView].[IssuerRatingDate] AS [IssuerRatingDate], 
+      [BondDescriptionView].[IssuerRatingAgency] AS [IssuerRatingAgency], 
+      [BondDescriptionView].[BondStructure] AS [BondStructure], 
+      [BondDescriptionView].[Coupon] AS [Coupon]
+      FROM [BondDescriptionView] AS [BondDescriptionView]</DefiningQuery>
+          </EntitySet>
           <EntitySet Name="FieldVsGroup" EntityType="mainModel.Store.FieldVsGroup" store:Type="Views" store:Name="FieldVsGroup">
             <DefiningQuery>SELECT 
       [FieldVsGroup].[id_FieldGroup] AS [id_FieldGroup], 
@@ -242,6 +274,10 @@
           <AssociationSet Name="FK_LegalEntity_0_0" Association="mainModel.Store.FK_LegalEntity_0_0">
             <End Role="Country" EntitySet="Country" />
             <End Role="LegalEntity" EntitySet="LegalEntity" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Property_0_0" Association="mainModel.Store.FK_Property_0_0">
+            <End Role="InstrumentType" EntitySet="InstrumentType" />
+            <End Role="Property" EntitySet="Property" />
           </AssociationSet>
           <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.Store.FK_PropertyValue_0_0">
             <End Role="Instrument" EntitySet="Instrument" />
@@ -458,6 +494,7 @@
           <Property Name="Name" Type="varchar" MaxLength="50" />
           <Property Name="Description" Type="varchar" MaxLength="50" />
           <Property Name="Expression" Type="varchar" MaxLength="300" />
+          <Property Name="id_InstrumentTpe" Type="integer" Nullable="false" />
         </EntityType>
         <EntityType Name="PropertyValue">
           <Key>
@@ -558,6 +595,58 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
           <Property Name="id_ParentTicker" Type="integer" />
+        </EntityType>
+        <!--Errors Found During Generation:
+      warning 6002: The table/view 'main.BondDescriptionView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
+      -->
+        <EntityType Name="BondDescriptionView">
+          <Key>
+            <PropertyRef Name="id_Instrument" />
+            <PropertyRef Name="InstrumentTypeName" />
+            <PropertyRef Name="id_InstrumentType" />
+            <PropertyRef Name="TickerName" />
+            <PropertyRef Name="SubIndustryName" />
+            <PropertyRef Name="SpecimenName" />
+            <PropertyRef Name="SeniorityName" />
+            <PropertyRef Name="RicName" />
+            <PropertyRef Name="IsinName" />
+            <PropertyRef Name="BorrowerName" />
+            <PropertyRef Name="BorrowerCountryName" />
+            <PropertyRef Name="IssuerName" />
+            <PropertyRef Name="IssuerCountryName" />
+            <PropertyRef Name="InstrumentRating" />
+            <PropertyRef Name="InstrumentRatingAgency" />
+            <PropertyRef Name="IssuerRating" />
+            <PropertyRef Name="IssuerRatingAgency" />
+          </Key>
+          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="InstrumentName" Type="varchar" MaxLength="50" />
+          <Property Name="InstrumentTypeName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="id_InstrumentType" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="IssueSize" Type="integer" />
+          <Property Name="Series" Type="varchar" MaxLength="50" />
+          <Property Name="Issue" Type="datetime" />
+          <Property Name="Maturity" Type="datetime" />
+          <Property Name="NextCoupon" Type="datetime" />
+          <Property Name="TickerName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="SubIndustryName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="IndustryName" Type="varchar" MaxLength="50" />
+          <Property Name="SpecimenName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="SeniorityName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="RicName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="IsinName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="BorrowerName" Type="varchar" Nullable="false" MaxLength="255" />
+          <Property Name="BorrowerCountryName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="IssuerName" Type="varchar" Nullable="false" MaxLength="255" />
+          <Property Name="IssuerCountryName" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="InstrumentRating" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="InstrumentRatingDate" Type="datetime" />
+          <Property Name="InstrumentRatingAgency" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="IssuerRating" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="IssuerRatingDate" Type="datetime" />
+          <Property Name="IssuerRatingAgency" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="BondStructure" Type="varchar" MaxLength="1000" />
+          <Property Name="Coupon" Type="real" />
         </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.FieldVsGroup' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
@@ -1005,6 +1094,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Property_0_0">
+          <End Role="InstrumentType" Type="mainModel.Store.InstrumentType" Multiplicity="1" />
+          <End Role="Property" Type="mainModel.Store.Property" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="InstrumentType">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Property">
+              <PropertyRef Name="id_InstrumentTpe" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_PropertyValue_0_0">
           <End Role="Instrument" Type="mainModel.Store.Instrument" Multiplicity="1" />
           <End Role="PropertyValue" Type="mainModel.Store.PropertyValue" Multiplicity="*" />
@@ -1360,11 +1461,16 @@
             <End Role="FieldGroup" EntitySet="FieldGroups" />
             <End Role="Ric" EntitySet="Rics" />
           </AssociationSet>
-          <EntitySet Name="Properties" EntityType="mainModel.Property" />
           <EntitySet Name="PropertyValues" EntityType="mainModel.PropertyValue" />
           <AssociationSet Name="FK_PropertyValue_0_0" Association="mainModel.FK_PropertyValue_0_0">
             <End Role="Instrument" EntitySet="Instruments" />
             <End Role="PropertyValue" EntitySet="PropertyValues" />
+          </AssociationSet>
+          <EntitySet Name="BondDescriptionViews" EntityType="mainModel.BondDescriptionView" />
+          <EntitySet Name="Properties" EntityType="mainModel.Property" />
+          <AssociationSet Name="FK_Property_0_0" Association="mainModel.FK_Property_0_0">
+            <End Role="InstrumentType" EntitySet="InstrumentTypes" />
+            <End Role="Property" EntitySet="Properties" />
           </AssociationSet>
           <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.FK_PropertyValue_1_0">
             <End Role="Property" EntitySet="Properties" />
@@ -1425,6 +1531,7 @@
           <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="Instruments" Relationship="mainModel.FK_Instrument_1_0" FromRole="InstrumentType" ToRole="Instrument" />
+          <NavigationProperty Name="Properties" Relationship="mainModel.FK_Property_0_0" FromRole="InstrumentType" ToRole="Property" />
         </EntityType>
         <EntityType Name="Isin">
           <Key>
@@ -2258,16 +2365,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityType Name="Property">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Description" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Expression" MaxLength="300" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="Property" ToRole="PropertyValue" />
-        </EntityType>
         <EntityType Name="PropertyValue">
           <Key>
             <PropertyRef Name="id" />
@@ -2288,6 +2385,79 @@
             </Principal>
             <Dependent Role="PropertyValue">
               <PropertyRef Name="id_Instrument" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="BondDescriptionView">
+          <Key>
+            <PropertyRef Name="id_Instrument" />
+            <PropertyRef Name="InstrumentTypeName" />
+            <PropertyRef Name="id_InstrumentType" />
+            <PropertyRef Name="TickerName" />
+            <PropertyRef Name="SubIndustryName" />
+            <PropertyRef Name="SpecimenName" />
+            <PropertyRef Name="SeniorityName" />
+            <PropertyRef Name="RicName" />
+            <PropertyRef Name="IsinName" />
+            <PropertyRef Name="BorrowerName" />
+            <PropertyRef Name="BorrowerCountryName" />
+            <PropertyRef Name="IssuerName" />
+            <PropertyRef Name="IssuerCountryName" />
+            <PropertyRef Name="InstrumentRating" />
+            <PropertyRef Name="InstrumentRatingAgency" />
+            <PropertyRef Name="IssuerRating" />
+            <PropertyRef Name="IssuerRatingAgency" />
+          </Key>
+          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="InstrumentName" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="InstrumentTypeName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_InstrumentType" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int64" Name="IssueSize" />
+          <Property Type="String" Name="Series" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="DateTime" Name="Issue" />
+          <Property Type="DateTime" Name="Maturity" />
+          <Property Type="DateTime" Name="NextCoupon" />
+          <Property Type="String" Name="TickerName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="SubIndustryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="IndustryName" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="SpecimenName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="SeniorityName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="RicName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="IsinName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="BorrowerName" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="BorrowerCountryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="IssuerName" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="IssuerCountryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="InstrumentRating" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="DateTime" Name="InstrumentRatingDate" />
+          <Property Type="String" Name="InstrumentRatingAgency" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="IssuerRating" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="DateTime" Name="IssuerRatingDate" />
+          <Property Type="String" Name="IssuerRatingAgency" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="BondStructure" MaxLength="1000" FixedLength="false" Unicode="false" />
+          <Property Type="Double" Name="Coupon" />
+        </EntityType>
+        <EntityType Name="Property">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Description" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Expression" MaxLength="300" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_InstrumentTpe" Nullable="false" />
+          <NavigationProperty Name="InstrumentType" Relationship="mainModel.FK_Property_0_0" FromRole="Property" ToRole="InstrumentType" />
+          <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_1_0" FromRole="Property" ToRole="PropertyValue" />
+        </EntityType>
+        <Association Name="FK_Property_0_0">
+          <End Type="mainModel.InstrumentType" Role="InstrumentType" Multiplicity="1" />
+          <End Type="mainModel.Property" Role="Property" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="InstrumentType">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Property">
+              <PropertyRef Name="id_InstrumentTpe" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -2711,22 +2881,57 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Properties">
-            <EntityTypeMapping TypeName="mainModel.Property">
-              <MappingFragment StoreEntitySet="Property">
-                <ScalarProperty Name="Expression" ColumnName="Expression" />
-                <ScalarProperty Name="Description" ColumnName="Description" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="PropertyValues">
             <EntityTypeMapping TypeName="mainModel.PropertyValue">
               <MappingFragment StoreEntitySet="PropertyValue">
                 <ScalarProperty Name="Value" ColumnName="Value" />
                 <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
                 <ScalarProperty Name="id_Property" ColumnName="id_Property" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="BondDescriptionViews">
+            <EntityTypeMapping TypeName="mainModel.BondDescriptionView">
+              <MappingFragment StoreEntitySet="BondDescriptionView">
+                <ScalarProperty Name="Coupon" ColumnName="Coupon" />
+                <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
+                <ScalarProperty Name="IssuerRatingAgency" ColumnName="IssuerRatingAgency" />
+                <ScalarProperty Name="IssuerRatingDate" ColumnName="IssuerRatingDate" />
+                <ScalarProperty Name="IssuerRating" ColumnName="IssuerRating" />
+                <ScalarProperty Name="InstrumentRatingAgency" ColumnName="InstrumentRatingAgency" />
+                <ScalarProperty Name="InstrumentRatingDate" ColumnName="InstrumentRatingDate" />
+                <ScalarProperty Name="InstrumentRating" ColumnName="InstrumentRating" />
+                <ScalarProperty Name="IssuerCountryName" ColumnName="IssuerCountryName" />
+                <ScalarProperty Name="IssuerName" ColumnName="IssuerName" />
+                <ScalarProperty Name="BorrowerCountryName" ColumnName="BorrowerCountryName" />
+                <ScalarProperty Name="BorrowerName" ColumnName="BorrowerName" />
+                <ScalarProperty Name="IsinName" ColumnName="IsinName" />
+                <ScalarProperty Name="RicName" ColumnName="RicName" />
+                <ScalarProperty Name="SeniorityName" ColumnName="SeniorityName" />
+                <ScalarProperty Name="SpecimenName" ColumnName="SpecimenName" />
+                <ScalarProperty Name="IndustryName" ColumnName="IndustryName" />
+                <ScalarProperty Name="SubIndustryName" ColumnName="SubIndustryName" />
+                <ScalarProperty Name="TickerName" ColumnName="TickerName" />
+                <ScalarProperty Name="NextCoupon" ColumnName="NextCoupon" />
+                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
+                <ScalarProperty Name="Issue" ColumnName="Issue" />
+                <ScalarProperty Name="Series" ColumnName="Series" />
+                <ScalarProperty Name="IssueSize" ColumnName="IssueSize" />
+                <ScalarProperty Name="id_InstrumentType" ColumnName="id_InstrumentType" />
+                <ScalarProperty Name="InstrumentTypeName" ColumnName="InstrumentTypeName" />
+                <ScalarProperty Name="InstrumentName" ColumnName="InstrumentName" />
+                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Properties">
+            <EntityTypeMapping TypeName="mainModel.Property">
+              <MappingFragment StoreEntitySet="Property">
+                <ScalarProperty Name="id_InstrumentTpe" ColumnName="id_InstrumentTpe" />
+                <ScalarProperty Name="Expression" ColumnName="Expression" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>

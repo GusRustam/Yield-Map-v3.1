@@ -59,7 +59,8 @@ namespace YieldMap.Database
         public DbSet<FieldDefinition> FieldDefinitions { get; set; }
         public DbSet<FieldVsGroup> FieldVsGroups { get; set; }
         public DbSet<FieldGroup> FieldGroups { get; set; }
-        public DbSet<Property> Properties { get; set; }
         public DbSet<PropertyValue> PropertyValues { get; set; }
+        public DbSet<BondDescriptionView> BondDescriptionViews { get; set; }
+        public DbSet<Property> Properties { get; set; }
     }
 }

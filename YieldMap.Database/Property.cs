@@ -23,17 +23,20 @@ namespace YieldMap.Database
         public string Name { get; set; }
         public string Description { get; set; }
         public string Expression { get; set; }
+        public long id_InstrumentTpe { get; set; }
     	public Property ToPocoSimple() {
     	    return new Property {
     			id = this.id,
     			Name = this.Name,
     			Description = this.Description,
     			Expression = this.Expression,
+    			id_InstrumentTpe = this.id_InstrumentTpe,
     		};
     	}
     
     	//public State State {get;set;}
     		
+        public virtual InstrumentType InstrumentType { get; set; }
         public virtual ICollection<PropertyValue> PropertyValues { get; set; }
     }
 }

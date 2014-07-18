@@ -6,5 +6,6 @@ namespace YieldMap.Transitive.Domains.Contexts {
         public DbSet<Instrument> Instruments { get; set; }
         public DbSet<Description> Descriptions { get; set; }
         public DbSet<InstrumentDescriptionView> InstrumentDescriptionViews { get; set; }
+        public DbSet<BondDescriptionView> BondDescriptionViews { get; set; }
     }
 }

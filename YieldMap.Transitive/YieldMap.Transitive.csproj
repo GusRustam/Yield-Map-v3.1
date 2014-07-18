@@ -55,6 +55,11 @@
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />
     <Compile Include="Domains\IReadOnlyRepository.cs" />
+    <Compile Include="Domains\Readers\BondDescriptionsReader.cs" />
+    <Compile Include="Domains\Readers\IBondDescriptionsReader.cs" />
+    <Compile Include="Tools\IBondsPacker.cs" />
+    <Compile Include="Tools\IInstrumentPacker.cs" />
+    <Compile Include="Tools\InstrumentPacker.cs" />
     <Compile Include="Registry\IFunctionRegistry.cs" />
     <Compile Include="Domains\UnitsOfWork\IPropertiesUnitOfWork.cs" />
     <Compile Include="Domains\UnitsOfWork\PropertiesUnitOfWork.cs" />

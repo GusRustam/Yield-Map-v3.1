@@ -8,7 +8,7 @@ namespace YieldMap.Transitive.Registry {
         /// Saves all values calculated
         /// </summary>
         /// <returns>0 if success</returns>
-        int Recalculate(Func<InstrumentDescriptionView, bool> predicate = null);
+        int RecalculateBonds(Func<BondDescriptionView, bool> predicate = null);
 
         /// <summary>
         /// Refreshes current function registry

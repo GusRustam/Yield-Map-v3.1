@@ -7,7 +7,9 @@ using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
+using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Repositories;
+using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Registry {
     public class PropertiesUpdater : IPropertiesUpdater {
@@ -18,48 +20,59 @@ namespace YieldMap.Transitive.Registry {
             _container = container.Invoke();
         }
 
-        public int Recalculate(Func<InstrumentDescriptionView, bool> predicate = null) {
-            Logger.Trace("Recalculate()");
-            var reader = _container.Resolve<IInstrumentDescriptionsReader>();
+        public int RecalculateBonds(Func<BondDescriptionView, bool> predicate = null) {
+            Logger.Trace("RecalculateBonds()");
+            var packer = _container.Resolve<IBondsPacker>();
+            var reader = _container.Resolve<IBondDescriptionsReader>();
             var registry = _container.Resolve<IFunctionRegistry>();
             var properties = registry.Items;
+
+            var instrumentTypes = _container.Resolve<IInstrumentTypes>();
             
             if (predicate == null)
                 predicate = i => true;
 
             using (var uow = _container.Resolve<IPropertiesUnitOfWork>()) {
                 using (var propertiesRepo = _container.Resolve<IPropertyValuesRepostiory>(new NamedParameter("uow", uow))) {
-                    reader.InstrumentDescriptionViews
-                        .ToList()
-                        .Where(predicate)
-                        .Select(descr => new {
+                    var x = reader.BondDescriptionViews;
+                    var x1 = x.Where(p => p.id_InstrumentType == instrumentTypes.Bond.id);
+                    var x2 = x1.ToList();
+                    var x3 = x2.Where(predicate);
+                    var x4 = x3.Select(descr => new {
+                            TypeId = descr.id_InstrumentType,
                             InstrumentId = descr.id_Instrument,
-                            Environment = reader.PackInstrumentDescription(descr)
-                        })
-                        .ToList()
+                            Environment = packer.PackInstrumentDescription(descr)
+                        });
+                    var x5 = x4.ToList();
                         // for each instrument matching predicate
-                        .ForEach(idDescr => {
+                    x5.ForEach(idDescr => {
+                            Logger.Trace(string.Format("For instrument with id {0}", idDescr.InstrumentId));
                             var instrumentId = idDescr.InstrumentId;
+                            var typeId = idDescr.TypeId;
                             var environment = idDescr.Environment;
                             // for each property
                             properties.ToList().ForEach(kvp => {
                                 var propertyId = kvp.Key;
                                 var grammar = kvp.Value;
+                                Logger.Trace(string.Format("For property with id {0} grammar {1}", propertyId, grammar));
                                 // evaluate property for that instrument
                                 var value = Interpreter.evaluate(grammar.Grammar, grammar.Expression, environment);
+                                Logger.Trace(string.Format("and value is {0}", value));
 
                                 // is there any value for this property and instrument?
                                 var item = propertiesRepo
-                                    .FindBy(pv => pv.id_Instrument == instrumentId && pv.id_Property == propertyId)
+                                    .FindBy(pv => pv.id_Instrument == instrumentId && pv.id_Property == propertyId && pv.id_Instrument == typeId)
                                     .FirstOrDefault();
 
                                 if (value.IsNothing && item != null) {
                                     // there was a value, now there shouldn't be any, since new value is nothing
                                     // remove it then
+                                    Logger.Info("Removing");
                                     propertiesRepo.Remove(item);
                                 } else if (!value.IsNothing) {
                                     // some value calculated
                                     var strValue = value.asString;
+                                    Logger.Info(string.Format("Adding {0}", strValue));
                                     // add it
                                     if (item == null)
                                         propertiesRepo.Add(new PropertyValue {
