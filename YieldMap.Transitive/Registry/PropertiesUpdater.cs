@@ -33,18 +33,19 @@ namespace YieldMap.Transitive.Registry {
 
             using (var uow = _container.Resolve<IPropertiesUnitOfWork>()) {
                 using (var propertiesRepo = _container.Resolve<IPropertyValuesRepostiory>(new NamedParameter("uow", uow))) {
-                    var x = reader.BondDescriptionViews;
-                    var x1 = x.Where(p => p.id_InstrumentType == instrumentTypes.Bond.id);
-                    var x2 = x1.ToList();
-                    var x3 = x2.Where(predicate);
-                    var x4 = x3.Select(descr => new {
+                    // for each instrument matching predicate
+                    reader
+                        .BondDescriptionViews
+                        .Where(p => p.id_InstrumentType == instrumentTypes.Bond.id)
+                        .ToList()
+                        .Where(predicate)
+                        .Select(descr => new {
                             TypeId = descr.id_InstrumentType,
                             InstrumentId = descr.id_Instrument,
                             Environment = new BondView(descr) // todo this could be generalized via factory with multimethod
-                        });
-                    var x5 = x4.ToList();
-                        // for each instrument matching predicate
-                    x5.ForEach(idDescr => {
+                        })
+                        .ToList()
+                        .ForEach(idDescr => {
                             Logger.Trace(string.Format("For instrument with id {0}", idDescr.InstrumentId));
                             var instrumentId = idDescr.InstrumentId;
                             var typeId = idDescr.TypeId;

@@ -74,11 +74,11 @@ module Lexan =
             match v with
             | Date dt -> dt.ToString("dd/MM/yyyy")
             | Rating n -> sprintf "[%s]" n.name
-            | String str -> sprintf "String(%s)" str
-            | Bool b -> sprintf "Bool(%s)" (b.ToString())
-            | Integer i -> sprintf "Integer(%d)" i
-            | Double d -> sprintf "Double(%f)" d
-            | Nothing -> "Nothing"
+            | String str -> sprintf "%s" str
+            | Bool b -> sprintf "%s" (b.ToString())
+            | Integer i -> sprintf "%d" i
+            | Double d -> sprintf "%f" d
+            | Nothing -> ""
 
         static member interpret (o : obj) =
             match o with

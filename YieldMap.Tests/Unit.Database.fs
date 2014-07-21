@@ -444,11 +444,40 @@ module Database =
 
         // IPropertyValuesRepostiory
         let propertyValuesRepo = MockRepository.GenerateMock<IPropertyValuesRepostiory>()
+        let validProperties = 
+            [
+                PropertyValue(id_Property = 1L, id_Instrument = 1L, Value = "InstrumentName1 ")
+                PropertyValue(id_Property = 1L, id_Instrument = 2L, Value = "InstrumentName2 ")
+                PropertyValue(id_Property = 2L, id_Instrument = 1L, Value = "InstrumentName1 0.12 'Jan-20")
+                PropertyValue(id_Property = 2L, id_Instrument = 2L, Value = "InstrumentName2 0.23 'Feb-30")
+            ]
+
+        let counter = ref 4
+
         let propertyValues = List.empty<PropertyValue>
         RhinoMocksExtensions
             .Stub<_,_>(propertyValuesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
             .Return(propertyValues.AsQueryable())
-            |> ignore        
+            |> ignore
+
+        RhinoMocksExtensions
+            .Stub<_,_>(propertyValuesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Add(null)))
+            .IgnoreArguments()
+            .Do(Rhino.Mocks.Function<_,_>(fun (p:PropertyValue) -> 
+                logger.InfoF "Got propertyValue <%d / %d / %s>" p.id_Instrument p.id_Property p.Value
+                let search = 
+                    validProperties 
+                    |> List.tryFind (fun property -> 
+                        property.id_Instrument = p.id_Instrument && 
+                        property.id_Property = p.id_Property && 
+                        property.Value = p.Value)
+                
+                match search with
+                | Some _ -> counter := (!counter)-1
+                | _ -> ()
+                
+                0))
+            |> ignore      
 
         RhinoMocksExtensions
             .Stub<_,_>(propertyValuesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindBy(null)))
@@ -505,7 +534,8 @@ module Database =
 
         let updater = container.Resolve<IPropertiesUpdater>()
         updater.RecalculateBonds () |> ignore
-        ()
+
+        !counter |> should be (equal 0)
 
     [<Test>]
     let ``Recalculating property values on changes in instruments on real DB`` () =
