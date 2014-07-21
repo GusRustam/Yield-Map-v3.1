@@ -582,15 +582,22 @@ module Database =
 
     [<Test>]
     let ``Recalculating properties on 0#RUCORP=MM`` () = 
+        globalThreshold := LoggingLevel.Info
         let container = DatabaseBuilder.Container
         let br = container.Resolve<IBackupRestore>()
         br.Restore "RUCORP.sql"
 
+        let registry = container.Resolve<IFunctionRegistry>()
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         let updater = container.Resolve<IPropertiesUpdater>()
+        let properyReader = container.Resolve<IPropertiesRepository> ()
+
+        properyReader.FindAll().ToList()
+        |> Seq.iter (fun x -> registry.Add(x.id, x.Expression) |> ignore)
 
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.RecalculateBonds () |> should be (equal 4)
-        properyValueReader.FindAll().Count() |> should be (equal 4)
+        updater.RecalculateBonds () |> should be (equal 1846)
+        properyValueReader.FindAll().Count() |> should be (equal 1846)
         
         br.Restore "EMPTY.sql"
+        globalThreshold := LoggingLevel.Trace
