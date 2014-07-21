@@ -406,7 +406,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Wow-wow-wow!!!!`` () =
+    let ``Utility. Initialize Db with 0#RUCORP=MM`` () =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUCORP=MM"|] dt
 

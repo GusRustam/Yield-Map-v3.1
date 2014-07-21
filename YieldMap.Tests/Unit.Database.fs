@@ -25,6 +25,8 @@ open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
 
 module Database =
+    open YieldMap.Transitive.Queries
+
     let logger = LogFactory.create "UnitTests.Database"
     let str (z : TimeSpan Nullable) = 
         if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
@@ -577,3 +579,18 @@ module Database =
             rics.Remove ric |> should be (equal 0)
             uow.Save() |> should be (equal 3)
         )))
+
+    [<Test>]
+    let ``Recalculating properties on 0#RUCORP=MM`` () = 
+        let container = DatabaseBuilder.Container
+        let br = container.Resolve<IBackupRestore>()
+        br.Restore "RUCORP.sql"
+
+        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
+        let updater = container.Resolve<IPropertiesUpdater>()
+
+        properyValueReader.FindAll().Count() |> should be (equal 0)
+        updater.RecalculateBonds () |> should be (equal 4)
+        properyValueReader.FindAll().Count() |> should be (equal 4)
+        
+        br.Restore "EMPTY.sql"
