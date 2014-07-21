@@ -75,8 +75,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>();
 
             Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
-            
+            Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
         }
-
     }
 }

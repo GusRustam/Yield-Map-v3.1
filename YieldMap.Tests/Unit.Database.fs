@@ -565,4 +565,15 @@ module Database =
 
         properyValueReader.FindAll().Count() |> should be (equal 4)
 
-        deleteChainRicInstrument ()
+        // Teardown, removing chain and ric
+        using (container.Resolve<IChainRicUnitOfWork>()) (fun uow ->
+        using (container.Resolve<IChainRepository>(NamedParameter("uow", uow))) (fun chains ->
+        using (container.Resolve<IRicRepository>(NamedParameter("uow", uow))) (fun rics -> 
+            let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
+            chains.Remove chain |> should be (equal 0)
+            let ric = rics.FindBy(fun r -> r.Name = "TESTRIC1").ToList().First()
+            rics.Remove ric |> should be (equal 0)
+            let ric = rics.FindBy(fun r -> r.Name = "TESTRIC2").ToList().First()
+            rics.Remove ric |> should be (equal 0)
+            uow.Save() |> should be (equal 3)
+        )))

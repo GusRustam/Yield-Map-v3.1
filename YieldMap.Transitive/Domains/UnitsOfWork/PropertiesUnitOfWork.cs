@@ -52,7 +52,7 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
                 }, 500);
             
                 // Mark added as unchanged
-                changedPvs.Where(e => e.State == EntityState.Added).ToList().ForEach(e => e.State = EntityState.Unchanged);
+                changedPvs.Where(e => e.State == EntityState.Added).ToList().ForEach(e => e.State = EntityState.Detached);
             }
 
             var deletedPvs = changedPvs.Where(e => e.State == EntityState.Deleted).ToList();
@@ -75,7 +75,10 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
         private static string BulkInsertPropertyValues(IEnumerable<PropertyValue> pvs) {
             var res = pvs.Aggregate(
                 "INSERT INTO PropertyValue(id_Instrument, id_Property, 'Value') SELECT ",
-                (current, i) => current + String.Format("{0}, {1}, '{2}' UNION SELECT ", i.id_Instrument, i.id_Property, i.Value));
+                (current, i) => {
+                    var value = i.Value.Replace("'", "''").Replace("\"", "\"\"");
+                    return current + String.Format("{0}, {1}, '{2}' UNION SELECT ", i.id_Instrument, i.id_Property, value);
+                });
             return res.Substring(0, res.Length - "UNION SELECT ".Length);
         }
 
