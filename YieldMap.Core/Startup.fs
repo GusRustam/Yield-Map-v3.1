@@ -50,6 +50,7 @@ module Startup =
         let c = q.Calendar
 
         let reload = LoadAndSave q :> Operation<_,_>
+        let recalculate = Recalculate q :> Operation<_,_>
         let connect = EstablishConnection q.Factory :> Operation<_,_>
         let shutdown = Shutdown () :> Operation<_,_>
 
@@ -131,7 +132,11 @@ module Startup =
             and doClose t channel = 
                 async {
                     let! res = Operation.execute shutdown t
-                    // TODO PARSE THE ANSWER
+                    match res with
+                    | Tweet.Failure f ->
+                        Notifier.notify ("Close", f, Severity.Warn)
+                    | _ -> ()
+
                     return close channel
                 }
 
@@ -151,6 +156,13 @@ module Startup =
                             return! connected channel
 
                         | Tweet.Answer _ -> 
+                            let! res = recalculate.Execute ()
+
+                            match res with
+                            | Tweet.Failure f -> 
+                                Notifier.notify ("Startup", f, Severity.Warn)
+                            | _ -> ()
+
                             return! initialized channel
 
                     with e ->
@@ -181,19 +193,19 @@ module Startup =
         // if server is down, set standard feedback timeout, otherwise use given timeout
         let shutdownTimeout t = if shut then Some addon else t 
 
-        member x.StateChanged = s.Publish
+        member __.StateChanged = s.Publish
 
-        member x.Connect (?t : int) = 
+        member __.Connect (?t : int) = 
             let timeout = shutdownTimeout t |> Operation.estimate connect
             logger.TraceF "Connect timeout is %d" timeout
             tryCommand (fun channel -> Commands.Connect (timeout, channel)) (timeout + addon)
 
-        member x.Reload (force, ?t : int) = 
+        member __.Reload (force, ?t : int) = 
             let timeout = shutdownTimeout t |> Operation.estimate reload
             logger.TraceF "Reload timeout is %d" timeout
             tryCommand (fun channel -> Commands.Reload (timeout, force, channel)) (timeout + addon)
         
-        member x.Close (?t : int) = 
+        member __.Close (?t : int) = 
             let timeout = shutdownTimeout t |> Operation.estimate shutdown
             logger.TraceF "Close timeout is %d" timeout
             tryCommand (fun channel -> Commands.Close (timeout, channel)) (timeout + addon)

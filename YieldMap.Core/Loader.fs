@@ -1,5 +1,34 @@
 ﻿namespace YieldMap.Core
 
+module Recalculator =
+    open Autofac
+
+    open YieldMap.Core.DbManager
+    open YieldMap.Tools.Response
+    open YieldMap.Transitive.Registry
+    open YieldMap.Transitive.Repositories
+
+    open System.Linq
+    
+    let recalculate (db:DbManager) = async {
+        try
+            let container = db.dbContainer
+
+            let registry = container.Resolve<IFunctionRegistry>()
+            let updater = container.Resolve<IPropertiesUpdater>()
+            let properyReader = container.Resolve<IPropertiesRepository> ()
+
+            properyReader
+                .FindAll()
+                .ToList()
+                |> Seq.iter (fun x -> registry.Add(x.id, x.Expression) |> ignore)
+
+            updater.RecalculateBonds () |> ignore
+
+            return Tweet.Answer ()
+        with e -> return Tweet.Failure <| Failure.Error e
+    }
+
 module Loader = 
     open DbManager
 
@@ -74,16 +103,13 @@ module Loader =
                     Frn.Create (frnMap.[note.Ric], note) 
                     :> InstrumentDescription 
                     |> Some
-
                 | Floater note  -> 
                     logger.WarnF "No frn info on frn %s" note.Ric 
                     None
-
                 | Straight bond -> 
                     Bond.Create bond
                     :> InstrumentDescription 
                     |> Some
-
                 | Convertible conv -> 
                     logger.WarnF "Convertibles not supported yet %s" conv.Ric 
                     None)

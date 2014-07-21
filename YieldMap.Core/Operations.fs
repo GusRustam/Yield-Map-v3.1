@@ -27,13 +27,13 @@ module Operations =
 
     type LoadAndSave (s:Drivers) = 
         interface Operation<LoadAndSaveRequest, unit> with
-            member x.Estimate () = Loader.estimate ()
-            member x.Execute (r, ?t) = Loader.reload s r.Chains r.Force
+            member __.Estimate () = Loader.estimate ()
+            member __.Execute (r, _) = Loader.reload s r.Chains r.Force
 
     type EstablishConnection (f:EikonFactory) = 
         interface Operation<unit, unit> with
-            member x.Estimate () = 15000 // fifteen seconds would suffice
-            member x.Execute (_, ?timeout) = async { 
+            member __.Estimate () = 15000 // fifteen seconds would suffice
+            member __.Execute (_, ?timeout) = async { 
                 let! res = 
                     match timeout with
                     | Some t -> f.Connect t
@@ -42,13 +42,18 @@ module Operations =
                 return 
                     match res with
                     | Ping.Failure f -> Tweet.Failure f
-                    | Ok -> Answer ()
+                    | _ -> Answer ()
             }
 
     type Shutdown () = 
         interface Operation<unit, unit> with
-            member x.Estimate () = 500 // half a second should be enough
-            member x.Execute (_, _) = async { 
+            member __.Estimate () = 500 // half a second should be enough
+            member __.Execute (_, _) = async { 
                 do! Async.Sleep 500
                 return Answer () 
             }
+
+    type Recalculate (s:Drivers) = 
+        interface Operation<unit, unit> with
+            member __.Estimate () = 5 * 60 * 1000 // 5 minutes are still a great estimate m'lord
+            member __.Execute (_, _) = Recalculator.recalculate s.Database

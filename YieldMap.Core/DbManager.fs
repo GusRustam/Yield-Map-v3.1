@@ -12,18 +12,16 @@ module DbManager =
 
     open System
 
-    type DbManager (container : IContainer) = 
-//        let container = 
-//            match _container with
-//            | Some cont -> cont
-//            | None -> Initializer.Container 
 
-        member internal x.bonds = container.Resolve<IBonds> ()
-        member internal x.chainRics = container.Resolve<IChainRics> ()
-        member internal x.ratings = container.Resolve<IRatings> ()
-        member internal x.updates = container.Resolve<IDbUpdates> ()
-        member internal x.backupRestore = container.Resolve<IBackupRestore> ()
-        
+    type DbManager (container : IContainer) = 
+        member internal __.bonds = container.Resolve<IBonds> ()
+        member internal __.chainRics = container.Resolve<IChainRics> ()
+        member internal __.ratings = container.Resolve<IRatings> ()
+        member internal __.updates = container.Resolve<IDbUpdates> ()
+        member internal __.backupRestore = container.Resolve<IBackupRestore> ()
+
+        member __.dbContainer = container
+       
         static member chainsInNeed dt (x : DbManager) = x.updates.ChainsInNeed dt
         static member needsRefresh dt (x : DbManager) = x.updates.NeedsReload dt
         static member classify (x : DbManager) a b = x.updates.Classify (a, b)
