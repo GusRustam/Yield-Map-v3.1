@@ -461,8 +461,8 @@ module Database =
 
         let functions = 
             [
-             (1L, Evaluatable("$InstrumentName + \" \" + $Series")); 
-             (2L, Evaluatable("$InstrumentName + IIf(Not IsNothing($Coupon), \" \" + Format(\"{0:0.00}\", $Coupon), \"\") + IIf(Not IsNothing($Maturity), \" '\" + Format(\"{0:MMM-yy}\", $Maturity), \"\")"))
+             (1L, Evaluatable("$Name + \" \" + $Series")); 
+             (2L, Evaluatable("$Name + IIf(Not IsNothing($Coupon), \" \" + Format(\"0.00\", $Coupon), \"\") + IIf(Not IsNothing($Maturity), \" '\" + Format(\"MMM-yy\", $Maturity), \"\")"))
             ] |> Map.ofList |> Map.toDict
 
         RhinoMocksExtensions
@@ -499,121 +499,13 @@ module Database =
         builder.RegisterInstance(propertiesUowMock) |> ignore
         builder.RegisterInstance(instrumentDescriptionsReaderMock) |> ignore
         builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>() |> ignore // using original code 
-        builder.RegisterType<BondsPacker>().As<IBondsPacker>() |> ignore // using original code 
         builder.RegisterInstance(Func<_>(fun () -> !cnt)) |> ignore
         cnt := builder.Build()
         let container = !cnt
 
         let updater = container.Resolve<IPropertiesUpdater>()
-        updater.RecalculateBonds () |> should be (equal 4)
+        updater.RecalculateBonds () |> ignore
         ()
-
-//        // Prepare
-//        let builder = ContainerBuilder()
-//
-//        let properties =
-//            [Property(id = 1L, Name = "Property1", Expression="$InstrumentName + \" \" + $Series"); 
-//             Property(id = 2L, Name = "Property2", Expression="$InstrumentName + IIf(Not IsNothing($Coupon), \" \" + Format(\"{0:0.00}\", $Coupon), \"\") + IIf(Not IsNothing($Maturity), \" '\" + Format(\"{0:MMM-yy}\", $Maturity), \"\")")]
-//
-//        // IFunctionRegistry
-//        let funcRegMock = MockRepository.GenerateMock<IFunctionRegistry>()
-//        RhinoMocksExtensions
-//            .Stub<_,_>(funcRegMock, Rhino.Mocks.Function<_,_>(fun x -> x.Add(0L, "")))
-//            .IgnoreArguments()
-//            .Return(0)
-//            |> ignore
-//
-//        // IPropertyValuesRepostiory
-//        let propertyValuesRepo = MockRepository.GenerateMock<IPropertyValuesRepostiory>()
-//        let propertyValues = ref List.empty<PropertyValue>
-//        let getPropertyValues = Func<_>(fun () -> (!propertyValues).AsQueryable())
-//        RhinoMocksExtensions
-//            .Stub<_,_>(propertyValuesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
-//            .Do(getPropertyValues)
-//            |> ignore        
-//
-//        let doRecalculate = Func<_,_>(fun (_:Func<InstrumentDescriptionView, bool>) -> 
-//            logger.Info "Call"
-//            
-//            // TODO IT WOULD BE BETTER SOMEHOW TO TEST THE ORIGINAL FUNCTION
-//            //propertyValues := [PropertyValue()] // TODO NOW INTERPRET THE PROPS
-//
-//            4)
-//
-//        // IPropertiesUpdater
-//        let updaterMock = MockRepository.GenerateMock<IPropertiesUpdater>()
-//        RhinoMocksExtensions
-//            .Stub<_,_>(updaterMock, Rhino.Mocks.Function<_,_>(fun x -> x.Recalculate(null)))
-//            .IgnoreArguments()
-//            .Do(doRecalculate)
-//            .Return(4)
-//            |> ignore    
-//
-//        // IPropertiesRepository
-//        let propertiesRepo = MockRepository.GenerateMock<IPropertiesRepository>()
-//        RhinoMocksExtensions
-//            .Stub<_,_>(propertiesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
-//            .Return(properties.AsQueryable())
-//            |> ignore    
-//
-//        // IChainRics
-//        let chainRicsServiceMock = MockRepository.GenerateMock<IChainRics>()
-//
-//        // IBonds
-//        let bondsMock = MockRepository.GenerateMock<IBonds>()
-//        
-//        // IInstrumentRepository
-//        let instrumentRepoMock = MockRepository.GenerateMock<IInstrumentRepository>()
-//        RhinoMocksExtensions
-//            .Stub<_,_>(instrumentRepoMock, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
-//            .Return([Instrument(id = 1L, Name = "INSTR1"); Instrument(id = 2L, Name = "INSTR2")].AsQueryable())
-//            |> ignore        
-//        
-//        let cnt = ref null
-//
-////        // IInstrumentDescriptionsReader
-////        let instrumentDescriptionsReaderMock = MockRepository.GenerateMock<IInstrumentDescriptionsReader>()
-////
-////        // IPropertiesUnitOfWork
-////        let propertiesUowMock = MockRepository.GenerateMock<IPropertiesUnitOfWork>()
-//
-//        builder.RegisterInstance(funcRegMock) |> ignore
-//        builder.RegisterInstance(updaterMock) |> ignore
-//        builder.RegisterInstance(propertiesRepo) |> ignore
-//        builder.RegisterInstance(propertyValuesRepo) |> ignore
-//        builder.RegisterInstance(chainRicsServiceMock) |> ignore
-//        builder.RegisterInstance(bondsMock) |> ignore
-//        builder.RegisterInstance(instrumentRepoMock) |> ignore
-////        builder.RegisterInstance(propertiesUowMock) |> ignore
-////        builder.RegisterInstance(instrumentDescriptionsReaderMock) |> ignore
-//
-////        builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>() |> ignore // using original code 
-//        builder.RegisterInstance(Func<_>(fun () -> !cnt)) |> ignore
-//        cnt := builder.Build()
-//        let container = !cnt
-//
-//        let [inst1id; instr2id] = 
-//            [MetaTables.BondDescr(BondStructure = "BondStructure1", Description = "Description1", Ric = "TESTRIC1", Currency = "RUB", ShortName = "Wow1", Series = "S1")
-//             MetaTables.BondDescr(BondStructure = "BondStructure2", Description = "Description2", Ric = "TESTRIC2", Currency = "RUB", ShortName = "Wow2", Series = "S1")] 
-//            |> createChainRicInstrument container "TESTCHAIN" [|"TESTRIC1"; "TESTRIC2"|] 
-//
-//        let registry = container.Resolve<IFunctionRegistry>()
-//        let updater = container.Resolve<IPropertiesUpdater>()
-//        let properyReader = container.Resolve<IPropertiesRepository> ()
-//        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
-//
-//        properyValueReader.FindAll().Count() |> should be (equal 0)
-//        
-//        properyReader
-//            .FindAll()
-//            .ToList()
-//            |> Seq.iter(fun p -> registry.Add(p.id, p.Expression) |> ignore)
-//
-//        updater.Recalculate () |> should be (equal 4)
-//
-//        properyValueReader.FindAll().Count() |> should be (equal 4)
-//
-//        deleteChainRicInstrument ()
 
     [<Test>]
     let ``Recalculating property values on changes in instruments on real DB`` () =

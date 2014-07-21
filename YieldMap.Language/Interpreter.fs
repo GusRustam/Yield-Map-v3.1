@@ -34,6 +34,8 @@ module Interpreter =
                     Value.Double (double i + d)
                 | Value.String s1, Value.String s2 -> 
                     Value.String (s1 + s2)
+                | Value.String s, Value.Nothing | Value.Nothing, Value.String s ->
+                    Value.String s
                 | Value.Rating n, Value.Integer i | Value.Integer i, Value.Rating n -> 
                     match n |> Notch.elevate (int i) with
                     | Answer notch -> notch |> Value.Rating 

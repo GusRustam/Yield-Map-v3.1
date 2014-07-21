@@ -88,6 +88,7 @@ module Lexan =
             | :? double as d -> Double d
             | :? bool as b -> Bool b
             | :? DateTime as d -> Date d
+            | null -> Nothing
             | _ -> 
                 let str = o.ToString()
                 let m = Regex.Match(str, "\[(?<rating>[^\]]*)\]")

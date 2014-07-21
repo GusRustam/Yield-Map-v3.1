@@ -8,8 +8,8 @@ using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
+using YieldMap.Transitive.MediatorTypes.Variables;
 using YieldMap.Transitive.Repositories;
-using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Registry {
     public class PropertiesUpdater : IPropertiesUpdater {
@@ -22,7 +22,6 @@ namespace YieldMap.Transitive.Registry {
 
         public int RecalculateBonds(Func<BondDescriptionView, bool> predicate = null) {
             Logger.Trace("RecalculateBonds()");
-            var packer = _container.Resolve<IBondsPacker>();
             var reader = _container.Resolve<IBondDescriptionsReader>();
             var registry = _container.Resolve<IFunctionRegistry>();
             var properties = registry.Items;
@@ -41,7 +40,7 @@ namespace YieldMap.Transitive.Registry {
                     var x4 = x3.Select(descr => new {
                             TypeId = descr.id_InstrumentType,
                             InstrumentId = descr.id_Instrument,
-                            Environment = packer.PackInstrumentDescription(descr)
+                            Environment = new BondView(descr) // todo this could be generalized via factory with multimethod
                         });
                     var x5 = x4.ToList();
                         // for each instrument matching predicate
@@ -56,7 +55,7 @@ namespace YieldMap.Transitive.Registry {
                                 var grammar = kvp.Value;
                                 Logger.Trace(string.Format("For property with id {0} grammar {1}", propertyId, grammar));
                                 // evaluate property for that instrument
-                                var value = Interpreter.evaluate(grammar.Grammar, grammar.Expression, environment);
+                                var value = Interpreter.evaluate(grammar.Grammar, grammar.Expression, environment.AsVariable());
                                 Logger.Trace(string.Format("and value is {0}", value));
 
                                 // is there any value for this property and instrument?
