@@ -12,8 +12,6 @@ module Operations =
     open System
     open DbManager
 
-    let private logger = LogFactory.create "Operations"
-
     type ('Request, 'Answer) Operation =
         abstract Estimate : unit -> int
         abstract Execute : 'Request * int option -> 'Answer Tweet Async

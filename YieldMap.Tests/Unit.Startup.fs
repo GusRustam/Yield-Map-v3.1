@@ -416,3 +416,16 @@ module StartupTest =
         s.Database 
         |> DbManager.backup 
         |> logger.Info
+
+    (* ========================= ============================= *)
+    [<Test>]
+    let ``Utility. Initialize Db with 0#RUELG=MM`` () =
+        let dt = DateTime(2014,5,14) 
+        let x = init [|"0#RUELG=MM"|] dt
+
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
+        
+        s.Database 
+        |> DbManager.backup 
+        |> logger.Info

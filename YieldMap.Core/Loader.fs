@@ -99,14 +99,12 @@ module Loader =
         }
 
     let rec reload (s:Drivers) chains force  = 
-        let loader, dt, db = s.Loader, s.TodayFix, s.Database
-
-        let needsReload = db |> DbManager.needsRefresh s.TodayFix
+        let needsReload = s.Database |> DbManager.needsRefresh s.TodayFix
 
         async {
             if force || force && needsReload then
                 try
-                    backupFile <- DbManager.backup db
+                    backupFile <- DbManager.backup s.Database
                     return! load s chains
                 with e -> 
                     logger.ErrorEx "Load failed" e
