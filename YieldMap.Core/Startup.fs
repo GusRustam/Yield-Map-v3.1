@@ -156,7 +156,7 @@ module Startup =
                             return! connected channel
 
                         | Tweet.Answer _ -> 
-                            let! res = recalculate.Execute ()
+                            let! res = recalculate.Execute ((), None) // timeout?
 
                             match res with
                             | Tweet.Failure f -> 

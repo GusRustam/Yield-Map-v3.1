@@ -225,7 +225,7 @@ module StartupTest =
         command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
         command "Connect" x.Connect (Startup.State Initialized)
 
-        logger.Error " =============== SECOND RELOAD ====================="
+        logger.Info " =============== SECOND RELOAD ====================="
         command "Reload" (fun () -> x.Reload true) (Startup.State Initialized)
         command "Close" x.Close (Startup.State Closed)
         command "Close" x.Close NotResponding
@@ -266,7 +266,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Strange US30`` () =
+    let ``Ric without any metadata loads, but is left unlinked`` () =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#US30YSTRIP=PX"|] dt
 
@@ -290,7 +290,6 @@ module StartupTest =
         // RIC US912834NP9=PX exists in chains, but doesn't exist in bond database for some reason. And that's ok
         (Array.length unattachedRics - initialUnattachedRics) |> should be (equal 1)
 
-        let loser = unattachedRics.[0]
         match unattachedRics |> Array.tryFindIndex (fun t -> t.Name = "US912834NP9=PX") with
         | None -> true |> should be (equal false)
         | _ -> ()
@@ -391,7 +390,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Indexes and FRNs`` () =
+    let ``FRNs are imported successfully`` () =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUCORP=MM"|] dt
 
