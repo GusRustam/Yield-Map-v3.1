@@ -2,7 +2,13 @@
 using System.Collections.Generic;
 using YieldMap.Database;
 
-namespace YieldMap.Transitive.Queries {
+namespace YieldMap.Transitive.Procedures {
+    /// <summary>
+    /// Determines whether th Db needs to be updated and 
+    /// classifies the existing rics into classes - Stale, Obsolete and Ok
+    /// Stale are those that need refresh, obsolete 
+    /// have to be deleted and Ok should be kept
+    /// </summary>
     public interface IDbUpdates {
         bool NeedsReload(DateTime dt);
         IEnumerable<Chain> ChainsInNeed(DateTime dt);

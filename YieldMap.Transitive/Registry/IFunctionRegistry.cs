@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 
 namespace YieldMap.Transitive.Registry {
+    /// <summary>
+    /// Stores pre-compiled expressions for properties
+    /// </summary>
     public interface IFunctionRegistry {
         int Clear();
         int Add(long propId, string expr);

@@ -63,7 +63,7 @@ module StartupTest =
     open YieldMap.Tools.Logging
     open YieldMap.Database
     open YieldMap.Transitive.Repositories
-    open YieldMap.Transitive.Queries
+    open YieldMap.Transitive.Procedures
     open YieldMap.Transitive.Domains.Readers
     open YieldMap.Transitive.Domains.UnitsOfWork
 

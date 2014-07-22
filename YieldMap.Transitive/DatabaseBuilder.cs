@@ -1,11 +1,9 @@
 ﻿using System;
 using Autofac;
-using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Procedures;
-using YieldMap.Transitive.Queries;
 using YieldMap.Transitive.Registry;
 using YieldMap.Transitive.Repositories;
 using YieldMap.Transitive.Tools;
@@ -29,9 +27,14 @@ namespace YieldMap.Transitive {
         static DatabaseBuilder() {
             Builder = new ContainerBuilder();
 
-            // --- Services
+            // Services
             Builder.RegisterType<FunctionRegistry>().As<IFunctionRegistry>().SingleInstance();
             Builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>().SingleInstance();
+            // -- updates, backup/restore
+            Builder.RegisterType<DbUpdates>().As<IDbUpdates>();
+            Builder.RegisterType<BackupRestore>().As<IBackupRestore>();
+            // -- savers
+            Builder.RegisterType<Saver>().As<ISaver>();
 
             // Resolver
             Builder.RegisterType<FieldResolver>().As<IFieldResolver>().SingleInstance();
@@ -43,39 +46,27 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<InstrumentTypes>().As<IInstrumentTypes>().SingleInstance();
             Builder.RegisterType<LegTypes>().As<ILegTypes>().SingleInstance();
 
-            // Readers
+            // Readers (they provide read-only access to one or several tables in Db)
             Builder.RegisterType<EikonEntitiesReader>().As<IEikonEntitiesReader>();
             Builder.RegisterType<InstrumentDescriptionsReader>().As<IInstrumentDescriptionsReader>();
+            Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
+            Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
 
-            // Savers
-            Builder.RegisterType<Bonds>().As<IBonds>();
-            Builder.RegisterType<ChainRics>().As<IChainRics>();
-            Builder.RegisterType<IPropertyStorage>().As<IPropertyStorage>(); // TODO NO PROPERTY STORER!!!
-            Builder.RegisterType<Ratings>().As<IRatings>();
-
-            // Readers and writers
-            Builder.RegisterType<DbUpdates>().As<IDbUpdates>();
-            Builder.RegisterType<BackupRestore>().As<IBackupRestore>();
-            
             // Repos and their units of work.
-            // And then - their readers
+            // Logic: first repos, and then - their UOWs (the UOWs they use)
             Builder.RegisterType<ChainRepository>().As<IChainRepository>();
             Builder.RegisterType<RicRepository>().As<IRicRepository>();
             Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>();
 
-            Builder.RegisterType<EikonEntitiesUnitOfWork>().As<IEikonEntitiesUnitOfWork>();
             Builder.RegisterType<FeedRepository>().As<IFeedRepository>();
+            Builder.RegisterType<EikonEntitiesUnitOfWork>().As<IEikonEntitiesUnitOfWork>();
 
-            Builder.RegisterType<BondAdditionUnitOfWork>().As<IBondAdditionUnitOfWork>();
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
-
+            Builder.RegisterType<BondAdditionUnitOfWork>().As<IBondAdditionUnitOfWork>();
 
             Builder.RegisterType<PropertiesRepository>().As<IPropertiesRepository>();
             Builder.RegisterType<PropertyValuesRepostiory>().As<IPropertyValuesRepostiory>();
             Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>();
-
-            Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
-            Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
         }
     }
 }

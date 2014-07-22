@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Transitive.Queries {
+﻿namespace YieldMap.Transitive.Procedures {
     public enum Mission {
         Obsolete,
         ToReload,

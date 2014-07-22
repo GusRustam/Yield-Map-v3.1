@@ -6,7 +6,7 @@ using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Tools;
 
-namespace YieldMap.Transitive.Queries {
+namespace YieldMap.Transitive.Procedures {
     public class DbUpdates : ReadOnlyRepository<ChainRicContext>, IDbUpdates {
         private static bool NeedsRefresh(Chain chain, DateTime today) {
             return chain.Expanded.HasValue && chain.Expanded.Value < today || !chain.Expanded.HasValue;

@@ -8,11 +8,9 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Domains.Contexts;
-using YieldMap.Transitive.Domains.UnitsOfWork;
 
-namespace YieldMap.Transitive.Queries {
+namespace YieldMap.Transitive.Procedures {
     internal class BackupRestore : IBackupRestore, IDisposable {
         private readonly DbContext _context;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.BackupRestore");

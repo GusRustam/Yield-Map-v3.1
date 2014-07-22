@@ -25,7 +25,7 @@ open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
 
 module Database =
-    open YieldMap.Transitive.Queries
+    open YieldMap.Transitive.Procedures
 
     let logger = LogFactory.create "UnitTests.Database"
     let str (z : TimeSpan Nullable) = 
@@ -58,17 +58,15 @@ module Database =
 
     let createChainRicInstrument (container:IContainer) chainName chainRics descrs  =
         // Setting up, adding chain and ric
-        let chainRicSaver = container.Resolve<IChainRics> ()
-        chainRicSaver.SaveChainRics(chainName, chainRics, "Q", DateTime.Today, "")
+        let saver = container.Resolve<ISaver> ()
+        saver.SaveChainRics(chainName, chainRics, "Q", DateTime.Today, "")
 
-        // Setting up, adding instrument
-        let bondSaver = container.Resolve<IBonds>()
 
         let bond = descrs
                    |> Seq.map Bond.Create 
                    |> Seq.map (fun x -> x :> InstrumentDescription)
 
-        bondSaver.Save bond
+        saver.SaveInstruments bond
 
         let ids = ref []
 
@@ -245,8 +243,8 @@ module Database =
         using (container.Resolve<IRicRepository>()) (fun rics ->
             rics.FindAll().Count() |> should be (equal 0))
 
-        let chainRicSaver = container.Resolve<IChainRics> ()
-        chainRicSaver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
+        let saver = container.Resolve<ISaver> ()
+        saver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
 
         let chainId = ref 0L
         let ricId = ref 0L
@@ -277,17 +275,16 @@ module Database =
     let ``Create a bond, save it to real db, and then remove it`` () = 
         let container = DatabaseBuilder.Container
 
-        let chainRicSaver = container.Resolve<IChainRics> ()
-        chainRicSaver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
+        let saver = container.Resolve<ISaver> ()
+        saver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
 
         let cnt = getCount<Instrument, IInstrumentRepository>()
 
-        let bondSaver = container.Resolve<IBonds>()
         
         let bond = MetaTables.BondDescr(BondStructure = "BondStructure", Description = "Description", Ric = "TESTRIC", Currency = "RUB")
                    |> Bond.Create 
 
-        bondSaver.Save [bond]
+        saver.SaveInstruments [bond]
 
         let id = ref 0L
         checkExact<Instrument, IInstrumentRepository> (cnt+1)

@@ -3,7 +3,6 @@
 module DbManager = 
     open Autofac
     open YieldMap.Transitive.Procedures
-    open YieldMap.Transitive.Queries
 
     open YieldMap.Loader.SdkFactory
     open YieldMap.Loader.LiveQuotes
@@ -14,9 +13,7 @@ module DbManager =
 
 
     type DbManager (container : IContainer) = 
-        member internal __.bonds = container.Resolve<IBonds> ()
-        member internal __.chainRics = container.Resolve<IChainRics> ()
-        member internal __.ratings = container.Resolve<IRatings> ()
+        member internal __.saver = container.Resolve<ISaver> ()
         member internal __.updates = container.Resolve<IDbUpdates> ()
         member internal __.backupRestore = container.Resolve<IBackupRestore> ()
 
@@ -25,10 +22,10 @@ module DbManager =
         static member chainsInNeed dt (x : DbManager) = x.updates.ChainsInNeed dt
         static member needsRefresh dt (x : DbManager) = x.updates.NeedsReload dt
         static member classify (x : DbManager) a b = x.updates.Classify (a, b)
-        static member saveBonds bonds (x : DbManager) = x.bonds.Save bonds
-        static member saveRatings ratings (x : DbManager) = x.ratings.Save ratings
+        static member saveBonds bonds (x : DbManager) = x.saver.SaveInstruments bonds
+        static member saveRatings ratings (x : DbManager) = x.saver.SaveRatings ratings
         static member saveChainRics (x : DbManager) chainRic rics feedName expanded prms = 
-            x.chainRics.SaveChainRics (chainRic, rics, feedName, expanded, prms)
+            x.saver.SaveChainRics (chainRic, rics, feedName, expanded, prms)
         static member backup (x : DbManager) = x.backupRestore.Backup ()
         static member restore name (x : DbManager) = x.backupRestore.Restore name
 

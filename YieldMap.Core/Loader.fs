@@ -49,7 +49,7 @@ module Loader =
     open YieldMap.Tools.Logging
 
     open YieldMap.Transitive.MediatorTypes
-    open YieldMap.Transitive.Queries
+    open YieldMap.Transitive.Procedures
 
     open System
     open System.Collections.Generic

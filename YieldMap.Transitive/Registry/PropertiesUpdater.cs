@@ -90,11 +90,11 @@ namespace YieldMap.Transitive.Registry {
             }
         }
 
-        public int Refresh() {
-            var registry = _container.Resolve<IFunctionRegistry>();
-            using (var ctx = new PropertiesContext()) 
-                ctx.Properties.ToList().ForEach(p => registry.Add(p.id, p.Expression));
-            return 0;
-        }
+        //public int Refresh() {
+        //    var registry = _container.Resolve<IFunctionRegistry>();
+        //    using (var ctx = new PropertiesContext()) 
+        //        ctx.Properties.ToList().ForEach(p => registry.Add(p.id, p.Expression));
+        //    return 0;
+        //}
     }
 }
