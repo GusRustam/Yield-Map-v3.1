@@ -2,6 +2,7 @@
     public enum EventSource {
         InstrumentDescription,
         Chain,
-        Ric
+        Ric,
+        Feed
     }
 }

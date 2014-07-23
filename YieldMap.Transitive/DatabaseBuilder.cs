@@ -54,7 +54,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<LegTypes>().As<ILegTypes>().SingleInstance();
 
             // Readers (they provide read-only access to one or several tables in Db)
-            Builder.RegisterType<EikonEntitiesReader>().As<IEikonEntitiesReader>();
+            Builder.RegisterType<FeedReader>().As<IFeedReader>();
             Builder.RegisterType<InstrumentDescriptionsReader>().As<IInstrumentDescriptionsReader>();
             Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
             Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
@@ -69,13 +69,13 @@ namespace YieldMap.Transitive {
             });
 
             Builder.RegisterType<FeedRepository>().As<IFeedRepository>();
-            Builder.RegisterType<EikonEntitiesUnitOfWork>().As<IEikonEntitiesUnitOfWork>().OnActivated(e => {
+            Builder.RegisterType<FeedsUnitOfWork>().As<IEikonEntitiesUnitOfWork>().OnActivated(e => {
                 var hander = e.Context.Resolve<ITriggerManager>();
                 e.Instance.Notify += (source, args) => hander.Handle(args);
             });
 
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
-            Builder.RegisterType<BondAdditionUnitOfWork>().As<IBondAdditionUnitOfWork>().OnActivated(e => {
+            Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>().OnActivated(e => {
                 var hander = e.Context.Resolve<ITriggerManager>();
                 e.Instance.Notify += (source, args) => hander.Handle(args);
             });

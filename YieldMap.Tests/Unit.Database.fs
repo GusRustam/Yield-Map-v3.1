@@ -298,7 +298,7 @@ module Database =
         using (container.Resolve<IInstrumentRepository>()) (fun instruments ->
             id := instruments.FindAll().First().id)
 
-        using (container.Resolve<IBondAdditionUnitOfWork>()) (fun uow ->
+        using (container.Resolve<IInstrumentUnitOfWork>()) (fun uow ->
         using (container.Resolve<IInstrumentRepository>(NamedParameter("uow", uow))) (fun instruments ->
             let bnd = instruments.FindById !id
             instruments.Remove bnd |> should be (equal 0)

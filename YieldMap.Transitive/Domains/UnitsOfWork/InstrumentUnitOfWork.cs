@@ -8,12 +8,12 @@ using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Domains.UnitsOfWork {
-    public class BondAdditionUnitOfWork : IBondAdditionUnitOfWork {
-        public BondAdditionUnitOfWork() {
-            Context = new BondAdditionContext();
+    public class InstrumentUnitOfWork : IInstrumentUnitOfWork {
+        public InstrumentUnitOfWork() {
+            Context = new InstrumentContext();
         }
 
-        public BondAdditionUnitOfWork(BondAdditionContext context) {
+        public InstrumentUnitOfWork(InstrumentContext context) {
             Context = context;
         }
 
@@ -25,7 +25,6 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
 
         public int Save() {
             var instruments = Context.ExtractEntityChanges<Instrument>();
-            
            
             var res = Context.SaveChanges();
 
@@ -35,6 +34,6 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
             return res;
         }
 
-        public BondAdditionContext Context { get; private set; }
+        public InstrumentContext Context { get; private set; }
 }
 }

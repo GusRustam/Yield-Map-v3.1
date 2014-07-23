@@ -9,14 +9,14 @@ using YieldMap.Transitive.Domains.Contexts;
 
 namespace YieldMap.Transitive.Repositories {
     public class FeedRepository : IFeedRepository {
-        private readonly EikonEntitiesContext _context;
+        private readonly FeedsContext _context;
 
-        public FeedRepository(IUnitOfWork<EikonEntitiesContext> uow) {
+        public FeedRepository(IUnitOfWork<FeedsContext> uow) {
             _context = uow.Context;
         }
 
         public FeedRepository() {
-            _context = new EikonEntitiesContext();
+            _context = new FeedsContext();
         }
 
         public IQueryable<Feed> FindAll() {

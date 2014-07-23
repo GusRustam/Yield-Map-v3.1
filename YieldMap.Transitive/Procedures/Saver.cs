@@ -73,7 +73,6 @@ namespace YieldMap.Transitive.Procedures {
             }
         }
 
-
         public void SaveInstruments(IEnumerable<InstrumentDescription> bonds) {
             bonds = bonds as IList<InstrumentDescription> ?? bonds.ToList();
 

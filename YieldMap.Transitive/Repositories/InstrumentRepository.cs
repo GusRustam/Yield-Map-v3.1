@@ -10,14 +10,14 @@ using YieldMap.Transitive.Domains.UnitsOfWork;
 
 namespace YieldMap.Transitive.Repositories {
     public class InstrumentRepository : IInstrumentRepository {
-        private readonly BondAdditionContext _context;
+        private readonly InstrumentContext _context;
 
-        public InstrumentRepository(IBondAdditionUnitOfWork uow) {
+        public InstrumentRepository(IInstrumentUnitOfWork uow) {
             _context = uow.Context;
         }
 
         public InstrumentRepository() {
-            _context = new BondAdditionContext();
+            _context = new InstrumentContext();
         }
 
         public IQueryable<Instrument> FindAll() {
