@@ -52,6 +52,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domains\Contexts\SaverContext.cs" />
     <Compile Include="Events\ChainRicHandler.cs" />
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />

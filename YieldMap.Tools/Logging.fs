@@ -73,7 +73,7 @@ module Logging =
         // todo make a static class to rule it 
         static member consoleSink () = 
             {new LoggingSink with
-                member x.Log (level, name, message) = 
+                member __.Log (level, name, message) = 
                     printfn "%-25s | %-8A | %15s | %s" (DateTime.Now.ToString("dd-MMM-yy hh:mm:ss,fff")) level name message
                 
                 member x.Log (level, name, message, ex) = 
@@ -82,8 +82,8 @@ module Logging =
         
         static member nullSink () = 
             {new LoggingSink with
-                member x.Log (level, name, message) = ()
-                member x.Log (level, name, message, ex) = ()}
+                member __.Log (_, _, _) = ()
+                member __.Log (_, _, _, _) = ()}
 
         static member nLogSink fileName name = 
             let layoutText = "${date} \t ${level} \t ${callsite:includeSourcePath=false} | ${message} | ${exception:format=Type,Message} | ${stacktrace}"
@@ -100,7 +100,6 @@ module Logging =
                     Name = "Chainsaw",
                     Layout = new Log4JXmlEventLayout())
 
-            let logger = LogManager.GetCurrentClassLogger()
             let loggerConfig = LoggingConfiguration()
             do loggerConfig.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, txtTarget));
             do loggerConfig.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, udpTarget));
@@ -134,29 +133,29 @@ module Logging =
             
                     let newLogger = {
                         new Logger with
-                            member x.TraceEx message ex = crtEx LoggingLevel.Trace message ex
-                            member x.TraceF format = kprintf (crt LoggingLevel.Trace) format 
-                            member x.Trace msg = crt LoggingLevel.Trace msg
+                            member __.TraceEx message ex = crtEx LoggingLevel.Trace message ex
+                            member __.TraceF format = kprintf (crt LoggingLevel.Trace) format 
+                            member __.Trace msg = crt LoggingLevel.Trace msg
 
-                            member x.DebugEx message ex = crtEx LoggingLevel.Debug message ex
-                            member x.DebugF format = kprintf (crt LoggingLevel.Debug) format 
-                            member x.Debug msg = crt LoggingLevel.Debug msg
+                            member __.DebugEx message ex = crtEx LoggingLevel.Debug message ex
+                            member __.DebugF format = kprintf (crt LoggingLevel.Debug) format 
+                            member __.Debug msg = crt LoggingLevel.Debug msg
 
-                            member x.InfoEx message ex = crtEx LoggingLevel.Info message ex
-                            member x.InfoF format = kprintf (crt LoggingLevel.Info) format 
-                            member x.Info msg = crt LoggingLevel.Info msg
+                            member __.InfoEx message ex = crtEx LoggingLevel.Info message ex
+                            member __.InfoF format = kprintf (crt LoggingLevel.Info) format 
+                            member __.Info msg = crt LoggingLevel.Info msg
 
-                            member x.WarnEx message ex = crtEx LoggingLevel.Warn message ex
-                            member x.WarnF format = kprintf (crt LoggingLevel.Warn) format 
-                            member x.Warn msg = crt LoggingLevel.Warn msg
+                            member __.WarnEx message ex = crtEx LoggingLevel.Warn message ex
+                            member __.WarnF format = kprintf (crt LoggingLevel.Warn) format 
+                            member __.Warn msg = crt LoggingLevel.Warn msg
 
-                            member x.ErrorEx message ex = crtEx LoggingLevel.Error message ex
-                            member x.ErrorF format = kprintf (crt LoggingLevel.Error) format 
-                            member x.Error msg = crt LoggingLevel.Error msg
+                            member __.ErrorEx message ex = crtEx LoggingLevel.Error message ex
+                            member __.ErrorF format = kprintf (crt LoggingLevel.Error) format 
+                            member __.Error msg = crt LoggingLevel.Error msg
 
-                            member x.FatalEx message ex = crtEx LoggingLevel.Fatal message ex
-                            member x.FatalF format = kprintf (crt LoggingLevel.Fatal) format
-                            member x.Fatal msg = crt LoggingLevel.Fatal msg}
+                            member __.FatalEx message ex = crtEx LoggingLevel.Fatal message ex
+                            member __.FatalF format = kprintf (crt LoggingLevel.Fatal) format
+                            member __.Fatal msg = crt LoggingLevel.Fatal msg}
 
                     loggers.Add(name, newLogger)
                     newLogger

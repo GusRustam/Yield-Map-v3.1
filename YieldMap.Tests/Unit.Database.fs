@@ -21,6 +21,7 @@ open YieldMap.Transitive.Repositories
 open YieldMap.Transitive.Registry
 open YieldMap.Transitive.Tools
 open YieldMap.Transitive.MediatorTypes
+open YieldMap.Transitive.Events
 open YieldMap.Tools.Aux
 open YieldMap.Tools.Logging
 
@@ -236,14 +237,10 @@ module Database =
 
     [<Test>]
     let ``Add chain and ric to real database, save and then remove it`` () =
-        let newDbEventHandler = 
-            {
-                new YieldMap.Transitive.Events.ITriggerManager with
-                    member __.Handle (z) = logger.Warn "Interceptor!!!"
-                    member __.get_Next () = null
-            }
-            
-        YieldMap.Transitive.Events.Triggers.Initialize newDbEventHandler
+        {new ITriggerManager with
+            member __.Handle args = logger.WarnF "Intercepted events on %A!!!" args.Source
+            member __.get_Next () = null}
+        |> Triggers.Initialize 
         
         let container = DatabaseBuilder.Container
 

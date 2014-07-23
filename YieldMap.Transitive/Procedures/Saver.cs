@@ -48,7 +48,7 @@ namespace YieldMap.Transitive.Procedures {
         public void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms) {
             if (prms == null)
                 prms = string.Empty;
-            using (var context = new ChainRicContext()) {
+            using (var context = new SaverContext()) {
                 try {
                     var feed = EnsureFeed(context, feedName);
                     var chain = EnsureChain(context, chainRic, feed, expanded, prms);
@@ -71,7 +71,7 @@ namespace YieldMap.Transitive.Procedures {
             bonds = bonds as IList<InstrumentDescription> ?? bonds.ToList();
 
             // Creating ISINs, and linking RICs to them
-            using (var ctx = new EikonEntitiesContext()) {
+            using (var ctx = new SaverContext()) {
                 try {
                     var isins = new Dictionary<string, Isin>();
                     foreach (var bond in bonds) {
@@ -100,7 +100,7 @@ namespace YieldMap.Transitive.Procedures {
             }
 
             // Descriptions
-            using (var ctx = new BondAdditionContext()) {
+            using (var ctx = new SaverContext()) {
                 var descriptions = new Dictionary<string, Description>();
                 foreach (var bond in bonds) {
                     if (bond.RateStructure.StartsWith("Unable"))
@@ -195,9 +195,8 @@ namespace YieldMap.Transitive.Procedures {
                 }
             }
 
-
             // Legs
-            using (var ctx = new BondAdditionContext()) {
+            using (var ctx = new SaverContext()) {
                 var legs = new Dictionary<string, Leg>();
                 foreach (var bond in bonds.Where(bond => !bond.RateStructure.StartsWith("Unable"))) {
                     try {
@@ -292,7 +291,7 @@ namespace YieldMap.Transitive.Procedures {
             }
         }
 
-        private Leg CreateLeg(BondAdditionContext ctx, long descrId, InstrumentDescription description) {
+        private Leg CreateLeg(SaverContext ctx, long descrId, InstrumentDescription description) {
             Leg leg = null;
             if (description is Bond) {
                 var bond = description as Bond;
@@ -321,7 +320,7 @@ namespace YieldMap.Transitive.Procedures {
             throw new InvalidDataException();
         }
 
-        private Index EnsureIndex(BondAdditionContext ctx, string name) {
+        private Index EnsureIndex(SaverContext ctx, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -335,7 +334,7 @@ namespace YieldMap.Transitive.Procedures {
             return index;
         }
 
-        private Feed EnsureFeed(ChainRicContext ctx, string name) {
+        private Feed EnsureFeed(SaverContext ctx, string name) {
             if (_feeds.ContainsKey(name))
                 return _feeds[name];
 
@@ -346,7 +345,7 @@ namespace YieldMap.Transitive.Procedures {
             return feed;
         }
 
-        private Chain EnsureChain(ChainRicContext ctx, string name, Feed feed, DateTime expanded, string prms) {
+        private Chain EnsureChain(SaverContext ctx, string name, Feed feed, DateTime expanded, string prms) {
             var chain = _chains.ContainsKey(name) ? _chains[name] : ctx.Chains.FirstOrDefault(t => t.Name == name);
 
             if (chain != null) {
@@ -361,7 +360,7 @@ namespace YieldMap.Transitive.Procedures {
             return chain;
         }
 
-        private static Isin EnsureIsin(EikonEntitiesContext ctx, Ric ric, string name) {
+        private static Isin EnsureIsin(SaverContext ctx, Ric ric, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -376,7 +375,7 @@ namespace YieldMap.Transitive.Procedures {
             return isin;
         }
 
-        private SubIndustry EnsureSubIndustry(BondAdditionContext ctx, string ind, string sub) {
+        private SubIndustry EnsureSubIndustry(SaverContext ctx, string ind, string sub) {
             if (String.IsNullOrWhiteSpace(ind))
                 return null;
 
@@ -392,7 +391,7 @@ namespace YieldMap.Transitive.Procedures {
             return subIndustry;
         }
 
-        private Specimen EnsureSpecimen(BondAdditionContext ctx, string name) {
+        private Specimen EnsureSpecimen(SaverContext ctx, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -406,7 +405,7 @@ namespace YieldMap.Transitive.Procedures {
             return pt;
         }
 
-        private Industry EnsureIndustry(BondAdditionContext ctx, string name) {
+        private Industry EnsureIndustry(SaverContext ctx, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -420,7 +419,7 @@ namespace YieldMap.Transitive.Procedures {
             return industry;
         }
 
-        private Seniority EnsureSeniority(BondAdditionContext ctx, string name) {
+        private Seniority EnsureSeniority(SaverContext ctx, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -434,7 +433,7 @@ namespace YieldMap.Transitive.Procedures {
             return pt;
         }
 
-        private Ticker EnsureTicker(BondAdditionContext ctx, string child, string parent) {
+        private Ticker EnsureTicker(SaverContext ctx, string child, string parent) {
             if (String.IsNullOrWhiteSpace(child))
                 return null;
 
@@ -460,7 +459,7 @@ namespace YieldMap.Transitive.Procedures {
             return ch;
         }
 
-        private Ticker EnsureParentTicker(BondAdditionContext ctx, string name) {
+        private Ticker EnsureParentTicker(SaverContext ctx, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -474,7 +473,7 @@ namespace YieldMap.Transitive.Procedures {
             return pt;
         }
 
-        private Currency EnsureCurrency(BondAdditionContext ctx, string name) {
+        private Currency EnsureCurrency(SaverContext ctx, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -491,7 +490,7 @@ namespace YieldMap.Transitive.Procedures {
             return currency;
         }
 
-        private LegalEntity EnsureLegalEntity(BondAdditionContext ctx, string name, Country country) {
+        private LegalEntity EnsureLegalEntity(SaverContext ctx, string name, Country country) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -509,7 +508,7 @@ namespace YieldMap.Transitive.Procedures {
             return legalEntity;
         }
 
-        private Country EnsureCountry(BondAdditionContext ctx, string name) {
+        private Country EnsureCountry(SaverContext ctx, string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
@@ -603,7 +602,7 @@ namespace YieldMap.Transitive.Procedures {
             return res.Substring(0, res.Length - 2);
         }
 
-        private void AddRics(ChainRicContext ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
+        private void AddRics(SaverContext ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
             foreach (var name in rics) {
                 try {
                     ctx.Configuration.AutoDetectChangesEnabled = false;
