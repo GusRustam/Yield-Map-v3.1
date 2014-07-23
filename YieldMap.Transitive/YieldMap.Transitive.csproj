@@ -53,14 +53,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Domains\Contexts\SaverContext.cs" />
+    <Compile Include="Events\LastHandler.cs" />
+    <Compile Include="Tools\EntityAction.cs" />
+    <Compile Include="Tools\DbContextHelper.cs" />
     <Compile Include="Events\ChainRicHandler.cs" />
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />
     <Compile Include="Domains\IReadOnlyRepository.cs" />
     <Compile Include="Domains\Readers\BondDescriptionsReader.cs" />
     <Compile Include="Domains\Readers\IBondDescriptionsReader.cs" />
+    <Compile Include="Events\IManyTables.cs" />
     <Compile Include="Events\InstrumentDescriptionHandler.cs" />
+    <Compile Include="Events\ISingleTable.cs" />
     <Compile Include="Events\ITriggerManager.cs" />
+    <Compile Include="Events\ManyTables.cs" />
     <Compile Include="MediatorTypes\Variables\BondView.cs" />
     <Compile Include="MediatorTypes\Variables\Entity.cs" />
     <Compile Include="MediatorTypes\Variables\InstrumentView.cs" />
@@ -68,11 +74,9 @@
     <Compile Include="MediatorTypes\Variables\IVariable.cs" />
     <Compile Include="MediatorTypes\Variables\RatingInfo.cs" />
     <Compile Include="MediatorTypes\Variables\VariableExtensions.cs" />
-    <Compile Include="Events\DbEventArgs.cs" />
-    <Compile Include="Procedures\EventDescription.cs" />
+    <Compile Include="Events\SingleTable.cs" />
     <Compile Include="Procedures\EventSource.cs" />
     <Compile Include="Events\IDbEventArgs.cs" />
-    <Compile Include="Procedures\IEventDescription.cs" />
     <Compile Include="Procedures\ISaver.cs" />
     <Compile Include="Procedures\Saver.cs" />
     <Compile Include="Registry\IFunctionRegistry.cs" />

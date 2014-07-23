@@ -237,10 +237,10 @@ module Database =
 
     [<Test>]
     let ``Add chain and ric to real database, save and then remove it`` () =
-        {new ITriggerManager with
-            member __.Handle args = logger.WarnF "Intercepted events on %A!!!" args.Source
-            member __.get_Next () = null}
-        |> Triggers.Initialize 
+//        {new ITriggerManager with
+//            member __.Handle args = logger.WarnF "Intercepted events on %A!!!" args.Source
+//            member __.get_Next () = null}
+//        |> Triggers.Initialize 
         
         let container = DatabaseBuilder.Container
 

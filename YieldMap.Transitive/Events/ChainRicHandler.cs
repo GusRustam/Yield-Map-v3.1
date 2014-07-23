@@ -11,30 +11,24 @@ namespace YieldMap.Transitive.Events {
 
         public override void Handle(IDbEventArgs args) {
             Logger.Trace("Handle()");
-            switch (args.Source) {
-                case EventSource.Chain:
-                    Logger.Info(
-                        string.Format(
-                            "Got updates on Chains with ids: added ({0}), changed({1}), removed({2})", 
-                            args.Added,
-                            args.Changed,
-                            args.Removed
-                        ));
-                    break;
-                case EventSource.Ric:
-                    Logger.Info(
-                        string.Format(
-                            "Got updates on Rics with ids: added ({0}), changed({1}), removed({2})",
-                            args.Added,
-                            args.Changed,
-                            args.Removed
-                        ));  
-                    break;
-                default:
-                    if (Next != null)
-                        Next.Handle(args);
-                    break;
+            if (args is ISingleTable) {
+                var singleArgs = args as ISingleTable;
+                switch (singleArgs.Source) {
+                    case EventSource.Chain:
+                        Logger.Info(singleArgs.ToString());
+                        break;
+                    case EventSource.Ric:
+                        Logger.Info(singleArgs.ToString());
+                        break;
+                    default:
+                        if (Next != null)
+                            Next.Handle(args);
+                        break;
+                }
+            } else {
+                if (Next != null)
+                    Next.Handle(args);
             }
-        }
+        } 
     }
 }

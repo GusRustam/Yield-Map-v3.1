@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Globalization;
@@ -160,7 +161,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Creating instruments
             var descrIds = new Dictionary<string, long>(); // ric -> id
-            using (var ctx = new BondAdditionContext()) {
+            using (var ctx = new SaverContext()) {
                 var instruments = new Dictionary<string, Instrument>();
                 foreach (var bond in bonds) {
                     if (bond.RateStructure.StartsWith("Unable"))

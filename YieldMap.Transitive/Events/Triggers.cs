@@ -7,8 +7,10 @@
         }
 
         static Triggers() {
-            var chainRicHander = new ChainRicHandler(null);
-            Main = new InstrumentDescriptionHandler(chainRicHander);
+            Main = 
+                new InstrumentDescriptionHandler(
+                    new ChainRicHandler(
+                        new LastHandler()));
         }
     }
 }
