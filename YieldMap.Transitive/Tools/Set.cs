@@ -2,7 +2,7 @@
 using System.Linq;
 
 namespace YieldMap.Transitive.Tools {
-    internal class Set<T> {
+    public class Set<T> {
         public static readonly Set<T> Empty = new Set<T>();
         private readonly HashSet<T> _data;
 

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
-using System.Diagnostics;
 using System.Linq;
 using YieldMap.Tools.Location;
+using YieldMap.Tools.Logging;
 
 namespace YieldMap.Transitive.Domains.Contexts {
     public class BaseContext<TContext> : DbContext where TContext : DbContext {
         // ReSharper disable StaticFieldInGenericType
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.BaseContext");
         private static readonly Dictionary<string, string> Variables = new Dictionary<string, string>();
         private static readonly string ConnectionString;
         // ReSharper restore StaticFieldInGenericType
@@ -38,7 +39,7 @@ namespace YieldMap.Transitive.Domains.Contexts {
         }
 
         public BaseContext() : base(ConnectionString) {
-            Debug.Print(ConnectionString);
+            Logger.Info(string.Format("Aquiring context {0}", ConnectionString));
         }
     }
 }

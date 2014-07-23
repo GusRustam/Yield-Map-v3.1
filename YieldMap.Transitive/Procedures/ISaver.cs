@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
 using Rating = YieldMap.Transitive.MediatorTypes.Rating;
 
 namespace YieldMap.Transitive.Procedures {
+    /// <summary>
+    /// Saves instruments, ratings and also different kinds of sources (chainRics, lists and search queries)
+    /// </summary>
     public interface ISaver {
+        event EventHandler<IDbEventArgs> Notify;
+
         void SaveInstruments(IEnumerable<InstrumentDescription> bonds);
         void SaveRatings(IEnumerable<Rating> ratings);
 

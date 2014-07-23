@@ -6,6 +6,7 @@ using System.Linq;
 using YieldMap.Database;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Domains.Contexts;
+using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Domains.UnitsOfWork {
@@ -22,6 +23,8 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
         public void Dispose() {
             Context.Dispose();
         }
+
+        public event EventHandler<IDbEventArgs> Notify;
 
         public int Save() {
             Context

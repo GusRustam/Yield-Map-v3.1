@@ -236,6 +236,15 @@ module Database =
 
     [<Test>]
     let ``Add chain and ric to real database, save and then remove it`` () =
+        let newDbEventHandler = 
+            {
+                new YieldMap.Transitive.Events.ITriggerManager with
+                    member __.Handle (z) = logger.Warn "Interceptor!!!"
+                    member __.get_Next () = null
+            }
+            
+        YieldMap.Transitive.Events.Triggers.Initialize newDbEventHandler
+        
         let container = DatabaseBuilder.Container
 
         using (container.Resolve<IChainRepository>()) (fun chains ->

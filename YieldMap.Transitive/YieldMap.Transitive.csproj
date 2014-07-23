@@ -52,11 +52,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Events\ChainRicHandler.cs" />
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />
     <Compile Include="Domains\IReadOnlyRepository.cs" />
     <Compile Include="Domains\Readers\BondDescriptionsReader.cs" />
     <Compile Include="Domains\Readers\IBondDescriptionsReader.cs" />
+    <Compile Include="Events\InstrumentDescriptionHandler.cs" />
+    <Compile Include="Events\ITriggerManager.cs" />
     <Compile Include="MediatorTypes\Variables\BondView.cs" />
     <Compile Include="MediatorTypes\Variables\Entity.cs" />
     <Compile Include="MediatorTypes\Variables\InstrumentView.cs" />
@@ -64,6 +67,11 @@
     <Compile Include="MediatorTypes\Variables\IVariable.cs" />
     <Compile Include="MediatorTypes\Variables\RatingInfo.cs" />
     <Compile Include="MediatorTypes\Variables\VariableExtensions.cs" />
+    <Compile Include="Events\DbEventArgs.cs" />
+    <Compile Include="Procedures\EventDescription.cs" />
+    <Compile Include="Procedures\EventSource.cs" />
+    <Compile Include="Events\IDbEventArgs.cs" />
+    <Compile Include="Procedures\IEventDescription.cs" />
     <Compile Include="Procedures\ISaver.cs" />
     <Compile Include="Procedures\Saver.cs" />
     <Compile Include="Registry\IFunctionRegistry.cs" />
@@ -135,6 +143,8 @@
     <Compile Include="Tools\RicComparer.cs" />
     <Compile Include="Tools\RicString.cs" />
     <Compile Include="Tools\Set.cs" />
+    <Compile Include="Events\TriggerManagerBase.cs" />
+    <Compile Include="Events\Triggers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -154,9 +164,7 @@
       <Name>YieldMap.Tools</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Triggers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

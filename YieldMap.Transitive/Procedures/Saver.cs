@@ -11,6 +11,7 @@ using YieldMap.Database;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Enums;
+using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
 using YieldMap.Transitive.Tools;
 using Rating = YieldMap.Transitive.MediatorTypes.Rating;
@@ -34,6 +35,8 @@ namespace YieldMap.Transitive.Procedures {
         private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
         private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
+
+        public event EventHandler<IDbEventArgs> Notify;
 
         public Saver(Func<IContainer> containerF) {
             var container = containerF.Invoke();
@@ -62,6 +65,7 @@ namespace YieldMap.Transitive.Procedures {
                 }
             }
         }
+
 
         public void SaveInstruments(IEnumerable<InstrumentDescription> bonds) {
             bonds = bonds as IList<InstrumentDescription> ?? bonds.ToList();
