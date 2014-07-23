@@ -1,6 +1,5 @@
 ﻿using System;
 using Autofac;
-using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
@@ -12,7 +11,7 @@ using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive {
     public static class DatabaseBuilder {
-        private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.DatabaseBuilder");
+        //private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.DatabaseBuilder");
         public static ContainerBuilder Builder { get; private set; }
         private static IContainer _container;
         private static readonly object Lock = new object();
@@ -31,10 +30,7 @@ namespace YieldMap.Transitive {
             Builder = new ContainerBuilder();
 
             // Services
-            Builder.Register(x => {
-                Logger.Info("Resolving Trigger");
-                return Triggers.Main;
-            }).As<ITriggerManager>();
+            Builder.Register(x => Triggers.Main).As<ITriggerManager>();
 
             Builder.RegisterType<FunctionRegistry>().As<IFunctionRegistry>().SingleInstance();
             Builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>().SingleInstance();

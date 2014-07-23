@@ -24,13 +24,13 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
         public event EventHandler<IDbEventArgs> Notify;
 
         public int Save() {
-            var instruments = Context.ExtractChanges<Instrument>();
+            var instruments = Context.ExtractEntityChanges<Instrument>();
             
            
             var res = Context.SaveChanges();
 
             if (Notify != null)
-                Notify(this, new SingleTable(instruments, EventSource.InstrumentDescription));
+                Notify(this, new SingleTable(instruments.ExtractIds(), EventSource.InstrumentDescription));
 
             return res;
         }

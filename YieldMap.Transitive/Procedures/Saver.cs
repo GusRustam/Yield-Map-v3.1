@@ -59,7 +59,13 @@ namespace YieldMap.Transitive.Procedures {
                     newRics.RemoveWhere(existingRics.Contains);
 
                     AddRics(context, chain, feed, newRics);
+                    var chainsUpd = context.ExtractEntityChanges<Chain>();
+                    var ricsUpd = context.ExtractEntityChanges<Ric>();
+
                     context.SaveChanges();
+
+                    Notify(this, new SingleTable(chainsUpd.ExtractIds(), EventSource.Chain));
+                    Notify(this, new SingleTable(ricsUpd.ExtractIds(), EventSource.Ric));
                 } catch (DbEntityValidationException e) {
                     Logger.Report("Failed to save", e);
                     throw;

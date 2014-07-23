@@ -22,14 +22,14 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
         public event EventHandler<IDbEventArgs> Notify;
 
         public int Save() {
-            var chains = Context.ExtractChanges<Chain>();
-            var rics = Context.ExtractChanges<Ric>();
+            var chains = Context.ExtractEntityChanges<Chain>();
+            var rics = Context.ExtractEntityChanges<Ric>();
             
             var res = Context.SaveChanges();
 
             if (Notify != null) {
-                Notify(this, new SingleTable(chains, EventSource.Chain));
-                Notify(this, new SingleTable(rics, EventSource.Ric));
+                Notify(this, new SingleTable(chains.ExtractIds(), EventSource.Chain));
+                Notify(this, new SingleTable(rics.ExtractIds(), EventSource.Ric));
             }
 
             return res;
