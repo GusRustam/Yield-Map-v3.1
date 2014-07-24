@@ -10,7 +10,7 @@ using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Domains.UnitsOfWork {
-    public class PropertiesUnitOfWork : IPropertiesUnitOfWork {
+    public class PropertiesUnitOfWork : IPropertiesUnitOfWork, INotifier {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("UnitsOfWork.Properties");
         public PropertiesUnitOfWork() {
             Context = new PropertiesContext();
@@ -24,8 +24,15 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
             Context.Dispose();
         }
 
+        private bool _notifications = true;
         public event EventHandler<IDbEventArgs> Notify;
-
+        public void DisableNotifications() {
+            _notifications = false;
+        }
+        public void EnableNotifications() {
+            _notifications = true;
+        }
+        
         public int Save() {
             Context
                 .ChangeTracker

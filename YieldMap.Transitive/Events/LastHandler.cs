@@ -8,7 +8,7 @@ namespace YieldMap.Transitive.Events {
         }
 
         public void Handle(IDbEventArgs args) {
-            Logger.Info(args.ToString());
+            Logger.Warn("Unhandled: " + args);
         }
     }
 }

@@ -3,20 +3,20 @@ using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Events {
-    public class SingleTable : ISingleTable {
+    public class DbEventArgs : IDbEventArgs {
         private readonly IEnumerable<long> _added;
         private readonly IEnumerable<long> _changed;
         private readonly IEnumerable<long> _removed;
         public EventSource Source { get; private set; }
 
-        public SingleTable(IEnumerable<long> added, IEnumerable<long> changed, IEnumerable<long> removed, EventSource source) {
+        public DbEventArgs(IEnumerable<long> added, IEnumerable<long> changed, IEnumerable<long> removed, EventSource source) {
             _added = added;
             _changed = changed;
             _removed = removed;
             Source = source;
         }
 
-        public SingleTable(IReadOnlyDictionary<EntityAction, IEnumerable<long>> data, EventSource source) {
+        public DbEventArgs(IReadOnlyDictionary<EntityAction, IEnumerable<long>> data, EventSource source) {
             _added = data[EntityAction.Added];
             _changed = data[EntityAction.Updated];
             _removed = data[EntityAction.Removed];

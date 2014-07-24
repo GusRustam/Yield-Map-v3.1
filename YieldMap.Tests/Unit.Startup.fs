@@ -136,7 +136,6 @@ module StartupTest =
 
     let mutable (c : Calendar) = Unchecked.defaultof<Calendar>
     let mutable (s : Drivers) = Unchecked.defaultof<Drivers>
-    let m = DbManager container
 
     let init chains dt = 
         c <- MockCalendar dt
@@ -154,7 +153,7 @@ module StartupTest =
             TodayFix = dt
             Loader = MockChainMeta c
             Calendar = c
-            Database = m
+            DbServices = container
         }
 
         Startup s
@@ -169,10 +168,12 @@ module StartupTest =
 
     [<TearDown>]
     let teardown () = 
+        let br = container.Resolve<IBackupRestore>()
+
         globalThreshold := LoggingLevel.Warn
         logger.Info "teardown"
         DbTracing.Disable ()
-        m |> DbManager.restore "EMPTY.sql"
+        br.Restore "EMPTY.sql"
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
@@ -310,7 +311,7 @@ module StartupTest =
             TodayFix = dt
             Loader = MockChainMeta c
             Calendar = c
-            Database = m
+            DbServices = container
         }
 
         let x = Startup s
@@ -327,9 +328,10 @@ module StartupTest =
         logger.Info "Reloaded"
 
         let assertAmounts dt t o r k =
+            let classifier = container.Resolve<IDbUpdates>()
             // todo secure proprtions
             let proportions = 
-                DbManager.classify s.Database dt [||]
+                classifier.Classify (dt, [||])
                 |> Map.fromDict
                 |> Map.map (fun _ -> Array.length)
 
@@ -412,9 +414,7 @@ module StartupTest =
         command "Connect" x.Connect (Startup.State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
         
-        s.Database 
-        |> DbManager.backup 
-        |> logger.Info
+        container.Resolve<IBackupRestore>().Backup() |> logger.Info
 
     (* ========================= ============================= *)
     [<Test>]
@@ -425,6 +425,7 @@ module StartupTest =
         command "Connect" x.Connect (Startup.State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
         
-        s.Database 
-        |> DbManager.backup 
-        |> logger.Info
+        container
+            .Resolve<IBackupRestore>()
+            .Backup() 
+            |> logger.Info

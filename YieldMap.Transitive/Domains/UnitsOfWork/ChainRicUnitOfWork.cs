@@ -2,11 +2,20 @@
 using YieldMap.Database;
 using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Events;
-using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Domains.UnitsOfWork {
-    public class ChainRicUnitOfWork : IChainRicUnitOfWork {
+    public class ChainRicUnitOfWork : IChainRicUnitOfWork, INotifier {
+        private bool _notifications = true;
+        public event EventHandler<IDbEventArgs> Notify;
+        public void DisableNotifications() {
+            _notifications = false;
+        }
+
+        public void EnableNotifications() {
+            _notifications = true;
+        }
+
         public ChainRicUnitOfWork() {
             Context = new ChainRicContext();
         }
@@ -19,7 +28,7 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
             Context.Dispose();
         }
 
-        public event EventHandler<IDbEventArgs> Notify;
+
 
         public int Save() {
             var chains = Context.ExtractEntityChanges<Chain>();
@@ -27,9 +36,9 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
             
             var res = Context.SaveChanges();
 
-            if (Notify != null) {
-                Notify(this, new SingleTable(chains.ExtractIds(), EventSource.Chain));
-                Notify(this, new SingleTable(rics.ExtractIds(), EventSource.Ric));
+            if (Notify != null && _notifications) {
+                Notify(this, new DbEventArgs(chains.ExtractIds(), EventSource.Chain));
+                Notify(this, new DbEventArgs(rics.ExtractIds(), EventSource.Ric));
             }
 
             return res;

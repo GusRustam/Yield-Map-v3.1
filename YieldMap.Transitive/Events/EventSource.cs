@@ -1,6 +1,6 @@
-﻿namespace YieldMap.Transitive.Procedures {
+﻿namespace YieldMap.Transitive.Events {
     public enum EventSource {
-        InstrumentDescription,
+        Instrument,
         Chain,
         Ric,
         Feed

@@ -1,5 +1,7 @@
 ﻿using System;
 using Autofac;
+using Autofac.Core;
+using YieldMap.Transitive.Domains.NativeContext;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
@@ -11,6 +13,18 @@ using YieldMap.Transitive.Repositories;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive {
+    class NotificationsModule : Module {
+        protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry, IComponentRegistration registration) {
+            registration.Activated += (source, e) => {
+                if (e.Instance is INotifier) {
+                    var notifier = e.Instance as INotifier;
+                    var hander = e.Context.Resolve<ITriggerManager>();
+                    notifier.Notify += (src, args) => hander.Handle(args);
+                }
+            };
+        }
+    }
+
     public static class DatabaseBuilder {
         //private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.DatabaseBuilder");
         public static ContainerBuilder Builder { get; private set; }
@@ -32,6 +46,7 @@ namespace YieldMap.Transitive {
 
             // Services
             Builder.Register(x => Triggers.Main).As<ITriggerManager>();
+            Builder.RegisterModule<NotificationsModule>();
 
             Builder.RegisterType<FunctionRegistry>().As<IFunctionRegistry>().SingleInstance();
             Builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>().SingleInstance();
@@ -39,10 +54,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<DbUpdates>().As<IDbUpdates>();
             Builder.RegisterType<BackupRestore>().As<IBackupRestore>();
             // -- savers
-            Builder.RegisterType<Saver>().As<ISaver>().OnActivated(e => {
-                var hander = e.Context.Resolve<ITriggerManager>();
-                e.Instance.Notify += (source, args) => hander.Handle(args);
-            });
+            Builder.RegisterType<Saver>().As<ISaver>();
 
             // Resolver
             Builder.RegisterType<FieldResolver>().As<IFieldResolver>().SingleInstance();
@@ -64,33 +76,21 @@ namespace YieldMap.Transitive {
             // Logic: first repos, and then - their UOWs (the UOWs they use)
             Builder.RegisterType<ChainRepository>().As<IChainRepository>();
             Builder.RegisterType<RicRepository>().As<IRicRepository>();
-            Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>().OnActivated(e => {
-                var hander = e.Context.Resolve<ITriggerManager>();
-                e.Instance.Notify += (source, args) => hander.Handle(args);
-            });
+            Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>();
 
             Builder.RegisterType<FeedRepository>().As<IFeedRepository>();
-            Builder.RegisterType<FeedsUnitOfWork>().As<IEikonEntitiesUnitOfWork>().OnActivated(e => {
-                var hander = e.Context.Resolve<ITriggerManager>();
-                e.Instance.Notify += (source, args) => hander.Handle(args);
-            });
+            Builder.RegisterType<FeedsUnitOfWork>().As<IEikonEntitiesUnitOfWork>();
 
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
-            Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>().OnActivated(e => {
-                var hander = e.Context.Resolve<ITriggerManager>();
-                e.Instance.Notify += (source, args) => hander.Handle(args);
-            });
+            Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>();
 
             Builder.RegisterType<PropertiesRepository>().As<IPropertiesRepository>();
             Builder.RegisterType<PropertyValuesRepostiory>().As<IPropertyValuesRepostiory>();
-            Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>().OnActivated(e => {
-                var hander = e.Context.Resolve<ITriggerManager>();
-                e.Instance.Notify += (source, args) => hander.Handle(args);
-            });
+            Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>();
 
             // Native components
             Builder.RegisterType<Connector>().As<IConnector>();
-            Builder.RegisterType<Domains.NativeContext.InstrumentReader>().As<Domains.NativeContext.IInstrumentReader>();
+            Builder.RegisterType<NInInstrumentReader>().As<INInstrumentReader>();
         }
     }
 }

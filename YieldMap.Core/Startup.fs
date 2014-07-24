@@ -1,6 +1,8 @@
 ﻿namespace YieldMap.Core
 
 module Startup =
+    open Autofac
+
     open Operations
     open Notifier
     open DbManager
@@ -18,6 +20,8 @@ module Startup =
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Response
     open YieldMap.Tools.Logging
+
+    open YieldMap.Transitive.Procedures
 
     open System
     open System.Threading
@@ -141,11 +145,12 @@ module Startup =
                 }
 
             and doReload t force channel = 
+                let updater = q.DbServices.Resolve<IDbUpdates>()
                 async {
                     try
                         let chainRequests = 
-                            q.Database 
-                            |> DbManager.chainsInNeed c.Today
+                            c.Today
+                            |> updater.ChainsInNeed 
                             |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
                             |> Array.ofSeq
 

@@ -8,7 +8,7 @@ using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Domains.UnitsOfWork {
-    public class InstrumentUnitOfWork : IInstrumentUnitOfWork {
+    public class InstrumentUnitOfWork : IInstrumentUnitOfWork, INotifier {
         public InstrumentUnitOfWork() {
             Context = new InstrumentContext();
         }
@@ -21,15 +21,22 @@ namespace YieldMap.Transitive.Domains.UnitsOfWork {
             Context.Dispose();
         }
 
+        private bool _notifications = true;
         public event EventHandler<IDbEventArgs> Notify;
-
+        public void DisableNotifications() {
+            _notifications = false;
+        }
+        public void EnableNotifications() {
+            _notifications = true;
+        }
+        
         public int Save() {
             var instruments = Context.ExtractEntityChanges<Instrument>();
            
             var res = Context.SaveChanges();
 
-            if (Notify != null)
-                Notify(this, new SingleTable(instruments.ExtractIds(), EventSource.InstrumentDescription));
+            if (Notify != null && _notifications)
+                Notify(this, new DbEventArgs(instruments.ExtractIds(), EventSource.Instrument));
 
             return res;
         }

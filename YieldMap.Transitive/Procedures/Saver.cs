@@ -36,8 +36,16 @@ namespace YieldMap.Transitive.Procedures {
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
         private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
         private readonly IContainer _container;
+        private bool _notifications = true;
 
         public event EventHandler<IDbEventArgs> Notify;
+        public void DisableNotifications() {
+            _notifications = false;
+        }
+
+        public void EnableNotifications() {
+            _notifications = true;
+        }
 
         public Saver(Func<IContainer> containerF) {
             _container = containerF.Invoke();
@@ -64,8 +72,11 @@ namespace YieldMap.Transitive.Procedures {
 
                     context.SaveChanges();
 
-                    Notify(this, new SingleTable(chainsUpd.ExtractIds(), EventSource.Chain));
-                    Notify(this, new SingleTable(ricsUpd.ExtractIds(), EventSource.Ric));
+                    if (Notify != null & _notifications) {
+                        Notify(this, new DbEventArgs(chainsUpd.ExtractIds(), EventSource.Chain));
+                        Notify(this, new DbEventArgs(ricsUpd.ExtractIds(), EventSource.Ric));
+                    }
+
                 } catch (DbEntityValidationException e) {
                     Logger.Report("Failed to save", e);
                     throw;
@@ -201,7 +212,7 @@ namespace YieldMap.Transitive.Procedures {
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
                 }
-                using (var reader = _container.Resolve<Domains.NativeContext.IInstrumentReader>()) {
+                using (var reader = _container.Resolve<Domains.NativeContext.INInstrumentReader>()) {
                     addedInstruments = reader.FindAll().Select(x => x.id).ToSet() - existingInstruments;
                 }
             }
@@ -234,7 +245,7 @@ namespace YieldMap.Transitive.Procedures {
                 }
             }
 
-            Notify(this, new SingleTable(addedInstruments, new long[] {}, new long[] {}, EventSource.InstrumentDescription));
+            Notify(this, new DbEventArgs(addedInstruments, new long[] {}, new long[] {}, EventSource.Instrument));
         }
 
         public void SaveRatings(IEnumerable<Rating> ratings) {

@@ -10,9 +10,8 @@ namespace YieldMap.Transitive.Events {
 
         public override void Handle(IDbEventArgs args) {
             Logger.Trace("Handle()");
-            var singleArgs = args as ISingleTable;
-            if (singleArgs != null && singleArgs.Source == EventSource.InstrumentDescription) {
-                Logger.Info(singleArgs.ToString());
+            if (args != null && args.Source == EventSource.Instrument) {
+                Logger.Info(args.ToString());
             } else {
                 if (Next != null) Next.Handle(args);
             }

@@ -14,16 +14,18 @@ open YieldMap.Tools.Logging
 open YieldMap.Core.DbManager
 
 module Tools =
+    open YieldMap.Transitive.Procedures
+
     let logger = LogFactory.create "Tools"
     let container = YieldMap.Transitive.DatabaseBuilder.Container
 
     [<Test>]
     let ``Restore DB to defaults`` () =
-        DbManager container
-        |> DbManager.restore (Path.Combine(Location.path, "../../EMPTY.sql"))
+        let x = container.Resolve<IBackupRestore>();
+        x.Restore (Path.Combine(Location.path, "../../EMPTY.sql"))
 
 
     [<Test>]
     let ``Restore DB to RUCORP`` () =
-        DbManager container
-        |> DbManager.restore (Path.Combine(Location.path, "../../RUCORP.sql"))
+        let x = container.Resolve<IBackupRestore>();
+        x.Restore (Path.Combine(Location.path, "../../RUCORP.sql"))

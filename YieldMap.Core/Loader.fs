@@ -10,10 +10,8 @@ module Recalculator =
 
     open System.Linq
     
-    let recalculate (db:DbManager) = async {
+    let recalculate (container:IContainer) = async {
         try
-            let container = db.dbContainer
-
             let registry = container.Resolve<IFunctionRegistry>()
             let updater = container.Resolve<IPropertiesUpdater>()
             let properyReader = container.Resolve<IPropertiesRepository> ()
@@ -30,6 +28,8 @@ module Recalculator =
     }
 
 module Loader = 
+    open Autofac
+
     open DbManager
 
     open YieldMap.Database
@@ -50,6 +50,7 @@ module Loader =
 
     open YieldMap.Transitive.MediatorTypes
     open YieldMap.Transitive.Procedures
+    open YieldMap.Transitive.Events
 
     open System
     open System.Collections.Generic
@@ -91,7 +92,7 @@ module Loader =
     let loadAndSaveMetadata (s:Drivers) rics =
         tweet {
             let loader = s.Loader
-            let db = s.Database
+            let db = s.DbServices
             
             let! bonds = loader.LoadMetadata<BondDescr> rics
             let! frns = loader.LoadMetadata<FrnData> rics
@@ -114,23 +115,28 @@ module Loader =
                     logger.WarnF "Convertibles not supported yet %s" conv.Ric 
                     None)
 
-            db |> DbManager.saveBonds (seq toSave)
+            let saver = db.Resolve<ISaver>()
+            let n = saver :> INotifier
+            n.DisableNotifications ()
+
+            saver.SaveInstruments (seq toSave)
 
             let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
             let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics
 
             let iR = (issueRatings |> List.map Rating.Create) @ (issuerRatings |> List.map Rating.Create)
-            db |> DbManager.saveRatings iR
-                            
+            saver.SaveRatings iR
+            n.EnableNotifications ()
         }
 
     let rec reload (s:Drivers) chains force  = 
-        let needsReload = s.Database |> DbManager.needsRefresh s.TodayFix
+        let container = s.DbServices
+        let needsReload = s.TodayFix |> container.Resolve<IDbUpdates>().NeedsReload 
 
         async {
             if force || force && needsReload then
                 try
-                    backupFile <- DbManager.backup s.Database
+                    backupFile <- container.Resolve<IBackupRestore>().Backup ()
                     return! load s chains
                 with e -> 
                     logger.ErrorEx "Load failed" e
@@ -140,6 +146,9 @@ module Loader =
 
     and private load (s:Drivers) requests = 
         logger.Trace "load ()"
+        let container = s.DbServices
+        let saver = container.Resolve<ISaver>()
+        let updater = container.Resolve<IDbUpdates>()
         async {
             try
                 let! ricsByChain, fails = loadChains s.Loader requests
@@ -148,15 +157,14 @@ module Loader =
                 fails |> Array.iter (fun (ric, e, _) -> 
                     Notifier.notify ("Loading", Problem <| sprintf "Failed to load chain %s because of %s" ric (e.ToString()), Severity.Warn))
                     
-
                 // saving rics and chains
-                ricsByChain |> Array.iter (fun (chain, rics, req) -> DbManager.saveChainRics s.Database chain rics req.Feed s.TodayFix req.Mode)
+                ricsByChain |> Array.iter (fun (chain, rics, req) -> saver.SaveChainRics (chain, rics, req.Feed, s.TodayFix, req.Mode))
 
                 // extracting rics
                 let chainRics = ricsByChain |> Array.map snd3 |> Array.collect id |> set
                     
                 // now determine which rics to reload and refresh
-                let classified = DbManager.classify s.Database s.TodayFix (chainRics |> Set.toArray) 
+                let classified = updater.Classify (s.TodayFix, chainRics |> Set.toArray) 
 
                 logger.InfoF "Will reload %d, kill %d and keep %d rics" 
                     (classified.[Mission.ToReload].Length) 
@@ -179,9 +187,11 @@ module Loader =
 
     and private loadFailed (s:Drivers) (e:Failure) = 
         logger.Trace "loadFailed ()"
+        let container = s.DbServices
+        let backup = container.Resolve<IBackupRestore>()
         async {
             try 
-                s.Database |> DbManager.restore backupFile
+                backup.Restore backupFile
                 logger.ErrorF "Failed to reload data, restored successfully: %A" (e.ToString())
                 return Ping.Failure (Problem "Failed to reload data, restored successfully")
             with e ->
