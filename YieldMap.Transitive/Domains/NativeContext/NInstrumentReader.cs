@@ -7,14 +7,14 @@ using YieldMap.Database;
 using YieldMap.Transitive.Native;
 
 namespace YieldMap.Transitive.Domains.NativeContext {
-    public class NInInstrumentReader : BaseReadOnlyRepository<Instrument>, INInstrumentReader {
+    public class NInstrumentReader : BaseReadOnlyRepository<Instrument>, INInstrumentReader {
         const string SelectAll = "SELECT id, Name, id_InstrumentType, id_Description FROM Instrument";
 
-        public NInInstrumentReader(SQLiteConnection connection)
+        public NInstrumentReader(SQLiteConnection connection)
             : base(connection) {
         }
 
-        public NInInstrumentReader(IConnector connector) : base(connector) {
+        public NInstrumentReader(IConnector connector) : base(connector) {
         }
 
         public override IQueryable<Instrument> FindAll() {

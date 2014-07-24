@@ -1,6 +1,5 @@
 ﻿using System;
 using Autofac;
-using Autofac.Core;
 using YieldMap.Transitive.Domains.NativeContext;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
@@ -13,18 +12,6 @@ using YieldMap.Transitive.Repositories;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive {
-    class NotificationsModule : Module {
-        protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry, IComponentRegistration registration) {
-            registration.Activated += (source, e) => {
-                if (e.Instance is INotifier) {
-                    var notifier = e.Instance as INotifier;
-                    var hander = e.Context.Resolve<ITriggerManager>();
-                    notifier.Notify += (src, args) => hander.Handle(args);
-                }
-            };
-        }
-    }
-
     public static class DatabaseBuilder {
         //private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.DatabaseBuilder");
         public static ContainerBuilder Builder { get; private set; }
@@ -90,7 +77,8 @@ namespace YieldMap.Transitive {
 
             // Native components
             Builder.RegisterType<Connector>().As<IConnector>();
-            Builder.RegisterType<NInInstrumentReader>().As<INInstrumentReader>();
+            Builder.RegisterType<NInstrumentReader>().As<INInstrumentReader>();
+            Builder.RegisterType<NPropertiesReader>().As<INPropertiesReader>();
         }
     }
 }

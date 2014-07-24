@@ -52,8 +52,3 @@ module Operations =
                 do! Async.Sleep 500
                 return Answer () 
             }
-
-    type Recalculate (s:Drivers) = 
-        interface Operation<unit, unit> with
-            member __.Estimate () = 5 * 60 * 1000 // 5 minutes are still a great estimate m'lord
-            member __.Execute (_, _) = Recalculator.recalculate s.DbServices

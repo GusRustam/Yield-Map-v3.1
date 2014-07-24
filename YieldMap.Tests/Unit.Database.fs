@@ -238,7 +238,7 @@ module Database =
     [<Test>]
     let ``Add chain and ric to real database, save and then remove it`` () =
         {new ITriggerManager with
-            member __.Handle args = logger.WarnF "Intercepted events on %s!!!" (args.ToString())
+            member __.Handle (src, args) = logger.WarnF "Intercepted events on %s: %s!!!" (src.GetType().Name) (args.ToString())
             member __.get_Next () = null}
         |> Triggers.Initialize 
         

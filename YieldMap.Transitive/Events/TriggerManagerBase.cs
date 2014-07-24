@@ -1,11 +1,13 @@
-﻿namespace YieldMap.Transitive.Events {
+﻿using Autofac;
+
+namespace YieldMap.Transitive.Events {
     public abstract class TriggerManagerBase : ITriggerManager {
-        protected TriggerManagerBase( ITriggerManager next) {
+        protected TriggerManagerBase(ITriggerManager next) {
             Next = next;
         }
 
         public ITriggerManager Next { get; private set; }
 
-        public abstract void Handle(IDbEventArgs args);
+        public abstract void Handle(object source, IDbEventArgs args);
     }
 }

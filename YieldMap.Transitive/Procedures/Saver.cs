@@ -245,7 +245,8 @@ namespace YieldMap.Transitive.Procedures {
                 }
             }
 
-            Notify(this, new DbEventArgs(addedInstruments, new long[] {}, new long[] {}, EventSource.Instrument));
+            if (_notifications) 
+                Notify(this, new DbEventArgs(addedInstruments, new long[] {}, new long[] {}, EventSource.Instrument));
         }
 
         public void SaveRatings(IEnumerable<Rating> ratings) {

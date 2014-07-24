@@ -8,9 +8,10 @@
 
         static Triggers() {
             Main = 
-                new InstrumentDescriptionHandler(
-                    new ChainRicHandler(
-                        new LastHandler()));
+                new WelcomeHanlder (
+                    new InstrumentDescriptionHandler(
+                        new ChainRicHandler(
+                            new LastHandler())));
         }
     }
 }

@@ -1,5 +1,8 @@
-﻿using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Procedures;
+﻿using System;
+using System.Linq;
+using Autofac;
+using YieldMap.Tools.Logging;
+using YieldMap.Transitive.Registry;
 
 namespace YieldMap.Transitive.Events {
     public class InstrumentDescriptionHandler : TriggerManagerBase {
@@ -8,12 +11,20 @@ namespace YieldMap.Transitive.Events {
             : base(next) {
         }
 
-        public override void Handle(IDbEventArgs args) {
+        public override void Handle(object source, IDbEventArgs args) {
             Logger.Trace("Handle()");
             if (args != null && args.Source == EventSource.Instrument) {
-                Logger.Info(args.ToString());
+                Logger.Debug("Recalculating properties for instruments");
+                Logger.Debug(args.ToString());
+                try {
+                    var updater = DatabaseBuilder.Container.Resolve<IPropertiesUpdater>();
+                    updater.RecalculateBonds(view => args.Added.Contains(view.id_Instrument));
+                    updater.RecalculateBonds(view => args.Changed.Contains(view.id_Instrument));
+                } catch (Exception e) {
+                    Logger.ErrorEx("Failed to recalculate", e);
+                }
             } else {
-                if (Next != null) Next.Handle(args);
+                if (Next != null) Next.Handle(source, args);
             }
         }
     }

@@ -9,7 +9,7 @@ namespace YieldMap.Transitive.Events {
             : base(next) {
         }
 
-        public override void Handle(IDbEventArgs args) {
+        public override void Handle(object source, IDbEventArgs args) {
             Logger.Trace("Handle()");
             switch (args.Source) {
                 case EventSource.Chain:
@@ -20,7 +20,7 @@ namespace YieldMap.Transitive.Events {
                     break;
                 default:
                     if (Next != null)
-                        Next.Handle(args);
+                        Next.Handle(source, args);
                     break;
             }
         } 

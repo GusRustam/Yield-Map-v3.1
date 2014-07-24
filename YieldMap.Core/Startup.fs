@@ -24,7 +24,10 @@ module Startup =
     open YieldMap.Transitive.Procedures
 
     open System
+    open System.Linq
     open System.Threading
+    open YieldMap.Transitive.Registry
+    open YieldMap.Transitive.Domains.NativeContext
 
     let logger = LogFactory.create "Startup"
 
@@ -54,7 +57,6 @@ module Startup =
         let c = q.Calendar
 
         let reload = LoadAndSave q :> Operation<_,_>
-        let recalculate = Recalculate q :> Operation<_,_>
         let connect = EstablishConnection q.Factory :> Operation<_,_>
         let shutdown = Shutdown () :> Operation<_,_>
 
@@ -146,6 +148,15 @@ module Startup =
 
             and doReload t force channel = 
                 let updater = q.DbServices.Resolve<IDbUpdates>()
+                if force then
+                    let registry = q.DbServices.Resolve<IFunctionRegistry>()
+                    use properties = q.DbServices.Resolve<INPropertiesReader>()
+                    registry.Clear () |> ignore
+                    properties
+                        .FindAll()
+                        .ToList() 
+                        |> Seq.iter(fun p -> registry.Add(p.id, p.Expression) |> ignore)
+
                 async {
                     try
                         let chainRequests = 
@@ -161,13 +172,6 @@ module Startup =
                             return! connected channel
 
                         | Tweet.Answer _ -> 
-                            let! res = recalculate.Execute ((), None) // timeout?
-
-                            match res with
-                            | Tweet.Failure f -> 
-                                Notifier.notify ("Startup", f, Severity.Warn)
-                            | _ -> ()
-
                             return! initialized channel
 
                     with e ->

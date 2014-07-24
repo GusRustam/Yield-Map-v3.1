@@ -177,7 +177,7 @@ module StartupTest =
 
     [<Test>]
     [<TestCaseSource("paramsForStartup")>]
-    let ``Startup with one chain`` xxx =             
+    let ``Startup with all chains one by one`` xxx =             
 
         let { date = dt; chains = prms } = xxx
         logger.WarnF "Starting test with chains %A" prms
@@ -206,7 +206,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Simple startup and states`` () =
+    let ``Simple startup and states verification on 0#RUELG=MM`` () =
         let dt = DateTime(2014,5,14) 
         let prms = "0#RUELG=MM"
         
@@ -243,7 +243,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Duplicate Isin leave no RIC unlinked`` () =
+    let ``Duplicate Isin leave no RIC unlinked on 0#RUEUROS=`` () =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUEUROS="|] dt        
         
@@ -267,7 +267,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Ric without any metadata loads, but is left unlinked`` () =
+    let ``Ric without any metadata loads, but is left unlinked (via 0#US30YSTRIP=PX)`` () =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#US30YSTRIP=PX"|] dt
 
@@ -299,7 +299,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``RUCORP overnight`` () =
+    let ``0#RUCORP=MM overnight`` () =
         // Preparing
         let dt = DateTime(2014,5,14,23,0,0)
         use c = new UpdateableCalendar (dt)
@@ -392,7 +392,7 @@ module StartupTest =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``FRNs are imported successfully`` () =
+    let ``FRNs are imported successfully from 0#RUCORP=MM`` () =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUCORP=MM"|] dt
 

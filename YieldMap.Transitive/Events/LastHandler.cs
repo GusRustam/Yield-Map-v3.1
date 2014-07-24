@@ -1,13 +1,13 @@
 ﻿using YieldMap.Tools.Logging;
 
 namespace YieldMap.Transitive.Events {
-    public class LastHandler : ITriggerManager {
+    public class LastHandler : TriggerManagerBase {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.Events.LastHandler");
-        public ITriggerManager Next {
-            get { return null; } 
+
+        public LastHandler() : base(null) {
         }
 
-        public void Handle(IDbEventArgs args) {
+        public override void Handle(object source, IDbEventArgs args) {
             Logger.Warn("Unhandled: " + args);
         }
     }
