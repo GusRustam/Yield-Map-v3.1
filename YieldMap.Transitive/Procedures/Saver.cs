@@ -13,6 +13,7 @@ using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
+using YieldMap.Transitive.Native.Readers;
 using YieldMap.Transitive.Tools;
 using Rating = YieldMap.Transitive.MediatorTypes.Rating;
 
@@ -212,7 +213,7 @@ namespace YieldMap.Transitive.Procedures {
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
                 }
-                using (var reader = _container.Resolve<Domains.NativeContext.INInstrumentReader>()) {
+                using (var reader = _container.Resolve<INInstrumentReader>()) {
                     addedInstruments = reader.FindAll().Select(x => x.id).ToSet() - existingInstruments;
                 }
             }

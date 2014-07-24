@@ -1,11 +1,11 @@
 ﻿using System;
 using Autofac;
-using YieldMap.Transitive.Domains.NativeContext;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Native;
+using YieldMap.Transitive.Native.Readers;
 using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Registry;
 using YieldMap.Transitive.Repositories;

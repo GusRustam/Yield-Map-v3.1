@@ -4,9 +4,8 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Linq.Expressions;
 using YieldMap.Database;
-using YieldMap.Transitive.Native;
 
-namespace YieldMap.Transitive.Domains.NativeContext {
+namespace YieldMap.Transitive.Native.Readers {
     public class NInstrumentReader : BaseReadOnlyRepository<Instrument>, INInstrumentReader {
         const string SelectAll = "SELECT id, Name, id_InstrumentType, id_Description FROM Instrument";
 

@@ -119,6 +119,9 @@ module Loader =
         let container = s.DbServices
         let saver = container.Resolve<ISaver>()
         let updater = container.Resolve<IDbUpdates>()
+
+        let killer = container.Resolve<INInstrumentUnitOfWork>() // TODO!!!
+
         async {
             try
                 let! ricsByChain, fails = loadChains s.Loader requests

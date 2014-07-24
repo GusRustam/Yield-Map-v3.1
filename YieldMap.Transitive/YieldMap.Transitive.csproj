@@ -54,13 +54,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Domains\Contexts\SaverContext.cs" />
-    <Compile Include="Domains\NativeContext\INInstrumentReader.cs" />
-    <Compile Include="Domains\NativeContext\INPropertiesReader.cs" />
-    <Compile Include="Domains\NativeContext\NPropertiesReader.cs" />
+    <Compile Include="Native\ICreateUpdateDelete.cs" />
+    <Compile Include="Native\Readers\INInstrumentReader.cs" />
+    <Compile Include="Native\Readers\INPropertiesReader.cs" />
+    <Compile Include="Native\Readers\NPropertiesReader.cs" />
     <Compile Include="Events\INotifier.cs" />
     <Compile Include="Events\WelcomeHanlder.cs" />
     <Compile Include="Native\BaseReadOnlyRepository.cs" />
-    <Compile Include="Domains\NativeContext\NInstrumentReader.cs" />
+    <Compile Include="Native\Readers\NInstrumentReader.cs" />
     <Compile Include="Native\Connector.cs" />
     <Compile Include="Native\IConnector.cs" />
     <Compile Include="Events\LastHandler.cs" />
@@ -177,7 +178,9 @@
       <Name>YieldMap.Tools</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Native\Cuds\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
