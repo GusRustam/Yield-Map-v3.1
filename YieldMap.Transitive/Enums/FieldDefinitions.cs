@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using YieldMap.Database;
-using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Domains.Contexts;
 
 namespace YieldMap.Transitive.Enums {

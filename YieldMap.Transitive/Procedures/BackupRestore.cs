@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.Entity;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Domains.Contexts;
+using YieldMap.Transitive.Native;
 
 namespace YieldMap.Transitive.Procedures {
     internal class BackupRestore : IBackupRestore, IDisposable {
-        private readonly DbContext _context;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Database.BackupRestore");
+        private readonly SQLiteConnection _connection;
 
-        public BackupRestore() {
-            _context = new EmptyContext();
+        public BackupRestore(IConnector connector) {
+            _connection = connector.GetConnection();
+            _connection.Open();
         }
 
         private class FieldDefition {
@@ -47,57 +48,50 @@ namespace YieldMap.Transitive.Procedures {
             Logger.Info("Backup()");
             var commands = new List<string>();
 
-            var ctx = _context;
-            var dbConnection = ctx.Database.Connection;
-            dbConnection.Open();
-            var tables = ListTables(dbConnection);
-            try {
-                foreach (var currentTable in tables) {
-                    Logger.Debug(string.Format("Saving table {0}", currentTable));
-                    try {
-                        var table = GetFieldDefitions(dbConnection, currentTable);
-                        var fieldNames = FieldDefition.ToNames(table);
+            var tables = ListTables(_connection);
+            foreach (var currentTable in tables) {
+                Logger.Debug(string.Format("Saving table {0}", currentTable));
+                try {
+                    var table = GetFieldDefitions(_connection, currentTable);
+                    var fieldNames = FieldDefition.ToNames(table);
 
-                        const string delim = ", ";
-                        var internalDelimiter = useUnion ? " UNION SELECT " : ", ";
-                        var query = dbConnection.CreateCommand();
-                        query.CommandText = "SELECT * FROM \"" + currentTable + "\"";
+                    const string delim = ", ";
+                    var internalDelimiter = useUnion ? " UNION SELECT " : ", ";
+                    var query = _connection.CreateCommand();
+                    query.CommandText = "SELECT * FROM \"" + currentTable + "\"";
 
-                        var values = "";
-                        var any = false;
-                        using (var reader = query.ExecuteReader()) {
-                            var counter = 0;
-                            while (reader.Read()) {
-                                any = true;
-                                if (++counter == 500) {
-                                    commands.Add(RenderInsert(useUnion, values, internalDelimiter, currentTable,
-                                        fieldNames));
-                                    values = "";
-                                    counter = 0;
-                                }
-
-                                var local = reader;
-                                var portion = table
-                                    .Select(col => GetAsString(local, col))
-                                    .Aggregate("", (current, fieldVal) => current + fieldVal + delim);
-
-                                portion = portion.Substring(0, portion.Length - delim.Length);
-                                values = useUnion
-                                    ? values + portion + internalDelimiter
-                                    : values + "(" + portion + ")" + internalDelimiter;
+                    var values = "";
+                    var any = false;
+                    using (var reader = query.ExecuteReader()) {
+                        var counter = 0;
+                        while (reader.Read()) {
+                            any = true;
+                            if (++counter == 500) {
+                                commands.Add(RenderInsert(useUnion, values, internalDelimiter, currentTable,
+                                    fieldNames));
+                                values = "";
+                                counter = 0;
                             }
+
+                            var local = reader;
+                            var portion = table
+                                .Select(col => GetAsString(local, col))
+                                .Aggregate("", (current, fieldVal) => current + fieldVal + delim);
+
+                            portion = portion.Substring(0, portion.Length - delim.Length);
+                            values = useUnion
+                                ? values + portion + internalDelimiter
+                                : values + "(" + portion + ")" + internalDelimiter;
                         }
-                        if (any) 
-                            commands.Add(RenderInsert(useUnion, values, internalDelimiter, currentTable, fieldNames));
-                        else
-                            Logger.Debug(string.Format("Empty table {0}", currentTable));
-                    } catch (Exception e) {
-                        Logger.ErrorEx("Failure", e);
-                        throw;
                     }
+                    if (any) 
+                        commands.Add(RenderInsert(useUnion, values, internalDelimiter, currentTable, fieldNames));
+                    else
+                        Logger.Debug(string.Format("Empty table {0}", currentTable));
+                } catch (Exception e) {
+                    Logger.ErrorEx("Failure", e);
+                    throw;
                 }
-            } finally {
-                dbConnection.Close();
             }
 
             var tempFile = Path.GetTempFileName();
@@ -166,15 +160,11 @@ namespace YieldMap.Transitive.Procedures {
 
         public void Cleanup() {
             Logger.Info("Cleanup()");
-            var ctx = _context;
-            var dbConnection = ctx.Database.Connection;
-            try {
-                dbConnection.Open();
-                var tables = ListTables(dbConnection);
+                var tables = ListTables(_connection);
                 foreach (var table in tables) {
                     Logger.Debug(string.Format("Cleaning table {0}", table));
                     try {
-                        var cmd = dbConnection.CreateCommand();
+                        var cmd = _connection.CreateCommand();
                         cmd.CommandText = "DELETE FROM \"" + table + "\"";
                         Logger.Trace(cmd.CommandText);
                         cmd.ExecuteNonQuery();
@@ -183,9 +173,6 @@ namespace YieldMap.Transitive.Procedures {
                         throw;
                     }
                 }
-            } finally {
-                dbConnection.Close();
-            }
         }
 
         public void Restore(string fileName) {
@@ -194,38 +181,32 @@ namespace YieldMap.Transitive.Procedures {
             var commands = File.ReadAllLines(fileName);
             Cleanup();
 
-            var ctx = _context;
-            var dbConnection = ctx.Database.Connection;
-            try {
-                dbConnection.Open();
-                var tables = ListTables(dbConnection);
-                foreach (var table in tables) {
-                    Logger.Debug(string.Format("Restoring table {0}", table));
-                    try {
-                        var tableName = table;
-                        var sqls = commands.Where(command => Regex.IsMatch(command, "^INSERT INTO \"" + tableName + "\""));
-                        foreach (var sql in sqls) {
-                            if (string.IsNullOrEmpty(sql)) {
-                                Logger.Warn(string.Format("No insertions for table {0}", table));
-                                continue;
-                            }
-                            var cmd = dbConnection.CreateCommand();
-                            cmd.CommandText = sql;
-                            Logger.Trace(sql);
-                            cmd.ExecuteNonQuery();
+            var tables = ListTables(_connection);
+            foreach (var table in tables) {
+                Logger.Debug(string.Format("Restoring table {0}", table));
+                try {
+                    var tableName = table;
+                    var sqls = commands.Where(command => Regex.IsMatch(command, "^INSERT INTO \"" + tableName + "\""));
+                    foreach (var sql in sqls) {
+                        if (string.IsNullOrEmpty(sql)) {
+                            Logger.Warn(string.Format("No insertions for table {0}", table));
+                            continue;
                         }
-                    } catch (Exception e) {
-                        Logger.ErrorEx("Failure", e);
-                        throw;
+                        var cmd = _connection.CreateCommand();
+                        cmd.CommandText = sql;
+                        Logger.Trace(sql);
+                        cmd.ExecuteNonQuery();
                     }
+                } catch (Exception e) {
+                    Logger.ErrorEx("Failure", e);
+                    throw;
                 }
-            } finally {
-                dbConnection.Close();
             }
         }
 
         public void Dispose() {
-            _context.Dispose();
+            _connection.Close();
+            _connection.Dispose();
         }
     }
 }

@@ -1,8 +1,15 @@
 ﻿using System.Data.Entity;
 using YieldMap.Database;
+using YieldMap.Tools.Logging;
 
 namespace YieldMap.Transitive.Domains.Contexts {
     public class SaverContext : BaseContext<SaverContext> {
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.Domains.Contexts.SaverContext");
+        public SaverContext() {
+            Logger.Debug("SaverContext()");
+        }  
+        
+        
         public DbSet<Description> Descriptions { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<LegalEntity> LegalEntities { get; set; }

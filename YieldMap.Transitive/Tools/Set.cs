@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace YieldMap.Transitive.Tools {
-    public class Set<T> {
+    public class Set<T> : ISet<T> {
         public static readonly Set<T> Empty = new Set<T>();
         private readonly HashSet<T> _data;
 
@@ -12,14 +12,6 @@ namespace YieldMap.Transitive.Tools {
 
         public Set() {
             _data = new HashSet<T>();
-        }
-
-        public IEnumerable<T> ToEnumerable() {
-            return new HashSet<T>(_data);
-        }
-
-        public T[] ToArray() {
-            return _data.ToArray();
         }
 
         public Set<T> Add(IEnumerable<T> items) {
@@ -88,6 +80,10 @@ namespace YieldMap.Transitive.Tools {
             return Equals(_data, other._data);
         }
 
+        public IEnumerator<T> GetEnumerator() {
+            return _data.GetEnumerator();
+        }
+
         public override bool Equals(object obj) {
             if (ReferenceEquals(null, obj))
                 return false;
@@ -98,6 +94,10 @@ namespace YieldMap.Transitive.Tools {
 
         public override int GetHashCode() {
             return (_data != null ? _data.GetHashCode() : 0);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
 
         public static bool Equals(Set<T> left, Set<T> right) {

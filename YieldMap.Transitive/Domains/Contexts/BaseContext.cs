@@ -39,7 +39,7 @@ namespace YieldMap.Transitive.Domains.Contexts {
         }
 
         public BaseContext() : base(ConnectionString) {
-            Logger.Info(string.Format("Aquiring context {0}", ConnectionString));
+            Logger.Debug(string.Format("Aquiring context {0}", ConnectionString));
         }
     }
 }

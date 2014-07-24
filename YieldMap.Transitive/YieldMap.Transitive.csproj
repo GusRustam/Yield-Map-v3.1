@@ -42,6 +42,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Data.SQLite, Version=1.0.92.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -53,6 +54,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Domains\Contexts\SaverContext.cs" />
+    <Compile Include="Domains\NativeContext\IInstrumentReader.cs" />
+    <Compile Include="Native\BaseReadOnlyRepository.cs" />
+    <Compile Include="Domains\NativeContext\BondAdditionContext.cs" />
+    <Compile Include="Native\Connector.cs" />
+    <Compile Include="Native\IConnector.cs" />
     <Compile Include="Events\LastHandler.cs" />
     <Compile Include="Tools\EntityAction.cs" />
     <Compile Include="Tools\DbContextHelper.cs" />
@@ -106,7 +112,6 @@
     <Compile Include="Domains\Contexts\BaseContext.cs" />
     <Compile Include="Domains\Contexts\ChainRicContext.cs" />
     <Compile Include="Domains\Contexts\FeedsContext.cs" />
-    <Compile Include="Domains\Contexts\EmptyContext.cs" />
     <Compile Include="Domains\Contexts\EnumerationsContext.cs" />
     <Compile Include="Domains\Contexts\InstrumentDescriptionContext.cs" />
     <Compile Include="Domains\Contexts\PropertiesContext.cs" />
@@ -144,11 +149,13 @@
     <Compile Include="Tools\Extensions.cs" />
     <Compile Include="Tools\FieldResolver.cs" />
     <Compile Include="Tools\IFieldResolver.cs" />
+    <Compile Include="Tools\ISet.cs" />
     <Compile Include="Tools\RicComparer.cs" />
     <Compile Include="Tools\RicString.cs" />
     <Compile Include="Tools\Set.cs" />
     <Compile Include="Events\TriggerManagerBase.cs" />
     <Compile Include="Events\Triggers.cs" />
+    <Compile Include="Tools\SetHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

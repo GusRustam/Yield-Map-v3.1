@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Globalization;
@@ -36,14 +35,15 @@ namespace YieldMap.Transitive.Procedures {
         private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
         private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
+        private readonly IContainer _container;
 
         public event EventHandler<IDbEventArgs> Notify;
 
         public Saver(Func<IContainer> containerF) {
-            var container = containerF.Invoke();
-            _resolver = container.Resolve<IFieldResolver>();
-            _legTypes = container.Resolve<ILegTypes>();
-            _instrumentTypes = container.Resolve<IInstrumentTypes>();
+            _container = containerF.Invoke();
+            _resolver = _container.Resolve<IFieldResolver>();
+            _legTypes = _container.Resolve<ILegTypes>();
+            _instrumentTypes = _container.Resolve<IInstrumentTypes>();
         }
 
         public void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms) {
@@ -165,8 +165,10 @@ namespace YieldMap.Transitive.Procedures {
             }
 
             // Creating instruments
+            Set<long> addedInstruments;
             var descrIds = new Dictionary<string, long>(); // ric -> id
             using (var ctx = new SaverContext()) {
+                var existingInstruments = ctx.Instruments.Select(x => x.id).ToSet();
                 var instruments = new Dictionary<string, Instrument>();
                 foreach (var bond in bonds) {
                     if (bond.RateStructure.StartsWith("Unable"))
@@ -199,6 +201,9 @@ namespace YieldMap.Transitive.Procedures {
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
                 }
+                using (var reader = _container.Resolve<Domains.NativeContext.IInstrumentReader>()) {
+                    addedInstruments = reader.FindAll().Select(x => x.id).ToSet() - existingInstruments;
+                }
             }
 
             // Legs
@@ -228,6 +233,8 @@ namespace YieldMap.Transitive.Procedures {
                     }, 500);
                 }
             }
+
+            Notify(this, new SingleTable(addedInstruments, new long[] {}, new long[] {}, EventSource.InstrumentDescription));
         }
 
         public void SaveRatings(IEnumerable<Rating> ratings) {

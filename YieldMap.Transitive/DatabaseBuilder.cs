@@ -4,6 +4,7 @@ using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Registry;
 using YieldMap.Transitive.Repositories;
@@ -86,6 +87,10 @@ namespace YieldMap.Transitive {
                 var hander = e.Context.Resolve<ITriggerManager>();
                 e.Instance.Notify += (source, args) => hander.Handle(args);
             });
+
+            // Native components
+            Builder.RegisterType<Connector>().As<IConnector>();
+            Builder.RegisterType<Domains.NativeContext.InstrumentReader>().As<Domains.NativeContext.IInstrumentReader>();
         }
     }
 }
