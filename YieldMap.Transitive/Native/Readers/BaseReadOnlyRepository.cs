@@ -3,9 +3,10 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Linq.Expressions;
 using YieldMap.Transitive.Domains;
+using YieldMap.Transitive.Native.Entities;
 
-namespace YieldMap.Transitive.Native {
-    public abstract class BaseReadOnlyRepository<T> : IReadOnlyRepository<T> {
+namespace YieldMap.Transitive.Native.Readers {
+    public abstract class BaseReadOnlyRepository<T> : IReadOnlyRepository<T> where T : IIdentifyable {
         protected readonly SQLiteConnection Connection;
 
         protected BaseReadOnlyRepository(SQLiteConnection connection) {

@@ -54,13 +54,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Domains\Contexts\SaverContext.cs" />
-    <Compile Include="Native\ICreateUpdateDelete.cs" />
+    <Compile Include="Native\Cuds\CudBase.cs" />
+    <Compile Include="Native\Entities\DbFieldAttribute.cs" />
+    <Compile Include="Native\Cuds\ICreateUpdateDelete.cs" />
+    <Compile Include="Native\Entities\IIdentifyable.cs" />
+    <Compile Include="Native\Cuds\InstrumentCud.cs" />
+    <Compile Include="Native\Entities\NEntityHelper.cs" />
+    <Compile Include="Native\Entities\NInstrument.cs" />
+    <Compile Include="Native\Cuds\Operations.cs" />
     <Compile Include="Native\Readers\INInstrumentReader.cs" />
     <Compile Include="Native\Readers\INPropertiesReader.cs" />
     <Compile Include="Native\Readers\NPropertiesReader.cs" />
     <Compile Include="Events\INotifier.cs" />
     <Compile Include="Events\WelcomeHanlder.cs" />
-    <Compile Include="Native\BaseReadOnlyRepository.cs" />
+    <Compile Include="Native\Readers\BaseReadOnlyRepository.cs" />
     <Compile Include="Native\Readers\NInstrumentReader.cs" />
     <Compile Include="Native\Connector.cs" />
     <Compile Include="Native\IConnector.cs" />
@@ -178,9 +185,7 @@
       <Name>YieldMap.Tools</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Native\Cuds\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
