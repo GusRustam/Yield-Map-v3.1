@@ -5,7 +5,8 @@ using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Native;
-using YieldMap.Transitive.Native.Readers;
+using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Registry;
 using YieldMap.Transitive.Repositories;
@@ -13,7 +14,6 @@ using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive {
     public static class DatabaseBuilder {
-        //private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.DatabaseBuilder");
         public static ContainerBuilder Builder { get; private set; }
         private static IContainer _container;
         private static readonly object Lock = new object();
@@ -77,8 +77,9 @@ namespace YieldMap.Transitive {
 
             // Native components
             Builder.RegisterType<Connector>().As<IConnector>();
-            Builder.RegisterType<NInstrumentReader>().As<INInstrumentReader>();
-            Builder.RegisterType<NPropertiesReader>().As<INPropertiesReader>();
+            Builder.RegisterType<NEntityHelper>().As<INEntityHelper>();
+            Builder.RegisterType<InstrumentCrud>().As<IInstrumentCrud>();
+            Builder.RegisterType<PropertyCrud>().As<IPropertiesCrud>();
         }
     }
 }

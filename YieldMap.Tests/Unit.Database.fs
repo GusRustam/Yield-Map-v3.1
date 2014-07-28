@@ -27,6 +27,8 @@ open YieldMap.Tools.Logging
 
 module Database =
     open YieldMap.Transitive.Procedures
+    open YieldMap.Transitive.Native.Crud
+    open YieldMap.Transitive.Native.Entities
 
     let logger = LogFactory.create "UnitTests.Database"
     let str (z : TimeSpan Nullable) = 
@@ -627,3 +629,20 @@ module Database =
         
         br.Restore "EMPTY.sql"
         globalThreshold := LoggingLevel.Trace
+
+
+    [<Test>] 
+    let ``Set generated native SQL`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+            ]
+
+        let sql = helper.BulkInsertSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal [""])
+//        cud.Create <| NInstrument(Name = "Hello")
+//        cud.Save ()

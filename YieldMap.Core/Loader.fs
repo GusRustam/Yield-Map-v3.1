@@ -28,6 +28,7 @@ module Loader =
     open System
     open System.Collections.Generic
     open System.IO
+    open YieldMap.Transitive.Native.Crud
 
     let private logger = LogFactory.create "Load"
 
@@ -120,7 +121,7 @@ module Loader =
         let saver = container.Resolve<ISaver>()
         let updater = container.Resolve<IDbUpdates>()
 
-        let killer = container.Resolve<INInstrumentUnitOfWork>() // TODO!!!
+        let killer = container.Resolve<IInstrumentCrud>() // TODO!!!
 
         async {
             try

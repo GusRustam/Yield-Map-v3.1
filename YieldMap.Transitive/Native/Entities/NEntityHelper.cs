@@ -4,41 +4,50 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using YieldMap.Database;
-using YieldMap.Transitive.Native.Cuds;
+using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Native.Entities {
-    public static class NEntityHelper {
-        private static readonly Dictionary<Type, Dictionary<Operations, string>> Queries;
-        private static readonly Dictionary<Type, Dictionary<string, Func<object, string>>> Rules 
+    public interface INEntityHelper {
+        IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : IIdentifyable;
+        IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : IIdentifyable;
+        IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : IIdentifyable;
+        string SelectSql<T>() where T : IIdentifyable;
+        void PrepareProperties<T>();
+        void PrepareRules<T>();
+        IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable;
+    }
+
+    public class NEntityHelper : INEntityHelper {
+        private readonly Dictionary<Type, Dictionary<Operations, string>> _queries;
+        private readonly Dictionary<Type, Dictionary<string, Func<object, string>>> _rules 
             = new Dictionary<Type, Dictionary<string, Func<object, string>>>();
-        private static readonly Dictionary<Type, PropertyInfo[]> Properties 
+        private readonly Dictionary<Type, PropertyInfo[]> _properties 
             = new Dictionary<Type, PropertyInfo[]>();
 
-        public static IEnumerable<string> BulkInsertSql<T>(this IEnumerable<T> instruments) where T : IIdentifyable {
+        public IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : IIdentifyable {
             PrepareProperties<T>();
             PrepareRules<T>();
 
             var type = typeof(T);
             var res =
                 instruments.ChunkedSelect(instrumentChunk => {
-                    var addition = Enumerable.Aggregate<T, string>(instrumentChunk, " ", (unitedSql, instrument) => {
+                    var addition = instrumentChunk.Aggregate(" SELECT ", (unitedSql, instrument) => {
                         var valuesList =
-                            Properties[type]
+                            _properties[type]
                                 .Aggregate("", (allFields, p) => {
-                                    var formattedField = Rules[type][p.Name](p.GetValue(instrument));
+                                    var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                     return allFields + formattedField + ", ";
                                 });
                         return unitedSql + valuesList + " UNION SELECT ";
                     });
-                    return Queries[type][Operations.Create] + addition;
+                    return _queries[type][Operations.Create] + addition;
                 }, 500);
 
             return res;
         }
 
-        public static IEnumerable<string> BulkUpdateSql<T>(this IEnumerable<T> instruments) where T : IIdentifyable {
+        public IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : IIdentifyable {
             PrepareProperties<T>();
             PrepareRules<T>();
 
@@ -47,9 +56,9 @@ namespace YieldMap.Transitive.Native.Entities {
                 instruments.ChunkedSelect(instrumentChunk => {
                     var updateCommands = instrumentChunk.Aggregate(" ", (unitedSql, instrument) => {
                         var valuesList =
-                            Properties[type]
-                                .Aggregate(Queries[type][Operations.Update], (allFields, p) => {
-                                    var formattedField = Rules[type][p.Name](p.GetValue(instrument));
+                            _properties[type]
+                                .Aggregate(_queries[type][Operations.Update], (allFields, p) => {
+                                    var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                     return allFields + p.Name + " = " + formattedField + ", ";
                                 });
                         return unitedSql + valuesList + " WHERE id = " + instrument.id + ";\n";
@@ -63,7 +72,7 @@ namespace YieldMap.Transitive.Native.Entities {
             return res;
         }
 
-        public static IEnumerable<string> BulkDeleteSql<T>(this IEnumerable<T> instruments) where T : IIdentifyable {
+        public IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : IIdentifyable {
             PrepareProperties<T>();
             PrepareRules<T>();
 
@@ -75,7 +84,7 @@ namespace YieldMap.Transitive.Native.Entities {
                     var deleteCommand = instrumentChunk
                         .Where(instrument => instrument.id != default(long))
                         .Aggregate(
-                            Queries[type][Operations.Delete] + " WHERE id IN (",
+                            _queries[type][Operations.Delete] + " WHERE id IN (",
                             (deleteSql, instrument) => deleteSql + instrument.id + ", ");
                     return deleteCommand + ")";
                 }, 500).ToList();
@@ -85,12 +94,12 @@ namespace YieldMap.Transitive.Native.Entities {
                     var deleteCommands = instrumentChunk
                         .Where(instrument => instrument.id == default(long))
                         .Aggregate(
-                            Queries[type][Operations.Delete] + " WHERE ",
+                            _queries[type][Operations.Delete] + " WHERE ",
                             (unitedSql, instrument) => {
                                 var valuesList =
-                                    Properties[type]
+                                    _properties[type]
                                         .Aggregate("", (allFields, p) => {
-                                            var formattedField = Rules[type][p.Name](p.GetValue(instrument));
+                                            var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                             return allFields + p.Name + " = " + formattedField + " AND ";
                                         });
                                 return unitedSql + valuesList;
@@ -105,11 +114,19 @@ namespace YieldMap.Transitive.Native.Entities {
             return res;
         }
 
-        private static void PrepareProperties<T>() {
+        public string SelectSql<T>() where T : IIdentifyable {
+            PrepareProperties<T>();
+            PrepareRules<T>();
             var type = typeof(T);
-            if (Properties.ContainsKey(type)) return;
 
-            Properties.Add(type,
+            return _queries[type][Operations.Read];
+        }
+
+        public void PrepareProperties<T>() {
+            var type = typeof(T);
+            if (_properties.ContainsKey(type)) return;
+
+            _properties.Add(type,
                 type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Select(p => new {Descr = p.GetCustomAttribute<DbFieldAttribute>(), Property = p})
                     .Where(x => x.Descr != null)
@@ -118,11 +135,11 @@ namespace YieldMap.Transitive.Native.Entities {
                     .ToArray());
         }
 
-        private static void PrepareRules<T>() {
+        public void PrepareRules<T>() {
             var type = typeof (T);
-            if (Rules.ContainsKey(type)) return;
+            if (_rules.ContainsKey(type)) return;
 
-            Rules.Add(type,
+            _rules.Add(type,
                 type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Select(p => {
                         if (p.PropertyType == typeof(float?))
@@ -159,7 +176,7 @@ namespace YieldMap.Transitive.Native.Entities {
         }
 
         private static string ParseString(object item) {
-            return ((string) item).Replace("'", "''").Replace("\"", "\"\"");
+            return "'" + ((string) item).Replace("'", "''").Replace("\"", "\"\"") + "'"; 
         }
         private static string ParseLong(object item) {
             var value = (long)item;
@@ -209,8 +226,9 @@ namespace YieldMap.Transitive.Native.Entities {
             var value = (DateTime?)item;
             return value.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", value.Value.ToLocalTime()) : "NULL";
         }
-        static NEntityHelper() {
-            Queries = new Dictionary<Type, Dictionary<Operations, string>>();
+        
+        public NEntityHelper() {
+            _queries = new Dictionary<Type, Dictionary<Operations, string>>();
 
             var instrumentQueries = new Dictionary<Operations, string> {
                 {Operations.Create, "INSERT INTO Instrument(Name, id_InstrumentType, id_Description) "},
@@ -219,18 +237,21 @@ namespace YieldMap.Transitive.Native.Entities {
                 {Operations.Delete, "DELETE FROM Instrument "}
             };
 
-            Queries.Add(typeof(Instrument), instrumentQueries);
+            _queries.Add(typeof(NInstrument), instrumentQueries);
         }
 
-        public static IIdentifyable Read<T>(this SQLiteDataReader reader) {
-            if (typeof(T) == typeof(NInstrument))
-                return new NInstrument {
-                    id = reader.GetInt32(0),
-                    Name = reader.GetString(1),
-                    id_InstrumentType = reader.GetInt32(2),
-                    id_Description = reader.GetInt32(3)
-                };
-            throw new ArgumentException("what");
+        public IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable {
+            if (reader.Read()) {
+                if (typeof (T) == typeof (NInstrument))
+                    return  new NInstrument {
+                        id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        id_InstrumentType = reader.GetInt32(2),
+                        id_Description = reader.GetInt32(3)
+                    };
+                throw new ArgumentException("what");
+            }
+            return null;
         }
     }
 }

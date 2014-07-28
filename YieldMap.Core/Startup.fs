@@ -27,7 +27,7 @@ module Startup =
     open System.Linq
     open System.Threading
     open YieldMap.Transitive.Registry
-    open YieldMap.Transitive.Domains.NativeContext
+    open YieldMap.Transitive.Native.Crud
 
     let logger = LogFactory.create "Startup"
 
@@ -150,7 +150,7 @@ module Startup =
                 let updater = q.DbServices.Resolve<IDbUpdates>()
                 if force then
                     let registry = q.DbServices.Resolve<IFunctionRegistry>()
-                    use properties = q.DbServices.Resolve<INPropertiesReader>()
+                    use properties = q.DbServices.Resolve<IPropertiesCrud>()
                     registry.Clear () |> ignore
                     properties
                         .FindAll()

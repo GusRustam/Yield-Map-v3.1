@@ -54,21 +54,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Domains\Contexts\SaverContext.cs" />
-    <Compile Include="Native\Cuds\CudBase.cs" />
+    <Compile Include="Native\Crud\CrudBase.cs" />
+    <Compile Include="Native\Crud\IInstrumentCrud.cs" />
+    <Compile Include="Native\Crud\IPropertiesCrud.cs" />
+    <Compile Include="Native\Crud\PropertyCrud.cs" />
     <Compile Include="Native\Entities\DbFieldAttribute.cs" />
-    <Compile Include="Native\Cuds\ICreateUpdateDelete.cs" />
+    <Compile Include="Native\Crud\ICrud.cs" />
     <Compile Include="Native\Entities\IIdentifyable.cs" />
-    <Compile Include="Native\Cuds\InstrumentCud.cs" />
+    <Compile Include="Native\Crud\InstrumentCrud.cs" />
     <Compile Include="Native\Entities\NEntityHelper.cs" />
     <Compile Include="Native\Entities\NInstrument.cs" />
-    <Compile Include="Native\Cuds\Operations.cs" />
-    <Compile Include="Native\Readers\INInstrumentReader.cs" />
-    <Compile Include="Native\Readers\INPropertiesReader.cs" />
-    <Compile Include="Native\Readers\NPropertiesReader.cs" />
+    <Compile Include="Native\Crud\Operations.cs" />
+    <Compile Include="Native\Entities\NProperty.cs" />
     <Compile Include="Events\INotifier.cs" />
     <Compile Include="Events\WelcomeHanlder.cs" />
-    <Compile Include="Native\Readers\BaseReadOnlyRepository.cs" />
-    <Compile Include="Native\Readers\NInstrumentReader.cs" />
     <Compile Include="Native\Connector.cs" />
     <Compile Include="Native\IConnector.cs" />
     <Compile Include="Events\LastHandler.cs" />
