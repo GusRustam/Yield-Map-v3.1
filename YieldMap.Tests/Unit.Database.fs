@@ -632,7 +632,7 @@ module Database =
 
 
     [<Test>] 
-    let ``Set generated native SQL`` () =
+    let ``Native SQL create 1 instrument`` () =
         let container = DatabaseBuilder.Container 
         let helper = container.Resolve<INEntityHelper>()
 
@@ -643,6 +643,52 @@ module Database =
 
         let sql = helper.BulkInsertSql<NInstrument>(instruments)
         logger.InfoF "Got sql %A" (List.ofSeq sql)
-        sql |> should be (equal [""])
+        sql |> should be (equal ["INSERT INTO Instrument(Name, id_InstrumentType, id_Description)  SELECT 'Hello', 1, 2"])
+
+    [<Test>] 
+    let ``Native SQL delete 1 instrument`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+            ]
+
+        let sql = helper.BulkDeleteSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal ["DELETE FROM Instrument WHERE Name = 'Hello' AND id_InstrumentType = 1 AND id_Description = 2"])
+
+    [<Test>] 
+    let ``Native SQL delete 2 instruments`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+                NInstrument(Name = "Bye", id_InstrumentType = Nullable 2L, id_Description = Nullable())
+            ]
+
+        let sql = helper.BulkDeleteSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal ["DELETE FROM Instrument WHERE Name = 'Hello' AND id_InstrumentType = 1 AND id_Description = 2"])
+
+
+    [<Test>] 
+    let ``Native SQL create 2 instruments`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+                NInstrument(Name = "Bye", id_InstrumentType = Nullable 2L, id_Description = Nullable())
+            ]
+
+        let sql = helper.BulkInsertSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal 
+            ["INSERT INTO Instrument(Name, id_InstrumentType, id_Description)  SELECT 'Hello', 1, 2 UNION SELECT 'Bye', 2, NULL"])
 //        cud.Create <| NInstrument(Name = "Hello")
 //        cud.Save ()

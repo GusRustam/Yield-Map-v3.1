@@ -39,9 +39,9 @@ namespace YieldMap.Transitive.Native.Entities {
                                     var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                     return allFields + formattedField + ", ";
                                 });
-                        return unitedSql + valuesList + " UNION SELECT ";
+                        return unitedSql + valuesList.Substring(0, valuesList.Length - ", ".Length) + " UNION SELECT ";
                     });
-                    return _queries[type][Operations.Create] + addition;
+                    return _queries[type][Operations.Create] + addition.Substring(0, addition.Length - " UNION SELECT ".Length);
                 }, 500);
 
             return res;
@@ -61,7 +61,7 @@ namespace YieldMap.Transitive.Native.Entities {
                                     var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                     return allFields + p.Name + " = " + formattedField + ", ";
                                 });
-                        return unitedSql + valuesList + " WHERE id = " + instrument.id + ";\n";
+                        return unitedSql + valuesList.Substring(0, valuesList.Length - ", ".Length) + " WHERE id = " + instrument.id + ";\n";
                     });
                     return 
                         "BEGIN TRANSACTION;\n" + 
@@ -102,7 +102,7 @@ namespace YieldMap.Transitive.Native.Entities {
                                             var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                             return allFields + p.Name + " = " + formattedField + " AND ";
                                         });
-                                return unitedSql + valuesList;
+                                return unitedSql + valuesList.Substring(0, valuesList.Length - " AND ".Length);
                             });
                     return
                         "BEGIN TRANSACTION;\n" +
@@ -230,6 +230,7 @@ namespace YieldMap.Transitive.Native.Entities {
         public NEntityHelper() {
             _queries = new Dictionary<Type, Dictionary<Operations, string>>();
 
+            // todo this can be automated too
             var instrumentQueries = new Dictionary<Operations, string> {
                 {Operations.Create, "INSERT INTO Instrument(Name, id_InstrumentType, id_Description) "},
                 {Operations.Read, "SELECT id, Name, id_InstrumentType, id_Description FROM Instrument "},
