@@ -59,6 +59,11 @@ namespace YieldMap.Transitive.Native.Crud {
             Operate(item, Operations.Delete);
         }
 
+        public void DeleteAll() {
+            ExecuteSql(_helper.DeleteAllSql<T>());
+            Entities.Clear();
+        }
+
         public void Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity> {
             // Operations.Create (have ids only)
             Execute<TEntity>(Operations.Create, _helper.BulkInsertSql);
@@ -73,7 +78,7 @@ namespace YieldMap.Transitive.Native.Crud {
             // - by fields (todo)
             Execute<TEntity>(Operations.Delete, _helper.BulkDeleteSql); 
 
-            foreach (var entity in Entities.Where(entity => entity.Value == Operations.Delete)) {
+            foreach (var entity in Entities.Where(entity => entity.Value == Operations.Delete).ToList()) {
                 Entities.Remove(entity.Key);
             }
         }
@@ -90,7 +95,7 @@ namespace YieldMap.Transitive.Native.Crud {
                 }
             }
 
-            var entities = Entities.Select(kvp => kvp.Key).ToList();
+            var entities = Entities.Where(kvp => kvp.Value == operation).Select(kvp => kvp.Key).ToList();
             foreach (var entity in entities) 
                 Entities[entity] = Operations.Read;
         }

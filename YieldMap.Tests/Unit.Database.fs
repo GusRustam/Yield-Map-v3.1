@@ -593,13 +593,16 @@ module Database =
         br.Restore "RUCORP.sql"
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         let updater = container.Resolve<IPropertiesUpdater>()
         let properyReader = container.Resolve<IPropertiesRepository> ()
+
+        let nativeKiller = container.Resolve<IPropertyValueCrud> ()
+        nativeKiller.DeleteAll()
 
         properyReader.FindAll().ToList()
         |> Seq.iter (fun x -> registry.Add(x.id, x.Expression) |> ignore)
 
+        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
         updater.RecalculateBonds () |> should be (equal 1846)
         properyValueReader.FindAll().Count() |> should be (equal 1846)
@@ -616,13 +619,16 @@ module Database =
         br.Restore "RUELG.sql"
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         let updater = container.Resolve<IPropertiesUpdater>()
-        let properyReader = container.Resolve<IPropertiesRepository> ()
 
+        let nativeKiller = container.Resolve<IPropertyValueCrud> ()
+        nativeKiller.DeleteAll()
+
+        let properyReader = container.Resolve<IPropertiesRepository> ()
         properyReader.FindAll().ToList()
         |> Seq.iter (fun x -> registry.Add(x.id, x.Expression) |> ignore)
 
+        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
         updater.RecalculateBonds () |> should be (equal 96)
         properyValueReader.FindAll().Count() |> should be (equal 96)
@@ -804,13 +810,28 @@ module NativeDatabase =
         helper.FindAll().Count() |> should be (greaterThan 0)
 
     [<Test>]
-    let ``Simple add and read id`` () =
+    let ``Add, read id, update and then delete`` () =
         let container = DatabaseBuilder.Container 
         let helper = container.Resolve<IFeedCrud>()
         helper.FindAll().Count() |> should be (equal 1)
+
         let newFeed = NFeed(Name = "A", Description = "Description")
         newFeed.id |> should be (equal 0L)
         helper.Create newFeed
         helper.Save<NFeed>()
+        
         helper.FindAll().Count() |> should be (equal 2)
         newFeed.id |> should be (greaterThan 0L)
+
+        newFeed.Description <- "Advanced description"
+        helper.Update newFeed
+        helper.Save<NFeed>()
+        helper.FindAll().Count() |> should be (equal 2)
+
+        let helper2 = container.Resolve<IFeedCrud>()
+        helper2.FindById(newFeed.id).Description |> should be (equal "Advanced description")
+
+        helper.Delete newFeed
+        helper.Save<NFeed> ()
+
+        helper.FindAll().Count() |> should be (equal 1)

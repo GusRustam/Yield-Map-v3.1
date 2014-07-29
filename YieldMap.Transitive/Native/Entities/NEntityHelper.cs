@@ -12,6 +12,7 @@ namespace YieldMap.Transitive.Native.Entities {
         IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
         IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
         IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
+        string DeleteAllSql<T>();
         string SelectSql<T>() where T : IIdentifyable;
         string FindIdSql<T>(T instrument) where T : IIdentifyable;
         IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable;
@@ -105,6 +106,10 @@ namespace YieldMap.Transitive.Native.Entities {
                 }, 500));
 
             return res;
+        }
+
+        public string DeleteAllSql<T>() {
+            return _queries[typeof (T)][Operations.Delete];
         }
 
         public string SelectSql<T>() where T : IIdentifyable {
@@ -230,7 +235,11 @@ namespace YieldMap.Transitive.Native.Entities {
         }
         
         public NEntityHelper() {
-            var types = new[] {typeof(NInstrument), typeof(NProperty), typeof(NFeed)}; // todo automate
+            var types =
+                Assembly.GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t => t.IsClass && t.GetInterfaces().Contains(typeof(IIdentifyable)))
+                    .ToList();
 
             _queries = new Dictionary<Type, Dictionary<Operations, string>>();
 
@@ -276,6 +285,13 @@ namespace YieldMap.Transitive.Native.Entities {
                         Description = reader.GetString(2),
                         Expression = reader.GetString(3),
                         id_InstrumentTpe = reader.GetInt32(4)
+                    };
+                if (typeof(T) == typeof(NPropertyValue))
+                    return new NPropertyValue {
+                        id = reader.GetInt32(0),
+                        id_Property = reader.GetInt32(1),
+                        id_Instrument = reader.GetInt32(2),
+                        Value = reader.GetString(3)
                     };
                 if (typeof(T) == typeof(NFeed)) {
                     return new NFeed {
