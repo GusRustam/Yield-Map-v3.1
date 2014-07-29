@@ -632,6 +632,10 @@ module Database =
 
 module NativeDatabase =
     open YieldMap.Transitive.Native.Entities
+    open YieldMap.Tools.Aux
+    open System.Collections.Generic
+    open YieldMap.Transitive.Native.Crud
+
     let logger = LogFactory.create "UnitTests.Database"
 
     [<Test>] 
@@ -646,7 +650,7 @@ module NativeDatabase =
 
         let sql = helper.BulkInsertSql<NInstrument>(instruments)
         logger.InfoF "Got sql %A" (List.ofSeq sql)
-        sql |> should be (equal ["INSERT INTO Instrument(Name, id_InstrumentType, id_Description)  SELECT 'Hello', 1, 2"])
+        sql |> should be (equal ["INSERT INTO Instrument(Name, id_InstrumentType, id_Description) SELECT 'Hello', 1, 2"])
 
     [<Test>] 
     let ``Native SQL delete 1 instrument`` () =
@@ -697,7 +701,7 @@ module NativeDatabase =
         let sql = helper.BulkInsertSql<NInstrument>(instruments)
         logger.InfoF "Got sql %A" (List.ofSeq sql)
         sql |> should be (equal 
-            ["INSERT INTO Instrument(Name, id_InstrumentType, id_Description)  SELECT 'Hello', 1, 2 UNION SELECT 'Bye', 2, NULL"])
+            ["INSERT INTO Instrument(Name, id_InstrumentType, id_Description) SELECT 'Hello', 1, 2 UNION SELECT 'Bye', 2, NULL"])
 
     [<Test>] 
     let ``Native SQL update 1 instrument`` () =
@@ -783,3 +787,30 @@ module NativeDatabase =
                 "DELETE FROM Instrument  WHERE id IN (15, 16)"
                 "BEGIN TRANSACTION;\n UPDATE Instrument SET Name = 'Hello', id_InstrumentType = 1, id_Description = 2 WHERE id = 15;\nUPDATE Instrument SET Name = 'Bye', id_InstrumentType = 2, id_Description = NULL WHERE id = 16;\nEND TRANSACTION;"
             ])
+
+    [<Test>]
+    let ``Mutable keys`` () =
+        let x = Dictionary<NProperty, int> ()
+        let mutable key = NProperty(id = 1L)
+        x.Add(key, 1)
+        key.id <- 2L
+        x.[key] |> should be (equal 1L)
+
+
+    [<Test>]
+    let ``Simple read`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<IFeedCrud>()
+        helper.FindAll().Count() |> should be (greaterThan 0)
+
+    [<Test>]
+    let ``Simple add and read id`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<IFeedCrud>()
+        helper.FindAll().Count() |> should be (equal 1)
+        let newFeed = NFeed(Name = "A", Description = "Description")
+        newFeed.id |> should be (equal 0L)
+        helper.Create newFeed
+        helper.Save<NFeed>()
+        helper.FindAll().Count() |> should be (equal 2)
+        newFeed.id |> should be (greaterThan 0L)

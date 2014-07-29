@@ -55,6 +55,8 @@
   <ItemGroup>
     <Compile Include="Domains\Contexts\SaverContext.cs" />
     <Compile Include="Native\Crud\CrudBase.cs" />
+    <Compile Include="Native\Crud\FeedCrud.cs" />
+    <Compile Include="Native\Crud\IFeedCrud.cs" />
     <Compile Include="Native\Crud\IInstrumentCrud.cs" />
     <Compile Include="Native\Crud\IPropertiesCrud.cs" />
     <Compile Include="Native\Crud\PropertyCrud.cs" />
@@ -63,6 +65,7 @@
     <Compile Include="Native\Entities\IIdentifyable.cs" />
     <Compile Include="Native\Crud\InstrumentCrud.cs" />
     <Compile Include="Native\Entities\NEntityHelper.cs" />
+    <Compile Include="Native\Entities\NFeed.cs" />
     <Compile Include="Native\Entities\NInstrument.cs" />
     <Compile Include="Native\Crud\Operations.cs" />
     <Compile Include="Native\Entities\NProperty.cs" />

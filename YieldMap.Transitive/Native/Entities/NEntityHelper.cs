@@ -9,13 +9,13 @@ using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Native.Entities {
     public interface INEntityHelper {
-        IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : IIdentifyable;
-        IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : IIdentifyable;
-        IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : IIdentifyable;
+        IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
+        IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
+        IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
         string SelectSql<T>() where T : IIdentifyable;
-        void PrepareProperties<T>();
-        void PrepareRules<T>();
+        string FindIdSql<T>(T instrument) where T : IIdentifyable;
         IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable;
+        long ReadId(SQLiteDataReader reader);
     }
 
     public class NEntityHelper : INEntityHelper {
@@ -25,16 +25,14 @@ namespace YieldMap.Transitive.Native.Entities {
         private readonly Dictionary<Type, PropertyInfo[]> _properties 
             = new Dictionary<Type, PropertyInfo[]>();
 
-        public IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : IIdentifyable {
-            PrepareProperties<T>();
-            PrepareRules<T>();
-
+        public IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T> {
             var type = typeof(T);
             var res =
                 instruments.ChunkedSelect(instrumentChunk => {
                     var addition = instrumentChunk.Aggregate(" SELECT ", (unitedSql, instrument) => {
                         var valuesList =
                             _properties[type]
+                                .Where(p => p.Name != "id")
                                 .Aggregate("", (allFields, p) => {
                                     var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                     return allFields + formattedField + ", ";
@@ -47,16 +45,14 @@ namespace YieldMap.Transitive.Native.Entities {
             return res;
         }
 
-        public IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : IIdentifyable {
-            PrepareProperties<T>();
-            PrepareRules<T>();
-
+        public IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T> {
             var type = typeof(T);
             var res =
                 instruments.ChunkedSelect(instrumentChunk => {
                     var updateCommands = instrumentChunk.Aggregate(" ", (unitedSql, instrument) => {
                         var valuesList =
                             _properties[type]
+                                .Where(p => p.Name != "id")
                                 .Aggregate(_queries[type][Operations.Update], (allFields, p) => {
                                     var formattedField = _rules[type][p.Name](p.GetValue(instrument));
                                     return allFields + p.Name + " = " + formattedField + ", ";
@@ -72,10 +68,7 @@ namespace YieldMap.Transitive.Native.Entities {
             return res;
         }
 
-        public IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : IIdentifyable {
-            PrepareProperties<T>();
-            PrepareRules<T>();
-
+        public IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T> {
             var type = typeof(T);
             var enumerable = instruments as IList<T> ?? instruments.ToList();
 
@@ -97,10 +90,12 @@ namespace YieldMap.Transitive.Native.Entities {
                         var deleteCommands = "";
                         foreach (var instrument in instrumentChunk) {
                             deleteCommands += _queries[type][Operations.Delete] + " WHERE ";
-                            var valuesList = _properties[type].Aggregate("", (condition, p) => {
-                                var formattedField = _rules[type][p.Name](p.GetValue(instrument));
-                                return condition + p.Name + " = " + formattedField + " AND ";
-                            });
+                            var valuesList = _properties[type]
+                                .Where(p => p.Name != "id")
+                                .Aggregate("", (condition, p) => {
+                                    var formattedField = _rules[type][p.Name](p.GetValue(instrument));
+                                    return condition + p.Name + " = " + formattedField + " AND ";
+                                });
                             deleteCommands += valuesList.Substring(0, valuesList.Length - " AND ".Length) + ";\n";
                         }
                     return
@@ -113,29 +108,39 @@ namespace YieldMap.Transitive.Native.Entities {
         }
 
         public string SelectSql<T>() where T : IIdentifyable {
-            PrepareProperties<T>();
-            PrepareRules<T>();
-            var type = typeof(T);
-
-            return _queries[type][Operations.Read];
+            return _queries[typeof(T)][Operations.Read];
         }
 
-        public void PrepareProperties<T>() {
-            var type = typeof(T);
-            if (_properties.ContainsKey(type)) return;
+        public string FindIdSql<T>(T instrument) where T : IIdentifyable {
+            var type = typeof (T);
+            var typeName = type.Name;
+            var name = typeName.StartsWith("N") ? typeName.Substring(1) : typeName;
+
+            var valuesList = _properties[type].Where(p => p.Name != "id").Aggregate("", (condition, p) => {
+                var formattedField = _rules[type][p.Name](p.GetValue(instrument));
+                return condition + p.Name + " = " + formattedField + " AND ";
+            });
+
+            return string.Format("SELECT id FROM {0} WHERE {1}", name, valuesList.Substring(0, valuesList.Length - " AND ".Length));
+            
+        }
+
+        public void PrepareProperties(Type type) {
+            if (_properties.ContainsKey(type))
+                return;
 
             _properties.Add(type,
                 type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Select(p => new {Descr = p.GetCustomAttribute<DbFieldAttribute>(), Property = p})
+                    .Select(p => new { Descr = p.GetCustomAttribute<DbFieldAttribute>(), Property = p })
                     .Where(x => x.Descr != null)
                     .OrderBy(x => x.Descr.Order)
                     .Select(x => x.Property)
                     .ToArray());
         }
 
-        public void PrepareRules<T>() {
-            var type = typeof (T);
-            if (_rules.ContainsKey(type)) return;
+        public void PrepareRules(Type type) {
+            if (_rules.ContainsKey(type))
+                return;
 
             _rules.Add(type,
                 type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -148,8 +153,8 @@ namespace YieldMap.Transitive.Native.Entities {
                             return new { p.Name, Function = new Func<object, string>(ParseNullableFloat) };
                         if (p.PropertyType == typeof(double))
                             return new { p.Name, Function = new Func<object, string>(ParseFloat) };
-                        if (p.PropertyType == typeof(long?)) 
-                            return new {p.Name, Function = new Func<object, string>(ParseNullableLong)};
+                        if (p.PropertyType == typeof(long?))
+                            return new { p.Name, Function = new Func<object, string>(ParseNullableLong) };
                         if (p.PropertyType == typeof(long))
                             return new { p.Name, Function = new Func<object, string>(ParseLong) };
                         if (p.PropertyType == typeof(int?))
@@ -164,13 +169,12 @@ namespace YieldMap.Transitive.Native.Entities {
                             return new { p.Name, Function = new Func<object, string>(ParseNullableBool) };
                         if (p.PropertyType == typeof(bool))
                             return new { p.Name, Function = new Func<object, string>(ParseBool) };
-                        return p.PropertyType == typeof(string) ? new {p.Name, Function = new Func<object, string>(ParseString)} : null;
+                        return p.PropertyType == typeof(string) ? new { p.Name, Function = new Func<object, string>(ParseString) } : null;
                         // todo other type converters
                     })
                     .Where(x => x != null)
                     .ToDictionary(x => x.Name, x => x.Function)
                 );
-
         }
 
         private static string ParseString(object item) {
@@ -226,28 +230,60 @@ namespace YieldMap.Transitive.Native.Entities {
         }
         
         public NEntityHelper() {
+            var types = new[] {typeof(NInstrument), typeof(NProperty), typeof(NFeed)}; // todo automate
+
             _queries = new Dictionary<Type, Dictionary<Operations, string>>();
 
-            // todo this can be automated too
-            var instrumentQueries = new Dictionary<Operations, string> {
-                {Operations.Create, "INSERT INTO Instrument(Name, id_InstrumentType, id_Description) "},
-                {Operations.Read, "SELECT id, Name, id_InstrumentType, id_Description FROM Instrument "},
-                {Operations.Update, "UPDATE Instrument SET "},
-                {Operations.Delete, "DELETE FROM Instrument "}
-            };
+            foreach (var type in types) {
+                PrepareProperties(type);
+                PrepareRules(type);
 
-            _queries.Add(typeof(NInstrument), instrumentQueries);
+                var typeName = type.Name;
+                var name = typeName.StartsWith("N") ? typeName.Substring(1) : typeName;
+
+                var allFields = string.Join(", ", _properties[type].Select(p => p.Name));
+                var valueFields = string.Join(", ", _properties[type].Where(p => p.Name != "id").Select(p => p.Name));
+
+                var queries = new Dictionary<Operations, string> {
+                    {Operations.Create, string.Format("INSERT INTO {0}({1})", name, valueFields)},
+                    {Operations.Read, string.Format("SELECT {1} FROM {0}", name, allFields)},
+                    {Operations.Update, string.Format("UPDATE {0} SET ", name)},
+                    {Operations.Delete, string.Format("DELETE FROM {0} ", name)}
+                };
+
+                _queries.Add(type, queries);
+            }
+        }
+
+        public long ReadId(SQLiteDataReader reader) {
+            return reader.Read() ? reader.GetInt32(0) : default(long);
         }
 
         public IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable {
+            // todo this can be also automated via Reflection.Emit
             if (reader.Read()) {
                 if (typeof (T) == typeof (NInstrument))
-                    return  new NInstrument {
+                    return new NInstrument {
                         id = reader.GetInt32(0),
                         Name = reader.GetString(1),
                         id_InstrumentType = reader.GetInt32(2),
                         id_Description = reader.GetInt32(3)
                     };
+                if (typeof(T) == typeof(NProperty))
+                    return new NProperty {
+                        id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Description = reader.GetString(2),
+                        Expression = reader.GetString(3),
+                        id_InstrumentTpe = reader.GetInt32(4)
+                    };
+                if (typeof(T) == typeof(NFeed)) {
+                    return new NFeed {
+                        id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Description = reader.GetString(2)
+                    };
+                }
                 throw new ArgumentException("what");
             }
             return null;

@@ -2,6 +2,7 @@
 
 namespace YieldMap.Transitive.Native.Entities {
     public class NInstrument : IIdentifyable, IEquatable<NInstrument> {
+        [DbField(0)]
         public long id { get; set; }
         
         [DbField(1)]
