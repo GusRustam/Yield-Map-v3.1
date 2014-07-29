@@ -79,37 +79,35 @@ namespace YieldMap.Transitive.Native.Entities {
             var type = typeof(T);
             var enumerable = instruments as IList<T> ?? instruments.ToList();
 
-            var res =
-                enumerable.ChunkedSelect(instrumentChunk => {
-                    var deleteCommand = instrumentChunk
-                        .Where(instrument => instrument.id != default(long))
-                        .Aggregate(
+            var res = new List<string>();
+            if (enumerable.Any(x => x.id != default(long)))
+                res.AddRange(enumerable
+                    .Where(instrument => instrument.id != default(long))
+                    .ChunkedSelect(instrumentChunk => {
+                        var deleteCommand = instrumentChunk.Aggregate(
                             _queries[type][Operations.Delete] + " WHERE id IN (",
                             (deleteSql, instrument) => deleteSql + instrument.id + ", ");
-                    return deleteCommand + ")";
-                }, 500).ToList();
+                    return deleteCommand.Substring(0, deleteCommand.Length - ", ".Length) + ")";
+                }, 500));
 
-            res.AddRange(
-                enumerable.ChunkedSelect(instrumentChunk => {
-                    var deleteCommands = instrumentChunk
-                        .Where(instrument => instrument.id == default(long))
-                        .Aggregate(
-                            _queries[type][Operations.Delete] + " WHERE ",
-                            (unitedSql, instrument) => {
-                                var valuesList =
-                                    _properties[type]
-                                        .Aggregate("", (allFields, p) => {
-                                            var formattedField = _rules[type][p.Name](p.GetValue(instrument));
-                                            return allFields + p.Name + " = " + formattedField + " AND ";
-                                        });
-                                return unitedSql + valuesList.Substring(0, valuesList.Length - " AND ".Length);
+            if (enumerable.Any(x => x.id == default(long))) // all
+                res.AddRange(enumerable
+                    .Where(instrument => instrument.id == default(long))
+                    .ChunkedSelect(instrumentChunk => { // by 500
+                        var deleteCommands = "";
+                        foreach (var instrument in instrumentChunk) {
+                            deleteCommands += _queries[type][Operations.Delete] + " WHERE ";
+                            var valuesList = _properties[type].Aggregate("", (condition, p) => {
+                                var formattedField = _rules[type][p.Name](p.GetValue(instrument));
+                                return condition + p.Name + " = " + formattedField + " AND ";
                             });
+                            deleteCommands += valuesList.Substring(0, valuesList.Length - " AND ".Length) + ";\n";
+                        }
                     return
                         "BEGIN TRANSACTION;\n" +
                         deleteCommands +
                         "END TRANSACTION;";
-                }, 500)
-                );
+                }, 500));
 
             return res;
         }

@@ -630,6 +630,9 @@ module Database =
         br.Restore "EMPTY.sql"
         globalThreshold := LoggingLevel.Trace
 
+module NativeDatabase =
+    open YieldMap.Transitive.Native.Entities
+    let logger = LogFactory.create "UnitTests.Database"
 
     [<Test>] 
     let ``Native SQL create 1 instrument`` () =
@@ -657,7 +660,10 @@ module Database =
 
         let sql = helper.BulkDeleteSql<NInstrument>(instruments)
         logger.InfoF "Got sql %A" (List.ofSeq sql)
-        sql |> should be (equal ["DELETE FROM Instrument WHERE Name = 'Hello' AND id_InstrumentType = 1 AND id_Description = 2"])
+        sql |> should be (equal
+            [
+                "BEGIN TRANSACTION;\nDELETE FROM Instrument  WHERE Name = 'Hello' AND id_InstrumentType = 1 AND id_Description = 2;\nEND TRANSACTION;"
+            ])
 
     [<Test>] 
     let ``Native SQL delete 2 instruments`` () =
@@ -672,8 +678,10 @@ module Database =
 
         let sql = helper.BulkDeleteSql<NInstrument>(instruments)
         logger.InfoF "Got sql %A" (List.ofSeq sql)
-        sql |> should be (equal ["DELETE FROM Instrument WHERE Name = 'Hello' AND id_InstrumentType = 1 AND id_Description = 2"])
-
+        sql |> should be (equal 
+            [
+            "BEGIN TRANSACTION;\nDELETE FROM Instrument  WHERE Name = 'Hello' AND id_InstrumentType = 1 AND id_Description = 2;\nDELETE FROM Instrument  WHERE Name = 'Bye' AND id_InstrumentType = 2 AND id_Description = NULL;\nEND TRANSACTION;"
+            ])
 
     [<Test>] 
     let ``Native SQL create 2 instruments`` () =
@@ -690,5 +698,88 @@ module Database =
         logger.InfoF "Got sql %A" (List.ofSeq sql)
         sql |> should be (equal 
             ["INSERT INTO Instrument(Name, id_InstrumentType, id_Description)  SELECT 'Hello', 1, 2 UNION SELECT 'Bye', 2, NULL"])
-//        cud.Create <| NInstrument(Name = "Hello")
-//        cud.Save ()
+
+    [<Test>] 
+    let ``Native SQL update 1 instrument`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(id = 15L, Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+            ]
+
+        let sql = helper.BulkUpdateSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal ["BEGIN TRANSACTION;\n UPDATE Instrument SET Name = 'Hello', id_InstrumentType = 1, id_Description = 2 WHERE id = 15;\nEND TRANSACTION;"])
+
+    [<Test>] 
+    let ``Native SQL update 2 instruments`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(id = 15L, Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+                NInstrument(id = 16L, Name = "Bye", id_InstrumentType = Nullable 2L, id_Description = Nullable())
+            ]
+
+        let sql = helper.BulkUpdateSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal ["BEGIN TRANSACTION;\n UPDATE Instrument SET Name = 'Hello', id_InstrumentType = 1, id_Description = 2 WHERE id = 15;\nUPDATE Instrument SET Name = 'Bye', id_InstrumentType = 2, id_Description = NULL WHERE id = 16;\nEND TRANSACTION;"])
+
+    [<Test>] 
+    let ``Native SQL delete 1 instrument by id`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(id = 15L, Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+            ]
+
+        let sql = helper.BulkDeleteSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal
+            [
+                "DELETE FROM Instrument  WHERE id IN (15)"
+            ])
+
+    [<Test>] 
+    let ``Native SQL delete 2 instruments by id`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(id = 15L, Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+                NInstrument(id = 16L, Name = "Bye", id_InstrumentType = Nullable 2L, id_Description = Nullable())
+            ]
+
+        let sql = helper.BulkDeleteSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal 
+            [
+                "DELETE FROM Instrument  WHERE id IN (15, 16)"
+            ])
+
+    [<Test>] 
+    let ``Native SQL delete mixed`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<INEntityHelper>()
+
+        let instruments = 
+            [
+                NInstrument(id = 15L, Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+                NInstrument(id = 16L, Name = "Bye", id_InstrumentType = Nullable 2L, id_Description = Nullable())
+                NInstrument(Name = "Hello", id_InstrumentType = Nullable 1L, id_Description = Nullable 2L)
+                NInstrument(Name = "Bye", id_InstrumentType = Nullable 2L, id_Description = Nullable())
+            ]
+
+        let sql = helper.BulkDeleteSql<NInstrument>(instruments)
+        logger.InfoF "Got sql %A" (List.ofSeq sql)
+        sql |> should be (equal 
+            [
+                "DELETE FROM Instrument  WHERE id IN (15, 16)"
+                "BEGIN TRANSACTION;\n UPDATE Instrument SET Name = 'Hello', id_InstrumentType = 1, id_Description = 2 WHERE id = 15;\nUPDATE Instrument SET Name = 'Bye', id_InstrumentType = 2, id_Description = NULL WHERE id = 16;\nEND TRANSACTION;"
+            ])
