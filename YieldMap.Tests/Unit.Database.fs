@@ -835,3 +835,43 @@ module NativeDatabase =
         helper.Save<NFeed> ()
 
         helper.FindAll().Count() |> should be (equal 1)
+
+
+    [<Test>]
+    let ``Add 2, read ids, update and then delete`` () =
+        let container = DatabaseBuilder.Container 
+        let helper = container.Resolve<IFeedCrud>()
+        helper.FindAll().Count() |> should be (equal 1)
+
+        let newFeed1 = NFeed(Name = "A", Description = "Description")
+        let newFeed2 = NFeed(Name = "B", Description = "Description B")
+        newFeed1.id |> should be (equal 0L)
+        newFeed2.id |> should be (equal 0L)
+        helper.Create newFeed1
+        helper.Create newFeed2
+        helper.Save<NFeed>()
+        
+        helper.FindAll().Count() |> should be (equal 3)
+        newFeed1.id |> should be (greaterThan 0L)
+        newFeed2.id |> should be (greaterThan 0L)
+
+        newFeed1.Description <- "Advanced description"
+        helper.Update newFeed1
+        helper.Save<NFeed>()
+        helper.FindAll().Count() |> should be (equal 3)
+
+        let helper2 = container.Resolve<IFeedCrud>()
+        helper2.FindById(newFeed1.id).Description |> should be (equal "Advanced description")
+
+        helper.Delete newFeed1
+        helper.Delete newFeed2
+        let newFeed3 = NFeed(Name = "C", Description = "Description C")
+        helper.Create newFeed3
+        helper.Save<NFeed> ()
+        newFeed3.id |> should be (greaterThan 0L)
+
+        helper.FindAll().Count() |> should be (equal 2)
+        newFeed3.id <- 0L
+        helper.Delete newFeed3
+        helper.Save<NFeed> ()
+        helper.FindAll().Count() |> should be (equal 1)
