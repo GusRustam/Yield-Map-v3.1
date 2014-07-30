@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="23">
+      <Diagram DiagramId="9193f223e02841e1a4a00f2d652e9bcf" Name="Diagram1" ZoomLevel="47">
         <EntityTypeShape EntityType="mainModel.Chain" Width="1.5" PointX="20.25" PointY="38.375" FillColor="DarkRed" />
         <EntityTypeShape EntityType="mainModel.Country" Width="1.5" PointX="31.625" PointY="45.625" FillColor="PaleTurquoise" />
         <EntityTypeShape EntityType="mainModel.Currency" Width="1.5" PointX="47" PointY="46.125" FillColor="Chocolate" />
@@ -39,7 +39,7 @@
         <AssociationConnector Association="mainModel.FK_RatingToLegalEntity_0_0" />
         <AssociationConnector Association="mainModel.FK_RatingToLegalEntity_1_0" />
         <AssociationConnector Association="mainModel.FK_Leg_0_01" />
-        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="28.375" PointY="38.375" FillColor="DarkRed" />
+        <EntityTypeShape EntityType="mainModel.Ric" Width="1.5" PointX="28.375" PointY="38.5" FillColor="DarkRed" />
         <AssociationConnector Association="mainModel.FK_Ric_2_0" />
         <AssociationConnector Association="mainModel.FK_Ric_1_0" ManuallyRouted="false" >
         </AssociationConnector>
@@ -47,7 +47,7 @@
         <EntityTypeShape EntityType="mainModel.Index" Width="1.5" PointX="31.25" PointY="40.375" FillColor="DarkRed" />
         <AssociationConnector Association="mainModel.FK_Index_0_0" />
         <AssociationConnector Association="mainModel.FK_Leg_0_02" />
-        <EntityTypeShape EntityType="mainModel.Description" Width="1.5" PointX="28.125" PointY="48.25" FillColor="PaleTurquoise" />
+        <EntityTypeShape EntityType="mainModel.Description" Width="1.5" PointX="28" PointY="48.25" FillColor="PaleTurquoise" />
         <EntityTypeShape EntityType="mainModel.Instrument" Width="2" PointX="43" PointY="51.75" FillColor="PaleTurquoise" />
         <AssociationConnector Association="mainModel.FK_Description_0_0" />
         <AssociationConnector Association="mainModel.FK_Description_1_0" />
