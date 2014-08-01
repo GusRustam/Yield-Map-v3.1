@@ -497,12 +497,12 @@ module Database =
 
         let functions = 
             [
-             (1L, Evaluatable("$Name + \" \" + $Series")); 
-             (2L, Evaluatable("$Name + IIf(Not IsNothing($Coupon), \" \" + Format(\"0.00\", $Coupon), \"\") + IIf(Not IsNothing($Maturity), \" '\" + Format(\"MMM-yy\", $Maturity), \"\")"))
+             (1L, Evaluatable("$Name + \" \" + $Series", 1L)); 
+             (2L, Evaluatable("$Name + IIf(Not IsNothing($Coupon), \" \" + Format(\"0.00\", $Coupon), \"\") + IIf(Not IsNothing($Maturity), \" '\" + Format(\"MMM-yy\", $Maturity), \"\")", 1L))
             ] |> Map.ofList |> Map.toDict
 
         RhinoMocksExtensions
-            .Stub<_,_>(funcRegMock, Rhino.Mocks.Function<_,_>(fun x -> x.Add(0L, "")))
+            .Stub<_,_>(funcRegMock, Rhino.Mocks.Function<_,_>(fun x -> x.Add(0L, 1L, "")))
             .IgnoreArguments()
             .Return(0)
             |> ignore
@@ -566,7 +566,7 @@ module Database =
         properyReader
             .FindAll()
             .ToList()
-            |> Seq.iter(fun p -> registry.Add(p.id, p.Expression)  |> ignore)
+            |> Seq.iter(fun p -> registry.Add(p.id, p.id_InstrumentTpe, p.Expression)  |> ignore)
 
         updater.RecalculateBonds () |> should be (equal 4)
 
@@ -600,7 +600,7 @@ module Database =
         nativeKiller.DeleteAll()
 
         properyReader.FindAll().ToList()
-        |> Seq.iter (fun x -> registry.Add(x.id, x.Expression) |> ignore)
+        |> Seq.iter (fun x -> registry.Add(x.id, x.id_InstrumentTpe, x.Expression) |> ignore)
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
@@ -626,7 +626,7 @@ module Database =
 
         let properyReader = container.Resolve<IPropertiesRepository> ()
         properyReader.FindAll().ToList()
-        |> Seq.iter (fun x -> registry.Add(x.id, x.Expression) |> ignore)
+        |> Seq.iter (fun x -> registry.Add(x.id, x.id_InstrumentTpe, x.Expression) |> ignore)
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)

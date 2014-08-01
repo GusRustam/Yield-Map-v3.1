@@ -150,12 +150,12 @@ module Startup =
                 let updater = q.DbServices.Resolve<IDbUpdates>()
                 if force then
                     let registry = q.DbServices.Resolve<IFunctionRegistry>()
-                    use properties = q.DbServices.Resolve<IPropertiesCrud>()
+                    use properties = q.DbServices.Resolve<IPropertyCrud>()
                     registry.Clear () |> ignore
                     properties
                         .FindAll()
                         .ToList() 
-                        |> Seq.iter(fun p -> registry.Add(p.id, p.Expression) |> ignore)
+                        |> Seq.iter(fun p -> registry.Add(p.id, p.id_InstrumentType, p.Expression) |> ignore)
 
                 async {
                     try

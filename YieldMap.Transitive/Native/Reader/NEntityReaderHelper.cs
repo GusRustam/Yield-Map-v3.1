@@ -13,7 +13,7 @@ namespace YieldMap.Transitive.Native.Reader {
         public NEntityReaderHelper() {
             var types = Assembly.GetExecutingAssembly()
                 .GetTypes()
-                .Where(t => t.IsClass && t.GetInterfaces().Contains(typeof(IIdentifyable)))
+                .Where(t => t.IsClass && t.GetInterfaces().Contains(typeof(INotIdentifyable)))
                 .ToList();
 
             foreach (var type in types) {

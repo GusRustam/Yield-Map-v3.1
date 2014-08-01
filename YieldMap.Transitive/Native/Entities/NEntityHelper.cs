@@ -8,17 +8,6 @@ using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Native.Entities {
-    public interface INEntityHelper {
-        IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
-        IEnumerable<string> BulkUpdateSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
-        IEnumerable<string> BulkDeleteSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T>;
-        string DeleteAllSql<T>();
-        string SelectSql<T>() where T : IIdentifyable;
-        string FindIdSql<T>(T instrument) where T : IIdentifyable;
-        IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable;
-        long ReadId(SQLiteDataReader reader);
-    }
-
     public class NEntityHelper : INEntityHelper {
         private readonly Dictionary<Type, Dictionary<Operations, string>> _queries;
         private readonly Dictionary<Type, Dictionary<string, Func<object, string>>> _rules 
@@ -268,6 +257,11 @@ namespace YieldMap.Transitive.Native.Entities {
             return reader.Read() ? reader.GetInt32(0) : default(long);
         }
 
+        public string AllFields<T>() where T : class, IIdentifyable {
+            var type = typeof (T);
+            return string.Join(", ", _properties[type].Select(p => p.Name));
+        }
+
         public IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable {
             // todo this can be also automated via Reflection.Emit
             if (reader.Read()) {
@@ -284,7 +278,7 @@ namespace YieldMap.Transitive.Native.Entities {
                         Name = reader.GetString(1),
                         Description = reader.GetString(2),
                         Expression = reader.GetString(3),
-                        id_InstrumentTpe = reader.GetInt32(4)
+                        id_InstrumentType = reader.GetInt32(4)
                     };
                 if (typeof(T) == typeof(NPropertyValue))
                     return new NPropertyValue {

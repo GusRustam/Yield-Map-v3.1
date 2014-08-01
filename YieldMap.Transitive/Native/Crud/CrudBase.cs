@@ -4,14 +4,17 @@ using System.Data.SQLite;
 using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
+using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native.Crud {
-    public abstract class CrudBase<T> : IDisposable, ICrud<T> where T : class, IIdentifyable, IEquatable<T> {
-        protected Dictionary<T, Operations> Entities = new Dictionary<T, Operations>() ;
+    public abstract class CrudBase<T> : ICrud<T> where T : class, IIdentifyable, IEquatable<T> {
+        public event EventHandler<IDbEventArgs> Notify;
+        protected Dictionary<T, Operations> Entities = new Dictionary<T, Operations>();
         abstract protected Logging.Logger Logger { get; }
         protected readonly SQLiteConnection Connection;
         private readonly INEntityHelper _helper;
+        protected readonly IContainer Container;
 
         protected CrudBase(SQLiteConnection connection) {
             Connection = connection;
@@ -19,9 +22,9 @@ namespace YieldMap.Transitive.Native.Crud {
         }
 
         protected CrudBase(Func<IContainer> containerF) {
-            var container = containerF.Invoke();
-            var connector = container.Resolve<IConnector>();
-            _helper = container.Resolve<INEntityHelper>();
+            Container = containerF.Invoke();
+            var connector = Container.Resolve<IConnector>();
+            _helper = Container.Resolve<INEntityHelper>();
             Connection = connector.GetConnection();
             Connection.Open();
         }
@@ -29,6 +32,7 @@ namespace YieldMap.Transitive.Native.Crud {
         public void Dispose() {
             Connection.Close();
             Connection.Dispose();
+            Container.Dispose();
         }
 
         private bool Exists(T entity, out Operations? state) {
@@ -64,6 +68,28 @@ namespace YieldMap.Transitive.Native.Crud {
             Entities.Clear();
         }
 
+        private bool _muted;
+        private bool _unmute;
+
+        public void MuteOnce() {
+            _muted = true;
+            _unmute = true;
+        }
+
+        public void Mute() {
+            _muted = true;
+            _unmute = false;
+        }
+
+        public void Unmute() {
+            _muted = false;
+            _unmute = false;
+        }
+
+        public bool Muted() {
+            return _muted;
+        }
+
         public void Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity> {
             // Operations.Create (have ids only)
             Execute<TEntity>(Operations.Create, _helper.BulkInsertSql);
@@ -76,11 +102,34 @@ namespace YieldMap.Transitive.Native.Crud {
             // Operations.Delete 
             // - by id 
             // - by fields (todo)
-            Execute<TEntity>(Operations.Delete, _helper.BulkDeleteSql); 
+            Execute<TEntity>(Operations.Delete, _helper.BulkDeleteSql);
 
+
+            if (!_muted && Notify != null) {
+                Notify(this,
+                    new DbEventArgs(
+                        Entities.Where(kvp => kvp.Value == Operations.Create).Select(kvp => kvp.Key.id).ToArray(),
+                        Entities.Where(kvp => kvp.Value == Operations.Update).Select(kvp => kvp.Key.id).ToArray(),
+                        Entities.Where(kvp => kvp.Value == Operations.Delete).Select(kvp => kvp.Key.id).ToArray(),
+                        NativeSource<TEntity>()));
+            }
+            if (_muted && _unmute) Unmute();
+        
             foreach (var entity in Entities.Where(entity => entity.Value == Operations.Delete).ToList()) {
                 Entities.Remove(entity.Key);
             }
+        }
+
+        private static EventSource NativeSource<TType>() {
+            var type = typeof (TType);
+            if (type == typeof(NInstrument))
+                return EventSource.Instrument;
+            if (type == typeof(NProperty))
+                return EventSource.Property;
+            if (type == typeof(NPropertyValue))
+                return EventSource.PropertyValue;
+
+            throw new ArgumentException();
         }
 
         private void RetrieveIds(Operations operation) {

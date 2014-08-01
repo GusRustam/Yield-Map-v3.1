@@ -70,6 +70,7 @@
     <Compile Include="Native\Crud\ICrud.cs" />
     <Compile Include="Native\Entities\IIdentifyable.cs" />
     <Compile Include="Native\Crud\InstrumentCrud.cs" />
+    <Compile Include="Native\Entities\INEntityHelper.cs" />
     <Compile Include="Native\Entities\INotIdentifyable.cs" />
     <Compile Include="Native\Entities\ITypedInstrument.cs" />
     <Compile Include="Native\Reader\BondDescriptionReader.cs" />

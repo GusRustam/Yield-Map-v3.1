@@ -29,6 +29,7 @@ module Loader =
     open System.Collections.Generic
     open System.IO
     open YieldMap.Transitive.Native.Crud
+    open YieldMap.Transitive.Native.Entities
 
     let private logger = LogFactory.create "Load"
 
@@ -121,7 +122,7 @@ module Loader =
         let saver = container.Resolve<ISaver>()
         let updater = container.Resolve<IDbUpdates>()
 
-        let killer = container.Resolve<IInstrumentCrud>() // TODO!!!
+        let killer = container.Resolve<IInstrumentCrud>() 
 
         async {
             try
@@ -145,11 +146,11 @@ module Loader =
                     (classified.[Mission.Obsolete].Length) 
                     (classified.[Mission.Keep].Length)
 
-// TODO PROPER DELETION USING PROPER RIC COMPARISON
-//                let o = classified.[Mission.Obsolete]
-//                let f = fun (r:Ric) -> Array.exists ((=) r.Name) o
-//                s.Database |> DbManager.deleteRics (Func<Ric, bool>(f))
-                    
+                classified.[Mission.ToReload] |> killer.FindByRic |> Seq.iter killer.Delete
+                classified.[Mission.Obsolete] |> killer.FindByRic |> Seq.iter killer.Delete
+
+                killer.Save<NInstrument> ()
+
                 let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                 match res with 
                 | Some e -> return! loadFailed s e

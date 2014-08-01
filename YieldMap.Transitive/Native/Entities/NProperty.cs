@@ -14,8 +14,8 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(3)]
         public string Expression { get; set; }
 
-        [DbField(4)] // ReSharper disable once InconsistentNaming
-        public long id_InstrumentTpe { get; set; }
+        [DbField(4, "id_InstrumentTpe")] // ReSharper disable once InconsistentNaming
+        public long id_InstrumentType { get; set; }
         
         public bool Equals(NProperty other) {
             if (other == null)
@@ -23,7 +23,7 @@ namespace YieldMap.Transitive.Native.Entities {
             if (id != default(long) && other.id != default(long) && id == other.id)
                 return true;
             return Name == other.Name && Description == other.Description &&
-                   Expression == other.Expression && id_InstrumentTpe == other.id_InstrumentTpe;
+                   Expression == other.Expression && id_InstrumentType == other.id_InstrumentType;
         }
     }
 }

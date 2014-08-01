@@ -3,6 +3,8 @@
         Instrument,
         Chain,
         Ric,
-        Feed
+        Feed,
+        Property,
+        PropertyValue
     }
 }
