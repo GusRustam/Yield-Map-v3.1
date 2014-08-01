@@ -1,6 +1,6 @@
 ﻿using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native.Crud {
-    public interface IPropertyCrud : ICrud<NProperty> {
+    public interface IFieldGroupCrud : ICrud<NFieldGroup> {
     }
 }

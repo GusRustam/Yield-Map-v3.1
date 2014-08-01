@@ -1,4 +1,4 @@
-﻿using YieldMap.Database;
+﻿using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Tools {
     /// <summary>
@@ -10,6 +10,6 @@ namespace YieldMap.Transitive.Tools {
         /// </summary>
         /// <param name="ric">the ric to use</param>
         /// <returns>id in FieldGroup table</returns>
-        FieldGroup Resolve(string ric);
+        NFieldGroup Resolve(string ric);
     }
 }

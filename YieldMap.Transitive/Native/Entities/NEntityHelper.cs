@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Reader;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Native.Entities {
@@ -12,8 +13,8 @@ namespace YieldMap.Transitive.Native.Entities {
         private readonly Dictionary<Type, Dictionary<Operations, string>> _queries;
         private readonly Dictionary<Type, Dictionary<string, Func<object, string>>> _rules 
             = new Dictionary<Type, Dictionary<string, Func<object, string>>>();
-        private readonly Dictionary<Type, PropertyInfo[]> _properties 
-            = new Dictionary<Type, PropertyInfo[]>();
+        private readonly Dictionary<Type, PropertyRecord[]> _properties
+            = new Dictionary<Type, PropertyRecord[]>();
 
         public IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T> {
             var type = typeof(T);
@@ -22,9 +23,9 @@ namespace YieldMap.Transitive.Native.Entities {
                     var addition = instrumentChunk.Aggregate(" SELECT ", (unitedSql, instrument) => {
                         var valuesList =
                             _properties[type]
-                                .Where(p => p.Name != "id")
+                                .Where(p => p.DbName != "id")
                                 .Aggregate("", (allFields, p) => {
-                                    var formattedField = _rules[type][p.Name](p.GetValue(instrument));
+                                    var formattedField = _rules[type][p.Info.Name](p.Info.GetValue(instrument));
                                     return allFields + formattedField + ", ";
                                 });
                         return unitedSql + valuesList.Substring(0, valuesList.Length - ", ".Length) + " UNION SELECT ";
@@ -42,10 +43,10 @@ namespace YieldMap.Transitive.Native.Entities {
                     var updateCommands = instrumentChunk.Aggregate(" ", (unitedSql, instrument) => {
                         var valuesList =
                             _properties[type]
-                                .Where(p => p.Name != "id")
+                                .Where(p => p.DbName != "id")
                                 .Aggregate(_queries[type][Operations.Update], (allFields, p) => {
-                                    var formattedField = _rules[type][p.Name](p.GetValue(instrument));
-                                    return allFields + p.Name + " = " + formattedField + ", ";
+                                    var formattedField = _rules[type][p.Info.Name](p.Info.GetValue(instrument));
+                                    return allFields + p.DbName + " = " + formattedField + ", ";
                                 });
                         return unitedSql + valuesList.Substring(0, valuesList.Length - ", ".Length) + " WHERE id = " + instrument.id + ";\n";
                     });
@@ -81,10 +82,10 @@ namespace YieldMap.Transitive.Native.Entities {
                         foreach (var instrument in instrumentChunk) {
                             deleteCommands += _queries[type][Operations.Delete] + " WHERE ";
                             var valuesList = _properties[type]
-                                .Where(p => p.Name != "id")
+                                .Where(p => p.DbName != "id")
                                 .Aggregate("", (condition, p) => {
-                                    var formattedField = _rules[type][p.Name](p.GetValue(instrument));
-                                    return condition + p.Name + " = " + formattedField + " AND ";
+                                    var formattedField = _rules[type][p.Info.Name](p.Info.GetValue(instrument));
+                                    return condition + p.DbName + " = " + formattedField + " AND ";
                                 });
                             deleteCommands += valuesList.Substring(0, valuesList.Length - " AND ".Length) + ";\n";
                         }
@@ -110,9 +111,9 @@ namespace YieldMap.Transitive.Native.Entities {
             var typeName = type.Name;
             var name = typeName.StartsWith("N") ? typeName.Substring(1) : typeName;
 
-            var valuesList = _properties[type].Where(p => p.Name != "id").Aggregate("", (condition, p) => {
-                var formattedField = _rules[type][p.Name](p.GetValue(instrument));
-                return condition + p.Name + " = " + formattedField + " AND ";
+            var valuesList = _properties[type].Where(p => p.DbName != "id").Aggregate("", (condition, p) => {
+                var formattedField = _rules[type][p.Info.Name](p.Info.GetValue(instrument));
+                return condition + p.DbName + " = " + formattedField + " AND ";
             });
 
             return string.Format("SELECT id FROM {0} WHERE {1}", name, valuesList.Substring(0, valuesList.Length - " AND ".Length));
@@ -128,7 +129,7 @@ namespace YieldMap.Transitive.Native.Entities {
                     .Select(p => new { Descr = p.GetCustomAttribute<DbFieldAttribute>(), Property = p })
                     .Where(x => x.Descr != null)
                     .OrderBy(x => x.Descr.Order)
-                    .Select(x => x.Property)
+                    .Select(x => new PropertyRecord(x.Property, x.Descr.Name))
                     .ToArray());
         }
 
@@ -239,8 +240,8 @@ namespace YieldMap.Transitive.Native.Entities {
                 var typeName = type.Name;
                 var name = typeName.StartsWith("N") ? typeName.Substring(1) : typeName;
 
-                var allFields = string.Join(", ", _properties[type].Select(p => p.Name));
-                var valueFields = string.Join(", ", _properties[type].Where(p => p.Name != "id").Select(p => p.Name));
+                var allFields = string.Join(", ", _properties[type].Select(p => p.DbName));
+                var valueFields = string.Join(", ", _properties[type].Where(p => p.DbName != "id").Select(p => p.DbName));
 
                 var queries = new Dictionary<Operations, string> {
                     {Operations.Create, string.Format("INSERT INTO {0}({1})", name, valueFields)},
@@ -259,11 +260,11 @@ namespace YieldMap.Transitive.Native.Entities {
 
         public string AllFields<T>() where T : class, IIdentifyable {
             var type = typeof (T);
-            return string.Join(", ", _properties[type].Select(p => p.Name));
+            return string.Join(", ", _properties[type].Select(p => p.DbName));
         }
 
         public IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable {
-            // todo this can be also automated via Reflection.Emit
+            // todo this can be also automated via Reflection.Emit or dynamic type
             if (reader.Read()) {
                 if (typeof (T) == typeof (NInstrument))
                     return new NInstrument {
@@ -292,6 +293,14 @@ namespace YieldMap.Transitive.Native.Entities {
                         id = reader.GetInt32(0),
                         Name = reader.GetString(1),
                         Description = reader.GetString(2)
+                    };
+                }
+                if (typeof(T) == typeof(NFieldGroup)) {
+                    return new NFieldGroup {
+                        id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Default = reader.GetChar(2) != '\0',
+                        id_DefaultFieldDef = reader.GetNullableInt32(3)
                     };
                 }
                 throw new ArgumentException("what");

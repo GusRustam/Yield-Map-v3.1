@@ -32,7 +32,7 @@ namespace YieldMap.Transitive.Native.Crud {
         public void Dispose() {
             Connection.Close();
             Connection.Dispose();
-            Container.Dispose();
+            //Container.Dispose();
         }
 
         private bool Exists(T entity, out Operations? state) {

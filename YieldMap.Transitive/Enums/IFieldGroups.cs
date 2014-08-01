@@ -1,12 +1,12 @@
-﻿using YieldMap.Database;
+﻿using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
     public interface IFieldGroups {
-        FieldGroup Default { get; }
-        FieldGroup Micex { get; }
-        FieldGroup Eurobonds { get; }
-        FieldGroup RussiaCpi { get; }
-        FieldGroup Mosprime { get; }
-        FieldGroup Swaps { get; }
+        NFieldGroup Default { get; }
+        NFieldGroup Micex { get; }
+        NFieldGroup Eurobonds { get; }
+        NFieldGroup RussiaCpi { get; }
+        NFieldGroup Mosprime { get; }
+        NFieldGroup Swaps { get; }
     }
 }

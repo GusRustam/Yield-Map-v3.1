@@ -58,7 +58,9 @@
     <Compile Include="Enums\SourceTypes.cs" />
     <Compile Include="Native\Crud\CrudBase.cs" />
     <Compile Include="Native\Crud\FeedCrud.cs" />
+    <Compile Include="Native\Crud\FieldGroupCrud.cs" />
     <Compile Include="Native\Crud\IFeedCrud.cs" />
+    <Compile Include="Native\Crud\IFieldGroupCrud.cs" />
     <Compile Include="Native\Crud\IInstrumentCrud.cs" />
     <Compile Include="Native\Crud\IPropertyCrud.cs" />
     <Compile Include="Native\Crud\IPropertyValueCrud.cs" />
@@ -73,6 +75,7 @@
     <Compile Include="Native\Entities\INEntityHelper.cs" />
     <Compile Include="Native\Entities\INotIdentifyable.cs" />
     <Compile Include="Native\Entities\ITypedInstrument.cs" />
+    <Compile Include="Native\Entities\NFieldGroup.cs" />
     <Compile Include="Native\Reader\BondDescriptionReader.cs" />
     <Compile Include="Native\Reader\INEntityReaderHelper.cs" />
     <Compile Include="Native\Reader\NEntityReaderHelper.cs" />

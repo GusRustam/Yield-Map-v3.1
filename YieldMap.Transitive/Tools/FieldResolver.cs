@@ -1,6 +1,6 @@
 ﻿using System;
-using YieldMap.Database;
 using YieldMap.Transitive.Enums;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Tools {
     public class FieldResolver : IFieldResolver {
@@ -10,7 +10,7 @@ namespace YieldMap.Transitive.Tools {
             _groups = groups;
         }
 
-        public FieldGroup Resolve(String ric) {
+        public NFieldGroup Resolve(String ric) {
             return ric.Contains("=MM") ? _groups.Micex : _groups.Default;
         }
     }

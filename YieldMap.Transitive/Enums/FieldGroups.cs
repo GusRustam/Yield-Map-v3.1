@@ -1,27 +1,28 @@
-﻿using System.Linq;
-using YieldMap.Database;
-using YieldMap.Transitive.Domains;
-using YieldMap.Transitive.Domains.Contexts;
+﻿using System;
+using System.Linq;
+using Autofac;
+using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
     internal class FieldGroups : IFieldGroups {
-        public FieldGroup Default { get; private set; }
-        public FieldGroup Micex { get; private set; }
-        public FieldGroup Eurobonds { get; private set; }
-        public FieldGroup RussiaCpi { get; private set; }
-        public FieldGroup Mosprime { get; private set; }
-        public FieldGroup Swaps { get; private set; }
+        public NFieldGroup Default { get; private set; }
+        public NFieldGroup Micex { get; private set; }
+        public NFieldGroup Eurobonds { get; private set; }
+        public NFieldGroup RussiaCpi { get; private set; }
+        public NFieldGroup Mosprime { get; private set; }
+        public NFieldGroup Swaps { get; private set; }
 
-        public FieldGroups() {
-            var ctx = new EnumerationsContext();
+        public FieldGroups(Func<IContainer> containerF) {
+            var reader = containerF().Resolve<IFieldGroupCrud>();
 
-            var items = ctx.FieldGroups.ToList();
-            Default = items.First(x => x.Default).ToPocoSimple();
-            Micex = items.First(x => x.Name == "Micex").ToPocoSimple();
-            Eurobonds = items.First(x => x.Name == "Eurobonds").ToPocoSimple();
-            RussiaCpi = items.First(x => x.Name == "Russian CPI Index").ToPocoSimple();
-            Mosprime = items.First(x => x.Name == "Mosprime").ToPocoSimple();
-            Swaps = items.First(x => x.Name == "Swaps").ToPocoSimple();
+            var items = reader.FindAll().ToList();
+            Default = items.First(x => x.Default);
+            Micex = items.First(x => x.Name == "Micex");
+            Eurobonds = items.First(x => x.Name == "Eurobonds");
+            RussiaCpi = items.First(x => x.Name == "Russian CPI Index");
+            Mosprime = items.First(x => x.Name == "Mosprime");
+            Swaps = items.First(x => x.Name == "Swaps");
         }
     }
 }

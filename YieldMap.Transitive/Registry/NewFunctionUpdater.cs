@@ -17,11 +17,10 @@ namespace YieldMap.Transitive.Registry {
             _container = container.Invoke();
         }
 
-        public int Recalculate<TItem, TReader>(Func<TItem, bool> predicate = null) 
-            where TItem : class, ITypedInstrument 
-            where TReader : IReader<TItem> {
+        public int Recalculate<TItem>(Func<TItem, bool> predicate = null) 
+            where TItem : class, ITypedInstrument  {
 
-            var reader = _container.Resolve<TReader>();
+            var reader = _container.Resolve<IReader<TItem>>();
             var registry = _container.Resolve<IFunctionRegistry>();
             var properties = registry.Items;
 

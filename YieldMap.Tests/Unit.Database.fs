@@ -534,13 +534,13 @@ module Database =
         builder.RegisterInstance(funcRegMock) |> ignore
         builder.RegisterInstance(propertiesUowMock) |> ignore
         builder.RegisterInstance(instrumentDescriptionsReaderMock) |> ignore
-        builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>() |> ignore // using original code 
+        builder.RegisterType<NewFunctionUpdater>().As<INewFunctionUpdater>() |> ignore // using original code 
         builder.RegisterInstance(Func<_>(fun () -> !cnt)) |> ignore
         cnt := builder.Build()
         let container = !cnt
 
-        let updater = container.Resolve<IPropertiesUpdater>()
-        updater.RecalculateBonds () |> ignore
+        let updater = container.Resolve<INewFunctionUpdater>()
+        updater.Recalculate<NBondDescriptionView>() |> ignore
 
         !counter |> should be (equal 0)
 
@@ -593,7 +593,7 @@ module Database =
         br.Restore "RUCORP.sql"
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let updater = container.Resolve<IPropertiesUpdater>()
+        let updater = container.Resolve<INewFunctionUpdater>()
         let properyReader = container.Resolve<IPropertiesRepository> ()
 
         let nativeKiller = container.Resolve<IPropertyValueCrud> ()
@@ -604,7 +604,7 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.RecalculateBonds () |> should be (equal 1846)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1846)
         properyValueReader.FindAll().Count() |> should be (equal 1846)
         
         br.Restore "EMPTY.sql"
@@ -619,7 +619,7 @@ module Database =
         br.Restore "RUELG.sql"
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let updater = container.Resolve<IPropertiesUpdater>()
+        let updater = container.Resolve<INewFunctionUpdater>()
 
         let nativeKiller = container.Resolve<IPropertyValueCrud> ()
         nativeKiller.DeleteAll()
@@ -630,7 +630,7 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.RecalculateBonds () |> should be (equal 96)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 96)
         properyValueReader.FindAll().Count() |> should be (equal 96)
         
         br.Restore "EMPTY.sql"

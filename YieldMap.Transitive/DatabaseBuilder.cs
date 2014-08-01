@@ -7,6 +7,7 @@ using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
+using YieldMap.Transitive.Native.Reader;
 using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Registry;
 using YieldMap.Transitive.Repositories;
@@ -36,7 +37,8 @@ namespace YieldMap.Transitive {
             Builder.RegisterModule<NotificationsModule>();
 
             Builder.RegisterType<FunctionRegistry>().As<IFunctionRegistry>().SingleInstance();
-            Builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>().SingleInstance();
+            //Builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>().SingleInstance();
+            Builder.RegisterType<NewFunctionUpdater>().As<INewFunctionUpdater>().SingleInstance();
             // -- updates, backup/restore
             Builder.RegisterType<DbUpdates>().As<IDbUpdates>();
             Builder.RegisterType<BackupRestore>().As<IBackupRestore>();
@@ -76,12 +78,23 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>();
 
             // Native components
+            // - connection
             Builder.RegisterType<Connector>().As<IConnector>();
+
+            // - helpers
             Builder.RegisterType<NEntityHelper>().As<INEntityHelper>().SingleInstance();
+            Builder.RegisterType<NEntityReaderHelper>().As<INEntityReaderHelper>().SingleInstance();
+
+            // - cruds
+            Builder.RegisterType<FieldGroupCrud>().As<IFieldGroupCrud>();
             Builder.RegisterType<InstrumentCrud>().As<IInstrumentCrud>();
             Builder.RegisterType<PropertyCrud>().As<IPropertyCrud>();
             Builder.RegisterType<PropertyValueCrud>().As<IPropertyValueCrud>();
             Builder.RegisterType<FeedCrud>().As<IFeedCrud>();
+
+            // - readers
+            Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();
+
         }
     }
 }
