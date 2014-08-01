@@ -9,7 +9,7 @@ using YieldMap.Transitive.Native.Entities;
 namespace YieldMap.Transitive.Native.Crud {
     public abstract class CrudBase<T> : IDisposable, ICrud<T> where T : class, IIdentifyable, IEquatable<T> {
         protected Dictionary<T, Operations> Entities = new Dictionary<T, Operations>() ;
-        abstract protected  Logging.Logger Logger { get; }
+        abstract protected Logging.Logger Logger { get; }
         protected readonly SQLiteConnection Connection;
         private readonly INEntityHelper _helper;
 

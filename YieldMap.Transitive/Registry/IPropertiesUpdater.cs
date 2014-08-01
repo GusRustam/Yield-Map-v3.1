@@ -1,5 +1,6 @@
 using System;
 using YieldMap.Database;
+using YieldMap.Transitive.MediatorTypes.Variables;
 
 namespace YieldMap.Transitive.Registry {
     /// <summary>

@@ -6,7 +6,7 @@ namespace YieldMap.Transitive.Registry {
     /// </summary>
     public interface IFunctionRegistry {
         int Clear();
-        int Add(long propId, string expr);
+        int Add(long propId, long instrTypeId, string expr);
         /// <summary>
         /// key - property Id
         /// value - grammar

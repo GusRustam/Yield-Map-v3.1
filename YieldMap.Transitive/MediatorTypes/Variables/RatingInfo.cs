@@ -6,7 +6,7 @@ namespace YieldMap.Transitive.MediatorTypes.Variables {
         public string Name;
         public string Agency;
         public DateTime? Date;
-        public Dictionary<string, object> AsVariable() {
+        public Dictionary<string, object> Variable() {
             var res = new Dictionary<string, object>();
             res["NAME"] = Name;
             res["AGENCY"] = Agency;

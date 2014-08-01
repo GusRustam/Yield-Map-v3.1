@@ -5,7 +5,7 @@ using YieldMap.Tools.Logging;
 
 namespace YieldMap.Transitive.Registry {
     public class FunctionRegistry : IFunctionRegistry {
-        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Transient.FunctionRegistry");
+        private static readonly Logging.Logger Logger = Logging.LogFactory.create("Transitive.FunctionRegistry");
         private readonly ConcurrentDictionary<long, Evaluatable> _registry = 
             new ConcurrentDictionary<long, Evaluatable>();
 
@@ -14,7 +14,7 @@ namespace YieldMap.Transitive.Registry {
             return 0;
         }
 
-        public int Add(long propId, string expr) {
+        public int Add(long propId, long instrTypeId, string expr) {
             if (_registry.ContainsKey(propId)) {
                 Evaluatable value;
                 if (_registry.TryGetValue(propId, out value) && value.Expression != expr && !_registry.TryRemove(propId, out value))
@@ -23,7 +23,7 @@ namespace YieldMap.Transitive.Registry {
 
             if (!string.IsNullOrWhiteSpace(expr)) {
                 try {
-                    var x = new Evaluatable(expr);
+                    var x = new Evaluatable(expr, instrTypeId);
                     if (!_registry.TryAdd(propId, x)) 
                         Logger.Warn(string.Format("Failed to add an expression for property {0} to registry {1}", propId, x));
                 } catch (Exceptions.GrammarException e) {

@@ -3,9 +3,9 @@
 namespace YieldMap.Transitive.MediatorTypes.Variables {
     public class Issuer : Entity  {
         public RatingInfo Rating;
-        public override Dictionary<string, object> AsVariable() {
-            var res = base.AsVariable();
-            res.VariableJoin(Rating.AsVariable(), "RATING");
+        public override Dictionary<string, object> Variable() {
+            var res = base.Variable();
+            res.VariableJoin(Rating.Variable(), "RATING");
             return res;
         }
     }

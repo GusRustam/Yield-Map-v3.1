@@ -58,7 +58,7 @@ namespace YieldMap.Transitive.MediatorTypes.Variables {
             };
         }
 
-        public virtual Dictionary<string, object> AsVariable() {
+        public virtual Dictionary<string, object> Variable() {
             var res = new Dictionary<string, object>();
             res["NAME"] = _name;
             res["SERIES"] = _series;
@@ -74,9 +74,9 @@ namespace YieldMap.Transitive.MediatorTypes.Variables {
             res["SPECIMEN"] = _specimen;
             res["TICKER"] = _ticker;
 
-            res.VariableJoin(_issuer.AsVariable(), "ISSUER.");
-            res.VariableJoin(_borrower.AsVariable(), "BORROWER.");
-            res.VariableJoin(_issueRating.AsVariable(), "ISSUE.RATING");
+            res.VariableJoin(_issuer.Variable(), "ISSUER.");
+            res.VariableJoin(_borrower.Variable(), "BORROWER.");
+            res.VariableJoin(_issueRating.Variable(), "ISSUE.RATING");
 
             return res;
         }

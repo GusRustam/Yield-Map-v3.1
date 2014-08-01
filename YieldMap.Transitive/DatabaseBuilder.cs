@@ -79,7 +79,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<Connector>().As<IConnector>();
             Builder.RegisterType<NEntityHelper>().As<INEntityHelper>().SingleInstance();
             Builder.RegisterType<InstrumentCrud>().As<IInstrumentCrud>();
-            Builder.RegisterType<PropertyCrud>().As<IPropertiesCrud>();
+            Builder.RegisterType<PropertyCrud>().As<IPropertyCrud>();
             Builder.RegisterType<PropertyValueCrud>().As<IPropertyValueCrud>();
             Builder.RegisterType<FeedCrud>().As<IFeedCrud>();
         }

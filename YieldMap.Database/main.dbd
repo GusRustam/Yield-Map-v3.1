@@ -32,7 +32,7 @@
       <TDBADiagramObject id="5" propertiesclass="TDiagramMetaTableProperties" objectname="Feed">
         <TDiagramMetaTableProperties>
           <Glyph>
-            <Geometry left="1580" top="380" width="200" height="83"/>
+            <Geometry left="1740" top="380" width="200" height="83"/>
           </Glyph>
         </TDiagramMetaTableProperties>
       </TDBADiagramObject>
@@ -43,7 +43,7 @@
             <Glyph>
               <Geometry>
                 <Point x="2590" y="490"/>
-                <Point x="1690" y="420"/>
+                <Point x="1850" y="420"/>
               </Geometry>
             </Glyph>
           </Relation>
@@ -177,7 +177,7 @@
             <Glyph>
               <Geometry>
                 <Point x="1440" y="630"/>
-                <Point x="1690" y="420"/>
+                <Point x="1850" y="420"/>
               </Geometry>
             </Glyph>
           </Relation>
@@ -514,7 +514,7 @@
             <Glyph>
               <Geometry>
                 <Point x="1690" y="930"/>
-                <Point x="1690" y="420"/>
+                <Point x="1850" y="420"/>
               </Geometry>
             </Glyph>
           </Relation>
@@ -698,7 +698,7 @@
       <TDBADiagramObject id="68" propertiesclass="TDiagramMetaTableProperties" objectname="RicToList">
         <TDiagramMetaTableProperties>
           <Glyph>
-            <Geometry left="2190" top="630" width="200" height="83"/>
+            <Geometry left="2120" top="650" width="200" height="83"/>
           </Glyph>
         </TDiagramMetaTableProperties>
       </TDBADiagramObject>
@@ -708,7 +708,7 @@
             <Geometry left="1104" top="1104" width="200" height="100"/>
             <Glyph>
               <Geometry>
-                <Point x="2290" y="670"/>
+                <Point x="2220" y="690"/>
                 <Point x="2680" y="620"/>
               </Geometry>
             </Glyph>
@@ -721,7 +721,7 @@
             <Geometry left="1120" top="1120" width="200" height="100"/>
             <Glyph>
               <Geometry>
-                <Point x="2290" y="670"/>
+                <Point x="2220" y="690"/>
                 <Point x="1680" y="920"/>
               </Geometry>
             </Glyph>
@@ -738,7 +738,7 @@
       <TDBADiagramObject id="72" propertiesclass="TDiagramMetaTableProperties" objectname="RicToSearchQuery">
         <TDiagramMetaTableProperties>
           <Glyph>
-            <Geometry left="2200" top="780" width="270" height="73"/>
+            <Geometry left="2210" top="790" width="270" height="73"/>
           </Glyph>
         </TDiagramMetaTableProperties>
       </TDBADiagramObject>
@@ -748,7 +748,7 @@
             <Geometry left="1168" top="1168" width="200" height="100"/>
             <Glyph>
               <Geometry>
-                <Point x="2340" y="820"/>
+                <Point x="2350" y="830"/>
                 <Point x="2760" y="750"/>
               </Geometry>
             </Glyph>
@@ -761,7 +761,7 @@
             <Geometry left="1184" top="1184" width="200" height="100"/>
             <Glyph>
               <Geometry>
-                <Point x="2340" y="820"/>
+                <Point x="2350" y="830"/>
                 <Point x="1680" y="920"/>
               </Geometry>
             </Glyph>

@@ -409,23 +409,40 @@ module StartupTest =
     [<Test>]
     let ``Utility. Initialize Db with 0#RUCORP=MM`` () =
         let dt = DateTime(2014,5,14) 
+        let br = container.Resolve<IBackupRestore>()
+        br.Restore "EMPTY.sql"
+        
         let x = init [|"0#RUCORP=MM"|] dt
 
         command "Connect" x.Connect (Startup.State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
         
-        container.Resolve<IBackupRestore>().Backup() |> logger.Info
+        br.Backup() |> logger.Info
 
     (* ========================= ============================= *)
     [<Test>]
     let ``Utility. Initialize Db with 0#RUELG=MM`` () =
         let dt = DateTime(2014,5,14) 
+        let br = container.Resolve<IBackupRestore>()
+        br.Restore "EMPTY.sql"
+
         let x = init [|"0#RUELG=MM"|] dt
 
         command "Connect" x.Connect (Startup.State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
         
-        container
-            .Resolve<IBackupRestore>()
-            .Backup() 
-            |> logger.Info
+        br.Backup() |> logger.Info            
+            
+    (* ========================= ============================= *)
+    [<Test>]
+    let ``Utility. Initialize Db with 0#AM097464227=`` () =
+        let dt = DateTime(2014,5,14) 
+        let br = container.Resolve<IBackupRestore>()
+        br.Restore "EMPTY.sql"
+
+        let x = init [|"0#AM097464227="|] dt
+
+        command "Connect" x.Connect (Startup.State Connected)
+        command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
+        
+        br.Backup() |> logger.Info

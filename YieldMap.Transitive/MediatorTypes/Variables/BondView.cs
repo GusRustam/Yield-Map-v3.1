@@ -8,10 +8,10 @@ namespace YieldMap.Transitive.MediatorTypes.Variables {
             _coupon = i.Coupon;
         }
 
-        public override Dictionary<string, object> AsVariable() {
+        public override Dictionary<string, object> Variable() {
             var res = new Dictionary<string, object>();
             res["COUPON"] = _coupon;
-            res.VariableJoin(base.AsVariable());
+            res.VariableJoin(base.Variable());
             return res;
         }
     }

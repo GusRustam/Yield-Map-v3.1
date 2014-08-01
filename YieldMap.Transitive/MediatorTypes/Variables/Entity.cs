@@ -4,7 +4,7 @@ namespace YieldMap.Transitive.MediatorTypes.Variables {
     public class Entity : IVariable {
         public string Name;
         public string Country;
-        public virtual Dictionary<string, object> AsVariable() {
+        public virtual Dictionary<string, object> Variable() {
             var res = new Dictionary<string, object>();
             res["NAME"] = Name;
             res["COUNTRY"] = Country;

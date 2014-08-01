@@ -4,7 +4,6 @@ using Autofac;
 using YieldMap.Database;
 using YieldMap.Language;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
@@ -56,12 +55,12 @@ namespace YieldMap.Transitive.Registry {
                                 var grammar = kvp.Value;
                                 Logger.Trace(string.Format("For property with id {0} grammar {1}", propertyId, grammar));
                                 // evaluate property for that instrument
-                                var value = Interpreter.evaluate(grammar.Grammar, grammar.Expression, environment.AsVariable());
+                                var value = Interpreter.evaluate(grammar.Grammar, grammar.Expression, environment.Variable());
                                 Logger.Trace(string.Format("and value is {0}", value));
 
                                 // is there any value for this property and instrument?
                                 var item = propertiesRepo
-                                    .FindBy(pv => pv.id_Instrument == instrumentId && pv.id_Property == propertyId && pv.id_Instrument == typeId)
+                                    .FindBy(pv => pv.id_Instrument == instrumentId && pv.id_Property == propertyId )//&& pv.id_Instrument == typeId)
                                     .FirstOrDefault();
 
                                 if (value.IsNothing && item != null) {
