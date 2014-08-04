@@ -57,7 +57,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<LegTypes>().As<ILegTypes>().SingleInstance();
 
             // Readers (they provide read-only access to one or several tables in Db)
-            Builder.RegisterType<FeedReader>().As<IFeedReader>();
+            //Builder.RegisterType<FeedReader>().As<IFeedReader>();
             //Builder.RegisterType<InstrumentDescriptionsReader>().As<IInstrumentDescriptionsReader>();
             Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
             //Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
@@ -68,8 +68,8 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<RicRepository>().As<IRicRepository>();
             Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>();
 
-            Builder.RegisterType<FeedRepository>().As<IFeedRepository>();
-            Builder.RegisterType<FeedsUnitOfWork>().As<IEikonEntitiesUnitOfWork>();
+            //Builder.RegisterType<FeedRepository>().As<IFeedRepository>();
+            //Builder.RegisterType<FeedsUnitOfWork>().As<IEikonEntitiesUnitOfWork>();
 
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
             Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>();

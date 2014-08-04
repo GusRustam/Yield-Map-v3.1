@@ -134,9 +134,7 @@
     <Compile Include="Repositories\PropertyValuesRepostiory.cs" />
     <Compile Include="Repositories\ChainRepository.cs" />
     <Compile Include="Domains\UnitsOfWork\ChainRicUnitOfWork.cs" />
-    <Compile Include="Domains\UnitsOfWork\FeedsUnitOfWork.cs" />
     <Compile Include="Domains\UnitsOfWork\IChainRicUnitOfWork.cs" />
-    <Compile Include="Domains\UnitsOfWork\IEikonEntitiesUnitOfWork.cs" />
     <Compile Include="Repositories\IInstrumentRepository.cs" />
     <Compile Include="Domains\UnitsOfWork\IInstrumentUnitOfWork.cs" />
     <Compile Include="Repositories\InstrumentRepository.cs" />
@@ -151,16 +149,12 @@
     <Compile Include="Domains\ContextHelper.cs" />
     <Compile Include="Domains\Contexts\BaseContext.cs" />
     <Compile Include="Domains\Contexts\ChainRicContext.cs" />
-    <Compile Include="Domains\Contexts\FeedsContext.cs" />
     <Compile Include="Domains\Contexts\EnumerationsContext.cs" />
     <Compile Include="Domains\Contexts\PropertiesContext.cs" />
     <Compile Include="Domains\Contexts\RatingContext.cs" />
-    <Compile Include="Domains\Readers\FeedReader.cs" />
-    <Compile Include="Domains\Readers\IFeedReader.cs" />
     <Compile Include="Procedures\IDbUpdates.cs" />
     <Compile Include="Procedures\Mission.cs" />
     <Compile Include="Procedures\DbUpdates.cs" />
-    <Compile Include="Repositories\FeedRepository.cs" />
     <Compile Include="Domains\IRepository.cs" />
     <Compile Include="Domains\IUnitOfWork.cs" />
     <Compile Include="Domains\ReadOnlyRepository.cs" />

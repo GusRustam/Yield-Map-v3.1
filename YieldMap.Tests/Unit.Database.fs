@@ -138,11 +138,11 @@ module Database =
     let ``Reading real database`` () = 
         // Prepare
         let builder = ContainerBuilder()
-        builder.RegisterType<FeedRepository>().As<IFeedRepository>() |> ignore
+        builder.RegisterType<FeedCrud>().As<IFeedCrud>() |> ignore
         let container = builder.Build()
 
         // Test
-        use feeds = container.Resolve<IFeedRepository>()
+        use feeds = container.Resolve<IFeedCrud>()
         feeds.FindAll().Count() |> should be (equal 1)
 
     [<Test>]
@@ -213,15 +213,14 @@ module Database =
     let ``Add feed to real database, save and then remove it`` () =
         let container = DatabaseBuilder.Container
 
-        use uow = container.Resolve<IEikonEntitiesUnitOfWork>()
-        use feeds = container.Resolve<IFeedRepository>(NamedParameter("uow", uow))
+        use feeds = container.Resolve<IFeedCrud>()
 
         let feed = feeds.FindById 1L
         feed.Name |> should be (equal "Q")
 
-        let feed = Feed(Name = "W", Description = "Test item")
-        feeds.Add feed |> should be (equal 0)
-        uow.Save () |> should be (equal 1)
+        let feed = NFeed(Name = "W", Description = "Test item")
+        feeds.Create feed |> should be (equal 0)
+        feeds.Save<NFeed> () |> should be (equal 0)
 
         feed.id |> should be (greaterThan 0)
         let newId = feed.id
@@ -231,8 +230,8 @@ module Database =
 
         feed2.Name |> should be (equal "W")
 
-        feeds.Remove feed |> should be (equal 0)
-        uow.Save () |> should be (equal 1)
+        feeds.Delete feed |> should be (equal 0)
+        feeds.Save<NFeed> () |> should be (equal 0)
 
         use feeds3 = container.Resolve<IFeedRepository>()
         let feed3 = feeds3.FindById newId
@@ -820,22 +819,22 @@ module NativeDatabase =
 
         let newFeed = NFeed(Name = "A", Description = "Description")
         newFeed.id |> should be (equal 0L)
-        helper.Create newFeed
-        helper.Save<NFeed>()
+        helper.Create newFeed |> ignore
+        helper.Save<NFeed>() |> ignore
         
         helper.FindAll().Count() |> should be (equal 2)
         newFeed.id |> should be (greaterThan 0L)
 
         newFeed.Description <- "Advanced description"
-        helper.Update newFeed
-        helper.Save<NFeed>()
+        helper.Update newFeed |> ignore
+        helper.Save<NFeed>() |> ignore
         helper.FindAll().Count() |> should be (equal 2)
 
         let helper2 = container.Resolve<IFeedCrud>()
         helper2.FindById(newFeed.id).Description |> should be (equal "Advanced description")
 
-        helper.Delete newFeed
-        helper.Save<NFeed> ()
+        helper.Delete newFeed |> ignore
+        helper.Save<NFeed> () |> ignore
 
         helper.FindAll().Count() |> should be (equal 1)
 
@@ -850,31 +849,31 @@ module NativeDatabase =
         let newFeed2 = NFeed(Name = "B", Description = "Description B")
         newFeed1.id |> should be (equal 0L)
         newFeed2.id |> should be (equal 0L)
-        helper.Create newFeed1
-        helper.Create newFeed2
-        helper.Save<NFeed>()
+        helper.Create newFeed1 |> ignore
+        helper.Create newFeed2 |> ignore
+        helper.Save<NFeed>() |> ignore
         
         helper.FindAll().Count() |> should be (equal 3)
         newFeed1.id |> should be (greaterThan 0L)
         newFeed2.id |> should be (greaterThan 0L)
 
         newFeed1.Description <- "Advanced description"
-        helper.Update newFeed1
-        helper.Save<NFeed>()
+        helper.Update newFeed1 |> ignore
+        helper.Save<NFeed>() |> ignore
         helper.FindAll().Count() |> should be (equal 3)
 
         let helper2 = container.Resolve<IFeedCrud>()
         helper2.FindById(newFeed1.id).Description |> should be (equal "Advanced description")
 
-        helper.Delete newFeed1
-        helper.Delete newFeed2
+        helper.Delete newFeed1 |> ignore
+        helper.Delete newFeed2 |> ignore
         let newFeed3 = NFeed(Name = "C", Description = "Description C")
-        helper.Create newFeed3
-        helper.Save<NFeed> ()
+        helper.Create newFeed3 |> ignore
+        helper.Save<NFeed> () |> ignore
         newFeed3.id |> should be (greaterThan 0L)
 
         helper.FindAll().Count() |> should be (equal 2)
         newFeed3.id <- 0L
-        helper.Delete newFeed3
-        helper.Save<NFeed> ()
+        helper.Delete newFeed3 |> ignore
+        helper.Save<NFeed> () |> ignore
         helper.FindAll().Count() |> should be (equal 1)
