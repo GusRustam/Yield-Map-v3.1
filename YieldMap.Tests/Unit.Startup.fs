@@ -72,6 +72,7 @@ module StartupTest =
 
     open Clutch.Diagnostics.EntityFramework
     open YieldMap.Transitive.Native.Crud
+    open YieldMap.Transitive.Native.Entities
 
     let logger = LogFactory.create "UnitTests.StartupTest"
     
@@ -141,13 +142,12 @@ module StartupTest =
     let init chains dt = 
         c <- MockCalendar dt
 
-        use uow = container.Resolve<IChainRicUnitOfWork>()
-        use repo = container.Resolve<IChainRepository>(NamedParameter("uow", uow))
+        use repo = container.Resolve<IChainCrud>()
 
         chains |> Array.iter (fun name -> 
-            if not <| repo.FindBy(fun (x:Chain) -> x.Name = name).Any() then
-                repo.Add <| Chain(Name = name, id_Feed = Nullable(1L), Params = "", State = State.Added) |> ignore)
-        uow.Save () |> ignore 
+            if not <| repo.FindBy(fun (x:NChain) -> x.Name = name).Any() then
+                repo.Create <| NChain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore)
+        repo.Save<NChain> () |> ignore 
 
         s <- {
             Factory = MockFactory ()
@@ -248,10 +248,10 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUEUROS="|] dt        
         
-        use ctx = container.Resolve<IRicRepository>()
+        use ctx = container.Resolve<IRicCrud>()
         let initialUnattachedRics = query {
             for n in ctx.FindAll() do
-            where (n.Isin = null)
+            where (n.id_Isin = Nullable())
             count}
 
         command "Connect" x.Connect (Startup.State Connected)
@@ -259,7 +259,7 @@ module StartupTest =
 
         let unattachedRics = query {
             for n in ctx.FindAll() do
-            where (n.Isin = null)
+            where (n.id_Isin = Nullable())
             count
         }
 
@@ -272,10 +272,10 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#US30YSTRIP=PX"|] dt
 
-        use ctx = container.Resolve<IRicRepository>()
+        use ctx = container.Resolve<IRicCrud>()
         let initialUnattachedRics = query {
             for n in ctx.FindAll() do
-            where (n.Isin = null)
+            where (n.id_Isin = Nullable())
             count}
 
         command "Connect" x.Connect (Startup.State Connected)
@@ -284,7 +284,7 @@ module StartupTest =
 
         let unattachedRics = query {
             for n in ctx.FindAll() do
-            where (n.Isin = null)
+            where (n.id_Isin = Nullable())
             select n}
 
         let unattachedRics = unattachedRics.ToArray()
@@ -317,11 +317,10 @@ module StartupTest =
 
         let x = Startup s
         
-        use uow = container.Resolve<IChainRicUnitOfWork>()
-        use repo = container.Resolve<IChainRepository>(NamedParameter("uow", uow))
+        use repo = container.Resolve<IChainCrud>()
 
-        repo.Add <| Chain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "", State = State.Added) |> ignore
-        uow.Save () |> ignore
+        repo.Create <| NChain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
+        repo.Save<NChain> () |> ignore
 
         command "Connect" x.Connect (Startup.State Connected)
         logger.Info "Reloading"

@@ -61,9 +61,6 @@ namespace YieldMap.Transitive {
 
             // Repos and their units of work.
             // Logic: first repos, and then - their UOWs (the UOWs they use)
-            Builder.RegisterType<RicRepository>().As<IRicRepository>();
-            Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>();
-
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
             Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>();
 
@@ -87,6 +84,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<PropertyValueCrud>().As<IPropertyValueCrud>();
             Builder.RegisterType<FeedCrud>().As<IFeedCrud>();
             Builder.RegisterType<ChainCrud>().As<IChainCrud>();
+            Builder.RegisterType<RicCrud>().As<IRicCrud>();
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();

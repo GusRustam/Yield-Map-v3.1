@@ -94,18 +94,20 @@ namespace YieldMap.Transitive.Native.Crud {
         }
 
         public int Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity> {
+            var res = 0;
+
             // Operations.Create (have ids only)
-            Execute<TEntity>(Operations.Create, _helper.BulkInsertSql);
+            res += Execute<TEntity>(Operations.Create, _helper.BulkInsertSql);
             RetrieveIds(Operations.Create);
 
             // Operations.Update (have ids only)
-            Execute<TEntity>(Operations.Update, _helper.BulkUpdateSql);
+            res += Execute<TEntity>(Operations.Update, _helper.BulkUpdateSql);
             RetrieveIds(Operations.Update);
 
             // Operations.Delete 
             // - by id 
             // - by fields (todo)
-            Execute<TEntity>(Operations.Delete, _helper.BulkDeleteSql);
+            res += Execute<TEntity>(Operations.Delete, _helper.BulkDeleteSql);
 
 
             if (!_muted && Notify != null) {
@@ -122,7 +124,7 @@ namespace YieldMap.Transitive.Native.Crud {
                 Entities.Remove(entity.Key);
             }
 
-            return 0;
+            return res;
         }
 
         private static EventSource NativeSource<TType>() {
@@ -154,14 +156,16 @@ namespace YieldMap.Transitive.Native.Crud {
                 Entities[entity] = Operations.Read;
         }
 
-        private void Execute<TEntitry>(Operations operations, Func<IEnumerable<TEntitry>, IEnumerable<string>> generator)  {
-            var enumerable = (IEnumerable<TEntitry>) Entities
+        private int Execute<TEntity>(Operations operations, Func<IEnumerable<TEntity>, IEnumerable<string>> generator)  {
+            var entitries = ((IEnumerable<TEntity>) Entities
                 .Where(x => x.Value == operations)
-                .Select(x => x.Key);
+                .Select(x => x.Key)).ToArray();
             
-            generator(enumerable)
+            generator(entitries)
                 .ToList()
                 .ForEach(ExecuteSql);
+
+            return entitries.Count();
         }
 
         private void ExecuteSql(string sql) {

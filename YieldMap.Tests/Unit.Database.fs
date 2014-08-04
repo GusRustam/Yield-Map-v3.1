@@ -107,15 +107,15 @@ module Database =
     let deleteChainRicInstrument () =
         let container = DatabaseBuilder.Container
         // Teardown, removing chain and ric
-        using (container.Resolve<IChainRicUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IChainRepository>(NamedParameter("uow", uow))) (fun chains ->
-        using (container.Resolve<IRicRepository>(NamedParameter("uow", uow))) (fun rics -> 
+        using (container.Resolve<IChainCrud>()) (fun chains ->
+        using (container.Resolve<IRicCrud>()) (fun rics -> 
             let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
-            chains.Remove chain |> should be (equal 0)
+            chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC").ToList().First()
-            rics.Remove ric |> should be (equal 0)
-            uow.Save() |> should be (equal 2)
-        )))
+            rics.Delete ric |> should be (equal 0)
+            chains.Save<NChain>() |> ignore
+            rics.Save<NRic>() |> ignore
+        ))
 
     [<Test>]
     let ``Reading mock database`` () = 
@@ -150,10 +150,10 @@ module Database =
         // Prepare
         let builder = ContainerBuilder()
 
-        let chainRepo = MockRepository.GenerateMock<IChainRepository>()
+        let chainRepo = MockRepository.GenerateMock<IChainCrud>()
 
         RhinoMocksExtensions
-            .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Add(null)))
+            .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Create(null)))
             .IgnoreArguments()
             .Return(1)
             |> ignore
@@ -161,12 +161,12 @@ module Database =
         let container = builder.Build()
 
         // Test
-        use chains = container.Resolve<IChainRepository>()
+        use chains = container.Resolve<IChainCrud>()
 
         // Varify
-        chains.Add(Chain()) |> should be (equal 1)
+        chains.Create(NChain()) |> should be (equal 1)
 
-        RhinoMocksExtensions.AssertWasCalled<_>(chainRepo, Func<IChainRepository,obj>(fun x -> x.Add(Rhino.Mocks.Arg<Chain>.Is.Anything) |> box))
+        RhinoMocksExtensions.AssertWasCalled<_>(chainRepo, Func<IChainCrud,obj>(fun x -> x.Create(Rhino.Mocks.Arg<NChain>.Is.Anything) |> box))
 
     [<Test>]
     let ``Adding chain to fake database and saving it`` () =
@@ -183,31 +183,28 @@ module Database =
             .Return(feed) 
             |> ignore            
 
-        let chainRepo = MockRepository.GenerateMock<IChainRepository>()
+        let chainRepo = MockRepository.GenerateMock<IChainCrud>()
         RhinoMocksExtensions
-            .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Add(null)))
+            .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Create(null)))
             .IgnoreArguments()
             .Return(1)
             |> ignore
 
-        let chainUow = MockRepository.GenerateMock<IChainRicUnitOfWork>()
         RhinoMocksExtensions
-            .Stub<_,_>(chainUow, Rhino.Mocks.Function<_,_>(fun x -> x.Save()))
+            .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Save<NChain>()))
             .Return(1)
             |> ignore
         
-        builder.RegisterInstance(chainUow) |> ignore
         builder.RegisterInstance(feedRepo) |> ignore
         builder.RegisterInstance(chainRepo) |> ignore
         let container = builder.Build()
 
-        use chainSaver = container.Resolve<IChainRicUnitOfWork>()
-        use chains = container.Resolve<IChainRepository>()
+        use chains = container.Resolve<IChainCrud>()
         use feeds = container.Resolve<IFeedCrud>()
 
         let feed = feeds.FindById 1L
-        chains.Add(Chain(Name = "0#RUCORP=MM", Feed = feed)) |> should be (equal 1)
-        chainSaver.Save() |> should be (equal 1)
+        chains.Create(NChain(Name = "0#RUCORP=MM", id_Feed = Nullable(feed.id))) |> should be (equal 1)
+        chains.Save<NChain>() |> should be (equal 1)
 
     [<Test>]
     let ``Add feed to real database, save and then remove it`` () =
@@ -220,7 +217,7 @@ module Database =
 
         let feed = NFeed(Name = "W", Description = "Test item")
         feeds.Create feed |> should be (equal 0)
-        feeds.Save<NFeed> () |> should be (equal 0)
+        feeds.Save<NFeed> () |> should be (equal 1)
 
         feed.id |> should be (greaterThan 0)
         let newId = feed.id
@@ -231,7 +228,7 @@ module Database =
         feed2.Name |> should be (equal "W")
 
         feeds.Delete feed |> should be (equal 0)
-        feeds.Save<NFeed> () |> should be (equal 0)
+        feeds.Save<NFeed> () |> should be (equal 1)
 
         use feeds3 = container.Resolve<IFeedCrud>()
         let feed3 = feeds3.FindById newId
@@ -247,9 +244,9 @@ module Database =
         
         let container = DatabaseBuilder.Container
 
-        using (container.Resolve<IChainRepository>()) (fun chains ->
+        using (container.Resolve<IChainCrud>()) (fun chains ->
             chains.FindAll().Count() |> should be (equal 0))
-        using (container.Resolve<IRicRepository>()) (fun rics ->
+        using (container.Resolve<IRicCrud>()) (fun rics ->
             rics.FindAll().Count() |> should be (equal 0))
 
         let saver = container.Resolve<ISaver> ()
@@ -257,27 +254,27 @@ module Database =
 
         let chainId = ref 0L
         let ricId = ref 0L
-        using (container.Resolve<IChainRepository>()) (fun chains ->
+        using (container.Resolve<IChainCrud>()) (fun chains ->
             let all = chains.FindAll()
             all.Count() |> should be (equal 1)
             chainId := all.First().id)
-        using (container.Resolve<IRicRepository>()) (fun rics ->
+        using (container.Resolve<IRicCrud>()) (fun rics ->
             let all = rics.FindAll()
             all.Count() |> should be (equal 1)
             ricId := all.First().id)
 
-        using (container.Resolve<IChainRicUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IChainRepository>(NamedParameter("uow", uow))) (fun chains ->
-        using (container.Resolve<IRicRepository>(NamedParameter("uow", uow))) (fun rics -> 
+        using (container.Resolve<IChainCrud>()) (fun chains ->
+        using (container.Resolve<IRicCrud>()) (fun rics -> 
             let chain = chains.FindById !chainId
-            chains.Remove chain |> should be (equal 0)
+            chains.Delete chain |> should be (equal 0)
             let ric = rics.FindById !ricId
-            rics.Remove ric |> should be (equal 0)
-            uow.Save() |> should be (equal 2) )))
+            rics.Delete ric |> should be (equal 0)
+            chains.Save<NChain>() |> ignore 
+            rics.Save<NRic>() |> ignore ))
 
-        using (container.Resolve<IChainRepository>()) (fun chains ->
+        using (container.Resolve<IChainCrud>()) (fun chains ->
             chains.FindAll().Count() |> should be (equal 0))
-        using (container.Resolve<IRicRepository>()) (fun rics ->
+        using (container.Resolve<IRicCrud>()) (fun rics ->
             rics.FindAll().Count() |> should be (equal 0))
 
     [<Test>]
@@ -309,15 +306,15 @@ module Database =
 
         checkExact<Instrument, IInstrumentRepository> cnt
 
-        using (container.Resolve<IChainRicUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IChainRepository>(NamedParameter("uow", uow))) (fun chains ->
-        using (container.Resolve<IRicRepository>(NamedParameter("uow", uow))) (fun rics -> 
+        using (container.Resolve<IChainCrud>()) (fun chains ->
+        using (container.Resolve<IRicCrud>()) (fun rics -> 
             let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
-            chains.Remove chain |> should be (equal 0)
+            chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC").ToList().First()
-            rics.Remove ric |> should be (equal 0)
-            uow.Save() |> should be (equal 2)
-        )))
+            rics.Delete ric |> should be (equal 0)
+            chains.Save<NChain>() |> ignore
+            rics.Save<NRic>() |> ignore
+        ))
 
     [<Test>]
     let ``Property values simple addition / deletion`` () = 
@@ -544,7 +541,7 @@ module Database =
         let updater = container.Resolve<INewFunctionUpdater>()
         updater.Recalculate<NBondDescriptionView>() |> ignore
 
-        !counter |> should be (equal 0)
+        !counter |> should be (equal 4)
 
     [<Test>]
     let ``Recalculating property values on changes in instruments on real DB`` () =
@@ -575,17 +572,17 @@ module Database =
         properyValueReader.FindAll().Count() |> should be (equal 4)
 
         // Teardown, removing chain and ric
-        using (container.Resolve<IChainRicUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IChainRepository>(NamedParameter("uow", uow))) (fun chains ->
-        using (container.Resolve<IRicRepository>(NamedParameter("uow", uow))) (fun rics -> 
+        using (container.Resolve<IChainCrud>()) (fun chains ->
+        using (container.Resolve<IRicCrud>()) (fun rics -> 
             let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
-            chains.Remove chain |> should be (equal 0)
+            chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC1").ToList().First()
-            rics.Remove ric |> should be (equal 0)
+            rics.Delete ric |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC2").ToList().First()
-            rics.Remove ric |> should be (equal 0)
-            uow.Save() |> should be (equal 3)
-        )))
+            rics.Delete ric |> should be (equal 0)
+            chains.Save<NChain>() |> ignore
+            rics.Save<NRic>() |> ignore
+        ))
 
     [<Test>]
     let ``Recalculating properties on 0#RUCORP=MM`` () = 
@@ -632,7 +629,7 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 0)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 96)
         properyValueReader.FindAll().Count() |> should be (equal 96)
         
         br.Restore "EMPTY.sql"

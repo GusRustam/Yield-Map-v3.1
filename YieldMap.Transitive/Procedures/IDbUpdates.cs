@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using YieldMap.Database;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Procedures {
     /// <summary>
@@ -11,7 +12,7 @@ namespace YieldMap.Transitive.Procedures {
     /// </summary>
     public interface IDbUpdates {
         bool NeedsReload(DateTime dt);
-        IEnumerable<Chain> ChainsInNeed(DateTime dt);
+        IEnumerable<NChain> ChainsInNeed(DateTime dt);
 
         /// <summary>
         /// Enumerates rics of all EXISTING bonds that need to be refreshed
@@ -20,14 +21,14 @@ namespace YieldMap.Transitive.Procedures {
         /// </summary>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        IEnumerable<Ric> StaleBondRics(DateTime dt);
+        IEnumerable<NRic> StaleBondRics(DateTime dt);
 
-        IEnumerable<Ric> AllBondRics();
+        IEnumerable<NRic> AllBondRics();
 
         /// <summary> Enumerates rics which belong to matured bonds </summary>
         /// <param name="dt">Today's date</param>
         /// <returns>IEnumerable of Rics</returns>
-        IEnumerable<Ric> ObsoleteBondRics(DateTime dt);
+        IEnumerable<NRic> ObsoleteBondRics(DateTime dt);
 
         Dictionary<Mission, string[]> Classify(DateTime dt, string[] chainRics);
     }

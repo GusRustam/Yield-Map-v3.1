@@ -108,6 +108,29 @@ namespace YieldMap.Transitive.Native.Reader {
                         BondStructure = reader.GetNullableString(26),
                         Coupon = reader.GetNullableDouble(27)
                     }) as T;
+
+                if (typeof(T) == typeof(NOrdinaryBond))
+                    return (new NOrdinaryBond {
+                        id_Instrument = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Series = reader.GetString(2),
+                        IssueSize = reader.GetNullableInt32(3),
+                        RateStructure = reader.GetString(4),
+                        BondStructure = reader.GetNullableString(5),
+                        Isin = reader.GetNullableString(6),
+                        Ric = reader.GetNullableString(7),
+                        id_Isin = reader.GetInt32(8),
+                        id_Ric = reader.GetInt32(9),
+                        id_Ticker = reader.GetNullableInt32(10),
+                        id_SubIndustry = reader.GetNullableInt32(11),
+                        id_Specimen = reader.GetNullableInt32(12),
+                        id_Seniority = reader.GetNullableInt32(13),
+                        Issue = reader.GetNullableDateTime(14),
+                        Maturity = reader.GetNullableDateTime(15),
+                        NextCoupon = reader.GetNullableDateTime(16),
+                        Coupon = reader.GetNullableDouble(17),
+                        id_Currency = reader.GetNullableInt32(18)
+                    }) as T;
                 throw new ArgumentException("what");
             }
             return null;

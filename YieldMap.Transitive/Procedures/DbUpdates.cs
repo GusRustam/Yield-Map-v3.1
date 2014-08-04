@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using YieldMap.Database;
-using YieldMap.Transitive.Domains;
-using YieldMap.Transitive.Domains.Contexts;
+using Autofac;
+using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Entities;
+using YieldMap.Transitive.Native.Reader;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Procedures {
-    public class DbUpdates : ReadOnlyRepository<ChainRicContext>, IDbUpdates {
-        private static bool NeedsRefresh(Chain chain, DateTime today) {
+    public class DbUpdates : IDbUpdates {
+        private readonly IContainer _container;
+
+        public DbUpdates(Func<IContainer> containerF) {
+            _container = containerF();
+        }
+
+        private static bool NeedsRefresh(NChain chain, DateTime today) {
             return chain.Expanded.HasValue && chain.Expanded.Value < today || !chain.Expanded.HasValue;
         }
 
-        private static bool NeedsRefresh(OrdinaryBond bond, DateTime today) {
+        private static bool NeedsRefresh(NOrdinaryBond bond, DateTime today) {
             if (!bond.NextCoupon.HasValue)
                 return false;
 
@@ -20,14 +27,15 @@ namespace YieldMap.Transitive.Procedures {
             return nextCoupon < today + TimeSpan.FromDays(7);
         }
 
-        public IEnumerable<Chain> ChainsInNeed(DateTime dt) {
+        public IEnumerable<NChain> ChainsInNeed(DateTime dt) {
+            var chains = _container.Resolve<IChainCrud>();
             return (
-                from c in Context.Chains.ToList()
+                from c in chains.FindAll()
                 where NeedsRefresh(c, dt)
-                select new Chain {
+                select new NChain {
                     Name = c.Name,
                     Expanded = c.Expanded,
-                    Feed = c.Feed == null ? null : new Feed {Name = c.Feed.Name}
+                    id_Feed = c.id_Feed
                 });
         }
 
@@ -35,22 +43,31 @@ namespace YieldMap.Transitive.Procedures {
             return ChainsInNeed(dt).Any();
         }
 
-        public IEnumerable<Ric> StaleBondRics(DateTime dt) {
-            return Context.OrdinaryBonds.ToList()
+        public IEnumerable<NRic> StaleBondRics(DateTime dt) {
+            var bonds = _container.Resolve<IReader<NOrdinaryBond>>();
+            var rics = _container.Resolve<IRicCrud>();
+
+            return bonds.FindAll()
                 .Where(b => b.Ric != null && NeedsRefresh(b, dt))
-                .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple());
+                .Select(b => rics.FindById(b.id_Ric));
         }
 
-        public IEnumerable<Ric> AllBondRics() {
-            return Context.OrdinaryBonds.ToList()
+        public IEnumerable<NRic> AllBondRics() {
+            var bonds = _container.Resolve<IReader<NOrdinaryBond>>();
+            var rics = _container.Resolve<IRicCrud>();
+
+            return bonds.FindAll()
                 .Where(b => b.Ric != null)
-                .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple());
+                .Select(b => rics.FindById(b.id_Ric));
         }
 
-        public IEnumerable<Ric> ObsoleteBondRics(DateTime dt) {
-            return Context.OrdinaryBonds.ToList()
+        public IEnumerable<NRic> ObsoleteBondRics(DateTime dt) {
+            var bonds = _container.Resolve<IReader<NOrdinaryBond>>();
+            var rics = _container.Resolve<IRicCrud>();
+
+            return bonds.FindAll()
                 .Where(b => b.Ric != null && b.Maturity.HasValue && b.Maturity.Value < dt)
-                .Select(b => Context.Rics.First(r => r.id == b.id_Ric).ToPocoSimple());
+                .Select(b => rics.FindById(b.id_Ric));
         }
 
         public Dictionary<Mission, string[]> Classify(DateTime dt, string[] chainRics) {

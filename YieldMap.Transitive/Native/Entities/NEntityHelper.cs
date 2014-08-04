@@ -266,16 +266,17 @@ namespace YieldMap.Transitive.Native.Entities {
         public IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable {
             // todo this can be also automated via Reflection.Emit or dynamic type
             if (reader.Read()) {
+                var theId = reader.GetInt32(0);
                 if (typeof (T) == typeof (NInstrument))
                     return new NInstrument {
-                        id = reader.GetInt32(0),
+                        id = theId,
                         Name = reader.GetString(1),
                         id_InstrumentType = reader.GetInt32(2),
                         id_Description = reader.GetInt32(3)
                     };
                 if (typeof(T) == typeof(NProperty))
                     return new NProperty {
-                        id = reader.GetInt32(0),
+                        id = theId,
                         Name = reader.GetString(1),
                         Description = reader.GetString(2),
                         Expression = reader.GetString(3),
@@ -283,7 +284,7 @@ namespace YieldMap.Transitive.Native.Entities {
                     };
                 if (typeof(T) == typeof(NPropertyValue))
                     return new NPropertyValue {
-                        id = reader.GetInt32(0),
+                        id = theId,
                         id_Property = reader.GetInt32(1),
                         id_Instrument = reader.GetInt32(2),
                         Value = reader.GetString(3)
@@ -295,9 +296,27 @@ namespace YieldMap.Transitive.Native.Entities {
                         Description = reader.GetString(2)
                     };
                 }
+                if (typeof(T) == typeof(NChain)) {
+                    return new NChain {
+                        id = theId,
+                        Name = reader.GetString(1),
+                        Expanded = reader.GetNullableDateTime(2),
+                        id_Feed = reader.GetNullableInt32(3),
+                        Params = reader.GetString(4)
+                    };
+                }
+                if (typeof(T) == typeof(NRic)) {
+                    return new NRic {
+                        id = theId,
+                        Name = reader.GetString(1),
+                        id_Feed = reader.GetNullableInt32(2),
+                        id_FieldGroup = reader.GetNullableInt32(3),
+                        id_Isin = reader.GetNullableInt32(4)
+                    };
+                }
                 if (typeof(T) == typeof(NFieldGroup)) {
                     return new NFieldGroup {
-                        id = reader.GetInt32(0),
+                        id = theId,
                         Name = reader.GetString(1),
                         Default = reader.GetInt16(2) != 1,
                         id_DefaultFieldDef = reader.GetNullableInt32(3)

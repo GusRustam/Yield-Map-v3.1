@@ -159,10 +159,13 @@ module Startup =
 
                 async {
                     try
+                        let feeds = q.DbServices.Resolve<IFeedCrud>().FindAll()
+
                         let chainRequests = 
                             c.Today
                             |> updater.ChainsInNeed 
-                            |> Seq.map (fun r -> { Ric = r.Name; Feed = r.Feed.Name; Mode = r.Params; Timeout = t}) 
+                            |> Seq.filter (fun r -> r.id_Feed.HasValue)
+                            |> Seq.map (fun r -> { Ric = r.Name; Feed = feeds.First(fun feed -> feed.id = r.id_Feed.Value).Name; Mode = r.Params; Timeout = t}) 
                             |> Array.ofSeq
 
                         let! res = reload.Execute ({Chains = chainRequests; Force = force}, Some t)
