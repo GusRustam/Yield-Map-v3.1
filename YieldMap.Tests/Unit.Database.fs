@@ -560,7 +560,7 @@ module Database =
             |> createChainRicInstrument container "TESTCHAIN" [|"TESTRIC1"; "TESTRIC2"|] 
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let updater = container.Resolve<IPropertiesUpdater>()
+        let updater = container.Resolve<INewFunctionUpdater>()
         let properyReader = container.Resolve<IPropertiesRepository> ()
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
 
@@ -571,7 +571,7 @@ module Database =
             .ToList()
             |> Seq.iter(fun p -> registry.Add(p.id, p.id_InstrumentTpe, p.Expression)  |> ignore)
 
-        updater.RecalculateBonds () |> should be (equal 4)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 4)
 
         properyValueReader.FindAll().Count() |> should be (equal 4)
 

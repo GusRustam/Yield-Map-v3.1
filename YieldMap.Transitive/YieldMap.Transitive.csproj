@@ -111,8 +111,6 @@
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Domains\Contexts\InstrumentContext.cs" />
     <Compile Include="Domains\IReadOnlyRepository.cs" />
-    <Compile Include="Domains\Readers\BondDescriptionsReader.cs" />
-    <Compile Include="Domains\Readers\IBondDescriptionsReader.cs" />
     <Compile Include="Events\InstrumentDescriptionHandler.cs" />
     <Compile Include="Events\ITriggerManager.cs" />
     <Compile Include="MediatorTypes\Variables\BondView.cs" />
@@ -155,15 +153,10 @@
     <Compile Include="Domains\Contexts\ChainRicContext.cs" />
     <Compile Include="Domains\Contexts\FeedsContext.cs" />
     <Compile Include="Domains\Contexts\EnumerationsContext.cs" />
-    <Compile Include="Domains\Contexts\InstrumentDescriptionContext.cs" />
     <Compile Include="Domains\Contexts\PropertiesContext.cs" />
     <Compile Include="Domains\Contexts\RatingContext.cs" />
-    <Compile Include="Registry\IPropertiesUpdater.cs" />
-    <Compile Include="Registry\PropertiesUpdater.cs" />
     <Compile Include="Domains\Readers\FeedReader.cs" />
     <Compile Include="Domains\Readers\IFeedReader.cs" />
-    <Compile Include="Domains\Readers\IInstrumentDescriptionsReader.cs" />
-    <Compile Include="Domains\Readers\InstrumentDescriptionsReader.cs" />
     <Compile Include="Procedures\IDbUpdates.cs" />
     <Compile Include="Procedures\Mission.cs" />
     <Compile Include="Procedures\DbUpdates.cs" />

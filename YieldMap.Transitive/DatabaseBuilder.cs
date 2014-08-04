@@ -58,9 +58,9 @@ namespace YieldMap.Transitive {
 
             // Readers (they provide read-only access to one or several tables in Db)
             Builder.RegisterType<FeedReader>().As<IFeedReader>();
-            Builder.RegisterType<InstrumentDescriptionsReader>().As<IInstrumentDescriptionsReader>();
+            //Builder.RegisterType<InstrumentDescriptionsReader>().As<IInstrumentDescriptionsReader>();
             Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
-            Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
+            //Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
 
             // Repos and their units of work.
             // Logic: first repos, and then - their UOWs (the UOWs they use)
