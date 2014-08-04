@@ -2,6 +2,7 @@
 using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
+using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Registry;
 
 namespace YieldMap.Transitive.Events {
@@ -17,9 +18,9 @@ namespace YieldMap.Transitive.Events {
                 Logger.Debug("Recalculating properties for instruments");
                 Logger.Debug(args.ToString());
                 try {
-                    var updater = DatabaseBuilder.Container.Resolve<IPropertiesUpdater>();
-                    updater.RecalculateBonds(view => args.Added.Contains(view.id_Instrument));
-                    updater.RecalculateBonds(view => args.Changed.Contains(view.id_Instrument));
+                    var updater = DatabaseBuilder.Container.Resolve<INewFunctionUpdater>();
+                    updater.Recalculate<NBondDescriptionView>(view => args.Added.Contains(view.id_Instrument));
+                    updater.Recalculate<NBondDescriptionView>(view => args.Changed.Contains(view.id_Instrument));
                 } catch (Exception e) {
                     Logger.ErrorEx("Failed to recalculate", e);
                 }

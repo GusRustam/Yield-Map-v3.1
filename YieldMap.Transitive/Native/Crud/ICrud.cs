@@ -8,10 +8,10 @@ namespace YieldMap.Transitive.Native.Crud {
         event EventHandler<IDbEventArgs> Notify;
 
         // CRUD functions
-        void Create(T item);
-        void Update(T item);
-        void Delete(T item);
-        void Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity>;
+        int Create(T item);
+        int Update(T item);
+        int Delete(T item);
+        int Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity>;
 
         /// <summary>
         /// Does not wait for Save to be called!  Use with care!

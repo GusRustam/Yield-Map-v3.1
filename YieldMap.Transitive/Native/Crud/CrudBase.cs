@@ -51,16 +51,19 @@ namespace YieldMap.Transitive.Native.Crud {
             Entities.Add(item, op);
         }
 
-        public void Create(T item) {
+        public int Create(T item) {
             Operate(item, item.id == default (long) ? Operations.Create : Operations.Update);
+            return 0;
         }
 
-        public void Update(T item) {
+        public int Update(T item) {
             Operate(item, item.id == default(long) ? Operations.Create : Operations.Update);
+            return 0;
         }
 
-        public void Delete(T item) {
+        public int Delete(T item) {
             Operate(item, Operations.Delete);
+            return 0;
         }
 
         public void DeleteAll() {
@@ -90,7 +93,7 @@ namespace YieldMap.Transitive.Native.Crud {
             return _muted;
         }
 
-        public void Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity> {
+        public int Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity> {
             // Operations.Create (have ids only)
             Execute<TEntity>(Operations.Create, _helper.BulkInsertSql);
             RetrieveIds(Operations.Create);
@@ -118,6 +121,8 @@ namespace YieldMap.Transitive.Native.Crud {
             foreach (var entity in Entities.Where(entity => entity.Value == Operations.Delete).ToList()) {
                 Entities.Remove(entity.Key);
             }
+
+            return 0;
         }
 
         private static EventSource NativeSource<TType>() {

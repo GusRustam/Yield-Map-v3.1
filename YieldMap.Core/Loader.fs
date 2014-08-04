@@ -146,10 +146,10 @@ module Loader =
                     (classified.[Mission.Obsolete].Length) 
                     (classified.[Mission.Keep].Length)
 
-                classified.[Mission.ToReload] |> killer.FindByRic |> Seq.iter killer.Delete
-                classified.[Mission.Obsolete] |> killer.FindByRic |> Seq.iter killer.Delete
+                classified.[Mission.ToReload] |> killer.FindByRic |> Seq.iter (killer.Delete >> ignore)
+                classified.[Mission.Obsolete] |> killer.FindByRic |> Seq.iter (killer.Delete >> ignore)
 
-                killer.Save<NInstrument> ()
+                killer.Save<NInstrument> () |> ignore
 
                 let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                 match res with 

@@ -299,7 +299,7 @@ namespace YieldMap.Transitive.Native.Entities {
                     return new NFieldGroup {
                         id = reader.GetInt32(0),
                         Name = reader.GetString(1),
-                        Default = reader.GetChar(2) != '\0',
+                        Default = reader.GetInt16(2) != 1,
                         id_DefaultFieldDef = reader.GetNullableInt32(3)
                     };
                 }

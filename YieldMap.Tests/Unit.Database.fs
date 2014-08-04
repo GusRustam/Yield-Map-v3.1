@@ -29,6 +29,8 @@ module Database =
     open YieldMap.Transitive.Procedures
     open YieldMap.Transitive.Native.Crud
     open YieldMap.Transitive.Native.Entities
+    open YieldMap.Transitive.Native.Reader
+    open YieldMap.Transitive.Native.Variables
 
     let logger = LogFactory.create "UnitTests.Database"
     let str (z : TimeSpan Nullable) = 
@@ -449,28 +451,28 @@ module Database =
             .Return(InstrumentType(id = 1L))
             |> ignore        
 
-        // IPropertyValuesRepostiory
-        let propertyValuesRepo = MockRepository.GenerateMock<IPropertyValuesRepostiory>()
+        // IPropertyValueCrud
+        let propertyValuesRepo = MockRepository.GenerateMock<IPropertyValueCrud>()
         let validProperties = 
             [
-                PropertyValue(id_Property = 1L, id_Instrument = 1L, Value = "InstrumentName1 ")
-                PropertyValue(id_Property = 1L, id_Instrument = 2L, Value = "InstrumentName2 ")
-                PropertyValue(id_Property = 2L, id_Instrument = 1L, Value = "InstrumentName1 0.12 'Jan-20")
-                PropertyValue(id_Property = 2L, id_Instrument = 2L, Value = "InstrumentName2 0.23 'Feb-30")
+                NPropertyValue(id_Property = 1L, id_Instrument = 1L, Value = "InstrumentName1 ")
+                NPropertyValue(id_Property = 1L, id_Instrument = 2L, Value = "InstrumentName2 ")
+                NPropertyValue(id_Property = 2L, id_Instrument = 1L, Value = "InstrumentName1 0.12 'Jan-20")
+                NPropertyValue(id_Property = 2L, id_Instrument = 2L, Value = "InstrumentName2 0.23 'Feb-30")
             ]
 
         let counter = ref 4
 
-        let propertyValues = List.empty<PropertyValue>
+        let propertyValues = List.empty<NPropertyValue>
         RhinoMocksExtensions
             .Stub<_,_>(propertyValuesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
-            .Return(propertyValues.AsQueryable())
+            .Return(propertyValues)
             |> ignore
 
         RhinoMocksExtensions
-            .Stub<_,_>(propertyValuesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Add(null)))
+            .Stub<_,_>(propertyValuesRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Create(null)))
             .IgnoreArguments()
-            .Do(Rhino.Mocks.Function<_,_>(fun (p:PropertyValue) -> 
+            .Do(Rhino.Mocks.Function<_,_>(fun (p:NPropertyValue) -> 
                 logger.InfoF "Got propertyValue <%d / %d / %s>" p.id_Instrument p.id_Property p.Value
                 let search = 
                     validProperties 
@@ -513,17 +515,17 @@ module Database =
             .Return(functions)
             |> ignore
 
-        // IInstrumentDescriptionsReader
-        let instrumentDescriptionsReaderMock = MockRepository.GenerateMock<IBondDescriptionsReader>()
+        // IReader<NBondDescriptionView>
+        let instrumentDescriptionsReaderMock = MockRepository.GenerateMock<IReader<NBondDescriptionView>>()
         let views = 
             [
-             BondDescriptionView(id_Instrument = 1L,id_InstrumentType = 1L,InstrumentName = "InstrumentName1",Coupon = Nullable(0.12),Maturity = Nullable(DateTime(2020, 1, 1)))
-             BondDescriptionView(id_Instrument = 2L,id_InstrumentType = 1L,InstrumentName = "InstrumentName2",Coupon = Nullable(0.23),Maturity = Nullable(DateTime(2030, 2, 2)))
+             NBondDescriptionView(id_Instrument = 1L,id_InstrumentType = 1L,InstrumentName = "InstrumentName1",Coupon = Nullable(0.12),Maturity = Nullable(DateTime(2020, 1, 1)))
+             NBondDescriptionView(id_Instrument = 2L,id_InstrumentType = 1L,InstrumentName = "InstrumentName2",Coupon = Nullable(0.23),Maturity = Nullable(DateTime(2030, 2, 2)))
             ]
             
         RhinoMocksExtensions
-            .Stub<_,_>(instrumentDescriptionsReaderMock, Rhino.Mocks.Function<_,_>(fun x -> x.BondDescriptionViews))
-            .Return(views.AsQueryable())
+            .Stub<_,_>(instrumentDescriptionsReaderMock, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
+            .Return(views)
             |> ignore        
 
         // IPropertiesUnitOfWork
@@ -535,6 +537,7 @@ module Database =
         builder.RegisterInstance(propertiesUowMock) |> ignore
         builder.RegisterInstance(instrumentDescriptionsReaderMock) |> ignore
         builder.RegisterType<NewFunctionUpdater>().As<INewFunctionUpdater>() |> ignore // using original code 
+        builder.RegisterType<VariableHelper>().As<IVariableHelper>() |> ignore // using original code 
         builder.RegisterInstance(Func<_>(fun () -> !cnt)) |> ignore
         cnt := builder.Build()
         let container = !cnt

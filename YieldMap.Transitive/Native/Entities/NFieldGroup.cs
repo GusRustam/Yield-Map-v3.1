@@ -8,7 +8,7 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(1)]
         public string Name { get; set; }
 
-        [DbField(2, "'Default'")]
+        [DbField(2, "[Default]")]
         public bool Default { get; set; }
 
         [DbField(3)] // ReSharper disable once InconsistentNaming
