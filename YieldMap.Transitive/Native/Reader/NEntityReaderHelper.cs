@@ -80,11 +80,11 @@ namespace YieldMap.Transitive.Native.Reader {
                 if (typeof(T) == typeof(NBondDescriptionView))
                     return (new NBondDescriptionView {
                         id_Instrument = reader.GetInt32(0),
-                        InstrumentName = reader.GetString(1),
-                        InstrumentTypeName = reader.GetString(2),
+                        InstrumentName = reader.GetNullableString(1),
+                        InstrumentTypeName = reader.GetNullableString(2),
                         id_InstrumentType = reader.GetInt32(3),
                         IssueSize = reader.GetNullableInt32(4),
-                        Series = reader.GetString(5),
+                        Series = reader.GetNullableString(5),
                         Issue = reader.GetNullableDateTime(6),
                         Maturity = reader.GetNullableDateTime(7),
                         NextCoupon = reader.GetNullableDateTime(8),

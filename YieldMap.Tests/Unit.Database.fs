@@ -137,9 +137,7 @@ module Database =
     [<Test>]
     let ``Reading real database`` () = 
         // Prepare
-        let builder = ContainerBuilder()
-        builder.RegisterType<FeedCrud>().As<IFeedCrud>() |> ignore
-        let container = builder.Build()
+        let container = DatabaseBuilder.Container
 
         // Test
         use feeds = container.Resolve<IFeedCrud>()
@@ -541,7 +539,7 @@ module Database =
         let updater = container.Resolve<INewFunctionUpdater>()
         updater.Recalculate<NBondDescriptionView>() |> ignore
 
-        !counter |> should be (equal 4)
+        !counter |> should be (equal 0)
 
     [<Test>]
     let ``Recalculating property values on changes in instruments on real DB`` () =
@@ -567,7 +565,7 @@ module Database =
             .ToList()
             |> Seq.iter(fun p -> registry.Add(p.id, p.id_InstrumentTpe, p.Expression)  |> ignore)
 
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 0)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 4)
 
         properyValueReader.FindAll().Count() |> should be (equal 4)
 

@@ -38,7 +38,6 @@ namespace YieldMap.Transitive {
             Builder.RegisterModule<NotificationsModule>();
 
             Builder.RegisterType<FunctionRegistry>().As<IFunctionRegistry>().SingleInstance();
-            //Builder.RegisterType<PropertiesUpdater>().As<IPropertiesUpdater>().SingleInstance();
             Builder.RegisterType<NewFunctionUpdater>().As<INewFunctionUpdater>().SingleInstance();
             // -- updates, backup/restore
             Builder.RegisterType<DbUpdates>().As<IDbUpdates>();
