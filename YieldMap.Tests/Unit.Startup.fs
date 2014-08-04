@@ -16,7 +16,7 @@ module Ops =
     open System.Data.Entity
     open System.Linq
 
-    let cnt (table : 'a IQueryable) = 
+    let cnt (table : 'a seq) = 
         query { for x in table do 
                 select x
                 count }
@@ -71,6 +71,7 @@ module StartupTest =
     open System.Linq
 
     open Clutch.Diagnostics.EntityFramework
+    open YieldMap.Transitive.Native.Crud
 
     let logger = LogFactory.create "UnitTests.StartupTest"
     
@@ -232,8 +233,8 @@ module StartupTest =
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        let feeds = container.Resolve<IFeedRepository>().FindAll()
-        let chains = container.Resolve<IChainRepository>().FindAll()
+        let feeds = container.Resolve<IFeedCrud>().FindAll()
+        let chains = container.Resolve<IChainCrud>().FindAll()
         
         cnt feeds |> should be (equal 1)
         cnt chains  |> should be (equal 1)

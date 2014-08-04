@@ -37,11 +37,11 @@ module Database =
         if z.HasValue then z.Value.ToString("mm\:ss\.fffffff")
         else "N/A"
 
-    let mockFeedRepo (feeds : Feed seq)= 
-        let mock = MockRepository.GenerateMock<IFeedRepository>()
+    let mockFeedRepo (feeds : NFeed seq)= 
+        let mock = MockRepository.GenerateMock<IFeedCrud>()
         RhinoMocksExtensions
             .Stub<_,_>(mock, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
-            .Return(feeds.AsQueryable()) 
+            .Return(feeds) 
             |> ignore
         mock
 
@@ -123,7 +123,7 @@ module Database =
         let builder = ContainerBuilder()
 
         let feedRepo =
-            [Feed(id = 1L, Name = "Q", Description = "")] 
+            [NFeed(id = 1L, Name = "Q", Description = "")] 
             |> Seq.ofList
             |> mockFeedRepo
         
@@ -131,7 +131,7 @@ module Database =
         let container = builder.Build()
 
         // Test
-        use feeds = container.Resolve<IFeedRepository>()
+        use feeds = container.Resolve<IFeedCrud>()
         feeds.FindAll().Count() |> should be (equal 1)
 
     [<Test>]
@@ -172,11 +172,11 @@ module Database =
     let ``Adding chain to fake database and saving it`` () =
         let builder = ContainerBuilder()
 
-        let feed = Feed(id = 1L, Name = "Q", Description = "")
-        let feedRepo = MockRepository.GenerateMock<IFeedRepository>()
+        let feed = NFeed(id = 1L, Name = "Q", Description = "")
+        let feedRepo = MockRepository.GenerateMock<IFeedCrud>()
         RhinoMocksExtensions
             .Stub<_,_>(feedRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
-            .Return(([feed]|> Seq.ofList).AsQueryable()) 
+            .Return(([feed]|> Seq.ofList)) 
             |> ignore
         RhinoMocksExtensions
             .Stub<_,_>(feedRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindById(1L)))
@@ -203,7 +203,7 @@ module Database =
 
         use chainSaver = container.Resolve<IChainRicUnitOfWork>()
         use chains = container.Resolve<IChainRepository>()
-        use feeds = container.Resolve<IFeedRepository>()
+        use feeds = container.Resolve<IFeedCrud>()
 
         let feed = feeds.FindById 1L
         chains.Add(Chain(Name = "0#RUCORP=MM", Feed = feed)) |> should be (equal 1)
@@ -225,7 +225,7 @@ module Database =
         feed.id |> should be (greaterThan 0)
         let newId = feed.id
 
-        use feeds2 = container.Resolve<IFeedRepository>()
+        use feeds2 = container.Resolve<IFeedCrud>()
         let feed2 = feeds2.FindById newId
 
         feed2.Name |> should be (equal "W")
@@ -233,7 +233,7 @@ module Database =
         feeds.Delete feed |> should be (equal 0)
         feeds.Save<NFeed> () |> should be (equal 0)
 
-        use feeds3 = container.Resolve<IFeedRepository>()
+        use feeds3 = container.Resolve<IFeedCrud>()
         let feed3 = feeds3.FindById newId
         feed3 |> should be (equal null)
 
@@ -570,7 +570,7 @@ module Database =
             .ToList()
             |> Seq.iter(fun p -> registry.Add(p.id, p.id_InstrumentTpe, p.Expression)  |> ignore)
 
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 4)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 0)
 
         properyValueReader.FindAll().Count() |> should be (equal 4)
 
@@ -632,7 +632,7 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 96)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 0)
         properyValueReader.FindAll().Count() |> should be (equal 96)
         
         br.Restore "EMPTY.sql"

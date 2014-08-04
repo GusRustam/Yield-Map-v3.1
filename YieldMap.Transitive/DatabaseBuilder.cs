@@ -57,19 +57,12 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<LegTypes>().As<ILegTypes>().SingleInstance();
 
             // Readers (they provide read-only access to one or several tables in Db)
-            //Builder.RegisterType<FeedReader>().As<IFeedReader>();
-            //Builder.RegisterType<InstrumentDescriptionsReader>().As<IInstrumentDescriptionsReader>();
             Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
-            //Builder.RegisterType<BondDescriptionsReader>().As<IBondDescriptionsReader>();
 
             // Repos and their units of work.
             // Logic: first repos, and then - their UOWs (the UOWs they use)
-            Builder.RegisterType<ChainRepository>().As<IChainRepository>();
             Builder.RegisterType<RicRepository>().As<IRicRepository>();
             Builder.RegisterType<ChainRicUnitOfWork>().As<IChainRicUnitOfWork>();
-
-            //Builder.RegisterType<FeedRepository>().As<IFeedRepository>();
-            //Builder.RegisterType<FeedsUnitOfWork>().As<IEikonEntitiesUnitOfWork>();
 
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
             Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>();
@@ -87,14 +80,13 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<NEntityReaderHelper>().As<INEntityReaderHelper>().SingleInstance();
             Builder.RegisterType<VariableHelper>().As<IVariableHelper>().SingleInstance();
 
-            
-
             // - cruds
             Builder.RegisterType<FieldGroupCrud>().As<IFieldGroupCrud>();
             Builder.RegisterType<InstrumentCrud>().As<IInstrumentCrud>();
             Builder.RegisterType<PropertyCrud>().As<IPropertyCrud>();
             Builder.RegisterType<PropertyValueCrud>().As<IPropertyValueCrud>();
             Builder.RegisterType<FeedCrud>().As<IFeedCrud>();
+            Builder.RegisterType<ChainCrud>().As<IChainCrud>();
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();

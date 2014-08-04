@@ -13,7 +13,7 @@ namespace YieldMap.Transitive.Native.Variables {
 
             var res = new Dictionary<string, object>();
             foreach (var property in _cache[type]) {
-                res[property.VarName] = property.Info.GetValue(obj);
+                res[property.VarName.ToUpper()] = property.Info.GetValue(obj);
             }
             return res;
         }
