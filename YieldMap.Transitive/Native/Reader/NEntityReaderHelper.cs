@@ -131,6 +131,45 @@ namespace YieldMap.Transitive.Native.Reader {
                         Coupon = reader.GetNullableDouble(17),
                         id_Currency = reader.GetNullableInt32(18)
                     }) as T;
+
+                if (typeof(T) == typeof(NOrdinaryFrn))
+                    return (new NOrdinaryFrn {
+                        id_Instrument = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Series = reader.GetString(2),
+                        IssueSize = reader.GetNullableInt32(3),
+                        RateStructure = reader.GetString(4),
+                        BondStructure = reader.GetNullableString(5),
+                        Isin = reader.GetNullableString(6),
+                        Ric = reader.GetNullableString(7),
+                        id_Isin = reader.GetInt32(8),
+                        id_Ric = reader.GetInt32(9),
+                        id_Ticker = reader.GetNullableInt32(10),
+                        id_SubIndustry = reader.GetNullableInt32(11),
+                        id_Specimen = reader.GetNullableInt32(12),
+                        id_Seniority = reader.GetNullableInt32(13),
+                        Issue = reader.GetNullableDateTime(14),
+                        Maturity = reader.GetNullableDateTime(15),
+                        NextCoupon = reader.GetNullableDateTime(16),
+                        id_Currency = reader.GetNullableInt32(17),
+                        FrnCap = reader.GetNullableDouble(18),
+                        FrnFloor = reader.GetNullableDouble(19),
+                        IndexName = reader.GetString(20),
+                        IndexRic = reader.GetString(21),
+                        Margin = reader.GetNullableDouble(22)
+                    }) as T;
+
+                if (typeof(T) == typeof(NFieldVsGroup))
+                    return (new NFieldVsGroup {
+                        id_FieldGroup = reader.GetInt32(0),
+                        id_Field = reader.GetInt32(1),
+                        id_FieldDefinition = reader.GetInt32(2),
+                        id_DefaultFieldDefinition = reader.GetNullableInt32(3),
+                        DefaultGroup = reader.GetBoolean(4),
+                        FieldGroupName = reader.GetNullableString(5),
+                        SystemName = reader.GetNullableString(6),
+                        InternalName = reader.GetNullableString(7)
+                    }) as T;
                 throw new ArgumentException("what");
             }
             return null;

@@ -17,8 +17,8 @@ namespace YieldMap.Database
         public Ric()
         {
             this.RicToChains = new HashSet<RicToChain>();
-            this.Indices = new HashSet<Index>();
             this.Descriptions = new HashSet<Description>();
+            this.Idxes = new HashSet<Idx>();
         }
     
         public long id { get; set; }
@@ -41,8 +41,8 @@ namespace YieldMap.Database
         public virtual Feed Feed { get; set; }
         public virtual Isin Isin { get; set; }
         public virtual ICollection<RicToChain> RicToChains { get; set; }
-        public virtual ICollection<Index> Indices { get; set; }
         public virtual ICollection<Description> Descriptions { get; set; }
         public virtual FieldGroup FieldGroup { get; set; }
+        public virtual ICollection<Idx> Idxes { get; set; }
     }
 }

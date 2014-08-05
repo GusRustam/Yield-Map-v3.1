@@ -322,6 +322,13 @@ namespace YieldMap.Transitive.Native.Entities {
                         id_DefaultFieldDef = reader.GetNullableInt32(3)
                     };
                 }
+                if (typeof(T) == typeof(NIdx)) {
+                    return new NIdx {
+                        id = theId,
+                        Name = reader.GetString(1),
+                        id_Ric = reader.GetNullableInt32(3)
+                    };
+                }
                 throw new ArgumentException("what");
             }
             return null;

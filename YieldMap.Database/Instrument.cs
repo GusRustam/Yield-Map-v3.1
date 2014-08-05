@@ -16,9 +16,9 @@ namespace YieldMap.Database
     {
         public Instrument()
         {
-            this.Legs = new HashSet<Leg>();
             this.RatingToInstruments = new HashSet<RatingToInstrument>();
             this.PropertyValues = new HashSet<PropertyValue>();
+            this.Legs = new HashSet<Leg>();
         }
     
         public long id { get; set; }
@@ -38,8 +38,8 @@ namespace YieldMap.Database
     		
         public virtual Description Description { get; set; }
         public virtual InstrumentType InstrumentType { get; set; }
-        public virtual ICollection<Leg> Legs { get; set; }
         public virtual ICollection<RatingToInstrument> RatingToInstruments { get; set; }
         public virtual ICollection<PropertyValue> PropertyValues { get; set; }
+        public virtual ICollection<Leg> Legs { get; set; }
     }
 }

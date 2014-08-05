@@ -8,7 +8,7 @@ namespace YieldMap.Transitive.Procedures {
     /// <summary>
     /// Saves instruments, ratings and also different kinds of sources (chainRics, lists and search queries)
     /// </summary>
-    public interface ISaver : INotifier {
+    public interface ISaver : INotifier, IDisposable {
         void SaveInstruments(IEnumerable<InstrumentDescription> bonds);
         void SaveRatings(IEnumerable<Rating> ratings);
 

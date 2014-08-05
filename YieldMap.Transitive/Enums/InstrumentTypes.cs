@@ -1,23 +1,25 @@
-﻿using System.Linq;
-using YieldMap.Database;
-using YieldMap.Transitive.Domains;
-using YieldMap.Transitive.Domains.Contexts;
+﻿using System;
+using System.Linq;
+using Autofac;
+using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
     public class InstrumentTypes : IInstrumentTypes {
-        public InstrumentType Bond { get; private set; }
-        public InstrumentType Frn { get; private set; }
-        public InstrumentType Swap { get; private set; }
-        public InstrumentType Ndf { get; private set; }
-        public InstrumentType Cds { get; private set; }
+        public NInstrumentType Bond { get; private set; }
+        public NInstrumentType Frn { get; private set; }
+        public NInstrumentType Swap { get; private set; }
+        public NInstrumentType Ndf { get; private set; }
+        public NInstrumentType Cds { get; private set; }
 
-        public InstrumentTypes() {
-            var ctx = new EnumerationsContext();
-            Bond = ctx.InstrumentTypes.First(i => i.Name == "Bond").ToPocoSimple();
-            Frn = ctx.InstrumentTypes.First(i => i.Name == "Frn").ToPocoSimple();
-            Swap = ctx.InstrumentTypes.First(i => i.Name == "Swap").ToPocoSimple();
-            Ndf = ctx.InstrumentTypes.First(i => i.Name == "Ndf").ToPocoSimple();
-            Cds = ctx.InstrumentTypes.First(i => i.Name == "Cds").ToPocoSimple();
+
+        public InstrumentTypes(Func<IContainer> containerF) {
+            var instrumentTypes = containerF().Resolve<IInstrumentTypeCrud>().FindAll().ToList();
+            Bond = instrumentTypes.First(i => i.Name == "Bond");
+            Frn = instrumentTypes.First(i => i.Name == "Frn");
+            Swap = instrumentTypes.First(i => i.Name == "Swap");
+            Ndf = instrumentTypes.First(i => i.Name == "Ndf");
+            Cds = instrumentTypes.First(i => i.Name == "Cds");
         }
     }
 }

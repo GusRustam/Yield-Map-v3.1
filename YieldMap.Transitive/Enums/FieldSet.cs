@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using YieldMap.Database;
-using YieldMap.Transitive.Domains;
-using YieldMap.Transitive.Domains.Contexts;
+using Autofac;
+using YieldMap.Transitive.Native.Entities;
+using YieldMap.Transitive.Native.Reader;
 
 namespace YieldMap.Transitive.Enums {
     public class FieldSet : IFieldSet {
@@ -17,15 +17,19 @@ namespace YieldMap.Transitive.Enums {
         public string Tenor { get; private set; }
         public string Maturity { get; private set; }
 
-        private static string GetById(IEnumerable<FieldVsGroup> items, long id) {
+
+        private static string GetById(IEnumerable<NFieldVsGroup> items, long id) {
             var item = items.FirstOrDefault(x => x.id_FieldDefinition == id);
             return item != null ? item.InternalName : String.Empty;
         }
 
-        public FieldSet(IFieldDefinitions defs, long idFieldGroup) {
-            var ctx = new EnumerationsContext();
+        public FieldSet(Func<IContainer> containerF, long idFieldGroup) {
+            var container = containerF();
 
-            var items = ctx.FieldVsGroups.Where(x => x.id_FieldGroup == idFieldGroup);
+            var defs = container.Resolve<IFieldDefinitions>();
+            var fvg = container.Resolve<IReader<NFieldVsGroup>>();
+
+            var items = fvg.FindBy(x => x.id_FieldGroup == idFieldGroup).ToList();
             Bid = GetById(items, defs.Bid.id);
             Ask = GetById(items, defs.Ask.id);
             Last = GetById(items, defs.Last.id);

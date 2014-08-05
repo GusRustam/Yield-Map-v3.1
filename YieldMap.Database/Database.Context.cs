@@ -32,7 +32,6 @@ namespace YieldMap.Database
         public DbSet<Industry> Industries { get; set; }
         public DbSet<InstrumentType> InstrumentTypes { get; set; }
         public DbSet<Isin> Isins { get; set; }
-        public DbSet<Leg> Legs { get; set; }
         public DbSet<LegType> LegTypes { get; set; }
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<RatingAgency> RatingAgencies { get; set; }
@@ -42,25 +41,18 @@ namespace YieldMap.Database
         public DbSet<Specimen> Specimens { get; set; }
         public DbSet<SubIndustry> SubIndustries { get; set; }
         public DbSet<Ticker> Tickers { get; set; }
-        public DbSet<RatingsView> RatingsViews { get; set; }
         public DbSet<LegalEntity> LegalEntities { get; set; }
         public DbSet<RatingToInstrument> RatingToInstruments { get; set; }
         public DbSet<RatingToLegalEntity> RatingToLegalEntities { get; set; }
         public DbSet<Ric> Rics { get; set; }
-        public DbSet<Index> Indices { get; set; }
         public DbSet<Description> Descriptions { get; set; }
         public DbSet<Instrument> Instruments { get; set; }
-        public DbSet<OrdinaryBond> OrdinaryBonds { get; set; }
-        public DbSet<OrdinaryFrn> OrdinaryFrns { get; set; }
-        public DbSet<InstrumentRicView> InstrumentRicViews { get; set; }
-        public DbSet<InstrumentIBView> InstrumentIBViews { get; set; }
-        public DbSet<InstrumentDescriptionView> InstrumentDescriptionViews { get; set; }
         public DbSet<Field> Fields { get; set; }
         public DbSet<FieldDefinition> FieldDefinitions { get; set; }
-        public DbSet<FieldVsGroup> FieldVsGroups { get; set; }
         public DbSet<FieldGroup> FieldGroups { get; set; }
         public DbSet<PropertyValue> PropertyValues { get; set; }
-        public DbSet<BondDescriptionView> BondDescriptionViews { get; set; }
         public DbSet<Property> Properties { get; set; }
+        public DbSet<Idx> Idxes { get; set; }
+        public DbSet<Leg> Legs { get; set; }
     }
 }

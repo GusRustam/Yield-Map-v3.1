@@ -1,6 +1,5 @@
 ﻿using System;
 using Autofac;
-using YieldMap.Transitive.Domains.Readers;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
@@ -55,9 +54,6 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<InstrumentTypes>().As<IInstrumentTypes>().SingleInstance();
             Builder.RegisterType<LegTypes>().As<ILegTypes>().SingleInstance();
 
-            // Readers (they provide read-only access to one or several tables in Db)
-            Builder.RegisterType<OrdinaryFrnReader>().As<IOrdinaryFrnReader>();
-
             // Repos and their units of work.
             // Logic: first repos, and then - their UOWs (the UOWs they use)
             Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
@@ -84,9 +80,12 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<FeedCrud>().As<IFeedCrud>();
             Builder.RegisterType<ChainCrud>().As<IChainCrud>();
             Builder.RegisterType<RicCrud>().As<IRicCrud>();
+            Builder.RegisterType<FieldDefinitionCrud>().As<IFieldDefinitionCrud>();
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();
+            Builder.RegisterType<OrdinaryBondReader>().As<IReader<NOrdinaryBond>>();
+            Builder.RegisterType<OrdinaryFrnReader>().As<IReader<NOrdinaryFrn>>();
 
         }
     }

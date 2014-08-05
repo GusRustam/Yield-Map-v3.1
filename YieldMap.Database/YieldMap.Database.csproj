@@ -56,9 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BondDescriptionView.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
     <Compile Include="Chain.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -99,25 +96,13 @@
     <Compile Include="FieldGroup.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="FieldVsGroup.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Index.cs">
+    <Compile Include="Idx.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Industry.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="Instrument.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="InstrumentDescriptionView.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="InstrumentIBView.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="InstrumentRicView.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="InstrumentType.cs">
@@ -136,12 +121,6 @@
     <Compile Include="LegType.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
-    <Compile Include="OrdinaryBond.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="OrdinaryFrn.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
     <Compile Include="Property.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
@@ -155,9 +134,6 @@
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="RatingAgencyCode.cs">
-      <DependentUpon>Database.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RatingsView.cs">
       <DependentUpon>Database.tt</DependentUpon>
     </Compile>
     <Compile Include="RatingToInstrument.cs">

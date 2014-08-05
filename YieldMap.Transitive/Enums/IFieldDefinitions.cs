@@ -1,15 +1,16 @@
 ﻿using YieldMap.Database;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
     public interface IFieldDefinitions {
-        FieldDefinition Bid { get; }
-        FieldDefinition Ask { get; }
-        FieldDefinition Last { get; }
-        FieldDefinition Close { get; }
-        FieldDefinition Vwap { get; }
-        FieldDefinition Volume { get; }
-        FieldDefinition Value { get; }
-        FieldDefinition Tenor { get; }
-        FieldDefinition Maturity { get; }        
+        NFieldDefinition Bid { get; }
+        NFieldDefinition Ask { get; }
+        NFieldDefinition Last { get; }
+        NFieldDefinition Close { get; }
+        NFieldDefinition Vwap { get; }
+        NFieldDefinition Volume { get; }
+        NFieldDefinition Value { get; }
+        NFieldDefinition Tenor { get; }
+        NFieldDefinition Maturity { get; }        
     }
 }

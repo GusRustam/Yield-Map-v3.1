@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,9 @@ using YieldMap.Transitive.Domains.Contexts;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Tools;
 using Rating = YieldMap.Transitive.MediatorTypes.Rating;
 
@@ -27,7 +30,6 @@ namespace YieldMap.Transitive.Procedures {
         private readonly Dictionary<string, Ric> _rics = new Dictionary<string, Ric>();
         private readonly Dictionary<string, Feed> _feeds = new Dictionary<string, Feed>();
         private readonly Dictionary<string, Chain> _chains = new Dictionary<string, Chain>();
-        private readonly Dictionary<string, Index> _indices = new Dictionary<string, Index>();
         private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();
         private readonly Dictionary<string, Currency> _currencies = new Dictionary<string, Currency>();
         private readonly Dictionary<string, LegalEntity> _legalEntities = new Dictionary<string, LegalEntity>();
@@ -36,8 +38,10 @@ namespace YieldMap.Transitive.Procedures {
         private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
         private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
         private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
+        private readonly Dictionary<string, long> _indices = new Dictionary<string, long>();
         private readonly IContainer _container;
         private bool _notifications = true;
+        private readonly SQLiteConnection _connection;
 
         public event EventHandler<IDbEventArgs> Notify;
         public void DisableNotifications() {
@@ -53,6 +57,8 @@ namespace YieldMap.Transitive.Procedures {
             _resolver = _container.Resolve<IFieldResolver>();
             _legTypes = _container.Resolve<ILegTypes>();
             _instrumentTypes = _container.Resolve<IInstrumentTypes>();
+            _connection = _container.Resolve<IConnector>().GetConnection();
+            _connection.Open();
         }
 
         public void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms) {
@@ -253,19 +259,47 @@ namespace YieldMap.Transitive.Procedures {
         public void SaveRatings(IEnumerable<Rating> ratings) {
             var rtis = new Dictionary<Tuple<long, long, DateTime>, RatingToInstrument>();
             var rtcs = new Dictionary<Tuple<long, long, DateTime>, RatingToLegalEntity>();
+
+            var ratingViews = _container
+                .ResolveReaderWithConnection<NRatingView>(_connection)
+                .FindAll()
+                .ToList();
+
+            var instrumentRicViews = _container
+                .ResolveReaderWithConnection<NInstrumentRicView>(_connection)
+                .FindAll()
+                .ToList();
+
+
+            var ratingsToInstruments = _container
+                .ResolveCrudWithConnection<NRatingToInstrument>(_connection)
+                .FindAll()
+                .ToList();
+
+            var ratingsToLegalEntities = _container
+                .ResolveCrudWithConnection<NRatingToLegalEntity>(_connection)
+                .FindAll()
+                .ToList();
+            
+            var instrumentIBViews = _container
+                .ResolveReaderWithConnection<NInstrumentIBView>(_connection)
+                .FindAll()
+                .ToList();
+
+        
+
             using (var context = new RatingContext()) {
-                var local = context;
                 var enumerable = ratings as Rating[] ?? ratings.ToArray();
 
                 var instruments = (
                     from rating in enumerable
                     where !rating.Issuer
                     let r = rating
-                    let ratingInfo = local.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
+                    let ratingInfo = ratingViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
                     where ratingInfo != null
-                    let ricInfo = local.InstrumentRicViews.FirstOrDefault(x => x.Name == rating.Ric)
+                    let ricInfo = instrumentRicViews.FirstOrDefault(x => x.Name == rating.Ric)
                     where ricInfo != null
-                    where !local.RatingToInstruments.Any(
+                    where !ratingsToInstruments.Any(
                         x => x.RatingDate == r.Date &&
                              x.id_Instrument == ricInfo.id_Instrument &&
                              x.id_Rating == ratingInfo.id_Rating)
@@ -283,12 +317,12 @@ namespace YieldMap.Transitive.Procedures {
                     from rating in enumerable
                     where rating.Issuer
                     let r = rating
-                    let ratingInfo = local.RatingsViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
+                    let ratingInfo = ratingViews.FirstOrDefault(x => x.AgencyCode == r.Source && x.RatingName == r.RatingName)
                     where ratingInfo != null
-                    let ricInfo = local.InstrumentIBViews.FirstOrDefault(x => x.Name == rating.Ric)
+                    let ricInfo = instrumentIBViews.FirstOrDefault(x => x.Name == rating.Ric)
                     where ricInfo != null && (ricInfo.id_Issuer.HasValue || ricInfo.id_Borrower.HasValue)
                     let idLegalEntity = ricInfo.id_Issuer.HasValue ? ricInfo.id_Issuer.Value : ricInfo.id_Borrower.Value
-                    where !local.RatingToLegalEntities.Any(
+                    where !ratingsToLegalEntities.Any(
                         x => x.RatingDate == r.Date &&
                              x.id_LegalEntity == idLegalEntity &&
                              x.id_Rating == ratingInfo.id_Rating)
@@ -301,7 +335,7 @@ namespace YieldMap.Transitive.Procedures {
                     if (!rtcs.ContainsKey(key))
                         rtcs.Add(key, company);
                 }
-                var peggedContext = local;
+                var peggedContext = context; // todo context ??
                 if (rtis.Any())
                     rtis.Values.ChunkedForEach(x => {
                         var sql = BulkInsertRatingLink(x);
@@ -332,7 +366,7 @@ namespace YieldMap.Transitive.Procedures {
                 var note = description as Frn;
                 leg = new Leg {
                     Structure = note.FrnStructure,
-                    Index = EnsureIndex(ctx, note.IndexName),
+                    id_Idx = EnsureIndex(note.IndexName),
                     Cap = note.Cap,
                     Floor = note.Floor,
                     Margin = note.Margin,
@@ -346,18 +380,26 @@ namespace YieldMap.Transitive.Procedures {
             throw new InvalidDataException();
         }
 
-        private Index EnsureIndex(SaverContext ctx, string name) {
+        private long? EnsureIndex(string name) {
             if (String.IsNullOrWhiteSpace(name))
                 return null;
 
             if (_indices.ContainsKey(name))
                 return _indices[name];
 
-            var index = ctx.Indices.FirstOrDefault(t => t.Name == name) ??
-                        ctx.Indices.Add(new Index { Name = name });
 
-            _indices[name] = index;
-            return index;
+            var indexTable = _container.ResolveCrudWithConnection<NIdx>(_connection);
+
+            var index = indexTable.FindBy(t => t.Name == name).First(); // todo expressions parsing
+
+            if (index == null) {
+                index = new NIdx {Name = name};
+                indexTable.Create(index);
+                indexTable.Save<NIdx>();
+                _indices.Add(name, index.id);
+            }
+            _indices[name] = index.id;
+            return index.id;
         }
 
         private Feed EnsureFeed(SaverContext ctx, string name) {
@@ -557,7 +599,7 @@ namespace YieldMap.Transitive.Procedures {
                 "INSERT INTO Leg(id_Instrument, id_LegType, id_Currency, id_Index, Structure, FixedRate, Cap, Floor, Margin) VALUES",
                 (current, i) => {
                     var coupon = i.FixedRate.HasValue ? String.Format("'{0}'", i.FixedRate.Value) : "NULL";
-                    var idIndex = i.Index != null ? i.Index.id.ToString(CultureInfo.InvariantCulture) : "NULL";
+                    var idIndex = i.id_Idx.HasValue ? i.id_Idx.ToString() : "NULL";
                     var cap = i.Cap.HasValue ? i.Cap.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
                     var floor = i.Floor.HasValue ? i.Floor.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
                     var margin = i.Margin.HasValue ? i.Margin.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
@@ -659,6 +701,11 @@ namespace YieldMap.Transitive.Procedures {
 
         public void SaveSearchRics(string searchQuery, string[] rics, string feedName, DateTime expanded, string prms) {
             throw new NotImplementedException();
+        }
+
+        public void Dispose() {
+            _connection.Close();
+            _connection.Dispose();
         }
     }
 }

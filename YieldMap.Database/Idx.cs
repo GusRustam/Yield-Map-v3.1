@@ -12,21 +12,27 @@ namespace YieldMap.Database
     using System;
     using System.Collections.Generic;
     //using YieldMap.Database.Domains;
-    public partial class InstrumentRicView //: IObjectWithState
+    public partial class Idx //: IObjectWithState
     {
-        public long id_Ric { get; set; }
-        public long id_Instrument { get; set; }
-        public long id_Description { get; set; }
+        public Idx()
+        {
+            this.Legs = new HashSet<Leg>();
+        }
+    
+        public long id { get; set; }
         public string Name { get; set; }
-    	public InstrumentRicView ToPocoSimple() {
-    	    return new InstrumentRicView {
-    			id_Ric = this.id_Ric,
-    			id_Instrument = this.id_Instrument,
-    			id_Description = this.id_Description,
+        public Nullable<long> id_Ric { get; set; }
+    	public Idx ToPocoSimple() {
+    	    return new Idx {
+    			id = this.id,
     			Name = this.Name,
+    			id_Ric = this.id_Ric,
     		};
     	}
     
     	//public State State {get;set;}
-    		}
+    		
+        public virtual Ric Ric { get; set; }
+        public virtual ICollection<Leg> Legs { get; set; }
+    }
 }

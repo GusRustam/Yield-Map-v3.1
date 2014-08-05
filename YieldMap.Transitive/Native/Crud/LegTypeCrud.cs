@@ -1,0 +1,23 @@
+﻿using System;
+using System.Data.SQLite;
+using Autofac;
+using YieldMap.Tools.Logging;
+using YieldMap.Transitive.Native.Entities;
+
+namespace YieldMap.Transitive.Native.Crud {
+    public class LegTypeCrud : CrudBase<NLegType>, ILegTypeCrud {
+        private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.LegTypeCrud");
+
+        public LegTypeCrud(SQLiteConnection connection)
+            : base(connection) {
+        }
+
+        public LegTypeCrud(Func<IContainer> containerF)
+            : base(containerF) {
+        }
+
+        protected override Logging.Logger Logger {
+            get { return TheLogger; }
+        }
+    }
+}

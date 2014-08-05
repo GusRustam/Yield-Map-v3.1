@@ -18,7 +18,7 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(4), Variable] // ReSharper disable once InconsistentNaming
         public long? IssueSize { get; set; }
 
-        [DbField(5), Variable("Instrument.Series")] // ReSharper disable InconsistentNaming
+        [DbField(5), Variable("Series")] // ReSharper disable InconsistentNaming
         public string Series { get; set; }
 
         [DbField(6), Variable("IssueDate")] // ReSharper disable InconsistentNaming

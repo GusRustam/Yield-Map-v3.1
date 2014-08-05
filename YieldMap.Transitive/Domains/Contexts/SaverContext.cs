@@ -21,7 +21,6 @@ namespace YieldMap.Transitive.Domains.Contexts {
         public DbSet<Instrument> Instruments { get; set; }
         public DbSet<InstrumentType> InstrumentTypes { get; set; }
         public DbSet<Currency> Currencies { get; set; }
-        public DbSet<Index> Indices { get; set; } // todo ??
         public DbSet<Ric> Rics { get; set; } // todo ??
         public DbSet<RicToChain> RicToChains { get; set; } // todo ??
         public DbSet<Feed> Feeds { get; set; } // todo ??

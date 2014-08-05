@@ -1,19 +1,20 @@
-﻿using System.Linq;
-using YieldMap.Database;
-using YieldMap.Transitive.Domains;
-using YieldMap.Transitive.Domains.Contexts;
+﻿using System;
+using System.Linq;
+using Autofac;
+using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
     internal class LegTypes : ILegTypes {
-        public LegType Paid { get; private set; }
-        public LegType Received { get; private set; }
-        public LegType Both { get; private set; }
+        public NLegType Paid { get; private set; }
+        public NLegType Received { get; private set; }
+        public NLegType Both { get; private set; }
 
-        public LegTypes() {
-            var ctx = new EnumerationsContext();
-            Paid = ctx.LegTypes.First(i => i.Name == "Paid").ToPocoSimple();
-            Received = ctx.LegTypes.First(i => i.Name == "Received").ToPocoSimple();
-            Both = ctx.LegTypes.First(i => i.Name == "Both").ToPocoSimple();
+        public LegTypes(Func<IContainer> containerF) {
+            var legTypes = containerF().Resolve<ILegTypeCrud>().FindAll().ToList();
+            Paid = legTypes.First(i => i.Name == "Paid");
+            Received = legTypes.First(i => i.Name == "Received");
+            Both = legTypes.First(i => i.Name == "Both");
         }
     }
 }

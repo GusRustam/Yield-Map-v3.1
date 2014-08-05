@@ -20,7 +20,7 @@ namespace YieldMap.Database
         public Nullable<long> id_LegType { get; set; }
         public Nullable<long> id_Currency { get; set; }
         public Nullable<double> FixedRate { get; set; }
-        public Nullable<long> id_Index { get; set; }
+        public Nullable<long> id_Idx { get; set; }
         public Nullable<double> Cap { get; set; }
         public Nullable<double> Floor { get; set; }
         public Nullable<double> Margin { get; set; }
@@ -32,7 +32,7 @@ namespace YieldMap.Database
     			id_LegType = this.id_LegType,
     			id_Currency = this.id_Currency,
     			FixedRate = this.FixedRate,
-    			id_Index = this.id_Index,
+    			id_Idx = this.id_Idx,
     			Cap = this.Cap,
     			Floor = this.Floor,
     			Margin = this.Margin,
@@ -41,9 +41,9 @@ namespace YieldMap.Database
     
     	//public State State {get;set;}
     		
-        public virtual LegType LegType { get; set; }
         public virtual Currency Currency { get; set; }
-        public virtual Index Index { get; set; }
+        public virtual Idx Idx { get; set; }
         public virtual Instrument Instrument { get; set; }
+        public virtual LegType LegType { get; set; }
     }
 }

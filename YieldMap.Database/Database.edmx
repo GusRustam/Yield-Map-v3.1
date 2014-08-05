@@ -14,7 +14,7 @@
           <EntitySet Name="Field" EntityType="mainModel.Store.Field" store:Type="Tables" />
           <EntitySet Name="FieldDefinition" EntityType="mainModel.Store.FieldDefinition" store:Type="Tables" />
           <EntitySet Name="FieldGroup" EntityType="mainModel.Store.FieldGroup" store:Type="Tables" />
-          <EntitySet Name="Index" EntityType="mainModel.Store.Index" store:Type="Tables" />
+          <EntitySet Name="Idx" EntityType="mainModel.Store.Idx" store:Type="Tables" />
           <EntitySet Name="Industry" EntityType="mainModel.Store.Industry" store:Type="Tables" />
           <EntitySet Name="Instrument" EntityType="mainModel.Store.Instrument" store:Type="Tables" />
           <EntitySet Name="InstrumentType" EntityType="mainModel.Store.InstrumentType" store:Type="Tables" />
@@ -35,162 +35,6 @@
           <EntitySet Name="Specimen" EntityType="mainModel.Store.Specimen" store:Type="Tables" />
           <EntitySet Name="SubIndustry" EntityType="mainModel.Store.SubIndustry" store:Type="Tables" />
           <EntitySet Name="Ticker" EntityType="mainModel.Store.Ticker" store:Type="Tables" />
-          <EntitySet Name="BondDescriptionView" EntityType="mainModel.Store.BondDescriptionView" store:Type="Views" store:Name="BondDescriptionView">
-            <DefiningQuery>SELECT 
-      [BondDescriptionView].[id_Instrument] AS [id_Instrument], 
-      [BondDescriptionView].[InstrumentName] AS [InstrumentName], 
-      [BondDescriptionView].[InstrumentTypeName] AS [InstrumentTypeName], 
-      [BondDescriptionView].[id_InstrumentType] AS [id_InstrumentType], 
-      [BondDescriptionView].[IssueSize] AS [IssueSize], 
-      [BondDescriptionView].[Series] AS [Series], 
-      [BondDescriptionView].[Issue] AS [Issue], 
-      [BondDescriptionView].[Maturity] AS [Maturity], 
-      [BondDescriptionView].[NextCoupon] AS [NextCoupon], 
-      [BondDescriptionView].[TickerName] AS [TickerName], 
-      [BondDescriptionView].[SubIndustryName] AS [SubIndustryName], 
-      [BondDescriptionView].[IndustryName] AS [IndustryName], 
-      [BondDescriptionView].[SpecimenName] AS [SpecimenName], 
-      [BondDescriptionView].[SeniorityName] AS [SeniorityName], 
-      [BondDescriptionView].[RicName] AS [RicName], 
-      [BondDescriptionView].[IsinName] AS [IsinName], 
-      [BondDescriptionView].[BorrowerName] AS [BorrowerName], 
-      [BondDescriptionView].[BorrowerCountryName] AS [BorrowerCountryName], 
-      [BondDescriptionView].[IssuerName] AS [IssuerName], 
-      [BondDescriptionView].[IssuerCountryName] AS [IssuerCountryName], 
-      [BondDescriptionView].[InstrumentRating] AS [InstrumentRating], 
-      [BondDescriptionView].[InstrumentRatingDate] AS [InstrumentRatingDate], 
-      [BondDescriptionView].[InstrumentRatingAgency] AS [InstrumentRatingAgency], 
-      [BondDescriptionView].[IssuerRating] AS [IssuerRating], 
-      [BondDescriptionView].[IssuerRatingDate] AS [IssuerRatingDate], 
-      [BondDescriptionView].[IssuerRatingAgency] AS [IssuerRatingAgency], 
-      [BondDescriptionView].[BondStructure] AS [BondStructure], 
-      [BondDescriptionView].[Coupon] AS [Coupon]
-      FROM [BondDescriptionView] AS [BondDescriptionView]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="FieldVsGroup" EntityType="mainModel.Store.FieldVsGroup" store:Type="Views" store:Name="FieldVsGroup">
-            <DefiningQuery>SELECT 
-      [FieldVsGroup].[id_FieldGroup] AS [id_FieldGroup], 
-      [FieldVsGroup].[id_Field] AS [id_Field], 
-      [FieldVsGroup].[id_FieldDefinition] AS [id_FieldDefinition], 
-      [FieldVsGroup].[id_DefaultFieldDefinition] AS [id_DefaultFieldDefinition], 
-      [FieldVsGroup].[DefaultGroup] AS [DefaultGroup], 
-      [FieldVsGroup].[FieldGroupName] AS [FieldGroupName], 
-      [FieldVsGroup].[SystemName] AS [SystemName], 
-      [FieldVsGroup].[InternalName] AS [InternalName]
-      FROM [FieldVsGroup] AS [FieldVsGroup]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="InstrumentDescriptionView" EntityType="mainModel.Store.InstrumentDescriptionView" store:Type="Views" store:Name="InstrumentDescriptionView">
-            <DefiningQuery>SELECT 
-      [InstrumentDescriptionView].[id_Instrument] AS [id_Instrument], 
-      [InstrumentDescriptionView].[InstrumentName] AS [InstrumentName], 
-      [InstrumentDescriptionView].[InstrumentTypeName] AS [InstrumentTypeName], 
-      [InstrumentDescriptionView].[id_InstrumentType] AS [id_InstrumentType], 
-      [InstrumentDescriptionView].[IssueSize] AS [IssueSize], 
-      [InstrumentDescriptionView].[Series] AS [Series], 
-      [InstrumentDescriptionView].[Issue] AS [Issue], 
-      [InstrumentDescriptionView].[Maturity] AS [Maturity], 
-      [InstrumentDescriptionView].[NextCoupon] AS [NextCoupon], 
-      [InstrumentDescriptionView].[TickerName] AS [TickerName], 
-      [InstrumentDescriptionView].[SubIndustryName] AS [SubIndustryName], 
-      [InstrumentDescriptionView].[IndustryName] AS [IndustryName], 
-      [InstrumentDescriptionView].[SpecimenName] AS [SpecimenName], 
-      [InstrumentDescriptionView].[SeniorityName] AS [SeniorityName], 
-      [InstrumentDescriptionView].[RicName] AS [RicName], 
-      [InstrumentDescriptionView].[IsinName] AS [IsinName], 
-      [InstrumentDescriptionView].[BorrowerName] AS [BorrowerName], 
-      [InstrumentDescriptionView].[BorrowerCountryName] AS [BorrowerCountryName], 
-      [InstrumentDescriptionView].[IssuerName] AS [IssuerName], 
-      [InstrumentDescriptionView].[IssuerCountryName] AS [IssuerCountryName], 
-      [InstrumentDescriptionView].[InstrumentRating] AS [InstrumentRating], 
-      [InstrumentDescriptionView].[InstrumentRatingDate] AS [InstrumentRatingDate], 
-      [InstrumentDescriptionView].[InstrumentRatingAgency] AS [InstrumentRatingAgency], 
-      [InstrumentDescriptionView].[IssuerRating] AS [IssuerRating], 
-      [InstrumentDescriptionView].[IssuerRatingDate] AS [IssuerRatingDate], 
-      [InstrumentDescriptionView].[IssuerRatingAgency] AS [IssuerRatingAgency]
-      FROM [InstrumentDescriptionView] AS [InstrumentDescriptionView]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="InstrumentIBView" EntityType="mainModel.Store.InstrumentIBView" store:Type="Views" store:Name="InstrumentIBView">
-            <DefiningQuery>SELECT 
-      [InstrumentIBView].[id_Ric] AS [id_Ric], 
-      [InstrumentIBView].[id_Instrument] AS [id_Instrument], 
-      [InstrumentIBView].[id_Borrower] AS [id_Borrower], 
-      [InstrumentIBView].[id_Issuer] AS [id_Issuer], 
-      [InstrumentIBView].[Name] AS [Name]
-      FROM [InstrumentIBView] AS [InstrumentIBView]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="InstrumentRicView" EntityType="mainModel.Store.InstrumentRicView" store:Type="Views" store:Name="InstrumentRicView">
-            <DefiningQuery>SELECT 
-      [InstrumentRicView].[id_Ric] AS [id_Ric], 
-      [InstrumentRicView].[id_Instrument] AS [id_Instrument], 
-      [InstrumentRicView].[id_Description] AS [id_Description], 
-      [InstrumentRicView].[Name] AS [Name]
-      FROM [InstrumentRicView] AS [InstrumentRicView]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="OrdinaryBond" EntityType="mainModel.Store.OrdinaryBond" store:Type="Views" store:Name="OrdinaryBond">
-            <DefiningQuery>SELECT 
-      [OrdinaryBond].[id_Instrument] AS [id_Instrument], 
-      [OrdinaryBond].[Name] AS [Name], 
-      [OrdinaryBond].[Series] AS [Series], 
-      [OrdinaryBond].[IssueSize] AS [IssueSize], 
-      [OrdinaryBond].[RateStructure] AS [RateStructure], 
-      [OrdinaryBond].[BondStructure] AS [BondStructure], 
-      [OrdinaryBond].[id_Issuer] AS [id_Issuer], 
-      [OrdinaryBond].[id_Borrower] AS [id_Borrower], 
-      [OrdinaryBond].[id_Isin] AS [id_Isin], 
-      [OrdinaryBond].[id_Ric] AS [id_Ric], 
-      [OrdinaryBond].[Isin] AS [Isin], 
-      [OrdinaryBond].[Ric] AS [Ric], 
-      [OrdinaryBond].[id_Ticker] AS [id_Ticker], 
-      [OrdinaryBond].[id_SubIndustry] AS [id_SubIndustry], 
-      [OrdinaryBond].[id_Specimen] AS [id_Specimen], 
-      [OrdinaryBond].[id_Seniority] AS [id_Seniority], 
-      [OrdinaryBond].[Issue] AS [Issue], 
-      [OrdinaryBond].[Maturity] AS [Maturity], 
-      [OrdinaryBond].[NextCoupon] AS [NextCoupon], 
-      [OrdinaryBond].[Coupon] AS [Coupon], 
-      [OrdinaryBond].[id_Currency] AS [id_Currency]
-      FROM [OrdinaryBond] AS [OrdinaryBond]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="OrdinaryFrn" EntityType="mainModel.Store.OrdinaryFrn" store:Type="Views" store:Name="OrdinaryFrn">
-            <DefiningQuery>SELECT 
-      [OrdinaryFrn].[id_Instrument] AS [id_Instrument], 
-      [OrdinaryFrn].[Name] AS [Name], 
-      [OrdinaryFrn].[Series] AS [Series], 
-      [OrdinaryFrn].[IssueSize] AS [IssueSize], 
-      [OrdinaryFrn].[RateStructure] AS [RateStructure], 
-      [OrdinaryFrn].[BondStructure] AS [BondStructure], 
-      [OrdinaryFrn].[id_Issuer] AS [id_Issuer], 
-      [OrdinaryFrn].[id_Borrower] AS [id_Borrower], 
-      [OrdinaryFrn].[id_Isin] AS [id_Isin], 
-      [OrdinaryFrn].[id_Ric] AS [id_Ric], 
-      [OrdinaryFrn].[Isin] AS [Isin], 
-      [OrdinaryFrn].[Ric] AS [Ric], 
-      [OrdinaryFrn].[id_Ticker] AS [id_Ticker], 
-      [OrdinaryFrn].[id_SubIndustry] AS [id_SubIndustry], 
-      [OrdinaryFrn].[id_Specimen] AS [id_Specimen], 
-      [OrdinaryFrn].[id_Seniority] AS [id_Seniority], 
-      [OrdinaryFrn].[Issue] AS [Issue], 
-      [OrdinaryFrn].[Maturity] AS [Maturity], 
-      [OrdinaryFrn].[NextCoupon] AS [NextCoupon], 
-      [OrdinaryFrn].[id_Currency] AS [id_Currency], 
-      [OrdinaryFrn].[FrnCap] AS [FrnCap], 
-      [OrdinaryFrn].[FrnFloor] AS [FrnFloor], 
-      [OrdinaryFrn].[Margin] AS [Margin], 
-      [OrdinaryFrn].[IndexName] AS [IndexName], 
-      [OrdinaryFrn].[IndexRic] AS [IndexRic]
-      FROM [OrdinaryFrn] AS [OrdinaryFrn]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="RatingsView" EntityType="mainModel.Store.RatingsView" store:Type="Views" store:Name="RatingsView">
-            <DefiningQuery>SELECT 
-      [RatingsView].[id_Rating] AS [id_Rating], 
-      [RatingsView].[id_RatingAgency] AS [id_RatingAgency], 
-      [RatingsView].[id_RatingAgencyCode] AS [id_RatingAgencyCode], 
-      [RatingsView].[RatingOrder] AS [RatingOrder], 
-      [RatingsView].[RatingName] AS [RatingName], 
-      [RatingsView].[AgencyName] AS [AgencyName], 
-      [RatingsView].[AgencyCode] AS [AgencyCode]
-      FROM [RatingsView] AS [RatingsView]</DefiningQuery>
-          </EntitySet>
           <AssociationSet Name="FK_Chain_0_0" Association="mainModel.Store.FK_Chain_0_0">
             <End Role="Feed" EntitySet="Feed" />
             <End Role="Chain" EntitySet="Chain" />
@@ -239,9 +83,9 @@
             <End Role="FieldDefinition" EntitySet="FieldDefinition" />
             <End Role="FieldGroup" EntitySet="FieldGroup" />
           </AssociationSet>
-          <AssociationSet Name="FK_Index_0_0" Association="mainModel.Store.FK_Index_0_0">
+          <AssociationSet Name="FK_Idx_0_0" Association="mainModel.Store.FK_Idx_0_0">
             <End Role="Ric" EntitySet="Ric" />
-            <End Role="Index" EntitySet="Index" />
+            <End Role="Idx" EntitySet="Idx" />
           </AssociationSet>
           <AssociationSet Name="FK_Instrument_0_0" Association="mainModel.Store.FK_Instrument_0_0">
             <End Role="Description" EntitySet="Description" />
@@ -256,19 +100,19 @@
             <End Role="Isin" EntitySet="Isin" />
           </AssociationSet>
           <AssociationSet Name="FK_Leg_0_0" Association="mainModel.Store.FK_Leg_0_0">
-            <End Role="Index" EntitySet="Index" />
+            <End Role="Currency" EntitySet="Currency" />
             <End Role="Leg" EntitySet="Leg" />
           </AssociationSet>
           <AssociationSet Name="FK_Leg_1_0" Association="mainModel.Store.FK_Leg_1_0">
-            <End Role="LegType" EntitySet="LegType" />
-            <End Role="Leg" EntitySet="Leg" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Leg_2_0" Association="mainModel.Store.FK_Leg_2_0">
             <End Role="Instrument" EntitySet="Instrument" />
             <End Role="Leg" EntitySet="Leg" />
           </AssociationSet>
+          <AssociationSet Name="FK_Leg_2_0" Association="mainModel.Store.FK_Leg_2_0">
+            <End Role="LegType" EntitySet="LegType" />
+            <End Role="Leg" EntitySet="Leg" />
+          </AssociationSet>
           <AssociationSet Name="FK_Leg_3_0" Association="mainModel.Store.FK_Leg_3_0">
-            <End Role="Currency" EntitySet="Currency" />
+            <End Role="Idx" EntitySet="Idx" />
             <End Role="Leg" EntitySet="Leg" />
           </AssociationSet>
           <AssociationSet Name="FK_LegalEntity_0_0" Association="mainModel.Store.FK_LegalEntity_0_0">
@@ -417,7 +261,7 @@
           <Property Name="Default" Type="bit" Nullable="false" />
           <Property Name="id_DefaultFieldDef" Type="integer" />
         </EntityType>
-        <EntityType Name="Index">
+        <EntityType Name="Idx">
           <Key>
             <PropertyRef Name="id" />
           </Key>
@@ -466,7 +310,7 @@
           <Property Name="id_LegType" Type="integer" />
           <Property Name="id_Currency" Type="integer" />
           <Property Name="FixedRate" Type="real" />
-          <Property Name="id_Index" Type="integer" />
+          <Property Name="id_Idx" Type="integer" />
           <Property Name="Cap" Type="real" />
           <Property Name="Floor" Type="real" />
           <Property Name="Margin" Type="real" />
@@ -599,249 +443,27 @@
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.BondDescriptionView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="BondDescriptionView">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="InstrumentTypeName" />
-            <PropertyRef Name="id_InstrumentType" />
-            <PropertyRef Name="TickerName" />
-            <PropertyRef Name="SubIndustryName" />
-            <PropertyRef Name="SpecimenName" />
-            <PropertyRef Name="SeniorityName" />
-            <PropertyRef Name="RicName" />
-            <PropertyRef Name="IsinName" />
-            <PropertyRef Name="BorrowerName" />
-            <PropertyRef Name="BorrowerCountryName" />
-            <PropertyRef Name="IssuerName" />
-            <PropertyRef Name="IssuerCountryName" />
-            <PropertyRef Name="InstrumentRating" />
-            <PropertyRef Name="InstrumentRatingAgency" />
-            <PropertyRef Name="IssuerRating" />
-            <PropertyRef Name="IssuerRatingAgency" />
-          </Key>
-          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="InstrumentName" Type="varchar" MaxLength="50" />
-          <Property Name="InstrumentTypeName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="id_InstrumentType" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="IssueSize" Type="integer" />
-          <Property Name="Series" Type="varchar" MaxLength="50" />
-          <Property Name="Issue" Type="datetime" />
-          <Property Name="Maturity" Type="datetime" />
-          <Property Name="NextCoupon" Type="datetime" />
-          <Property Name="TickerName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="SubIndustryName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IndustryName" Type="varchar" MaxLength="50" />
-          <Property Name="SpecimenName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="SeniorityName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="RicName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IsinName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="BorrowerName" Type="varchar" Nullable="false" MaxLength="255" />
-          <Property Name="BorrowerCountryName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IssuerName" Type="varchar" Nullable="false" MaxLength="255" />
-          <Property Name="IssuerCountryName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="InstrumentRating" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="InstrumentRatingDate" Type="datetime" />
-          <Property Name="InstrumentRatingAgency" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IssuerRating" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IssuerRatingDate" Type="datetime" />
-          <Property Name="IssuerRatingAgency" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="BondStructure" Type="varchar" MaxLength="1000" />
-          <Property Name="Coupon" Type="real" />
-        </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.FieldVsGroup' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="FieldVsGroup">
-          <Key>
-            <PropertyRef Name="id_FieldGroup" />
-            <PropertyRef Name="id_Field" />
-            <PropertyRef Name="id_FieldDefinition" />
-            <PropertyRef Name="id_DefaultFieldDefinition" />
-            <PropertyRef Name="DefaultGroup" />
-            <PropertyRef Name="FieldGroupName" />
-            <PropertyRef Name="SystemName" />
-          </Key>
-          <Property Name="id_FieldGroup" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Field" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_FieldDefinition" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_DefaultFieldDefinition" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="DefaultGroup" Type="bit" Nullable="false" />
-          <Property Name="FieldGroupName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="SystemName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="InternalName" Type="varchar" MaxLength="50" />
-        </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.InstrumentDescriptionView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="InstrumentDescriptionView">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="InstrumentTypeName" />
-            <PropertyRef Name="id_InstrumentType" />
-            <PropertyRef Name="TickerName" />
-            <PropertyRef Name="SubIndustryName" />
-            <PropertyRef Name="SpecimenName" />
-            <PropertyRef Name="SeniorityName" />
-            <PropertyRef Name="RicName" />
-            <PropertyRef Name="IsinName" />
-            <PropertyRef Name="BorrowerName" />
-            <PropertyRef Name="BorrowerCountryName" />
-            <PropertyRef Name="IssuerName" />
-            <PropertyRef Name="IssuerCountryName" />
-            <PropertyRef Name="InstrumentRating" />
-            <PropertyRef Name="InstrumentRatingAgency" />
-            <PropertyRef Name="IssuerRating" />
-            <PropertyRef Name="IssuerRatingAgency" />
-          </Key>
-          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="InstrumentName" Type="varchar" MaxLength="50" />
-          <Property Name="InstrumentTypeName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="id_InstrumentType" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="IssueSize" Type="integer" />
-          <Property Name="Series" Type="varchar" MaxLength="50" />
-          <Property Name="Issue" Type="datetime" />
-          <Property Name="Maturity" Type="datetime" />
-          <Property Name="NextCoupon" Type="datetime" />
-          <Property Name="TickerName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="SubIndustryName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IndustryName" Type="varchar" MaxLength="50" />
-          <Property Name="SpecimenName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="SeniorityName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="RicName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IsinName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="BorrowerName" Type="varchar" Nullable="false" MaxLength="255" />
-          <Property Name="BorrowerCountryName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IssuerName" Type="varchar" Nullable="false" MaxLength="255" />
-          <Property Name="IssuerCountryName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="InstrumentRating" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="InstrumentRatingDate" Type="datetime" />
-          <Property Name="InstrumentRatingAgency" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IssuerRating" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IssuerRatingDate" Type="datetime" />
-          <Property Name="IssuerRatingAgency" Type="varchar" Nullable="false" MaxLength="50" />
-        </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.InstrumentIBView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="InstrumentIBView">
-          <Key>
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="Name" />
-          </Key>
-          <Property Name="id_Ric" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Borrower" Type="integer" />
-          <Property Name="id_Issuer" Type="integer" />
-          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
-        </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.InstrumentRicView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="InstrumentRicView">
-          <Key>
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="id_Description" />
-            <PropertyRef Name="Name" />
-          </Key>
-          <Property Name="id_Ric" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Description" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="varchar" Nullable="false" MaxLength="50" />
-        </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.OrdinaryBond' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="OrdinaryBond">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="id_Isin" />
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="Isin" />
-            <PropertyRef Name="Ric" />
-          </Key>
-          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="varchar" MaxLength="50" />
-          <Property Name="Series" Type="varchar" MaxLength="50" />
-          <Property Name="IssueSize" Type="integer" />
-          <Property Name="RateStructure" Type="nvarchar" />
-          <Property Name="BondStructure" Type="varchar" MaxLength="1000" />
-          <Property Name="id_Issuer" Type="integer" />
-          <Property Name="id_Borrower" Type="integer" />
-          <Property Name="id_Isin" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Ric" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Isin" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="Ric" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="id_Ticker" Type="integer" />
-          <Property Name="id_SubIndustry" Type="integer" />
-          <Property Name="id_Specimen" Type="integer" />
-          <Property Name="id_Seniority" Type="integer" />
-          <Property Name="Issue" Type="datetime" />
-          <Property Name="Maturity" Type="datetime" />
-          <Property Name="NextCoupon" Type="datetime" />
-          <Property Name="Coupon" Type="real" />
-          <Property Name="id_Currency" Type="integer" />
-        </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.OrdinaryFrn' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="OrdinaryFrn">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="id_Isin" />
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="Isin" />
-            <PropertyRef Name="Ric" />
-            <PropertyRef Name="IndexName" />
-            <PropertyRef Name="IndexRic" />
-          </Key>
-          <Property Name="id_Instrument" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="varchar" MaxLength="50" />
-          <Property Name="Series" Type="varchar" MaxLength="50" />
-          <Property Name="IssueSize" Type="integer" />
-          <Property Name="RateStructure" Type="nvarchar" />
-          <Property Name="BondStructure" Type="varchar" MaxLength="1000" />
-          <Property Name="id_Issuer" Type="integer" />
-          <Property Name="id_Borrower" Type="integer" />
-          <Property Name="id_Isin" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_Ric" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Isin" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="Ric" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="id_Ticker" Type="integer" />
-          <Property Name="id_SubIndustry" Type="integer" />
-          <Property Name="id_Specimen" Type="integer" />
-          <Property Name="id_Seniority" Type="integer" />
-          <Property Name="Issue" Type="datetime" />
-          <Property Name="Maturity" Type="datetime" />
-          <Property Name="NextCoupon" Type="datetime" />
-          <Property Name="id_Currency" Type="integer" />
-          <Property Name="FrnCap" Type="real" />
-          <Property Name="FrnFloor" Type="real" />
-          <Property Name="Margin" Type="real" />
-          <Property Name="IndexName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="IndexRic" Type="varchar" Nullable="false" MaxLength="50" />
-        </EntityType>
         <!--Errors Found During Generation:
       warning 6002: The table/view 'main.RatingsView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
       -->
-        <EntityType Name="RatingsView">
-          <Key>
-            <PropertyRef Name="id_Rating" />
-            <PropertyRef Name="id_RatingAgency" />
-            <PropertyRef Name="id_RatingAgencyCode" />
-            <PropertyRef Name="RatingOrder" />
-            <PropertyRef Name="RatingName" />
-            <PropertyRef Name="AgencyName" />
-          </Key>
-          <Property Name="id_Rating" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="id_RatingAgency" Type="integer" Nullable="false" />
-          <Property Name="id_RatingAgencyCode" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="RatingOrder" Type="integer" Nullable="false" />
-          <Property Name="RatingName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="AgencyName" Type="varchar" Nullable="false" MaxLength="50" />
-          <Property Name="AgencyCode" Type="varchar" MaxLength="50" />
-        </EntityType>
         <Association Name="FK_Chain_0_0">
           <End Role="Feed" Type="mainModel.Store.Feed" Multiplicity="0..1" />
           <End Role="Chain" Type="mainModel.Store.Chain" Multiplicity="*" />
@@ -986,14 +608,14 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Index_0_0">
+        <Association Name="FK_Idx_0_0">
           <End Role="Ric" Type="mainModel.Store.Ric" Multiplicity="0..1" />
-          <End Role="Index" Type="mainModel.Store.Index" Multiplicity="*" />
+          <End Role="Idx" Type="mainModel.Store.Idx" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Ric">
               <PropertyRef Name="id" />
             </Principal>
-            <Dependent Role="Index">
+            <Dependent Role="Idx">
               <PropertyRef Name="id_Ric" />
             </Dependent>
           </ReferentialConstraint>
@@ -1035,30 +657,18 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_Leg_0_0">
-          <End Role="Index" Type="mainModel.Store.Index" Multiplicity="0..1" />
+          <End Role="Currency" Type="mainModel.Store.Currency" Multiplicity="0..1" />
           <End Role="Leg" Type="mainModel.Store.Leg" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="Index">
+            <Principal Role="Currency">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="Leg">
-              <PropertyRef Name="id_Index" />
+              <PropertyRef Name="id_Currency" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_Leg_1_0">
-          <End Role="LegType" Type="mainModel.Store.LegType" Multiplicity="0..1" />
-          <End Role="Leg" Type="mainModel.Store.Leg" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="LegType">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Leg">
-              <PropertyRef Name="id_LegType" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Leg_2_0">
           <End Role="Instrument" Type="mainModel.Store.Instrument" Multiplicity="0..1" />
           <End Role="Leg" Type="mainModel.Store.Leg" Multiplicity="*" />
           <ReferentialConstraint>
@@ -1070,15 +680,27 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Leg_3_0">
-          <End Role="Currency" Type="mainModel.Store.Currency" Multiplicity="0..1" />
+        <Association Name="FK_Leg_2_0">
+          <End Role="LegType" Type="mainModel.Store.LegType" Multiplicity="0..1" />
           <End Role="Leg" Type="mainModel.Store.Leg" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="Currency">
+            <Principal Role="LegType">
               <PropertyRef Name="id" />
             </Principal>
             <Dependent Role="Leg">
-              <PropertyRef Name="id_Currency" />
+              <PropertyRef Name="id_LegType" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Leg_3_0">
+          <End Role="Idx" Type="mainModel.Store.Idx" Multiplicity="0..1" />
+          <End Role="Leg" Type="mainModel.Store.Leg" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Idx">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Leg">
+              <PropertyRef Name="id_Idx" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1298,7 +920,6 @@
           <EntitySet Name="Industries" EntityType="mainModel.Industry" />
           <EntitySet Name="InstrumentTypes" EntityType="mainModel.InstrumentType" />
           <EntitySet Name="Isins" EntityType="mainModel.Isin" />
-          <EntitySet Name="Legs" EntityType="mainModel.Leg" />
           <EntitySet Name="LegTypes" EntityType="mainModel.LegType" />
           <EntitySet Name="Ratings" EntityType="mainModel.Rating" />
           <EntitySet Name="RatingAgencies" EntityType="mainModel.RatingAgency" />
@@ -1308,7 +929,6 @@
           <EntitySet Name="Specimens" EntityType="mainModel.Specimen" />
           <EntitySet Name="SubIndustries" EntityType="mainModel.SubIndustry" />
           <EntitySet Name="Tickers" EntityType="mainModel.Ticker" />
-          <EntitySet Name="RatingsViews" EntityType="mainModel.RatingsView" />
           <AssociationSet Name="FK_Chain_0_0" Association="mainModel.FK_Chain_0_0">
             <End Role="Feed" EntitySet="Feeds" />
             <End Role="Chain" EntitySet="Chains" />
@@ -1324,10 +944,6 @@
           <AssociationSet Name="FK_SubIndustry_0_0" Association="mainModel.FK_SubIndustry_0_0">
             <End Role="Industry" EntitySet="Industries" />
             <End Role="SubIndustry" EntitySet="SubIndustries" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Leg_0_0" Association="mainModel.FK_Leg_0_0">
-            <End Role="LegType" EntitySet="LegTypes" />
-            <End Role="Leg" EntitySet="Legs" />
           </AssociationSet>
           <AssociationSet Name="FK_Rating_0_0" Association="mainModel.FK_Rating_0_0">
             <End Role="RatingAgency" EntitySet="RatingAgencies" />
@@ -1360,10 +976,6 @@
             <End Role="Rating" EntitySet="Ratings" />
             <End Role="RatingToLegalEntity" EntitySet="RatingToLegalEntities" />
           </AssociationSet>
-          <AssociationSet Name="FK_Leg_0_01" Association="mainModel.FK_Leg_0_01">
-            <End Role="Currency" EntitySet="Currencies" />
-            <End Role="Leg" EntitySet="Legs" />
-          </AssociationSet>
           <EntitySet Name="Rics" EntityType="mainModel.Ric" />
           <AssociationSet Name="FK_Ric_2_0" Association="mainModel.FK_Ric_2_0">
             <End Role="Feed" EntitySet="Feeds" />
@@ -1376,15 +988,6 @@
           <AssociationSet Name="FK_RicToChain_1_0" Association="mainModel.FK_RicToChain_1_0">
             <End Role="Ric" EntitySet="Rics" />
             <End Role="RicToChain" EntitySet="RicToChains" />
-          </AssociationSet>
-          <EntitySet Name="Indices" EntityType="mainModel.Index" />
-          <AssociationSet Name="FK_Index_0_0" Association="mainModel.FK_Index_0_0">
-            <End Role="Ric" EntitySet="Rics" />
-            <End Role="Index" EntitySet="Indices" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Leg_0_02" Association="mainModel.FK_Leg_0_02">
-            <End Role="Index" EntitySet="Indices" />
-            <End Role="Leg" EntitySet="Legs" />
           </AssociationSet>
           <EntitySet Name="Descriptions" EntityType="mainModel.Description" />
           <EntitySet Name="Instruments" EntityType="mainModel.Instrument" />
@@ -1428,22 +1031,12 @@
             <End Role="InstrumentType" EntitySet="InstrumentTypes" />
             <End Role="Instrument" EntitySet="Instruments" />
           </AssociationSet>
-          <AssociationSet Name="FK_Leg_2_0" Association="mainModel.FK_Leg_2_0">
-            <End Role="Instrument" EntitySet="Instruments" />
-            <End Role="Leg" EntitySet="Legs" />
-          </AssociationSet>
           <AssociationSet Name="FK_RatingToInstrument_1_0" Association="mainModel.FK_RatingToInstrument_1_0">
             <End Role="Instrument" EntitySet="Instruments" />
             <End Role="RatingToInstrument" EntitySet="RatingToInstruments" />
           </AssociationSet>
-          <EntitySet Name="OrdinaryBonds" EntityType="mainModel.OrdinaryBond" />
-          <EntitySet Name="OrdinaryFrns" EntityType="mainModel.OrdinaryFrn" />
-          <EntitySet Name="InstrumentRicViews" EntityType="mainModel.InstrumentRicView" />
-          <EntitySet Name="InstrumentIBViews" EntityType="mainModel.InstrumentIBView" />
-          <EntitySet Name="InstrumentDescriptionViews" EntityType="mainModel.InstrumentDescriptionView" />
           <EntitySet Name="Fields" EntityType="mainModel.Field" />
           <EntitySet Name="FieldDefinitions" EntityType="mainModel.FieldDefinition" />
-          <EntitySet Name="FieldVsGroups" EntityType="mainModel.FieldVsGroup" />
           <AssociationSet Name="FK_Field_0_0" Association="mainModel.FK_Field_0_0">
             <End Role="FieldDefinition" EntitySet="FieldDefinitions" />
             <End Role="Field" EntitySet="Fields" />
@@ -1466,7 +1059,6 @@
             <End Role="Instrument" EntitySet="Instruments" />
             <End Role="PropertyValue" EntitySet="PropertyValues" />
           </AssociationSet>
-          <EntitySet Name="BondDescriptionViews" EntityType="mainModel.BondDescriptionView" />
           <EntitySet Name="Properties" EntityType="mainModel.Property" />
           <AssociationSet Name="FK_Property_0_0" Association="mainModel.FK_Property_0_0">
             <End Role="InstrumentType" EntitySet="InstrumentTypes" />
@@ -1475,6 +1067,28 @@
           <AssociationSet Name="FK_PropertyValue_1_0" Association="mainModel.FK_PropertyValue_1_0">
             <End Role="Property" EntitySet="Properties" />
             <End Role="PropertyValue" EntitySet="PropertyValues" />
+          </AssociationSet>
+          <EntitySet Name="Idxes" EntityType="mainModel.Idx" />
+          <EntitySet Name="Legs" EntityType="mainModel.Leg" />
+          <AssociationSet Name="FK_Leg_0_0" Association="mainModel.FK_Leg_0_0">
+            <End Role="Currency" EntitySet="Currencies" />
+            <End Role="Leg" EntitySet="Legs" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Idx_0_0" Association="mainModel.FK_Idx_0_0">
+            <End Role="Ric" EntitySet="Rics" />
+            <End Role="Idx" EntitySet="Idxes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Leg_3_0" Association="mainModel.FK_Leg_3_0">
+            <End Role="Idx" EntitySet="Idxes" />
+            <End Role="Leg" EntitySet="Legs" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Leg_1_0" Association="mainModel.FK_Leg_1_0">
+            <End Role="Instrument" EntitySet="Instruments" />
+            <End Role="Leg" EntitySet="Legs" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Leg_2_0" Association="mainModel.FK_Leg_2_0">
+            <End Role="LegType" EntitySet="LegTypes" />
+            <End Role="Leg" EntitySet="Legs" />
           </AssociationSet>
           </EntityContainer>
         <EntityType Name="Chain">
@@ -1503,7 +1117,7 @@
           </Key>
           <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_0_01" FromRole="Currency" ToRole="Leg" />
+          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_0_0" FromRole="Currency" ToRole="Leg" />
         </EntityType>
         <EntityType Name="Feed">
           <Key>
@@ -1544,32 +1158,13 @@
           <NavigationProperty Name="Rics" Relationship="mainModel.FK_Ric_1_0" FromRole="Isin" ToRole="Ric" />
           <NavigationProperty Name="Descriptions" Relationship="mainModel.FK_Description_5_0" FromRole="Isin" ToRole="Description" />
           </EntityType>
-        <EntityType Name="Leg">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Structure" MaxLength="1000" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_Instrument" />
-          <Property Type="Int64" Name="id_LegType" />
-          <Property Type="Int64" Name="id_Currency" />
-          <Property Type="Double" Name="FixedRate" />
-          <Property Type="Int64" Name="id_Index" />
-          <Property Type="Double" Name="Cap" />
-          <Property Type="Double" Name="Floor" />
-          <NavigationProperty Name="LegType" Relationship="mainModel.FK_Leg_0_0" FromRole="Leg" ToRole="LegType" />
-          <NavigationProperty Name="Currency" Relationship="mainModel.FK_Leg_0_01" FromRole="Leg" ToRole="Currency" />
-          <NavigationProperty Name="Index" Relationship="mainModel.FK_Leg_0_02" FromRole="Leg" ToRole="Index" />
-          <NavigationProperty Name="Instrument" Relationship="mainModel.FK_Leg_2_0" FromRole="Leg" ToRole="Instrument" />
-          <Property Type="Double" Name="Margin" />
-        </EntityType>
         <EntityType Name="LegType">
           <Key>
             <PropertyRef Name="id" />
           </Key>
           <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_0_0" FromRole="LegType" ToRole="Leg" />
+          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_2_0" FromRole="LegType" ToRole="Leg" />
         </EntityType>
         <EntityType Name="Rating">
           <Key>
@@ -1649,23 +1244,6 @@
           <NavigationProperty Name="Parent" Relationship="mainModel.FK_Ticker_0_0" FromRole="Ticker1" ToRole="Ticker" />
           <NavigationProperty Name="Descriptions" Relationship="mainModel.FK_Description_3_0" FromRole="Ticker" ToRole="Description" />
         </EntityType>
-        <EntityType Name="RatingsView">
-          <Key>
-            <PropertyRef Name="id_Rating" />
-            <PropertyRef Name="id_RatingAgency" />
-            <PropertyRef Name="id_RatingAgencyCode" />
-            <PropertyRef Name="RatingOrder" />
-            <PropertyRef Name="RatingName" />
-            <PropertyRef Name="AgencyName" />
-          </Key>
-          <Property Type="Int64" Name="id_Rating" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_RatingAgency" Nullable="false" />
-          <Property Type="Int64" Name="id_RatingAgencyCode" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="RatingOrder" Nullable="false" />
-          <Property Type="String" Name="RatingName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="AgencyName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="AgencyCode" MaxLength="50" FixedLength="false" Unicode="false" />
-        </EntityType>
         <Association Name="FK_Chain_0_0">
           <End Type="mainModel.Feed" Role="Feed" Multiplicity="0..1" />
           <End Type="mainModel.Chain" Role="Chain" Multiplicity="*" />
@@ -1711,18 +1289,6 @@
             </Principal>
             <Dependent Role="SubIndustry">
               <PropertyRef Name="id_Industry" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Leg_0_0">
-          <End Type="mainModel.LegType" Role="LegType" Multiplicity="0..1" />
-          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="LegType">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Leg">
-              <PropertyRef Name="id_LegType" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1844,18 +1410,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Leg_0_01">
-          <End Type="mainModel.Currency" Role="Currency" Multiplicity="0..1" />
-          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Currency">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Leg">
-              <PropertyRef Name="id_Currency" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <EntityType Name="Ric">
           <Key>
             <PropertyRef Name="id" />
@@ -1868,9 +1422,9 @@
           <NavigationProperty Name="Feed" Relationship="mainModel.FK_Ric_2_0" FromRole="Ric" ToRole="Feed" />
           <NavigationProperty Name="Isin" Relationship="mainModel.FK_Ric_1_0" FromRole="Ric" ToRole="Isin" />
           <NavigationProperty Name="RicToChains" Relationship="mainModel.FK_RicToChain_1_0" FromRole="Ric" ToRole="RicToChain" />
-          <NavigationProperty Name="Indices" Relationship="mainModel.FK_Index_0_0" FromRole="Ric" ToRole="Index" />
           <NavigationProperty Name="Descriptions" Relationship="mainModel.FK_Description_4_0" FromRole="Ric" ToRole="Description" />
           <NavigationProperty Name="FieldGroup" Relationship="mainModel.FK_Ric_0_0" FromRole="Ric" ToRole="FieldGroup" />
+          <NavigationProperty Name="Idxes" Relationship="mainModel.FK_Idx_0_0" FromRole="Ric" ToRole="Idx" />
         </EntityType>
         <Association Name="FK_Ric_2_0">
           <End Type="mainModel.Feed" Role="Feed" Multiplicity="0..1" />
@@ -1905,40 +1459,6 @@
             </Principal>
             <Dependent Role="RicToChain">
               <PropertyRef Name="Ric_id" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <EntityType Name="Index">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_Ric" />
-          <NavigationProperty Name="Ric" Relationship="mainModel.FK_Index_0_0" FromRole="Index" ToRole="Ric" />
-          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_0_02" FromRole="Index" ToRole="Leg" />
-        </EntityType>
-        <Association Name="FK_Index_0_0">
-          <End Type="mainModel.Ric" Role="Ric" Multiplicity="0..1" />
-          <End Type="mainModel.Index" Role="Index" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Ric">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Index">
-              <PropertyRef Name="id_Ric" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Leg_0_02">
-          <End Type="mainModel.Index" Role="Index" Multiplicity="0..1" />
-          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Index">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Leg">
-              <PropertyRef Name="id_Index" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1981,9 +1501,9 @@
           <Property Type="Int64" Name="id_Description" />
           <NavigationProperty Name="Description" Relationship="mainModel.FK_Instrument_0_0" FromRole="Instrument" ToRole="Description" />
           <NavigationProperty Name="InstrumentType" Relationship="mainModel.FK_Instrument_1_0" FromRole="Instrument" ToRole="InstrumentType" />
-          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_2_0" FromRole="Instrument" ToRole="Leg" />
           <NavigationProperty Name="RatingToInstruments" Relationship="mainModel.FK_RatingToInstrument_1_0" FromRole="Instrument" ToRole="RatingToInstrument" />
           <NavigationProperty Name="PropertyValues" Relationship="mainModel.FK_PropertyValue_0_0" FromRole="Instrument" ToRole="PropertyValue" />
+          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_1_0" FromRole="Instrument" ToRole="Leg" />
         </EntityType>
         <Association Name="FK_Description_0_0">
           <End Type="mainModel.LegalEntity" Role="LegalEntity" Multiplicity="0..1" />
@@ -2105,18 +1625,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Leg_2_0">
-          <End Type="mainModel.Instrument" Role="Instrument" Multiplicity="0..1" />
-          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Instrument">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="Leg">
-              <PropertyRef Name="id_Instrument" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_RatingToInstrument_1_0">
           <End Type="mainModel.Instrument" Role="Instrument" Multiplicity="0..1" />
           <End Type="mainModel.RatingToInstrument" Role="RatingToInstrument" Multiplicity="*" />
@@ -2129,143 +1637,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityType Name="OrdinaryBond">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="id_Isin" />
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="Isin" />
-            <PropertyRef Name="Ric" />
-          </Key>
-          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Series" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="IssueSize" />
-          <Property Type="String" Name="RateStructure" MaxLength="2147483647" FixedLength="false" Unicode="true" />
-          <Property Type="String" Name="BondStructure" MaxLength="1000" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_Issuer" />
-          <Property Type="Int64" Name="id_Borrower" />
-          <Property Type="Int64" Name="id_Isin" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Ric" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Isin" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Ric" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_Ticker" />
-          <Property Type="Int64" Name="id_SubIndustry" />
-          <Property Type="Int64" Name="id_Specimen" />
-          <Property Type="Int64" Name="id_Seniority" />
-          <Property Type="DateTime" Name="Issue" />
-          <Property Type="DateTime" Name="Maturity" />
-          <Property Type="DateTime" Name="NextCoupon" />
-          <Property Type="Double" Name="Coupon" />
-          <Property Type="Int64" Name="id_Currency" />
-        </EntityType>
-        <EntityType Name="OrdinaryFrn">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="id_Isin" />
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="Isin" />
-            <PropertyRef Name="Ric" />
-            <PropertyRef Name="IndexName" />
-            <PropertyRef Name="IndexRic" />
-          </Key>
-          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Series" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="IssueSize" />
-          <Property Type="String" Name="RateStructure" MaxLength="2147483647" FixedLength="false" Unicode="true" />
-          <Property Type="String" Name="BondStructure" MaxLength="1000" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_Issuer" />
-          <Property Type="Int64" Name="id_Borrower" />
-          <Property Type="Int64" Name="id_Isin" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Ric" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Isin" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="Ric" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_Ticker" />
-          <Property Type="Int64" Name="id_SubIndustry" />
-          <Property Type="Int64" Name="id_Specimen" />
-          <Property Type="Int64" Name="id_Seniority" />
-          <Property Type="DateTime" Name="Issue" />
-          <Property Type="DateTime" Name="Maturity" />
-          <Property Type="DateTime" Name="NextCoupon" />
-          <Property Type="Int64" Name="id_Currency" />
-          <Property Type="Double" Name="FrnCap" />
-          <Property Type="Double" Name="FrnFloor" />
-          <Property Type="Double" Name="Margin" />
-          <Property Type="String" Name="IndexName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IndexRic" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-        </EntityType>
-        <EntityType Name="InstrumentRicView">
-          <Key>
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="id_Description" />
-            <PropertyRef Name="Name" />
-          </Key>
-          <Property Type="Int64" Name="id_Ric" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Description" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-        </EntityType>
-        <EntityType Name="InstrumentIBView">
-          <Key>
-            <PropertyRef Name="id_Ric" />
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="Name" />
-          </Key>
-          <Property Type="Int64" Name="id_Ric" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Borrower" />
-          <Property Type="Int64" Name="id_Issuer" />
-          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-        </EntityType>
-        <EntityType Name="InstrumentDescriptionView">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="InstrumentTypeName" />
-            <PropertyRef Name="id_InstrumentType" />
-            <PropertyRef Name="TickerName" />
-            <PropertyRef Name="SubIndustryName" />
-            <PropertyRef Name="SpecimenName" />
-            <PropertyRef Name="SeniorityName" />
-            <PropertyRef Name="RicName" />
-            <PropertyRef Name="IsinName" />
-            <PropertyRef Name="BorrowerName" />
-            <PropertyRef Name="BorrowerCountryName" />
-            <PropertyRef Name="IssuerName" />
-            <PropertyRef Name="IssuerCountryName" />
-            <PropertyRef Name="InstrumentRating" />
-            <PropertyRef Name="InstrumentRatingAgency" />
-            <PropertyRef Name="IssuerRating" />
-            <PropertyRef Name="IssuerRatingAgency" />
-          </Key>
-          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="InstrumentName" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="InstrumentTypeName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_InstrumentType" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="IssueSize" />
-          <Property Type="String" Name="Series" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="DateTime" Name="Issue" />
-          <Property Type="DateTime" Name="Maturity" />
-          <Property Type="DateTime" Name="NextCoupon" />
-          <Property Type="String" Name="TickerName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="SubIndustryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IndustryName" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="SpecimenName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="SeniorityName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="RicName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IsinName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="BorrowerName" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="BorrowerCountryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IssuerName" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IssuerCountryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="InstrumentRating" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="DateTime" Name="InstrumentRatingDate" />
-          <Property Type="String" Name="InstrumentRatingAgency" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IssuerRating" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="DateTime" Name="IssuerRatingDate" />
-          <Property Type="String" Name="IssuerRatingAgency" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-        </EntityType>
         <EntityType Name="Field">
           <Key>
             <PropertyRef Name="id" />
@@ -2285,25 +1656,6 @@
           <Property Type="String" Name="Name" MaxLength="50" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="Fields" Relationship="mainModel.FK_Field_0_0" FromRole="FieldDefinition" ToRole="Field" />
           <NavigationProperty Name="FieldGroups" Relationship="mainModel.FK_FieldGroup_0_0" FromRole="FieldDefinition" ToRole="FieldGroup" />
-        </EntityType>
-        <EntityType Name="FieldVsGroup">
-          <Key>
-            <PropertyRef Name="id_FieldGroup" />
-            <PropertyRef Name="id_Field" />
-            <PropertyRef Name="id_FieldDefinition" />
-            <PropertyRef Name="id_DefaultFieldDefinition" />
-            <PropertyRef Name="DefaultGroup" />
-            <PropertyRef Name="FieldGroupName" />
-            <PropertyRef Name="SystemName" />
-          </Key>
-          <Property Type="Int64" Name="id_FieldGroup" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_Field" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_FieldDefinition" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="id_DefaultFieldDefinition" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Boolean" Name="DefaultGroup" Nullable="false" />
-          <Property Type="String" Name="FieldGroupName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="SystemName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="InternalName" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
         <Association Name="FK_Field_0_0">
           <End Type="mainModel.FieldDefinition" Role="FieldDefinition" Multiplicity="1" />
@@ -2388,55 +1740,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityType Name="BondDescriptionView">
-          <Key>
-            <PropertyRef Name="id_Instrument" />
-            <PropertyRef Name="InstrumentTypeName" />
-            <PropertyRef Name="id_InstrumentType" />
-            <PropertyRef Name="TickerName" />
-            <PropertyRef Name="SubIndustryName" />
-            <PropertyRef Name="SpecimenName" />
-            <PropertyRef Name="SeniorityName" />
-            <PropertyRef Name="RicName" />
-            <PropertyRef Name="IsinName" />
-            <PropertyRef Name="BorrowerName" />
-            <PropertyRef Name="BorrowerCountryName" />
-            <PropertyRef Name="IssuerName" />
-            <PropertyRef Name="IssuerCountryName" />
-            <PropertyRef Name="InstrumentRating" />
-            <PropertyRef Name="InstrumentRatingAgency" />
-            <PropertyRef Name="IssuerRating" />
-            <PropertyRef Name="IssuerRatingAgency" />
-          </Key>
-          <Property Type="Int64" Name="id_Instrument" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="InstrumentName" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="InstrumentTypeName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="Int64" Name="id_InstrumentType" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="Int64" Name="IssueSize" />
-          <Property Type="String" Name="Series" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="DateTime" Name="Issue" />
-          <Property Type="DateTime" Name="Maturity" />
-          <Property Type="DateTime" Name="NextCoupon" />
-          <Property Type="String" Name="TickerName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="SubIndustryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IndustryName" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="SpecimenName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="SeniorityName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="RicName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IsinName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="BorrowerName" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="BorrowerCountryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IssuerName" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IssuerCountryName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="InstrumentRating" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="DateTime" Name="InstrumentRatingDate" />
-          <Property Type="String" Name="InstrumentRatingAgency" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="IssuerRating" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="DateTime" Name="IssuerRatingDate" />
-          <Property Type="String" Name="IssuerRatingAgency" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Type="String" Name="BondStructure" MaxLength="1000" FixedLength="false" Unicode="false" />
-          <Property Type="Double" Name="Coupon" />
-        </EntityType>
         <EntityType Name="Property">
           <Key>
             <PropertyRef Name="id" />
@@ -2470,6 +1773,95 @@
             </Principal>
             <Dependent Role="PropertyValue">
               <PropertyRef Name="id_Property" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Idx">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_Ric" />
+          <NavigationProperty Name="Ric" Relationship="mainModel.FK_Idx_0_0" FromRole="Idx" ToRole="Ric" />
+          <NavigationProperty Name="Legs" Relationship="mainModel.FK_Leg_3_0" FromRole="Idx" ToRole="Leg" />
+        </EntityType>
+        <EntityType Name="Leg">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Type="Int64" Name="id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Structure" MaxLength="1000" FixedLength="false" Unicode="false" />
+          <Property Type="Int64" Name="id_Instrument" />
+          <Property Type="Int64" Name="id_LegType" />
+          <Property Type="Int64" Name="id_Currency" />
+          <Property Type="Double" Name="FixedRate" />
+          <Property Type="Int64" Name="id_Idx" />
+          <Property Type="Double" Name="Cap" />
+          <Property Type="Double" Name="Floor" />
+          <Property Type="Double" Name="Margin" />
+          <NavigationProperty Name="Currency" Relationship="mainModel.FK_Leg_0_0" FromRole="Leg" ToRole="Currency" />
+          <NavigationProperty Name="Idx" Relationship="mainModel.FK_Leg_3_0" FromRole="Leg" ToRole="Idx" />
+          <NavigationProperty Name="Instrument" Relationship="mainModel.FK_Leg_1_0" FromRole="Leg" ToRole="Instrument" />
+          <NavigationProperty Name="LegType" Relationship="mainModel.FK_Leg_2_0" FromRole="Leg" ToRole="LegType" />
+        </EntityType>
+        <Association Name="FK_Leg_0_0">
+          <End Type="mainModel.Currency" Role="Currency" Multiplicity="0..1" />
+          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Currency">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Leg">
+              <PropertyRef Name="id_Currency" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Idx_0_0">
+          <End Type="mainModel.Ric" Role="Ric" Multiplicity="0..1" />
+          <End Type="mainModel.Idx" Role="Idx" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ric">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Idx">
+              <PropertyRef Name="id_Ric" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Leg_3_0">
+          <End Type="mainModel.Idx" Role="Idx" Multiplicity="0..1" />
+          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Idx">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Leg">
+              <PropertyRef Name="id_Idx" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Leg_1_0">
+          <End Type="mainModel.Instrument" Role="Instrument" Multiplicity="0..1" />
+          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Instrument">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Leg">
+              <PropertyRef Name="id_Instrument" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Leg_2_0">
+          <End Type="mainModel.LegType" Role="LegType" Multiplicity="0..1" />
+          <End Type="mainModel.Leg" Role="Leg" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="LegType">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="Leg">
+              <PropertyRef Name="id_LegType" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -2536,22 +1928,6 @@
               <MappingFragment StoreEntitySet="Isin">
                 <ScalarProperty Name="id_Feed" ColumnName="id_Feed" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="Legs">
-            <EntityTypeMapping TypeName="mainModel.Leg">
-              <MappingFragment StoreEntitySet="Leg">
-                <ScalarProperty Name="Margin" ColumnName="Margin" />
-                <ScalarProperty Name="Floor" ColumnName="Floor" />
-                <ScalarProperty Name="Cap" ColumnName="Cap" />
-                <ScalarProperty Name="id_Index" ColumnName="id_Index" />
-                <ScalarProperty Name="FixedRate" ColumnName="FixedRate" />
-                <ScalarProperty Name="id_Currency" ColumnName="id_Currency" />
-                <ScalarProperty Name="id_LegType" ColumnName="id_LegType" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-                <ScalarProperty Name="Structure" ColumnName="Structure" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -2635,19 +2011,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="RatingsViews">
-            <EntityTypeMapping TypeName="mainModel.RatingsView">
-              <MappingFragment StoreEntitySet="RatingsView">
-                <ScalarProperty Name="AgencyCode" ColumnName="AgencyCode" />
-                <ScalarProperty Name="AgencyName" ColumnName="AgencyName" />
-                <ScalarProperty Name="RatingName" ColumnName="RatingName" />
-                <ScalarProperty Name="RatingOrder" ColumnName="RatingOrder" />
-                <ScalarProperty Name="id_RatingAgencyCode" ColumnName="id_RatingAgencyCode" />
-                <ScalarProperty Name="id_RatingAgency" ColumnName="id_RatingAgency" />
-                <ScalarProperty Name="id_Rating" ColumnName="id_Rating" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="LegalEntities">
             <EntityTypeMapping TypeName="mainModel.LegalEntity">
               <MappingFragment StoreEntitySet="LegalEntity">
@@ -2688,15 +2051,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Indices">
-            <EntityTypeMapping TypeName="mainModel.Index">
-              <MappingFragment StoreEntitySet="Index">
-                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Descriptions">
             <EntityTypeMapping TypeName="mainModel.Description">
               <MappingFragment StoreEntitySet="Description">
@@ -2728,117 +2082,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="OrdinaryBonds">
-            <EntityTypeMapping TypeName="mainModel.OrdinaryBond">
-              <MappingFragment StoreEntitySet="OrdinaryBond">
-                <ScalarProperty Name="id_Currency" ColumnName="id_Currency" />
-                <ScalarProperty Name="Coupon" ColumnName="Coupon" />
-                <ScalarProperty Name="NextCoupon" ColumnName="NextCoupon" />
-                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
-                <ScalarProperty Name="Issue" ColumnName="Issue" />
-                <ScalarProperty Name="id_Seniority" ColumnName="id_Seniority" />
-                <ScalarProperty Name="id_Specimen" ColumnName="id_Specimen" />
-                <ScalarProperty Name="id_SubIndustry" ColumnName="id_SubIndustry" />
-                <ScalarProperty Name="id_Ticker" ColumnName="id_Ticker" />
-                <ScalarProperty Name="Ric" ColumnName="Ric" />
-                <ScalarProperty Name="Isin" ColumnName="Isin" />
-                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
-                <ScalarProperty Name="id_Isin" ColumnName="id_Isin" />
-                <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
-                <ScalarProperty Name="id_Issuer" ColumnName="id_Issuer" />
-                <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
-                <ScalarProperty Name="RateStructure" ColumnName="RateStructure" />
-                <ScalarProperty Name="IssueSize" ColumnName="IssueSize" />
-                <ScalarProperty Name="Series" ColumnName="Series" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="OrdinaryFrns">
-            <EntityTypeMapping TypeName="mainModel.OrdinaryFrn">
-              <MappingFragment StoreEntitySet="OrdinaryFrn">
-                <ScalarProperty Name="IndexRic" ColumnName="IndexRic" />
-                <ScalarProperty Name="IndexName" ColumnName="IndexName" />
-                <ScalarProperty Name="Margin" ColumnName="Margin" />
-                <ScalarProperty Name="FrnFloor" ColumnName="FrnFloor" />
-                <ScalarProperty Name="FrnCap" ColumnName="FrnCap" />
-                <ScalarProperty Name="id_Currency" ColumnName="id_Currency" />
-                <ScalarProperty Name="NextCoupon" ColumnName="NextCoupon" />
-                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
-                <ScalarProperty Name="Issue" ColumnName="Issue" />
-                <ScalarProperty Name="id_Seniority" ColumnName="id_Seniority" />
-                <ScalarProperty Name="id_Specimen" ColumnName="id_Specimen" />
-                <ScalarProperty Name="id_SubIndustry" ColumnName="id_SubIndustry" />
-                <ScalarProperty Name="id_Ticker" ColumnName="id_Ticker" />
-                <ScalarProperty Name="Ric" ColumnName="Ric" />
-                <ScalarProperty Name="Isin" ColumnName="Isin" />
-                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
-                <ScalarProperty Name="id_Isin" ColumnName="id_Isin" />
-                <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
-                <ScalarProperty Name="id_Issuer" ColumnName="id_Issuer" />
-                <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
-                <ScalarProperty Name="RateStructure" ColumnName="RateStructure" />
-                <ScalarProperty Name="IssueSize" ColumnName="IssueSize" />
-                <ScalarProperty Name="Series" ColumnName="Series" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="InstrumentRicViews">
-            <EntityTypeMapping TypeName="mainModel.InstrumentRicView">
-              <MappingFragment StoreEntitySet="InstrumentRicView">
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id_Description" ColumnName="id_Description" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="InstrumentIBViews">
-            <EntityTypeMapping TypeName="mainModel.InstrumentIBView">
-              <MappingFragment StoreEntitySet="InstrumentIBView">
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="id_Issuer" ColumnName="id_Issuer" />
-                <ScalarProperty Name="id_Borrower" ColumnName="id_Borrower" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="InstrumentDescriptionViews">
-            <EntityTypeMapping TypeName="mainModel.InstrumentDescriptionView">
-              <MappingFragment StoreEntitySet="InstrumentDescriptionView">
-                <ScalarProperty Name="IssuerRatingAgency" ColumnName="IssuerRatingAgency" />
-                <ScalarProperty Name="IssuerRatingDate" ColumnName="IssuerRatingDate" />
-                <ScalarProperty Name="IssuerRating" ColumnName="IssuerRating" />
-                <ScalarProperty Name="InstrumentRatingAgency" ColumnName="InstrumentRatingAgency" />
-                <ScalarProperty Name="InstrumentRatingDate" ColumnName="InstrumentRatingDate" />
-                <ScalarProperty Name="InstrumentRating" ColumnName="InstrumentRating" />
-                <ScalarProperty Name="IssuerCountryName" ColumnName="IssuerCountryName" />
-                <ScalarProperty Name="IssuerName" ColumnName="IssuerName" />
-                <ScalarProperty Name="BorrowerCountryName" ColumnName="BorrowerCountryName" />
-                <ScalarProperty Name="BorrowerName" ColumnName="BorrowerName" />
-                <ScalarProperty Name="IsinName" ColumnName="IsinName" />
-                <ScalarProperty Name="RicName" ColumnName="RicName" />
-                <ScalarProperty Name="SeniorityName" ColumnName="SeniorityName" />
-                <ScalarProperty Name="SpecimenName" ColumnName="SpecimenName" />
-                <ScalarProperty Name="IndustryName" ColumnName="IndustryName" />
-                <ScalarProperty Name="SubIndustryName" ColumnName="SubIndustryName" />
-                <ScalarProperty Name="TickerName" ColumnName="TickerName" />
-                <ScalarProperty Name="NextCoupon" ColumnName="NextCoupon" />
-                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
-                <ScalarProperty Name="Issue" ColumnName="Issue" />
-                <ScalarProperty Name="Series" ColumnName="Series" />
-                <ScalarProperty Name="IssueSize" ColumnName="IssueSize" />
-                <ScalarProperty Name="id_InstrumentType" ColumnName="id_InstrumentType" />
-                <ScalarProperty Name="InstrumentTypeName" ColumnName="InstrumentTypeName" />
-                <ScalarProperty Name="InstrumentName" ColumnName="InstrumentName" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Fields">
             <EntityTypeMapping TypeName="mainModel.Field">
               <MappingFragment StoreEntitySet="Field">
@@ -2854,20 +2097,6 @@
               <MappingFragment StoreEntitySet="FieldDefinition">
                 <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="FieldVsGroups">
-            <EntityTypeMapping TypeName="mainModel.FieldVsGroup">
-              <MappingFragment StoreEntitySet="FieldVsGroup">
-                <ScalarProperty Name="InternalName" ColumnName="InternalName" />
-                <ScalarProperty Name="SystemName" ColumnName="SystemName" />
-                <ScalarProperty Name="FieldGroupName" ColumnName="FieldGroupName" />
-                <ScalarProperty Name="DefaultGroup" ColumnName="DefaultGroup" />
-                <ScalarProperty Name="id_DefaultFieldDefinition" ColumnName="id_DefaultFieldDefinition" />
-                <ScalarProperty Name="id_FieldDefinition" ColumnName="id_FieldDefinition" />
-                <ScalarProperty Name="id_Field" ColumnName="id_Field" />
-                <ScalarProperty Name="id_FieldGroup" ColumnName="id_FieldGroup" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -2891,40 +2120,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="BondDescriptionViews">
-            <EntityTypeMapping TypeName="mainModel.BondDescriptionView">
-              <MappingFragment StoreEntitySet="BondDescriptionView">
-                <ScalarProperty Name="Coupon" ColumnName="Coupon" />
-                <ScalarProperty Name="BondStructure" ColumnName="BondStructure" />
-                <ScalarProperty Name="IssuerRatingAgency" ColumnName="IssuerRatingAgency" />
-                <ScalarProperty Name="IssuerRatingDate" ColumnName="IssuerRatingDate" />
-                <ScalarProperty Name="IssuerRating" ColumnName="IssuerRating" />
-                <ScalarProperty Name="InstrumentRatingAgency" ColumnName="InstrumentRatingAgency" />
-                <ScalarProperty Name="InstrumentRatingDate" ColumnName="InstrumentRatingDate" />
-                <ScalarProperty Name="InstrumentRating" ColumnName="InstrumentRating" />
-                <ScalarProperty Name="IssuerCountryName" ColumnName="IssuerCountryName" />
-                <ScalarProperty Name="IssuerName" ColumnName="IssuerName" />
-                <ScalarProperty Name="BorrowerCountryName" ColumnName="BorrowerCountryName" />
-                <ScalarProperty Name="BorrowerName" ColumnName="BorrowerName" />
-                <ScalarProperty Name="IsinName" ColumnName="IsinName" />
-                <ScalarProperty Name="RicName" ColumnName="RicName" />
-                <ScalarProperty Name="SeniorityName" ColumnName="SeniorityName" />
-                <ScalarProperty Name="SpecimenName" ColumnName="SpecimenName" />
-                <ScalarProperty Name="IndustryName" ColumnName="IndustryName" />
-                <ScalarProperty Name="SubIndustryName" ColumnName="SubIndustryName" />
-                <ScalarProperty Name="TickerName" ColumnName="TickerName" />
-                <ScalarProperty Name="NextCoupon" ColumnName="NextCoupon" />
-                <ScalarProperty Name="Maturity" ColumnName="Maturity" />
-                <ScalarProperty Name="Issue" ColumnName="Issue" />
-                <ScalarProperty Name="Series" ColumnName="Series" />
-                <ScalarProperty Name="IssueSize" ColumnName="IssueSize" />
-                <ScalarProperty Name="id_InstrumentType" ColumnName="id_InstrumentType" />
-                <ScalarProperty Name="InstrumentTypeName" ColumnName="InstrumentTypeName" />
-                <ScalarProperty Name="InstrumentName" ColumnName="InstrumentName" />
-                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Properties">
             <EntityTypeMapping TypeName="mainModel.Property">
               <MappingFragment StoreEntitySet="Property">
@@ -2932,6 +2127,31 @@
                 <ScalarProperty Name="Expression" ColumnName="Expression" />
                 <ScalarProperty Name="Description" ColumnName="Description" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Idxes">
+            <EntityTypeMapping TypeName="mainModel.Idx">
+              <MappingFragment StoreEntitySet="Idx">
+                <ScalarProperty Name="id_Ric" ColumnName="id_Ric" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Legs">
+            <EntityTypeMapping TypeName="mainModel.Leg">
+              <MappingFragment StoreEntitySet="Leg">
+                <ScalarProperty Name="Margin" ColumnName="Margin" />
+                <ScalarProperty Name="Floor" ColumnName="Floor" />
+                <ScalarProperty Name="Cap" ColumnName="Cap" />
+                <ScalarProperty Name="id_Idx" ColumnName="id_Idx" />
+                <ScalarProperty Name="FixedRate" ColumnName="FixedRate" />
+                <ScalarProperty Name="id_Currency" ColumnName="id_Currency" />
+                <ScalarProperty Name="id_LegType" ColumnName="id_LegType" />
+                <ScalarProperty Name="id_Instrument" ColumnName="id_Instrument" />
+                <ScalarProperty Name="Structure" ColumnName="Structure" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>

@@ -1,32 +1,36 @@
-﻿using System.Linq;
-using YieldMap.Database;
-using YieldMap.Transitive.Domains.Contexts;
+﻿using System;
+using System.Linq;
+using Autofac;
+using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
     public class FieldDefinitions : IFieldDefinitions {
-        public FieldDefinition Bid { get; private set; }
-        public FieldDefinition Ask { get; private set; }
-        public FieldDefinition Last { get; private set; }
-        public FieldDefinition Close { get; private set; }
-        public FieldDefinition Vwap { get; private set; }
-        public FieldDefinition Volume { get; private set; }
-        public FieldDefinition Value { get; private set; }
-        public FieldDefinition Tenor { get; private set; }
-        public FieldDefinition Maturity { get; private set; }
+        public NFieldDefinition Bid { get; private set; }
+        public NFieldDefinition Ask { get; private set; }
+        public NFieldDefinition Last { get; private set; }
+        public NFieldDefinition Close { get; private set; }
+        public NFieldDefinition Vwap { get; private set; }
+        public NFieldDefinition Volume { get; private set; }
+        public NFieldDefinition Value { get; private set; }
+        public NFieldDefinition Tenor { get; private set; }
+        public NFieldDefinition Maturity { get; private set; }
 
-        public FieldDefinitions() {
-            var ctx = new EnumerationsContext();
+        public FieldDefinitions(Func<IContainer> containerF) {
+            var items = containerF()
+                .Resolve<IFieldDefinitionCrud>()
+                .FindAll()
+                .ToList();
 
-            var items = ctx.FieldDefinitions.ToList();
-            Bid = items.First(x => x.Name == "BID").ToPocoSimple();
-            Ask = items.First(x => x.Name == "ASK").ToPocoSimple();
-            Last = items.First(x => x.Name == "LAST").ToPocoSimple();
-            Close = items.First(x => x.Name == "CLOSE").ToPocoSimple();
-            Vwap = items.First(x => x.Name == "VWAP").ToPocoSimple();
-            Volume = items.First(x => x.Name == "VOLUME").ToPocoSimple();
-            Value = items.First(x => x.Name == "VALUE").ToPocoSimple();
-            Tenor = items.First(x => x.Name == "TENOR").ToPocoSimple();
-            Maturity = items.First(x => x.Name == "MATURITY").ToPocoSimple();
+            Bid = items.First(x => x.Name == "BID");
+            Ask = items.First(x => x.Name == "ASK");
+            Last = items.First(x => x.Name == "LAST");
+            Close = items.First(x => x.Name == "CLOSE");
+            Vwap = items.First(x => x.Name == "VWAP");
+            Volume = items.First(x => x.Name == "VOLUME");
+            Value = items.First(x => x.Name == "VALUE");
+            Tenor = items.First(x => x.Name == "TENOR");
+            Maturity = items.First(x => x.Name == "MATURITY");
         }
     }
 }
