@@ -9,10 +9,10 @@ namespace YieldMap.Transitive.Native.Entities {
         public long id_Rating { get; set; }
 
         [DbField(2)] // ReSharper disable once InconsistentNaming
-        public long id_LegalEntity { get; set; }
+        public long? id_LegalEntity { get; set; }
 
         [DbField(3)] // ReSharper disable once InconsistentNaming
-        public DateTime RatingDate { get; set; }
+        public DateTime? RatingDate { get; set; }
 
         public bool Equals(NRatingToLegalEntity other) {
             if (other == null)

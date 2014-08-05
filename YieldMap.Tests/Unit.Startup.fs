@@ -64,7 +64,6 @@ module StartupTest =
     open YieldMap.Database
     open YieldMap.Transitive.Repositories
     open YieldMap.Transitive.Procedures
-    open YieldMap.Transitive.Domains.Readers
     open YieldMap.Transitive.Domains.UnitsOfWork
 
     open System.Data.Entity
@@ -297,6 +296,7 @@ module StartupTest =
         | _ -> ()
 
     open YieldMap.Tools.Aux
+    open YieldMap.Transitive.Native.Reader
 
     (* ========================= ============================= *)
     [<Test>]
@@ -398,7 +398,7 @@ module StartupTest =
 
         command "Connect" x.Connect (Startup.State Connected)
         command "Reload" (fun () -> x.Reload (true, 100000000)) (Startup.State Initialized)
-        use ctx = container.Resolve<IOrdinaryFrnReader>()
+        let ctx = container.Resolve<IReader<NOrdinaryFrn>>()
         let n = query { for x in ctx.FindAll() do
                         select x
                         count }

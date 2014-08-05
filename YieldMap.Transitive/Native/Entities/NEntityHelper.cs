@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Reader;
@@ -15,6 +16,8 @@ namespace YieldMap.Transitive.Native.Entities {
             = new Dictionary<Type, Dictionary<string, Func<object, string>>>();
         private readonly Dictionary<Type, PropertyRecord[]> _properties
             = new Dictionary<Type, PropertyRecord[]>();
+        private readonly Dictionary<Type, Func<SQLiteDataReader, object>> _readers = 
+            new Dictionary<Type, Func<SQLiteDataReader, object>>();
 
         public IEnumerable<string> BulkInsertSql<T>(IEnumerable<T> instruments) where T : class, IIdentifyable, IEquatable<T> {
             var type = typeof(T);
@@ -263,75 +266,78 @@ namespace YieldMap.Transitive.Native.Entities {
             return string.Join(", ", _properties[type].Select(p => p.DbName));
         }
 
-        public IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable {
-            // todo this can be also automated via Reflection.Emit or dynamic type
-            if (reader.Read()) {
-                var theId = reader.GetInt32(0);
-                if (typeof (T) == typeof (NInstrument))
-                    return new NInstrument {
-                        id = theId,
-                        Name = reader.GetString(1),
-                        id_InstrumentType = reader.GetInt32(2),
-                        id_Description = reader.GetInt32(3)
-                    };
-                if (typeof(T) == typeof(NProperty))
-                    return new NProperty {
-                        id = theId,
-                        Name = reader.GetString(1),
-                        Description = reader.GetString(2),
-                        Expression = reader.GetString(3),
-                        id_InstrumentType = reader.GetInt32(4)
-                    };
-                if (typeof(T) == typeof(NPropertyValue))
-                    return new NPropertyValue {
-                        id = theId,
-                        id_Property = reader.GetInt32(1),
-                        id_Instrument = reader.GetInt32(2),
-                        Value = reader.GetString(3)
-                    };
-                if (typeof(T) == typeof(NFeed)) {
-                    return new NFeed {
-                        id = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        Description = reader.GetString(2)
-                    };
-                }
-                if (typeof(T) == typeof(NChain)) {
-                    return new NChain {
-                        id = theId,
-                        Name = reader.GetString(1),
-                        Expanded = reader.GetNullableDateTime(2),
-                        id_Feed = reader.GetNullableInt32(3),
-                        Params = reader.GetString(4)
-                    };
-                }
-                if (typeof(T) == typeof(NRic)) {
-                    return new NRic {
-                        id = theId,
-                        Name = reader.GetString(1),
-                        id_Feed = reader.GetNullableInt32(2),
-                        id_FieldGroup = reader.GetNullableInt32(3),
-                        id_Isin = reader.GetNullableInt32(4)
-                    };
-                }
-                if (typeof(T) == typeof(NFieldGroup)) {
-                    return new NFieldGroup {
-                        id = theId,
-                        Name = reader.GetString(1),
-                        Default = reader.GetInt16(2) != 1,
-                        id_DefaultFieldDef = reader.GetNullableInt32(3)
-                    };
-                }
-                if (typeof(T) == typeof(NIdx)) {
-                    return new NIdx {
-                        id = theId,
-                        Name = reader.GetString(1),
-                        id_Ric = reader.GetNullableInt32(3)
-                    };
-                }
-                throw new ArgumentException("what");
-            }
+        public static Expression GetCall(Type propertyType, int i) {
+            var sqliteReaderType = typeof(SQLiteDataReader);
+            var helperType = typeof (SqliteReaderHelper);
+
+            var readerExp = Expression.Parameter(typeof(SQLiteDataReader));
+            var iExp = Expression.Constant(i);
+
+            if (propertyType == typeof(bool))
+                return Expression.Call(readerExp, sqliteReaderType.GetMethod("GetBoolean"), new Expression[] { iExp });
+
+            if (propertyType == typeof(bool?))
+                return Expression.Call(helperType.GetMethod("GetNullableBoolean"), new Expression[] { readerExp, iExp });
+
+            if (propertyType == typeof(float))
+                return Expression.Call(readerExp, sqliteReaderType.GetMethod("GetGloat"), new Expression[] { iExp });
+
+            if (propertyType == typeof(float?))
+                return Expression.Call(helperType.GetMethod("GetNullableFloat"), new Expression[] { readerExp, iExp });
+
+            if (propertyType == typeof(double))
+                return Expression.Call(readerExp, sqliteReaderType.GetMethod("GetDouble"), new Expression[] { iExp });
+
+            if (propertyType == typeof(double?))
+                return Expression.Call(helperType.GetMethod("GetNullableDouble"), new Expression[] { readerExp, iExp });
+
+            if (propertyType == typeof(int))
+                return Expression.Call(readerExp, sqliteReaderType.GetMethod("GetInt16"), new Expression[] { iExp });
+
+            if (propertyType == typeof(int?))
+                return Expression.Call(helperType.GetMethod("GetNullableInt16"), new Expression[] { readerExp, iExp });
+
+            if (propertyType == typeof(long))
+                return Expression.Call(readerExp, sqliteReaderType.GetMethod("GetInt32"), new Expression[] { iExp });
+
+            if (propertyType == typeof(long?))
+                return Expression.Call(helperType.GetMethod("GetNullableInt32"), new Expression[] { readerExp, iExp });
+
+            if (propertyType == typeof(DateTime))
+                return Expression.Call(readerExp, sqliteReaderType.GetMethod("GetDateTime"), new Expression[] { iExp });
+
+            if (propertyType == typeof(DateTime?))
+                return Expression.Call(helperType.GetMethod("GetNullableDateTime"), new Expression[] { readerExp, iExp });
+
+            if (propertyType == typeof(string))
+                return Expression.Call(helperType.GetMethod("GetNullableString"), new Expression[] { readerExp, iExp });
+
             return null;
+        }
+
+        public IIdentifyable Read<T>(SQLiteDataReader reader) where T : class, IIdentifyable {
+            var type = typeof(T);
+            PrepareReaders(type);
+            if (reader.Read()) 
+                return _readers[type](reader) as T;
+            return null;
+        }
+
+        private void PrepareReaders(Type type) {
+            if (_readers.ContainsKey(type)) return;
+
+            var properties = _properties[type].Select(r => r.Info).ToArray();
+
+            var memberBindings = new List<MemberBinding>();
+            for (var i = 0; i < properties.Length; i++) {
+                var property = properties[i];
+                var methodCall = GetCall(property.PropertyType, i);
+
+                memberBindings.Add(Expression.Bind(property, methodCall));
+            }
+
+            var parser = Expression.Lambda(Expression.MemberInit(Expression.New(type), memberBindings)).Compile() as Func<SQLiteDataReader, object>;
+            if (parser != null) _readers.Add(type, parser);
         }
     }
 }

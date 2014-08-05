@@ -2,13 +2,18 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native.Reader {
     public class NEntityReaderHelper : INEntityReaderHelper {
-        private readonly Dictionary<Type, string> _queries = new Dictionary<Type, string>();
-        private readonly Dictionary<Type, PropertyRecord[]> _properties = new Dictionary<Type, PropertyRecord[]>();
+        private readonly Dictionary<Type, string> _queries = 
+            new Dictionary<Type, string>();
+        private readonly Dictionary<Type, PropertyRecord[]> _properties = 
+            new Dictionary<Type, PropertyRecord[]>();
+        private readonly Dictionary<Type, Func<SQLiteDataReader, object>> _readers =
+            new Dictionary<Type, Func<SQLiteDataReader, object>>();
 
         public NEntityReaderHelper() {
             var types = Assembly.GetExecutingAssembly()
@@ -46,133 +51,30 @@ namespace YieldMap.Transitive.Native.Reader {
         }
 
         public T Read<T>(SQLiteDataReader reader) where T : class, INotIdentifyable {
-            // todo this can be also automated via Reflection.Emit
-            if (reader.Read()) {
-                if (typeof (T) == typeof (NInstrumentDescriptionView))
-                    return (new NInstrumentDescriptionView {
-                        id_Instrument = reader.GetInt32(0),
-                        InstrumentName = reader.GetString(1),
-                        InstrumentTypeName = reader.GetString(2),
-                        id_InstrumentType = reader.GetInt32(3),
-                        IssueSize= reader.GetNullableInt32(4),
-                        Series= reader.GetString(5),
-                        Issue = reader.GetNullableDateTime(6),
-                        Maturity= reader.GetNullableDateTime(7),
-                        NextCoupon= reader.GetNullableDateTime(8),
-                        TickerName= reader.GetString(9),
-                        SubIndustryName= reader.GetString(10),
-                        IndustryName= reader.GetString(11),
-                        SpecimenName= reader.GetString(12),
-                        SeniorityName= reader.GetString(13),
-                        RicName= reader.GetString(14),
-                        IsinName= reader.GetString(15),
-                        BorrowerName= reader.GetString(16),
-                        BorrowerCountryName= reader.GetString(17),
-                        IssuerName= reader.GetString(18),
-                        IssuerCountryName= reader.GetString(19),
-                        InstrumentRating= reader.GetString(20),
-                        InstrumentRatingDate= reader.GetNullableDateTime(21),
-                        InstrumentRatingAgency= reader.GetString(22),
-                        IssuerRating= reader.GetString(23),
-                        IssuerRatingDate= reader.GetNullableDateTime(24),
-                        IssuerRatingAgency = reader.GetString(25)  
-                    }) as T;
-                if (typeof(T) == typeof(NBondDescriptionView))
-                    return (new NBondDescriptionView {
-                        id_Instrument = reader.GetInt32(0),
-                        InstrumentName = reader.GetNullableString(1),
-                        InstrumentTypeName = reader.GetNullableString(2),
-                        id_InstrumentType = reader.GetInt32(3),
-                        IssueSize = reader.GetNullableInt32(4),
-                        Series = reader.GetNullableString(5),
-                        Issue = reader.GetNullableDateTime(6),
-                        Maturity = reader.GetNullableDateTime(7),
-                        NextCoupon = reader.GetNullableDateTime(8),
-                        TickerName = reader.GetNullableString(9),
-                        SubIndustryName = reader.GetNullableString(10),
-                        IndustryName = reader.GetNullableString(11),
-                        SpecimenName = reader.GetNullableString(12),
-                        SeniorityName = reader.GetNullableString(13),
-                        RicName = reader.GetNullableString(14),
-                        IsinName = reader.GetNullableString(15),
-                        BorrowerName = reader.GetNullableString(16),
-                        BorrowerCountryName = reader.GetNullableString(17),
-                        IssuerName = reader.GetNullableString(18),
-                        IssuerCountryName = reader.GetNullableString(19),
-                        InstrumentRating = reader.GetNullableString(20),
-                        InstrumentRatingDate = reader.GetNullableDateTime(21),
-                        InstrumentRatingAgency = reader.GetNullableString(22),
-                        IssuerRating = reader.GetNullableString(23),
-                        IssuerRatingDate = reader.GetNullableDateTime(24),
-                        IssuerRatingAgency = reader.GetNullableString(25),
-                        BondStructure = reader.GetNullableString(26),
-                        Coupon = reader.GetNullableDouble(27)
-                    }) as T;
-
-                if (typeof(T) == typeof(NOrdinaryBond))
-                    return (new NOrdinaryBond {
-                        id_Instrument = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        Series = reader.GetString(2),
-                        IssueSize = reader.GetNullableInt32(3),
-                        RateStructure = reader.GetString(4),
-                        BondStructure = reader.GetNullableString(5),
-                        Isin = reader.GetNullableString(6),
-                        Ric = reader.GetNullableString(7),
-                        id_Isin = reader.GetInt32(8),
-                        id_Ric = reader.GetInt32(9),
-                        id_Ticker = reader.GetNullableInt32(10),
-                        id_SubIndustry = reader.GetNullableInt32(11),
-                        id_Specimen = reader.GetNullableInt32(12),
-                        id_Seniority = reader.GetNullableInt32(13),
-                        Issue = reader.GetNullableDateTime(14),
-                        Maturity = reader.GetNullableDateTime(15),
-                        NextCoupon = reader.GetNullableDateTime(16),
-                        Coupon = reader.GetNullableDouble(17),
-                        id_Currency = reader.GetNullableInt32(18)
-                    }) as T;
-
-                if (typeof(T) == typeof(NOrdinaryFrn))
-                    return (new NOrdinaryFrn {
-                        id_Instrument = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        Series = reader.GetString(2),
-                        IssueSize = reader.GetNullableInt32(3),
-                        RateStructure = reader.GetString(4),
-                        BondStructure = reader.GetNullableString(5),
-                        Isin = reader.GetNullableString(6),
-                        Ric = reader.GetNullableString(7),
-                        id_Isin = reader.GetInt32(8),
-                        id_Ric = reader.GetInt32(9),
-                        id_Ticker = reader.GetNullableInt32(10),
-                        id_SubIndustry = reader.GetNullableInt32(11),
-                        id_Specimen = reader.GetNullableInt32(12),
-                        id_Seniority = reader.GetNullableInt32(13),
-                        Issue = reader.GetNullableDateTime(14),
-                        Maturity = reader.GetNullableDateTime(15),
-                        NextCoupon = reader.GetNullableDateTime(16),
-                        id_Currency = reader.GetNullableInt32(17),
-                        FrnCap = reader.GetNullableDouble(18),
-                        FrnFloor = reader.GetNullableDouble(19),
-                        IndexName = reader.GetString(20),
-                        IndexRic = reader.GetString(21),
-                        Margin = reader.GetNullableDouble(22)
-                    }) as T;
-
-                if (typeof(T) == typeof(NFieldVsGroup))
-                    return (new NFieldVsGroup {
-                        id_FieldGroup = reader.GetInt32(0),
-                        id_Field = reader.GetInt32(1),
-                        id_FieldDefinition = reader.GetInt32(2),
-                        id_DefaultFieldDefinition = reader.GetNullableInt32(3),
-                        DefaultGroup = reader.GetBoolean(4),
-                        FieldGroupName = reader.GetNullableString(5),
-                        SystemName = reader.GetNullableString(6),
-                        InternalName = reader.GetNullableString(7)
-                    }) as T;
-                throw new ArgumentException("what");
-            }
+            var type = typeof(T);
+            PrepareReaders(type);
+            if (reader.Read())
+                return _readers[type](reader) as T;
             return null;
+        }
+
+        private void PrepareReaders(Type type) {
+            if (_readers.ContainsKey(type))
+                return;
+
+            var properties = _properties[type].Select(r => r.Info).ToArray();
+
+            var memberBindings = new List<MemberBinding>();
+            for (var i = 0; i < properties.Length; i++) {
+                var property = properties[i];
+                var methodCall = NEntityHelper.GetCall(property.PropertyType, i);
+
+                memberBindings.Add(Expression.Bind(property, methodCall));
+            }
+
+            var parser = Expression.Lambda(Expression.MemberInit(Expression.New(type), memberBindings)).Compile() as Func<SQLiteDataReader, object>;
+            if (parser != null)
+                _readers.Add(type, parser);
         }
     }
 }

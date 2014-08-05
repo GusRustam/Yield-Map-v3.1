@@ -14,7 +14,6 @@ open YieldMap.Requests.MetaTables
 open YieldMap.Transitive
 open YieldMap.Transitive.Enums
 open YieldMap.Transitive.Domains
-open YieldMap.Transitive.Domains.Readers
 open YieldMap.Transitive.Domains.UnitsOfWork
 open YieldMap.Transitive.Procedures
 open YieldMap.Transitive.Repositories
@@ -442,7 +441,7 @@ module Database =
         let instrumentTypesMock = MockRepository.GenerateMock<IInstrumentTypes>()
         RhinoMocksExtensions
             .Stub<_,_>(instrumentTypesMock, Rhino.Mocks.Function<_,_>(fun x -> x.Bond))
-            .Return(InstrumentType(id = 1L))
+            .Return(NInstrumentType(id = 1L))
             |> ignore        
 
         // IPropertyValueCrud

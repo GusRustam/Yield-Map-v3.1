@@ -18,16 +18,15 @@ namespace YieldMap.Transitive.Native.Reader {
             return reader.IsDBNull(position) ? string.Empty : reader.GetString(position);
         }
 
-        public static long? GetNullableInt32(this SQLiteDataReader reader, int position) {
+        public static bool? GetNullableBoolean(this SQLiteDataReader reader, int position) {
             try {
-                if (reader.IsDBNull(position)) return null;
-                var res = reader.GetInt32(position);
-                return res != default (long) ? res : new long?();
+                if (reader.IsDBNull(position))
+                    return null;
+                return reader.GetBoolean(position);
             } catch (Exception) {
                 return null;
             }
         }
-
         public static double? GetNullableDouble(this SQLiteDataReader reader, int position) {
             try {
                 if (reader.IsDBNull(position))
@@ -36,7 +35,36 @@ namespace YieldMap.Transitive.Native.Reader {
             } catch (Exception) {
                 return null;
             }
-        }    
-        
+        }
+
+        public static float? GetNullableFloat(this SQLiteDataReader reader, int position) {
+            try {
+                if (reader.IsDBNull(position))
+                    return null;
+                return reader.GetFloat(position);
+            } catch (Exception) {
+                return null;
+            }
+        }
+
+        public static long? GetNullableInt32(this SQLiteDataReader reader, int position) {
+            try {
+                if (reader.IsDBNull(position))
+                    return null;
+                return reader.GetInt32(position);
+            } catch (Exception) {
+                return null;
+            }
+        }
+
+        public static int? GetNullableInt16(this SQLiteDataReader reader, int position) {
+            try {
+                if (reader.IsDBNull(position))
+                    return null;
+                return reader.GetInt16(position);
+            } catch (Exception) {
+                return null;
+            }
+        }  
     }
 }

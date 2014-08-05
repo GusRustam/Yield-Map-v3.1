@@ -10,7 +10,7 @@ namespace YieldMap.Transitive.Native.Entities {
         string DeleteAllSql<T>();
         string SelectSql<T>() where T : IIdentifyable;
         string FindIdSql<T>(T instrument) where T : IIdentifyable;
-        IIdentifyable Read<T>(SQLiteDataReader reader) where T : IIdentifyable;
+        IIdentifyable Read<T>(SQLiteDataReader reader) where T : class, IIdentifyable;
         long ReadId(SQLiteDataReader reader);
         string AllFields<T>() where T : class, IIdentifyable;
     }

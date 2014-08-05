@@ -169,9 +169,7 @@
     <Compile Include="MediatorTypes\Bond.cs" />
     <Compile Include="Domains\ContextHelper.cs" />
     <Compile Include="Domains\Contexts\BaseContext.cs" />
-    <Compile Include="Domains\Contexts\ChainRicContext.cs" />
     <Compile Include="Domains\Contexts\PropertiesContext.cs" />
-    <Compile Include="Domains\Contexts\RatingContext.cs" />
     <Compile Include="Procedures\IDbUpdates.cs" />
     <Compile Include="Procedures\Mission.cs" />
     <Compile Include="Procedures\DbUpdates.cs" />
