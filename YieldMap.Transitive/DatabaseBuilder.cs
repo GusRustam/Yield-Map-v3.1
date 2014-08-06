@@ -87,6 +87,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<RatingToLegalEntityCrud>().As<ICrud<NRatingToLegalEntity>>();
             Builder.RegisterType<RicCrud>().As<ICrud<NRic>>();
             Builder.RegisterType<SourceTypeCrud>().As<ICrud<NSourceType>>();
+            Builder.RegisterType<IndexCrud>().As<ICrud<NIdx>>();
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();

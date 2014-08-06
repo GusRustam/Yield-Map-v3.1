@@ -12,6 +12,6 @@ namespace YieldMap.Transitive.Native {
         string FindIdSql<T>(T instrument) where T : IIdentifyable;
         IIdentifyable Read<T>(SQLiteDataReader reader) where T : class, IIdentifyable;
         long ReadId(SQLiteDataReader reader);
-        string AllFields<T>() where T : class, IIdentifyable;
+        string AllFields<T>(bool qualified = false) where T : class, IIdentifyable;
     }
 }

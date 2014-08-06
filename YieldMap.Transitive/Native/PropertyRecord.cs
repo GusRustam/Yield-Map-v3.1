@@ -4,10 +4,12 @@ namespace YieldMap.Transitive.Native {
     public class PropertyRecord {
         private readonly PropertyInfo _info;
         private readonly string _dbName;
+        private readonly string _tableName;
 
-        public PropertyRecord(PropertyInfo info, string dbName) {
+        public PropertyRecord(PropertyInfo info, string dbName, string tableName) {
             _info = info;
             _dbName = dbName;
+            _tableName = tableName;
         }
 
         public string DbName {
@@ -16,6 +18,10 @@ namespace YieldMap.Transitive.Native {
 
         public PropertyInfo Info {
             get { return _info; }
+        }
+
+        public string TableName {
+            get { return _tableName; }
         }
     }
 }

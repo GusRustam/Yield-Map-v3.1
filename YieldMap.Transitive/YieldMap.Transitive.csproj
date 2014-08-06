@@ -63,6 +63,7 @@
     <Compile Include="Native\Crud\FieldDefinitionCrud.cs" />
     <Compile Include="Native\Crud\FieldGroupCrud.cs" />
     <Compile Include="Native\Crud\IInstrumentCrud.cs" />
+    <Compile Include="Native\Crud\IndexCrud.cs" />
     <Compile Include="Native\Crud\InstrumentTypeCrud.cs" />
     <Compile Include="Native\Crud\LegTypeCrud.cs" />
     <Compile Include="Native\Crud\PropertyCrud.cs" />

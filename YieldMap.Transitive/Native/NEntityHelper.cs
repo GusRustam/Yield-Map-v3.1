@@ -4,7 +4,6 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Reflection;
 using Autofac;
-using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Native {
@@ -115,10 +114,6 @@ namespace YieldMap.Transitive.Native {
             
         }
 
-        
-
-        
-
         public NEntityHelper(Func<IContainer> containerFunc) {
             var container = containerFunc();
 
@@ -154,9 +149,9 @@ namespace YieldMap.Transitive.Native {
             return reader.Read() ? reader.GetInt32(0) : default(long);
         }
 
-        public string AllFields<T>() where T : class, IIdentifyable {
+        public string AllFields<T>(bool qualified = false) where T : class, IIdentifyable {
             var type = typeof (T);
-            return string.Join(", ", _cache.Properties[type].Select(p => p.DbName));
+            return string.Join(", ", _cache.Properties[type].Select(p => qualified ? p.TableName + "." + p.DbName : p.DbName));
         }
 
         public IIdentifyable Read<T>(SQLiteDataReader reader) where T : class, IIdentifyable {

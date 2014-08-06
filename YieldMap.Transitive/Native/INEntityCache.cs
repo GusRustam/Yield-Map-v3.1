@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
-using YieldMap.Transitive.Native.Crud;
-using YieldMap.Transitive.Native.Reader;
 
 namespace YieldMap.Transitive.Native {
     public interface INEntityCache {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Native.Entities;
@@ -21,10 +22,16 @@ namespace YieldMap.Transitive.Native.Crud {
         }
 
         public IEnumerable<NInstrument> FindByRic(IEnumerable<string> rics) {
+            Logger.Debug("FindByRic()");
+            var theRics = rics.Select(ric => "'" + ric + "'");
             var helper = Container.Resolve<INEntityHelper>();
-            var sql = "SELECT " + helper.AllFields<NInstrument>() + " FROM " +
-                      "Instrument INNER JOIN Ric ON (Instrument.id_Ric = Ric.id) " +
-                      "WHERE Ric.Name IN (" + string.Join(", ", rics) + ")";
+            var sql = "SELECT " + helper.AllFields<NInstrument>(true) + " FROM " +
+                      "Instrument " +
+                      "INNER JOIN Description ON (Instrument.id_Description = Description.id) " +
+                      "INNER JOIN Ric ON (Description.id_Ric = Ric.id) " +
+                      "WHERE Ric.Name IN (" + string.Join(", ", theRics) + ")";
+            Logger.Trace(sql);
+
             var connector = Container.Resolve<IConnector>();
             var res = new List<NInstrument>();
             using (var cnn = connector.GetConnection()) {

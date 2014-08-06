@@ -45,8 +45,18 @@ namespace YieldMap.Transitive.Native {
                     .Select(p => new { Descr = p.GetCustomAttribute<DbFieldAttribute>(), Property = p })
                     .Where(x => x.Descr != null)
                     .OrderBy(x => x.Descr.Order)
-                    .Select(x => new PropertyRecord(x.Property, x.Descr.Name))
+                    .Select(x => new PropertyRecord(x.Property, x.Descr.Name, GetTableName(type)))
                     .ToArray());
+        }
+
+        private static string GetTableName(Type type) {
+            var name = type.Name;
+            return 
+                name.StartsWith("N")
+                ? (name.Length > 1
+                    ? (name[1] >= 'A' && name[1] <= 'Z' ? name.Substring(1) : name)
+                    : name)
+                : name;
         }
 
 
