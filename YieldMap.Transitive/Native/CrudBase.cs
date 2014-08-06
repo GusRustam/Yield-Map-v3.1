@@ -5,9 +5,10 @@ using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Events;
+using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
 
-namespace YieldMap.Transitive.Native.Crud {
+namespace YieldMap.Transitive.Native {
     public abstract class CrudBase<T> : ICrud<T> where T : class, IIdentifyable, IEquatable<T> {
         public event EventHandler<IDbEventArgs> Notify;
         protected Dictionary<T, Operations> Entities = new Dictionary<T, Operations>();

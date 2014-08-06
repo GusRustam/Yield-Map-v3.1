@@ -1,7 +1,6 @@
 ﻿using System.Data.SQLite;
-using YieldMap.Transitive.Native.Entities;
 
-namespace YieldMap.Transitive.Native.Reader {
+namespace YieldMap.Transitive.Native {
     public interface INEntityReaderHelper {
         string SelectSql<T>();
         T Read<T>(SQLiteDataReader reader) where T : class, INotIdentifyable;

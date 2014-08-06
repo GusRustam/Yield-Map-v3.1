@@ -71,6 +71,7 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<NEntityHelper>().As<INEntityHelper>().SingleInstance();
             Builder.RegisterType<NEntityReaderHelper>().As<INEntityReaderHelper>().SingleInstance();
             Builder.RegisterType<VariableHelper>().As<IVariableHelper>().SingleInstance();
+            Builder.RegisterType<NEntityCache>().As<INEntityCache>().SingleInstance();
 
             // - cruds
             Builder.RegisterType<FieldGroupCrud>().As<IFieldGroupCrud>();
@@ -81,6 +82,8 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<ChainCrud>().As<IChainCrud>();
             Builder.RegisterType<RicCrud>().As<IRicCrud>();
             Builder.RegisterType<FieldDefinitionCrud>().As<IFieldDefinitionCrud>();
+            Builder.RegisterType<LegTypeCrud>().As<ILegTypeCrud>();
+            
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
-using System.Reflection;
 using Autofac;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Native.Entities;
+using YieldMap.Transitive.Native.Reader;
 
-namespace YieldMap.Transitive.Native.Reader {
+namespace YieldMap.Transitive.Native {
     public abstract class ReaderBase<T> : IReader<T> where T : class, INotIdentifyable {
         abstract protected Logging.Logger Logger { get; }
         protected readonly SQLiteConnection Connection;
@@ -64,24 +64,6 @@ namespace YieldMap.Transitive.Native.Reader {
             using (var r = query.ExecuteReader()) {
                 return _helper.Read<T>(r);
             }
-        }
-    }
-
-    internal class PropertyRecord {
-        private readonly PropertyInfo _info;
-        private readonly string _dbName;
-
-        public PropertyRecord(PropertyInfo info, string dbName) {
-            _info = info;
-            _dbName = dbName;
-        }
-
-        public string DbName {
-            get { return string.IsNullOrEmpty(_dbName) ? _info.Name : _dbName; }
-        }
-
-        public PropertyInfo Info {
-            get { return _info; }
         }
     }
 }

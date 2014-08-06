@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace YieldMap.Transitive.Native.Entities {
+namespace YieldMap.Transitive.Native {
     public class DbFieldAttribute : Attribute {
         private readonly int _order;
         private readonly string _name;

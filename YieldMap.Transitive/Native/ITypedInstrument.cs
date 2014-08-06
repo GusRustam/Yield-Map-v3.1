@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Transitive.Native.Entities {
+﻿namespace YieldMap.Transitive.Native {
     public interface ITypedInstrument : INotIdentifyable {
         // ReSharper disable once InconsistentNaming
         long id_Instrument { get; set; }

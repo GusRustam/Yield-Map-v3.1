@@ -4,7 +4,7 @@ using Autofac;
 using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Native.Reader;
 
-namespace YieldMap.Transitive.Native.Crud {
+namespace YieldMap.Transitive.Native {
     public static class CrudHelper {
         public static ICrud<T> ResolveCrudWithConnection<T>(this IContainer container, SQLiteConnection connection) 
             where T : class, IIdentifyable, IEquatable<T> {
