@@ -15,7 +15,6 @@ using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
 using YieldMap.Transitive.Native;
-using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Tools;
 using Rating = YieldMap.Transitive.MediatorTypes.Rating;
@@ -219,7 +218,7 @@ namespace YieldMap.Transitive.Procedures {
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
                 }
-                using (var reader = _container.Resolve<IInstrumentCrud>()) {
+                using (var reader = _container.Resolve<ICrud<NInstrument>>()) {
                     addedInstruments = reader.FindAll().Select(x => x.id).ToSet() - existingInstruments;
                 }
             }
@@ -604,7 +603,7 @@ namespace YieldMap.Transitive.Procedures {
 
         private static string BulkInsertLegs(IEnumerable<Leg> legs) {
             var res = legs.Aggregate(
-                "INSERT INTO Leg(id_Instrument, id_LegType, id_Currency, id_Index, Structure, FixedRate, Cap, Floor, Margin) VALUES",
+                "INSERT INTO Leg(id_Instrument, id_LegType, id_Currency, id_Idx, Structure, FixedRate, Cap, Floor, Margin) VALUES",
                 (current, i) => {
                     var coupon = i.FixedRate.HasValue ? String.Format("'{0}'", i.FixedRate.Value) : "NULL";
                     var idIndex = i.id_Idx.HasValue ? i.id_Idx.ToString() : "NULL";

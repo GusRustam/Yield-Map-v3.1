@@ -74,22 +74,28 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<NEntityCache>().As<INEntityCache>().SingleInstance();
 
             // - cruds
-            Builder.RegisterType<FieldGroupCrud>().As<IFieldGroupCrud>();
+            Builder.RegisterType<ChainCrud>().As<ICrud<NChain>>();
+            Builder.RegisterType<FeedCrud>().As<ICrud<NFeed>>();
+            Builder.RegisterType<FieldDefinitionCrud>().As<ICrud<NFieldDefinition>>();
+            Builder.RegisterType<FieldGroupCrud>().As<ICrud<NFieldGroup>>();
             Builder.RegisterType<InstrumentCrud>().As<IInstrumentCrud>();
-            Builder.RegisterType<PropertyCrud>().As<IPropertyCrud>();
-            Builder.RegisterType<PropertyValueCrud>().As<IPropertyValueCrud>();
-            Builder.RegisterType<FeedCrud>().As<IFeedCrud>();
-            Builder.RegisterType<ChainCrud>().As<IChainCrud>();
-            Builder.RegisterType<RicCrud>().As<IRicCrud>();
-            Builder.RegisterType<FieldDefinitionCrud>().As<IFieldDefinitionCrud>();
-            Builder.RegisterType<LegTypeCrud>().As<ILegTypeCrud>();
-            
+            Builder.RegisterType<InstrumentTypeCrud>().As<ICrud<NInstrumentType>>();
+            Builder.RegisterType<LegTypeCrud>().As<ICrud<NLegType>>();
+            Builder.RegisterType<PropertyCrud>().As<ICrud<NProperty>>();
+            Builder.RegisterType<PropertyValueCrud>().As<ICrud<NPropertyValue>>();
+            Builder.RegisterType<RatingToInstrumentCrud>().As<ICrud<NRatingToInstrument>>();
+            Builder.RegisterType<RatingToLegalEntityCrud>().As<ICrud<NRatingToLegalEntity>>();
+            Builder.RegisterType<RicCrud>().As<ICrud<NRic>>();
+            Builder.RegisterType<SourceTypeCrud>().As<ICrud<NSourceType>>();
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();
+            Builder.RegisterType<FieldVsGroupReader>().As<IReader<NFieldVsGroup>>();
+            Builder.RegisterType<InstrumentIBViewReader>().As<IReader<NInstrumentIBView>>();
+            Builder.RegisterType<InstrumentRicViewReader>().As<IReader<NInstrumentRicView>>();
             Builder.RegisterType<OrdinaryBondReader>().As<IReader<NOrdinaryBond>>();
             Builder.RegisterType<OrdinaryFrnReader>().As<IReader<NOrdinaryFrn>>();
-
+            Builder.RegisterType<RatingViewReader>().As<IReader<NRatingView>>();
         }
     }
 }

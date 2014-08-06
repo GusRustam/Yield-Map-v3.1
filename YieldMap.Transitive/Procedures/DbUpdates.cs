@@ -29,7 +29,7 @@ namespace YieldMap.Transitive.Procedures {
         }
 
         public IEnumerable<NChain> ChainsInNeed(DateTime dt) {
-            var chains = _container.Resolve<IChainCrud>();
+            var chains = _container.Resolve<ICrud<NChain>>();
             return (
                 from c in chains.FindAll()
                 where NeedsRefresh(c, dt)
@@ -46,7 +46,7 @@ namespace YieldMap.Transitive.Procedures {
 
         public IEnumerable<NRic> StaleBondRics(DateTime dt) {
             var bonds = _container.Resolve<IReader<NOrdinaryBond>>();
-            var rics = _container.Resolve<IRicCrud>();
+            var rics = _container.Resolve<ICrud<NRic>>();
 
             return bonds.FindAll()
                 .Where(b => b.Ric != null && NeedsRefresh(b, dt))
@@ -55,7 +55,7 @@ namespace YieldMap.Transitive.Procedures {
 
         public IEnumerable<NRic> AllBondRics() {
             var bonds = _container.Resolve<IReader<NOrdinaryBond>>();
-            var rics = _container.Resolve<IRicCrud>();
+            var rics = _container.Resolve<ICrud<NRic>>();
 
             return bonds.FindAll()
                 .Where(b => b.Ric != null)
@@ -64,7 +64,7 @@ namespace YieldMap.Transitive.Procedures {
 
         public IEnumerable<NRic> ObsoleteBondRics(DateTime dt) {
             var bonds = _container.Resolve<IReader<NOrdinaryBond>>();
-            var rics = _container.Resolve<IRicCrud>();
+            var rics = _container.Resolve<ICrud<NRic>>();
 
             return bonds.FindAll()
                 .Where(b => b.Ric != null && b.Maturity.HasValue && b.Maturity.Value < dt)

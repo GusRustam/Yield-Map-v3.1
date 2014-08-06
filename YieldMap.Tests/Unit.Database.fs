@@ -30,6 +30,7 @@ module Database =
     open YieldMap.Transitive.Native.Entities
     open YieldMap.Transitive.Native.Reader
     open YieldMap.Transitive.Native.Variables
+    open YieldMap.Transitive.Native
 
     let logger = LogFactory.create "UnitTests.Database"
     let str (z : TimeSpan Nullable) = 
@@ -37,7 +38,7 @@ module Database =
         else "N/A"
 
     let mockFeedRepo (feeds : NFeed seq)= 
-        let mock = MockRepository.GenerateMock<IFeedCrud>()
+        let mock = MockRepository.GenerateMock<ICrud<NFeed>>()
         RhinoMocksExtensions
             .Stub<_,_>(mock, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
             .Return(feeds) 
@@ -106,8 +107,8 @@ module Database =
     let deleteChainRicInstrument () =
         let container = DatabaseBuilder.Container
         // Teardown, removing chain and ric
-        using (container.Resolve<IChainCrud>()) (fun chains ->
-        using (container.Resolve<IRicCrud>()) (fun rics -> 
+        using (container.Resolve<ICrud<NChain>>()) (fun chains ->
+        using (container.Resolve<ICrud<NRic>>()) (fun rics -> 
             let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
             chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC").ToList().First()
@@ -130,7 +131,7 @@ module Database =
         let container = builder.Build()
 
         // Test
-        use feeds = container.Resolve<IFeedCrud>()
+        use feeds = container.Resolve<ICrud<NFeed>>()
         feeds.FindAll().Count() |> should be (equal 1)
 
     [<Test>]
@@ -139,7 +140,7 @@ module Database =
         let container = DatabaseBuilder.Container
 
         // Test
-        use feeds = container.Resolve<IFeedCrud>()
+        use feeds = container.Resolve<ICrud<NFeed>>()
         feeds.FindAll().Count() |> should be (equal 1)
 
     [<Test>]
@@ -147,7 +148,7 @@ module Database =
         // Prepare
         let builder = ContainerBuilder()
 
-        let chainRepo = MockRepository.GenerateMock<IChainCrud>()
+        let chainRepo = MockRepository.GenerateMock<ICrud<NChain>>()
 
         RhinoMocksExtensions
             .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Create(null)))
@@ -158,19 +159,19 @@ module Database =
         let container = builder.Build()
 
         // Test
-        use chains = container.Resolve<IChainCrud>()
+        use chains = container.Resolve<ICrud<NChain>>()
 
         // Varify
         chains.Create(NChain()) |> should be (equal 1)
 
-        RhinoMocksExtensions.AssertWasCalled<_>(chainRepo, Func<IChainCrud,obj>(fun x -> x.Create(Rhino.Mocks.Arg<NChain>.Is.Anything) |> box))
+        RhinoMocksExtensions.AssertWasCalled<_>(chainRepo, Func<ICrud<NChain>,obj>(fun x -> x.Create(Rhino.Mocks.Arg<NChain>.Is.Anything) |> box))
 
     [<Test>]
     let ``Adding chain to fake database and saving it`` () =
         let builder = ContainerBuilder()
 
         let feed = NFeed(id = 1L, Name = "Q", Description = "")
-        let feedRepo = MockRepository.GenerateMock<IFeedCrud>()
+        let feedRepo = MockRepository.GenerateMock<ICrud<NFeed>>()
         RhinoMocksExtensions
             .Stub<_,_>(feedRepo, Rhino.Mocks.Function<_,_>(fun x -> x.FindAll()))
             .Return(([feed]|> Seq.ofList)) 
@@ -180,7 +181,7 @@ module Database =
             .Return(feed) 
             |> ignore            
 
-        let chainRepo = MockRepository.GenerateMock<IChainCrud>()
+        let chainRepo = MockRepository.GenerateMock<ICrud<NChain>>()
         RhinoMocksExtensions
             .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Create(null)))
             .IgnoreArguments()
@@ -196,8 +197,8 @@ module Database =
         builder.RegisterInstance(chainRepo) |> ignore
         let container = builder.Build()
 
-        use chains = container.Resolve<IChainCrud>()
-        use feeds = container.Resolve<IFeedCrud>()
+        use chains = container.Resolve<ICrud<NChain>>()
+        use feeds = container.Resolve<ICrud<NFeed>>()
 
         let feed = feeds.FindById 1L
         chains.Create(NChain(Name = "0#RUCORP=MM", id_Feed = Nullable(feed.id))) |> should be (equal 1)
@@ -207,7 +208,7 @@ module Database =
     let ``Add feed to real database, save and then remove it`` () =
         let container = DatabaseBuilder.Container
 
-        use feeds = container.Resolve<IFeedCrud>()
+        use feeds = container.Resolve<ICrud<NFeed>>()
 
         let feed = feeds.FindById 1L
         feed.Name |> should be (equal "Q")
@@ -219,7 +220,7 @@ module Database =
         feed.id |> should be (greaterThan 0)
         let newId = feed.id
 
-        use feeds2 = container.Resolve<IFeedCrud>()
+        use feeds2 = container.Resolve<ICrud<NFeed>>()
         let feed2 = feeds2.FindById newId
 
         feed2.Name |> should be (equal "W")
@@ -227,7 +228,7 @@ module Database =
         feeds.Delete feed |> should be (equal 0)
         feeds.Save<NFeed> () |> should be (equal 1)
 
-        use feeds3 = container.Resolve<IFeedCrud>()
+        use feeds3 = container.Resolve<ICrud<NFeed>>()
         let feed3 = feeds3.FindById newId
         feed3 |> should be (equal null)
 
@@ -241,9 +242,9 @@ module Database =
         
         let container = DatabaseBuilder.Container
 
-        using (container.Resolve<IChainCrud>()) (fun chains ->
+        using (container.Resolve<ICrud<NChain>>()) (fun chains ->
             chains.FindAll().Count() |> should be (equal 0))
-        using (container.Resolve<IRicCrud>()) (fun rics ->
+        using (container.Resolve<ICrud<NRic>>()) (fun rics ->
             rics.FindAll().Count() |> should be (equal 0))
 
         let saver = container.Resolve<ISaver> ()
@@ -251,17 +252,17 @@ module Database =
 
         let chainId = ref 0L
         let ricId = ref 0L
-        using (container.Resolve<IChainCrud>()) (fun chains ->
+        using (container.Resolve<ICrud<NChain>>()) (fun chains ->
             let all = chains.FindAll()
             all.Count() |> should be (equal 1)
             chainId := all.First().id)
-        using (container.Resolve<IRicCrud>()) (fun rics ->
+        using (container.Resolve<ICrud<NRic>>()) (fun rics ->
             let all = rics.FindAll()
             all.Count() |> should be (equal 1)
             ricId := all.First().id)
 
-        using (container.Resolve<IChainCrud>()) (fun chains ->
-        using (container.Resolve<IRicCrud>()) (fun rics -> 
+        using (container.Resolve<ICrud<NChain>>()) (fun chains ->
+        using (container.Resolve<ICrud<NRic>>()) (fun rics -> 
             let chain = chains.FindById !chainId
             chains.Delete chain |> should be (equal 0)
             let ric = rics.FindById !ricId
@@ -269,9 +270,9 @@ module Database =
             chains.Save<NChain>() |> ignore 
             rics.Save<NRic>() |> ignore ))
 
-        using (container.Resolve<IChainCrud>()) (fun chains ->
+        using (container.Resolve<ICrud<NChain>>()) (fun chains ->
             chains.FindAll().Count() |> should be (equal 0))
-        using (container.Resolve<IRicCrud>()) (fun rics ->
+        using (container.Resolve<ICrud<NRic>>()) (fun rics ->
             rics.FindAll().Count() |> should be (equal 0))
 
     [<Test>]
@@ -303,8 +304,8 @@ module Database =
 
         checkExact<Instrument, IInstrumentRepository> cnt
 
-        using (container.Resolve<IChainCrud>()) (fun chains ->
-        using (container.Resolve<IRicCrud>()) (fun rics -> 
+        using (container.Resolve<ICrud<NChain>>()) (fun chains ->
+        using (container.Resolve<ICrud<NRic>>()) (fun rics -> 
             let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
             chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC").ToList().First()
@@ -444,8 +445,8 @@ module Database =
             .Return(NInstrumentType(id = 1L))
             |> ignore        
 
-        // IPropertyValueCrud
-        let propertyValuesRepo = MockRepository.GenerateMock<IPropertyValueCrud>()
+        // ICrud<NPropertyValue>
+        let propertyValuesRepo = MockRepository.GenerateMock<ICrud<NPropertyValue>>()
         let validProperties = 
             [
                 NPropertyValue(id_Property = 1L, id_Instrument = 1L, Value = "InstrumentName1 ")
@@ -569,8 +570,8 @@ module Database =
         properyValueReader.FindAll().Count() |> should be (equal 4)
 
         // Teardown, removing chain and ric
-        using (container.Resolve<IChainCrud>()) (fun chains ->
-        using (container.Resolve<IRicCrud>()) (fun rics -> 
+        using (container.Resolve<ICrud<NChain>>()) (fun chains ->
+        using (container.Resolve<ICrud<NRic>>()) (fun rics -> 
             let chain = chains.FindBy(fun c -> c.Name = "TESTCHAIN").ToList().First()
             chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC1").ToList().First()
@@ -592,7 +593,7 @@ module Database =
         let updater = container.Resolve<INewFunctionUpdater>()
         let properyReader = container.Resolve<IPropertiesRepository> ()
 
-        let nativeKiller = container.Resolve<IPropertyValueCrud> ()
+        let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
         nativeKiller.DeleteAll()
 
         properyReader.FindAll().ToList()
@@ -617,7 +618,7 @@ module Database =
         let registry = container.Resolve<IFunctionRegistry>()
         let updater = container.Resolve<INewFunctionUpdater>()
 
-        let nativeKiller = container.Resolve<IPropertyValueCrud> ()
+        let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
         nativeKiller.DeleteAll()
 
         let properyReader = container.Resolve<IPropertiesRepository> ()
@@ -637,6 +638,7 @@ module NativeDatabase =
     open YieldMap.Tools.Aux
     open System.Collections.Generic
     open YieldMap.Transitive.Native.Crud
+    open YieldMap.Transitive.Native
 
     let logger = LogFactory.create "UnitTests.Database"
 
@@ -802,13 +804,13 @@ module NativeDatabase =
     [<Test>]
     let ``Simple read`` () =
         let container = DatabaseBuilder.Container 
-        let helper = container.Resolve<IFeedCrud>()
+        let helper = container.Resolve<ICrud<NFeed>>()
         helper.FindAll().Count() |> should be (greaterThan 0)
 
     [<Test>]
     let ``Add, read id, update and then delete`` () =
         let container = DatabaseBuilder.Container 
-        let helper = container.Resolve<IFeedCrud>()
+        let helper = container.Resolve<ICrud<NFeed>>()
         helper.FindAll().Count() |> should be (equal 1)
 
         let newFeed = NFeed(Name = "A", Description = "Description")
@@ -824,7 +826,7 @@ module NativeDatabase =
         helper.Save<NFeed>() |> ignore
         helper.FindAll().Count() |> should be (equal 2)
 
-        let helper2 = container.Resolve<IFeedCrud>()
+        let helper2 = container.Resolve<ICrud<NFeed>>()
         helper2.FindById(newFeed.id).Description |> should be (equal "Advanced description")
 
         helper.Delete newFeed |> ignore
@@ -836,7 +838,7 @@ module NativeDatabase =
     [<Test>]
     let ``Add 2, read ids, update and then delete`` () =
         let container = DatabaseBuilder.Container 
-        let helper = container.Resolve<IFeedCrud>()
+        let helper = container.Resolve<ICrud<NFeed>>()
         helper.FindAll().Count() |> should be (equal 1)
 
         let newFeed1 = NFeed(Name = "A", Description = "Description")
@@ -856,7 +858,7 @@ module NativeDatabase =
         helper.Save<NFeed>() |> ignore
         helper.FindAll().Count() |> should be (equal 3)
 
-        let helper2 = container.Resolve<IFeedCrud>()
+        let helper2 = container.Resolve<ICrud<NFeed>>()
         helper2.FindById(newFeed1.id).Description |> should be (equal "Advanced description")
 
         helper.Delete newFeed1 |> ignore

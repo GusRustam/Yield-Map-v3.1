@@ -5,7 +5,7 @@ using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native.Crud {
-    public class LegTypeCrud : CrudBase<NLegType>, ILegTypeCrud {
+    public class LegTypeCrud : CrudBase<NLegType> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.LegTypeCrud");
 
         public LegTypeCrud(SQLiteConnection connection)

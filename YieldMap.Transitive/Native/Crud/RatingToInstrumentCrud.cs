@@ -5,7 +5,7 @@ using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native.Crud {
-    public class RatingToInstrumentCrud : CrudBase<NRatingToInstrument>, IRatingToInstrumentCrud {
+    public class RatingToInstrumentCrud : CrudBase<NRatingToInstrument> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.RatingToInstrumentCrud");
 
         public RatingToInstrumentCrud(SQLiteConnection connection)

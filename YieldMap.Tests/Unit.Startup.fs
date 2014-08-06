@@ -70,7 +70,7 @@ module StartupTest =
     open System.Linq
 
     open Clutch.Diagnostics.EntityFramework
-    open YieldMap.Transitive.Native.Crud
+    open YieldMap.Transitive.Native
     open YieldMap.Transitive.Native.Entities
 
     let logger = LogFactory.create "UnitTests.StartupTest"
@@ -141,7 +141,7 @@ module StartupTest =
     let init chains dt = 
         c <- MockCalendar dt
 
-        use repo = container.Resolve<IChainCrud>()
+        use repo = container.Resolve<ICrud<NChain>>()
 
         chains |> Array.iter (fun name -> 
             if not <| repo.FindBy(fun (x:NChain) -> x.Name = name).Any() then
@@ -232,8 +232,8 @@ module StartupTest =
         command "Close" x.Close NotResponding
         command "Connect" x.Connect NotResponding
 
-        let feeds = container.Resolve<IFeedCrud>().FindAll()
-        let chains = container.Resolve<IChainCrud>().FindAll()
+        let feeds = container.Resolve<ICrud<NFeed>>().FindAll()
+        let chains = container.Resolve<ICrud<NChain>>().FindAll()
         
         cnt feeds |> should be (equal 1)
         cnt chains  |> should be (equal 1)
@@ -247,7 +247,7 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#RUEUROS="|] dt        
         
-        use ctx = container.Resolve<IRicCrud>()
+        use ctx = container.Resolve<ICrud<NRic>>()
         let initialUnattachedRics = query {
             for n in ctx.FindAll() do
             where (n.id_Isin = Nullable())
@@ -271,7 +271,7 @@ module StartupTest =
         let dt = DateTime(2014,5,14) 
         let x = init [|"0#US30YSTRIP=PX"|] dt
 
-        use ctx = container.Resolve<IRicCrud>()
+        use ctx = container.Resolve<ICrud<NRic>>()
         let initialUnattachedRics = query {
             for n in ctx.FindAll() do
             where (n.id_Isin = Nullable())
@@ -297,6 +297,7 @@ module StartupTest =
 
     open YieldMap.Tools.Aux
     open YieldMap.Transitive.Native.Reader
+    open YieldMap.Transitive.Native
 
     (* ========================= ============================= *)
     [<Test>]
@@ -317,7 +318,7 @@ module StartupTest =
 
         let x = Startup s
         
-        use repo = container.Resolve<IChainCrud>()
+        use repo = container.Resolve<ICrud<NChain>>()
 
         repo.Create <| NChain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
         repo.Save<NChain> () |> ignore

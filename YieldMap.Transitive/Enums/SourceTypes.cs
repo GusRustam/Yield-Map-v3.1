@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Autofac;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
 
@@ -13,7 +14,7 @@ namespace YieldMap.Transitive.Enums {
         public NSourceType Source { get; private set; }
 
         public SourceTypes(Func<IContainer> containerF) {
-            using (var crud = containerF.Invoke().Resolve<ISourceTypeCrud>()) {
+            using (var crud = containerF.Invoke().Resolve<ICrud<NSourceType>>()) {
                 var items = crud.FindAll().ToList();
                 Universe = items.First(x => x.Name == "Universe");
                 Chain = items.First(x => x.Name == "Chain");

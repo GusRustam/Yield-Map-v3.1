@@ -1,4 +1,4 @@
-﻿namespace YieldMap.Transitive.Native.Crud {
+﻿namespace YieldMap.Transitive.Native {
     public enum Operations {
         Create,
         Read,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Autofac;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
 
@@ -14,7 +15,7 @@ namespace YieldMap.Transitive.Enums {
 
 
         public InstrumentTypes(Func<IContainer> containerF) {
-            var instrumentTypes = containerF().Resolve<IInstrumentTypeCrud>().FindAll().ToList();
+            var instrumentTypes = containerF().Resolve<ICrud<NInstrumentType>>().FindAll().ToList();
             Bond = instrumentTypes.First(i => i.Name == "Bond");
             Frn = instrumentTypes.First(i => i.Name == "Frn");
             Swap = instrumentTypes.First(i => i.Name == "Swap");

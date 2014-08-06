@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Autofac;
-using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
@@ -14,7 +14,7 @@ namespace YieldMap.Transitive.Enums {
         public NFieldGroup Swaps { get; private set; }
 
         public FieldGroups(Func<IContainer> containerF) {
-            var reader = containerF().Resolve<IFieldGroupCrud>();
+            var reader = containerF().Resolve<ICrud<NFieldGroup>>();
 
             var items = reader.FindAll().ToList();
             Default = items.First(x => x.Default);

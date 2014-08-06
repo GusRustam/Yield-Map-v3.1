@@ -3,9 +3,8 @@ using System.Linq;
 using Autofac;
 using YieldMap.Language;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Entities;
-using YieldMap.Transitive.Native.Reader;
 using YieldMap.Transitive.Native.Variables;
 
 namespace YieldMap.Transitive.Registry {
@@ -39,8 +38,8 @@ namespace YieldMap.Transitive.Registry {
                     Environment = helper.ToVariable(descr) 
                 })
                 .ToList();
-            
-            using (var crud = _container.Resolve<IPropertyValueCrud>()) {
+
+            using (var crud = _container.Resolve<ICrud<NPropertyValue>>()) {
                 list.ForEach(idDescr => {
                     var instrumentId = idDescr.InstrumentId;
                     Logger.Trace(string.Format("For instrument with id {0}", instrumentId));

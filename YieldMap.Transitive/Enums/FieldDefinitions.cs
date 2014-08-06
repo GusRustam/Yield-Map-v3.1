@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Autofac;
-using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
@@ -18,7 +18,7 @@ namespace YieldMap.Transitive.Enums {
 
         public FieldDefinitions(Func<IContainer> containerF) {
             var items = containerF()
-                .Resolve<IFieldDefinitionCrud>()
+                .Resolve<ICrud<NFieldDefinition>>()
                 .FindAll()
                 .ToList();
 

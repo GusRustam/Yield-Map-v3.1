@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Autofac;
-using YieldMap.Transitive.Native.Crud;
+using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
@@ -11,7 +11,7 @@ namespace YieldMap.Transitive.Enums {
         public NLegType Both { get; private set; }
 
         public LegTypes(Func<IContainer> containerF) {
-            var legTypes = containerF().Resolve<ILegTypeCrud>().FindAll().ToList();
+            var legTypes = containerF().Resolve<ICrud<NLegType>>().FindAll().ToList();
             Paid = legTypes.First(i => i.Name == "Paid");
             Received = legTypes.First(i => i.Name == "Received");
             Both = legTypes.First(i => i.Name == "Both");

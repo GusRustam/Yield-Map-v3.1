@@ -5,9 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using YieldMap.Transitive.Native.Crud;
-using YieldMap.Transitive.Native.Entities;
-using YieldMap.Transitive.Native.Reader;
 
 namespace YieldMap.Transitive.Native {
     public class NEntityCache : INEntityCache {
@@ -68,7 +65,7 @@ namespace YieldMap.Transitive.Native {
                 memberBindings.Add(Expression.Bind(property, methodCall));
             }
 
-            var parser = Expression.Lambda(Expression.MemberInit(Expression.New(type), memberBindings)).Compile() as Func<SQLiteDataReader, object>;
+            var parser = Expression.Lambda(Expression.MemberInit(Expression.New(type), memberBindings), new[] { readerExp }).Compile() as Func<SQLiteDataReader, object>;
             if (parser != null)
                 _readers.Add(type, parser);
         }

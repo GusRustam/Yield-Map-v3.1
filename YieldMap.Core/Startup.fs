@@ -28,6 +28,8 @@ module Startup =
     open System.Threading
     open YieldMap.Transitive.Registry
     open YieldMap.Transitive.Native.Crud
+    open YieldMap.Transitive.Native
+    open YieldMap.Transitive.Native.Entities
 
     let logger = LogFactory.create "Startup"
 
@@ -150,7 +152,7 @@ module Startup =
                 let updater = q.DbServices.Resolve<IDbUpdates>()
                 if force then
                     let registry = q.DbServices.Resolve<IFunctionRegistry>()
-                    use properties = q.DbServices.Resolve<IPropertyCrud>()
+                    use properties = q.DbServices.Resolve<ICrud<NProperty>>()
                     registry.Clear () |> ignore
                     properties
                         .FindAll()
@@ -159,7 +161,7 @@ module Startup =
 
                 async {
                     try
-                        let feeds = q.DbServices.Resolve<IFeedCrud>().FindAll()
+                        let feeds = q.DbServices.Resolve<ICrud<NFeed>>().FindAll()
 
                         let chainRequests = 
                             c.Today

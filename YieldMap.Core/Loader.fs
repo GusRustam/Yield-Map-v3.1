@@ -28,8 +28,9 @@ module Loader =
     open System
     open System.Collections.Generic
     open System.IO
-    open YieldMap.Transitive.Native.Crud
+    open YieldMap.Transitive.Native
     open YieldMap.Transitive.Native.Entities
+    open YieldMap.Transitive.Native.Crud
 
     let private logger = LogFactory.create "Load"
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using YieldMap.Transitive.Events;
-using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native {
     public interface ICrud<T> : IDisposable where T : class, IIdentifyable, IEquatable<T>  {
