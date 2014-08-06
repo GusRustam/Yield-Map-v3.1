@@ -75,7 +75,10 @@ module Loader =
 
             let frnMap = frns |> List.map (fun x -> x.Ric, x) |> Map.ofList
 
-            let toSave = bonds |> List.choose (function
+            let saver = db.Resolve<ISaver>()
+            
+            bonds 
+            |> Seq.choose (function
                 | Floater note when frnMap |> Map.containsKey note.Ric -> 
                     Frn.Create (frnMap.[note.Ric], note) 
                     :> InstrumentDescription 
@@ -90,10 +93,7 @@ module Loader =
                 | Convertible conv -> 
                     logger.WarnF "Convertibles not supported yet %s" conv.Ric 
                     None)
-
-            let saver = db.Resolve<ISaver>()
-
-            saver.SaveInstruments (seq toSave)
+            |> saver.SaveInstruments
 
             let! issueRatings = loader.LoadMetadata<IssueRatingData> rics
             let! issuerRatings = loader.LoadMetadata<IssuerRatingData> rics

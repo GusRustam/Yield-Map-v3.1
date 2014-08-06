@@ -601,7 +601,8 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1846)
+//        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1846)
+        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 96)
         properyValueReader.FindAll().Count() |> should be (equal 1846)
         
         br.Restore "EMPTY.sql"
@@ -628,6 +629,7 @@ module Database =
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
         updater.Recalculate<NBondDescriptionView> () |> should be (equal 96)
+        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 96)
         properyValueReader.FindAll().Count() |> should be (equal 96)
         
         br.Restore "EMPTY.sql"

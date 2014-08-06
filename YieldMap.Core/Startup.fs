@@ -163,9 +163,10 @@ module Startup =
                     try
                         let feeds = q.DbServices.Resolve<ICrud<NFeed>>().FindAll()
 
+                        let chainsInNeed = updater.ChainsInNeed c.Today
+
                         let chainRequests = 
-                            c.Today
-                            |> updater.ChainsInNeed 
+                            chainsInNeed
                             |> Seq.filter (fun r -> r.id_Feed.HasValue)
                             |> Seq.map (fun r -> { Ric = r.Name; Feed = feeds.First(fun feed -> feed.id = r.id_Feed.Value).Name; Mode = r.Params; Timeout = t}) 
                             |> Array.ofSeq

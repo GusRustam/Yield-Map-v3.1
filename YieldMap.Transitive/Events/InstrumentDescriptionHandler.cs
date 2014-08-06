@@ -21,6 +21,8 @@ namespace YieldMap.Transitive.Events {
                     var updater = DatabaseBuilder.Container.Resolve<INewFunctionUpdater>();
                     updater.Recalculate<NBondDescriptionView>(view => args.Added.Contains(view.id_Instrument));
                     updater.Recalculate<NBondDescriptionView>(view => args.Changed.Contains(view.id_Instrument));
+                    updater.Recalculate<NFrnDescriptionView>(view => args.Added.Contains(view.id_Instrument));
+                    updater.Recalculate<NFrnDescriptionView>(view => args.Changed.Contains(view.id_Instrument));
                 } catch (Exception e) {
                     Logger.ErrorEx("Failed to recalculate", e);
                 }

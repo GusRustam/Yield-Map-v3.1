@@ -15,6 +15,7 @@ using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
 using YieldMap.Transitive.Native;
+using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Tools;
 using Rating = YieldMap.Transitive.MediatorTypes.Rating;
@@ -218,7 +219,7 @@ namespace YieldMap.Transitive.Procedures {
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
                 }
-                using (var reader = _container.Resolve<ICrud<NInstrument>>()) {
+                using (var reader = _container.Resolve<IInstrumentCrud>()) {
                     addedInstruments = reader.FindAll().Select(x => x.id).ToSet() - existingInstruments;
                 }
             }

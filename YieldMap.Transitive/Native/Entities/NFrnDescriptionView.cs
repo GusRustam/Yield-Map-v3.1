@@ -1,18 +1,24 @@
 ﻿using YieldMap.Transitive.Native.Variables;
 
 namespace YieldMap.Transitive.Native.Entities {
-    public class NBondDescriptionView : NInstrumentDescriptionView {
-        [DbField(26)] // ReSharper disable once InconsistentNaming
-        public string BondStructure { get; set; }
+    public class NFrnDescriptionView : NInstrumentDescriptionView {
+        [DbField(26, "BondStructure")] // ReSharper disable once InconsistentNaming
+        public string FrnStructure { get; set; }
 
         [DbField(27), Variable] // ReSharper disable once InconsistentNaming
-        public double? Coupon { get; set; }
+        public double? Margin { get; set; }
 
-        public NBondDescriptionView() {
+        [DbField(28, "IdxName"), Variable] // ReSharper disable once InconsistentNaming
+        public string IndexName { get; set; }
+
+        [DbField(29, "IdxRic"), Variable] // ReSharper disable InconsistentNaming once
+        public string IndexRic { get; set; }
+
+        public NFrnDescriptionView() {
         }
 
-        public NBondDescriptionView(NInstrumentDescriptionView parent, string bondStructure, double? coupon) {
-            id_Instrument = parent.id_Instrument; 
+        public NFrnDescriptionView(NInstrumentDescriptionView parent, string bondStructure, double? margin, string indexName, string indexRic) {
+            id_Instrument = parent.id_Instrument;
             InstrumentName = parent.InstrumentName;
             InstrumentTypeName = parent.InstrumentTypeName;
             id_InstrumentType = parent.id_InstrumentType;
@@ -37,9 +43,11 @@ namespace YieldMap.Transitive.Native.Entities {
             InstrumentRatingAgency = parent.InstrumentRatingAgency;
             IssuerRating = parent.IssuerRating;
             IssuerRatingDate = parent.IssuerRatingDate;
-            IssuerRatingAgency = parent.IssuerRatingAgency;   
-            BondStructure = bondStructure;
-            Coupon = coupon;
+            IssuerRatingAgency = parent.IssuerRatingAgency;
+            FrnStructure = bondStructure;
+            Margin = margin;
+            IndexName = indexName;
+            IndexRic = indexRic;
         }
     }
 }

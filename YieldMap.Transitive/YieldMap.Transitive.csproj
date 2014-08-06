@@ -72,6 +72,7 @@
     <Compile Include="Native\Crud\RicCrud.cs" />
     <Compile Include="Native\Crud\SourceTypeCrud.cs" />
     <Compile Include="Native\DbFieldAttribute.cs" />
+    <Compile Include="Native\Entities\NFrnDescriptionView.cs" />
     <Compile Include="Native\ICrud.cs" />
     <Compile Include="Native\IIdentifyable.cs" />
     <Compile Include="Native\Crud\InstrumentCrud.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Native\Reader\FieldVsGroupReader.cs" />
     <Compile Include="Native\INEntityCache.cs" />
     <Compile Include="Native\INEntityReaderHelper.cs" />
+    <Compile Include="Native\Reader\FrnDescriptionReader.cs" />
     <Compile Include="Native\Reader\InstrumentIBViewReader.cs" />
     <Compile Include="Native\Reader\InstrumentRicViewReader.cs" />
     <Compile Include="Native\NEntityCache.cs" />

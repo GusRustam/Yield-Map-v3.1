@@ -111,7 +111,7 @@ namespace YieldMap.Transitive.Native {
         }
 
         private static string ParseString(object item) {
-            return "'" + ((string)item).Replace("'", "''").Replace("\"", "\"\"") + "'";
+            return item != null ? "'" + ((string)item).Replace("'", "''").Replace("\"", "\"\"") + "'" : "''";
         }
         private static string ParseLong(object item) {
             var value = (long)item;

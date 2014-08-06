@@ -90,6 +90,7 @@ namespace YieldMap.Transitive {
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();
+            Builder.RegisterType<FrnDescriptionReader>().As<IReader<NFrnDescriptionView>>();
             Builder.RegisterType<FieldVsGroupReader>().As<IReader<NFieldVsGroup>>();
             Builder.RegisterType<InstrumentIBViewReader>().As<IReader<NInstrumentIBView>>();
             Builder.RegisterType<InstrumentRicViewReader>().As<IReader<NInstrumentRicView>>();
