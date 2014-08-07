@@ -641,8 +641,22 @@ module NativeDatabase =
     open System.Collections.Generic
     open YieldMap.Transitive.Native.Crud
     open YieldMap.Transitive.Native
+    open YieldMap.Tools.Location
+    open System.Data.SQLite
+    open System.IO
 
     let logger = LogFactory.create "UnitTests.Database"
+
+    [<Test>]
+    let ``Distinct resolution modes`` () = 
+        let container = DatabaseBuilder.Container
+//        let sourceTypes = container.Resolve<ISourceTypes>()
+//        sourceTypes |> should not' (equal null)
+
+        container.Resolve<ICrud<NSourceType>>() |> should not' (equal null)
+        container.ResolveKeyed<ICrud<NSourceType>>(ConnectionMode.New) |> should not' (equal null)
+        container.ResolveKeyed<ICrud<NSourceType>>(ConnectionMode.Existing, new NamedParameter("connection", new SQLiteConnection ("Data Source="+Path.Combine(Location.path, "main.db")+";Version=3;New=False;Compress=True;"))) |> should not' (equal null)
+
 
     [<Test>] 
     let ``Native SQL create 1 instrument`` () =

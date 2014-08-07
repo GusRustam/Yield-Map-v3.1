@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Data.SQLite;
+using System.Linq;
+using System.Reflection;
 using Autofac;
+using Autofac.Core;
 using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
@@ -22,9 +26,10 @@ namespace YieldMap.Transitive {
         public static IContainer Container {
             get {
                 lock (Lock) {
-                    if (_container != null) return _container;
+                    if (_container != null) return _container; // TODO WHY TWICE??
                     Builder.RegisterInstance<Func<IContainer>>(() => _container);
-                    return _container = Builder.Build();
+                    _container = Builder.Build();
+                    return _container;
                 }
             }
         }
@@ -74,20 +79,42 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<NEntityCache>().As<INEntityCache>().SingleInstance();
 
             // - cruds
-            Builder.RegisterType<ChainCrud>().As<ICrud<NChain>>();
-            Builder.RegisterType<FeedCrud>().As<ICrud<NFeed>>();
-            Builder.RegisterType<FieldDefinitionCrud>().As<ICrud<NFieldDefinition>>();
-            Builder.RegisterType<FieldGroupCrud>().As<ICrud<NFieldGroup>>();
-            Builder.RegisterType<InstrumentCrud>().As<IInstrumentCrud>();
-            Builder.RegisterType<InstrumentTypeCrud>().As<ICrud<NInstrumentType>>();
-            Builder.RegisterType<LegTypeCrud>().As<ICrud<NLegType>>();
-            Builder.RegisterType<PropertyCrud>().As<ICrud<NProperty>>();
-            Builder.RegisterType<PropertyValueCrud>().As<ICrud<NPropertyValue>>();
-            Builder.RegisterType<RatingToInstrumentCrud>().As<ICrud<NRatingToInstrument>>();
-            Builder.RegisterType<RatingToLegalEntityCrud>().As<ICrud<NRatingToLegalEntity>>();
-            Builder.RegisterType<RicCrud>().As<ICrud<NRic>>();
-            Builder.RegisterType<SourceTypeCrud>().As<ICrud<NSourceType>>();
-            Builder.RegisterType<IndexCrud>().As<ICrud<NIdx>>();
+            var allTypes = Assembly
+                .GetExecutingAssembly()
+                .GetTypes();
+
+            var crudTypes = allTypes
+                 .Where(t => t.IsClass && 
+                     !t.IsAbstract && 
+                     t.GetInterfaces()
+                        .Where(x => x.IsGenericType)
+                        .Select(x => x.GetGenericTypeDefinition())
+                        .Contains(typeof(ICrud<>)))
+                 .ToList();
+
+            crudTypes.ForEach(t => Builder.RegisterType(t).AsImplementedInterfaces());
+            crudTypes.ForEach(t => Builder.RegisterType(t).UsingConstructor(typeof(Func<IContainer>)).Keyed(ConnectionMode.New, typeof(ICrud<>)));
+            crudTypes.ForEach(t => Builder.RegisterType(t).UsingConstructor(typeof(SQLiteConnection)).Keyed(ConnectionMode.Existing, t));
+
+            //Builder.RegisterType<ChainCrud>().As<ICrud<NChain>>();
+            //Builder.RegisterType<FeedCrud>().As<ICrud<NFeed>>();
+            //Builder.RegisterType<FieldDefinitionCrud>().As<ICrud<NFieldDefinition>>();
+            //Builder.RegisterType<FieldGroupCrud>().As<ICrud<NFieldGroup>>();
+            //Builder.RegisterType<InstrumentCrud>().As<IInstrumentCrud>();
+            //Builder.RegisterType<InstrumentTypeCrud>().As<ICrud<NInstrumentType>>();
+            //Builder.RegisterType<LegTypeCrud>().As<ICrud<NLegType>>();
+            //Builder.RegisterType<PropertyCrud>().As<ICrud<NProperty>>();
+            //Builder.RegisterType<PropertyValueCrud>().As<ICrud<NPropertyValue>>();
+            //Builder.RegisterType<RatingToInstrumentCrud>().As<ICrud<NRatingToInstrument>>();
+            //Builder.RegisterType<RatingToLegalEntityCrud>().As<ICrud<NRatingToLegalEntity>>();
+            //Builder.RegisterType<RicCrud>().As<ICrud<NRic>>();
+
+            //Builder.RegisterType<SourceTypeCrud>().As<ICrud<NSourceType>>();
+            //Builder.RegisterType<SourceTypeCrud>().UsingConstructor(typeof(Func<IContainer>)).Keyed<ICrud<NSourceType>>(ConnectionMode.New);
+            //Builder.RegisterType<SourceTypeCrud>().UsingConstructor(typeof(SQLiteConnection)).Keyed<ICrud<NSourceType>>(ConnectionMode.Existing);
+
+
+            //Builder.RegisterType<IndexCrud>().As<ICrud<NIdx>>();
 
             // - readers
             Builder.RegisterType<BondDescriptionReader>().As<IReader<NBondDescriptionView>>();
@@ -97,7 +124,10 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<InstrumentRicViewReader>().As<IReader<NInstrumentRicView>>();
             Builder.RegisterType<OrdinaryBondReader>().As<IReader<NOrdinaryBond>>();
             Builder.RegisterType<OrdinaryFrnReader>().As<IReader<NOrdinaryFrn>>();
+            
             Builder.RegisterType<RatingViewReader>().As<IReader<NRatingView>>();
+            Builder.RegisterType<RatingViewReader>().UsingConstructor(typeof(Func<IContainer>)).Keyed<IReader<NRatingView>>(ConnectionMode.New);
+            Builder.RegisterType<RatingViewReader>().UsingConstructor(typeof(SQLiteConnection)).Keyed<IReader<NRatingView>>(ConnectionMode.Existing);
         }
     }
 }

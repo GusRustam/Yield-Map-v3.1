@@ -53,6 +53,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConnectionMode.cs" />
     <Compile Include="Domains\Contexts\SaverContext.cs" />
     <Compile Include="Enums\ISourceTypes.cs" />
     <Compile Include="Enums\SourceTypes.cs" />
