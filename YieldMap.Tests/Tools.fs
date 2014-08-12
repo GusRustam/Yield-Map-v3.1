@@ -65,21 +65,30 @@ module Tools =
         logger.InfoF " <=== %s : %s " cmd (res.ToString())
         res |> should be (equal state)
 
-
     [<Test>]
     let ``Restore DB to defaults`` () =
         let x = container.Resolve<IBackupRestore>();
         x.Restore (Path.Combine(Location.path, "../../EMPTY.sql"))
 
+    [<Test>]
+    let ``Backup current database`` () =
+        let br = container.Resolve<IBackupRestore>()
+        br.Backup() |> logger.Info            
+
 
     [<Test>]
-    let ``Restore DB to RUCORP`` () =
+    let ``Restore DB to 0#RUCORP=MM`` () =
         let x = container.Resolve<IBackupRestore>();
         x.Restore (Path.Combine(Location.path, "../../RUCORP.sql"))
 
+    [<Test>]
+    let ``Restore DB to 0#RUELG=MM`` () =
+        let x = container.Resolve<IBackupRestore>();
+        x.Restore (Path.Combine(Location.path, "../../RUELG.sql"))
+
     (* ========================= ============================= *)
     [<Test>]
-    let ``Utility. Initialize Db with 0#RUCORP=MM`` () =
+    let ``Initialize Db with 0#RUCORP=MM`` () =
         let dt = DateTime(2014,5,14) 
         let br = container.Resolve<IBackupRestore>()
         br.Restore "EMPTY.sql"
@@ -93,7 +102,7 @@ module Tools =
 
     (* ========================= ============================= *)
     [<Test>]
-    let ``Utility. Initialize Db with 0#RUELG=MM`` () =
+    let ``Initialize Db with 0#RUELG=MM`` () =
         let dt = DateTime(2014,5,14) 
         let br = container.Resolve<IBackupRestore>()
         br.Restore "EMPTY.sql"
@@ -107,7 +116,7 @@ module Tools =
             
     (* ========================= ============================= *)
     [<Test>]
-    let ``Utility. Initialize Db with 0#AM097464227=`` () =
+    let ``Initialize Db with 0#AM097464227=`` () =
         let dt = DateTime(2014,5,14) 
         let br = container.Resolve<IBackupRestore>()
         br.Restore "EMPTY.sql"
