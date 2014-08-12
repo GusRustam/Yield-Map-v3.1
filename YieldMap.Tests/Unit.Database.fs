@@ -649,6 +649,8 @@ module NativeDatabase =
 
     [<Test>]
     let ``Distinct resolution modes`` () = 
+        let container1 = DatabaseBuilder.Container
+        let container1 = DatabaseBuilder.Container
         let container = DatabaseBuilder.Container
 //        let sourceTypes = container.Resolve<ISourceTypes>()
 //        sourceTypes |> should not' (equal null)
