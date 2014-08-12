@@ -105,7 +105,7 @@ namespace YieldMap.Transitive {
                     .UsingConstructor(typeof (Func<IContainer>))
                     .Keyed(ConnectionMode.New, t.Interface);
                 Builder.RegisterType(t.Type)
-                    .UsingConstructor(typeof (SQLiteConnection))
+                    .UsingConstructor(typeof (SQLiteConnection), typeof(INEntityHelper))
                     .Keyed(ConnectionMode.Existing, t.Interface);
             });
 
@@ -131,7 +131,7 @@ namespace YieldMap.Transitive {
                     .UsingConstructor(typeof(Func<IContainer>))
                     .Keyed(ConnectionMode.New, t.Interface);
                 Builder.RegisterType(t.Type)
-                    .UsingConstructor(typeof(SQLiteConnection))
+                    .UsingConstructor(typeof(SQLiteConnection), typeof(INEntityReaderHelper))
                     .Keyed(ConnectionMode.Existing, t.Interface);
             });
         }

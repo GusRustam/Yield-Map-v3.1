@@ -8,7 +8,8 @@ namespace YieldMap.Transitive.Native.Crud {
     public class SourceTypeCrud : CrudBase<NSourceType> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.SourceTypeCrud");
 
-        public SourceTypeCrud(SQLiteConnection connection) : base(connection) {
+        public SourceTypeCrud(SQLiteConnection connection, INEntityHelper helper)
+            : base(connection, helper) {
         }
 
         public SourceTypeCrud(Func<IContainer> containerF)

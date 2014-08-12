@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Reader {
     public class FieldVsGroupReader : ReaderBase<NFieldVsGroup> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.FieldVsGroupReader");
 
-        public FieldVsGroupReader(SQLiteConnection connection)
-            : base(connection) {
+        public FieldVsGroupReader(SQLiteConnection connection, INEntityReaderHelper helper)
+            : base(connection, helper) {
         }
 
         public FieldVsGroupReader(Func<IContainer> containerF)

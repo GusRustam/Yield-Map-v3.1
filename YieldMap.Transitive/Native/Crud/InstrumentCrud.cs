@@ -10,7 +10,8 @@ namespace YieldMap.Transitive.Native.Crud {
     public class InstrumentCrud : CrudBase<NInstrument>, IInstrumentCrud {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.InstrumentCrud");
 
-        public InstrumentCrud(SQLiteConnection connection) : base(connection) {
+        public InstrumentCrud(SQLiteConnection connection, INEntityHelper helper)
+            : base(connection, helper) {
         }
 
         public InstrumentCrud(Func<IContainer> containerF)

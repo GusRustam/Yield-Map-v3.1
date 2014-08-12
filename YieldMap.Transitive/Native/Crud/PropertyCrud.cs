@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Crud {
     public class PropertyCrud : CrudBase<NProperty> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.PropertyCrud");
 
-        public PropertyCrud(SQLiteConnection connection)
-            : base(connection) {
+        public PropertyCrud(SQLiteConnection connection, INEntityHelper helper)
+            : base(connection, helper) {
         }
 
         public PropertyCrud(Func<IContainer> containerF)

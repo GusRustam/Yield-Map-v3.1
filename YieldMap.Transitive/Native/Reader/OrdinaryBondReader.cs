@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Reader {
     public class OrdinaryBondReader : ReaderBase<NOrdinaryBond> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.OrdinaryBondReader");
 
-        public OrdinaryBondReader(SQLiteConnection connection)
-            : base(connection) {
+        public OrdinaryBondReader(SQLiteConnection connection, INEntityReaderHelper helper)
+            : base(connection, helper) {
         }
 
         public OrdinaryBondReader(Func<IContainer> containerF)

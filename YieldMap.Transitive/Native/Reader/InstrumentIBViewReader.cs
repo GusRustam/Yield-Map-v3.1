@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Reader {
     public class InstrumentIBViewReader : ReaderBase<NInstrumentIBView> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.InstrumentIBViewReader");
 
-        public InstrumentIBViewReader(SQLiteConnection connection)
-            : base(connection) {
+        public InstrumentIBViewReader(SQLiteConnection connection, INEntityReaderHelper helper)
+            : base(connection, helper) {
         }
 
         public InstrumentIBViewReader(Func<IContainer> containerF)

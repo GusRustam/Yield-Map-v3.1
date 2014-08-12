@@ -15,7 +15,6 @@ using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
 using YieldMap.Transitive.Native;
-using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Tools;
 using Rating = YieldMap.Transitive.MediatorTypes.Rating;
@@ -41,7 +40,7 @@ namespace YieldMap.Transitive.Procedures {
         private readonly Dictionary<string, long> _indices = new Dictionary<string, long>();
         private readonly IContainer _container;
         private bool _notifications = true;
-        private readonly SQLiteConnection _connection;
+        private SQLiteConnection _connection;
 
         public event EventHandler<IDbEventArgs> Notify;
         public void DisableNotifications() {
@@ -157,6 +156,7 @@ namespace YieldMap.Transitive.Procedures {
                         // CONSTRAINT: there already must be some ric with some feed!!!
                         description.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
                         description.Isin = description.Ric.Isin;
+
                     } catch (Exception e) {
                         failed = true;
                         Logger.ErrorEx("Instrument", e);
@@ -199,7 +199,7 @@ namespace YieldMap.Transitive.Procedures {
 
                         instrument = new Instrument {
                             Name = bond.ShortName,
-                            id_InstrumentType = _instrumentTypes.Bond.id,
+                            id_InstrumentType = bond is Bond ? _instrumentTypes.Bond.id : _instrumentTypes.Frn.id,
                             id_Description = descrIds[bond.Ric]
                         };
                     } catch (Exception e) {
@@ -219,7 +219,7 @@ namespace YieldMap.Transitive.Procedures {
                         peggedContext.Database.ExecuteSqlCommand(sql);
                     }, 500);
                 }
-                using (var reader = _container.Resolve<IInstrumentCrud>()) {
+                using (var reader = _container.Resolve<ICrud<NInstrument>>()) {
                     addedInstruments = reader.FindAll().Select(x => x.id).ToSet() - existingInstruments;
                 }
             }
@@ -260,8 +260,12 @@ namespace YieldMap.Transitive.Procedures {
             var rtis = new Dictionary<Tuple<long, long, DateTime>, NRatingToInstrument>();
             var rtcs = new Dictionary<Tuple<long, long, DateTime>, NRatingToLegalEntity>();
 
+            if (_connection.State != ConnectionState.Open) {
+                Logger.Warn(string.Format("Connection not open: {0}", _connection.State));
+                _connection = _container.Resolve<IConnector>().GetConnection();
+            }
             var ratingViews = _container
-                .ResolveReaderWithConnection<NRatingView>(_connection)
+                .ResolveReaderWithConnection<NRatingsView>(_connection)
                 .FindAll()
                 .ToList();
 
@@ -398,7 +402,7 @@ namespace YieldMap.Transitive.Procedures {
 
             var indexTable = _container.ResolveCrudWithConnection<NIdx>(_connection);
 
-            var index = indexTable.FindBy(t => t.Name == name).First(); // todo expressions parsing
+            var index = indexTable.FindBy(t => t.Name == name).FirstOrDefault(); // todo expressions parsing
 
             if (index == null) {
                 index = new NIdx {Name = name};

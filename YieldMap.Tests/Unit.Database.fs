@@ -601,8 +601,8 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-//        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1846)
-        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 96)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1846)
+        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 0)
         properyValueReader.FindAll().Count() |> should be (equal 1846)
         
         br.Restore "EMPTY.sql"
@@ -629,7 +629,7 @@ module Database =
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
         updater.Recalculate<NBondDescriptionView> () |> should be (equal 96)
-        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 96)
+        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 0)
         properyValueReader.FindAll().Count() |> should be (equal 96)
         
         br.Restore "EMPTY.sql"
@@ -649,8 +649,6 @@ module NativeDatabase =
 
     [<Test>]
     let ``Distinct resolution modes`` () = 
-        let container1 = DatabaseBuilder.Container
-        let container1 = DatabaseBuilder.Container
         let container = DatabaseBuilder.Container
 //        let sourceTypes = container.Resolve<ISourceTypes>()
 //        sourceTypes |> should not' (equal null)

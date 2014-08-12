@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Crud {
     public class FieldGroupCrud : CrudBase<NFieldGroup> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.FieldGroupCrud");
 
-        public FieldGroupCrud(SQLiteConnection connection)
-            : base(connection) {
+        public FieldGroupCrud(SQLiteConnection connection, INEntityHelper helper)
+            : base(connection, helper) {
         }
 
         public FieldGroupCrud(Func<IContainer> containerF)

@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Crud {
     public class IndexCrud : CrudBase<NIdx> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.IndexCrud");
 
-        public IndexCrud(SQLiteConnection connection)
-            : base(connection) {
+        public IndexCrud(SQLiteConnection connection, INEntityHelper helper)
+            : base(connection, helper) {
         }
 
         public IndexCrud(Func<IContainer> containerF)

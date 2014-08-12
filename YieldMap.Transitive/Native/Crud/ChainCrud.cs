@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Crud {
     public class ChainCrud : CrudBase<NChain> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.ChainCrud");
 
-        public ChainCrud(SQLiteConnection connection)
-            : base(connection) {
+        public ChainCrud(SQLiteConnection connection, INEntityHelper helper)
+            : base(connection, helper) {
         }
 
         public ChainCrud(Func<IContainer> containerF)

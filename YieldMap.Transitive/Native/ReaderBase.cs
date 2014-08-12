@@ -4,18 +4,18 @@ using System.Data.SQLite;
 using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Native.Entities;
-using YieldMap.Transitive.Native.Reader;
 
 namespace YieldMap.Transitive.Native {
     public abstract class ReaderBase<T> : IReader<T> where T : class, INotIdentifyable {
         abstract protected Logging.Logger Logger { get; }
         protected readonly SQLiteConnection Connection;
+        private readonly bool _ownsConnection;
         private readonly INEntityReaderHelper _helper;
 
-        protected ReaderBase(SQLiteConnection connection) {
+        protected ReaderBase(SQLiteConnection connection, INEntityReaderHelper helper) {
             Connection = connection;
-            Connection.Open();
+            _ownsConnection = false;
+            _helper = helper;
         }
 
         protected ReaderBase(Func<IContainer> containerF) {
@@ -24,11 +24,14 @@ namespace YieldMap.Transitive.Native {
             _helper = container.Resolve<INEntityReaderHelper>();
             Connection = connector.GetConnection();
             Connection.Open();
+            _ownsConnection = true;
         }
 
         public void Dispose() {
-            Connection.Close();
-            Connection.Dispose();
+            if (_ownsConnection) {
+                Connection.Close();
+                Connection.Dispose();
+            }
         }
 
         public IEnumerable<T> FindAll() {

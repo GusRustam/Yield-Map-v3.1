@@ -5,7 +5,6 @@ using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Events;
-using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native {
@@ -14,12 +13,14 @@ namespace YieldMap.Transitive.Native {
         protected Dictionary<T, Operations> Entities = new Dictionary<T, Operations>();
         abstract protected Logging.Logger Logger { get; }
         protected readonly SQLiteConnection Connection;
+        private readonly bool _ownsConnection;
         private readonly INEntityHelper _helper;
         protected readonly IContainer Container;
 
-        protected CrudBase(SQLiteConnection connection) {
+        protected CrudBase(SQLiteConnection connection, INEntityHelper helper) {
             Connection = connection;
-            Connection.Open();
+            _ownsConnection = false;
+            _helper = helper;
         }
 
         protected CrudBase(Func<IContainer> containerF) {
@@ -27,13 +28,15 @@ namespace YieldMap.Transitive.Native {
             var connector = Container.Resolve<IConnector>();
             _helper = Container.Resolve<INEntityHelper>();
             Connection = connector.GetConnection();
+            _ownsConnection = true;
             Connection.Open();
         }
 
         public void Dispose() {
-            Connection.Close();
-            Connection.Dispose();
-            //Container.Dispose();
+            if (_ownsConnection) {
+                Connection.Close();
+                Connection.Dispose();
+            }
         }
 
         private bool Exists(T entity, out Operations? state) {
@@ -209,11 +212,8 @@ namespace YieldMap.Transitive.Native {
         }
 
         public IEnumerable<T> FindBy(Func<T, bool> predicate) {
-            return
-                FindAll()
-                .Where(predicate)
-                .ToList()
-                .AsQueryable();    
+            var all = FindAll().ToList();
+            return all.Any() ? all.Where(predicate) : new T[] {};
         }
 
         public T FindById(long id) {

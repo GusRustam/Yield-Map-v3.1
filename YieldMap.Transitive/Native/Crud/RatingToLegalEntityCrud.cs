@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Crud {
     public class RatingToLegalEntityCrud : CrudBase<NRatingToLegalEntity> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.RatingToLegalEntityCrud");
 
-        public RatingToLegalEntityCrud(SQLiteConnection connection)
-            : base(connection) {
+        public RatingToLegalEntityCrud(SQLiteConnection connection, INEntityHelper helper)
+            : base(connection, helper) {
         }
 
         public RatingToLegalEntityCrud(Func<IContainer> containerF)

@@ -1,5 +1,5 @@
 ﻿namespace YieldMap.Transitive.Native.Entities {
-    public class NRatingView : INotIdentifyable {
+    public class NRatingsView : INotIdentifyable {
         [DbField(0)] // ReSharper disable once InconsistentNaming
         public long id_Rating { get; set; }
 

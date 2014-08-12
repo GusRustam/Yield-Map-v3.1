@@ -123,7 +123,7 @@ module Loader =
         let saver = container.Resolve<ISaver>()
         let updater = container.Resolve<IDbUpdates>()
 
-        let killer = container.Resolve<IInstrumentCrud>() 
+        let killer = container.Resolve<ICrud<NInstrument>>() :?> IInstrumentCrud
 
         async {
             try

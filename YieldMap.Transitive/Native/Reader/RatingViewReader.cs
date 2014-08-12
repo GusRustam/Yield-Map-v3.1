@@ -5,11 +5,11 @@ using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native.Reader {
-    public class RatingViewReader : ReaderBase<NRatingView> {
+    public class RatingViewReader : ReaderBase<NRatingsView> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.RatingViewReader");
 
-        public RatingViewReader(SQLiteConnection connection)
-            : base(connection) {
+        public RatingViewReader(SQLiteConnection connection, INEntityReaderHelper helper)
+            : base(connection, helper) {
         }
 
         public RatingViewReader(Func<IContainer> containerF)

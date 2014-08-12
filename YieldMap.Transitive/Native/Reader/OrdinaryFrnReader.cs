@@ -8,8 +8,8 @@ namespace YieldMap.Transitive.Native.Reader {
     public class OrdinaryFrnReader : ReaderBase<NOrdinaryFrn> {
         private static readonly Logging.Logger TheLogger = Logging.LogFactory.create("YieldMap.Transitive.Native.OrdinaryFrnReader");
 
-        public OrdinaryFrnReader(SQLiteConnection connection)
-            : base(connection) {
+        public OrdinaryFrnReader(SQLiteConnection connection, INEntityReaderHelper helper)
+            : base(connection, helper) {
         }
 
         public OrdinaryFrnReader(Func<IContainer> containerF)
