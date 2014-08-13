@@ -8,10 +8,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(27), Variable] // ReSharper disable once InconsistentNaming
         public double? Margin { get; set; }
 
-        [DbField(28, "IdxName"), Variable] // ReSharper disable once InconsistentNaming
+        [DbField(28, "IdxName"), Variable("IdxName")] // ReSharper disable once InconsistentNaming
         public string IndexName { get; set; }
 
-        [DbField(29, "IdxRic"), Variable] // ReSharper disable InconsistentNaming once
+        [DbField(29, "IdxRic"), Variable("IdxRic")] // ReSharper disable InconsistentNaming once
         public string IndexRic { get; set; }
 
         public NFrnDescriptionView() {

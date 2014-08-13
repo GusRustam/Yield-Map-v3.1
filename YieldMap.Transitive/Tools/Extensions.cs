@@ -47,10 +47,10 @@ namespace YieldMap.Transitive.Tools {
                 action(list.GetRange(minRange, maxRange - minRange + 1));
                 iteration = iteration + 1;
             } while (!finished);
-
         }
-        public static IEnumerable<Q> ChunkedSelect<T, Q>(this IEnumerable<T> items, Func<IEnumerable<T>, Q> action, int chunkSize) {
-            var res = new List<Q>();
+
+        public static IEnumerable<TResult> ChunkedSelect<TItem, TResult>(this IEnumerable<TItem> items, Func<IEnumerable<TItem>, TResult> action, int chunkSize) {
+            var res = new List<TResult>();
 
             var list = items.ToList();
             var length = list.Count();

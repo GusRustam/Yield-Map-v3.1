@@ -54,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionMode.cs" />
-    <Compile Include="Domains\Contexts\SaverContext.cs" />
+    <Compile Include="Domains\SaverContext.cs" />
     <Compile Include="Enums\ISourceTypes.cs" />
     <Compile Include="Enums\SourceTypes.cs" />
     <Compile Include="Native\Crud\ChainCrud.cs" />
@@ -133,8 +133,8 @@
     <Compile Include="Native\ReaderBase.cs" />
     <Compile Include="Native\SqliteReaderHelper.cs" />
     <Compile Include="NotificationsModule.cs" />
-    <Compile Include="Registry\INewFunctionUpdater.cs" />
-    <Compile Include="Registry\NewFunctionUpdater.cs" />
+    <Compile Include="Procedures\INewFunctionUpdater.cs" />
+    <Compile Include="Procedures\NewFunctionUpdater.cs" />
     <Compile Include="Tools\EntityAction.cs" />
     <Compile Include="Tools\DbContextHelper.cs" />
     <Compile Include="Events\ChainRicHandler.cs" />
@@ -146,16 +146,14 @@
     <Compile Include="Events\IDbEventArgs.cs" />
     <Compile Include="Procedures\ISaver.cs" />
     <Compile Include="Procedures\Saver.cs" />
-    <Compile Include="Registry\IFunctionRegistry.cs" />
-    <Compile Include="Registry\Evaluatable.cs" />
-    <Compile Include="Registry\FunctionRegistry.cs" />
+    <Compile Include="Procedures\IFunctionRegistry.cs" />
+    <Compile Include="Procedures\Evaluatable.cs" />
+    <Compile Include="Procedures\FunctionRegistry.cs" />
     <Compile Include="MediatorTypes\Bond.cs" />
-    <Compile Include="Domains\ContextHelper.cs" />
-    <Compile Include="Domains\Contexts\BaseContext.cs" />
+    <Compile Include="Domains\BaseContext.cs" />
     <Compile Include="Procedures\IDbUpdates.cs" />
     <Compile Include="Procedures\Mission.cs" />
     <Compile Include="Procedures\DbUpdates.cs" />
-    <Compile Include="Domains\IUnitOfWork.cs" />
     <Compile Include="MediatorTypes\Frn.cs" />
     <Compile Include="MediatorTypes\InstrumentDescription.cs" />
     <Compile Include="Procedures\BackupRestore.cs" />

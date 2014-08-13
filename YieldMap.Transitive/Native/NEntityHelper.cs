@@ -161,6 +161,5 @@ namespace YieldMap.Transitive.Native {
                 return _cache.Readers[type](reader) as T;
             return null;
         }
-
     }
 }

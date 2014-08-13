@@ -4,9 +4,10 @@ using System.Configuration;
 using System.Data.Entity;
 using System.Linq;
 using YieldMap.Tools.Location;
+
 //using YieldMap.Tools.Logging;
 
-namespace YieldMap.Transitive.Domains.Contexts {
+namespace YieldMap.Transitive.Domains {
     public class BaseContext<TContext> : DbContext where TContext : DbContext {
         // ReSharper disable StaticFieldInGenericType
         //private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.BaseContext");

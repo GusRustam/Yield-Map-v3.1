@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace YieldMap.Transitive.Registry {
+namespace YieldMap.Transitive.Procedures {
     /// <summary>
     /// Stores pre-compiled expressions for properties
     /// </summary>

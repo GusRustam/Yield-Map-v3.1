@@ -10,7 +10,7 @@ using System.Linq;
 using Autofac;
 using YieldMap.Database;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Domains.Contexts;
+using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;

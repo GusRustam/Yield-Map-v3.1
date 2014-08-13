@@ -2,7 +2,7 @@
 using YieldMap.Database;
 using YieldMap.Tools.Logging;
 
-namespace YieldMap.Transitive.Domains.Contexts {
+namespace YieldMap.Transitive.Domains {
     public class SaverContext : BaseContext<SaverContext> {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("YieldMap.Transitive.Domains.Contexts.SaverContext");
         public SaverContext() {

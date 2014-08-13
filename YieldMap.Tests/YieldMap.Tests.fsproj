@@ -96,7 +96,6 @@
     <Compile Include="Unit.Api.fs" />
     <Compile Include="Unit.Calendar.fs" />
     <Compile Include="Unit.Parser.fs" />
-    <Compile Include="Unit.Registry.fs" />
     <Compile Include="IntegrationTesting.fs" />
     <Compile Include="Tools.fs" />
     <None Include="packages.config" />

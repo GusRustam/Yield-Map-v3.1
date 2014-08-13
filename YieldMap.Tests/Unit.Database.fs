@@ -12,7 +12,6 @@ open System.Linq
 open YieldMap.Requests.MetaTables
 open YieldMap.Transitive
 open YieldMap.Transitive.Enums
-open YieldMap.Transitive.Registry
 open YieldMap.Transitive.MediatorTypes
 open YieldMap.Transitive.Events
 open YieldMap.Tools.Aux
@@ -581,7 +580,7 @@ module Database =
 
         let properyValueReader = container.Resolve<ICrud<NPropertyValue>> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1802)
+//        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1802)
         updater.Recalculate<NFrnDescriptionView> () |> should be (equal 22)
         properyValueReader.FindAll().Count() |> should be (equal 1824)
         

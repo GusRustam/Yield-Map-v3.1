@@ -7,27 +7,13 @@ module Startup =
     open Notifier
     open DbManager
 
-    open YieldMap.Database
-
-    open YieldMap.Loader
-    open YieldMap.Loader.SdkFactory
-    open YieldMap.Loader.LiveQuotes
-    open YieldMap.Loader.Calendar
-    open YieldMap.Loader.MetaChains
-    
     open YieldMap.Requests
-    
-    open YieldMap.Tools.Aux
     open YieldMap.Tools.Response
     open YieldMap.Tools.Logging
 
     open YieldMap.Transitive.Procedures
 
-    open System
     open System.Linq
-    open System.Threading
-    open YieldMap.Transitive.Registry
-    open YieldMap.Transitive.Native.Crud
     open YieldMap.Transitive.Native
     open YieldMap.Transitive.Native.Entities
 

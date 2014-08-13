@@ -7,7 +7,7 @@ using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Native.Variables;
 
-namespace YieldMap.Transitive.Registry {
+namespace YieldMap.Transitive.Procedures {
     public class NewFunctionUpdater : INewFunctionUpdater {
         private readonly IContainer _container;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Transitive.Registry");

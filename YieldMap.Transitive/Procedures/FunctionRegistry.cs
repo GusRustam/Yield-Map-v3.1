@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using YieldMap.Language;
 using YieldMap.Tools.Logging;
 
-namespace YieldMap.Transitive.Registry {
+namespace YieldMap.Transitive.Procedures {
     public class FunctionRegistry : IFunctionRegistry {
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Transitive.FunctionRegistry");
         private readonly ConcurrentDictionary<long, Evaluatable> _registry = 

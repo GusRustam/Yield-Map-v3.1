@@ -3,7 +3,7 @@ using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Native.Entities;
-using YieldMap.Transitive.Registry;
+using YieldMap.Transitive.Procedures;
 
 namespace YieldMap.Transitive.Events {
     public class InstrumentDescriptionHandler : TriggerManagerBase {

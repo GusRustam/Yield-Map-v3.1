@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using YieldMap.Language;
 
-
-namespace YieldMap.Transitive.Registry {
-    using Syntax = IEnumerable<Tuple<int, Syntan.Syntel>>;
-
+namespace YieldMap.Transitive.Procedures {
     public class Evaluatable {
         private readonly string _expression;
-        private readonly Syntax _grammar;
+        private readonly IEnumerable<Tuple<int, Syntan.Syntel>> _grammar;
         private readonly long _idInstrumentType;
 
         public override string ToString() {
@@ -25,7 +22,7 @@ namespace YieldMap.Transitive.Registry {
             get { return _expression; }
         }
 
-        public Syntax Grammar {
+        public IEnumerable<Tuple<int, Syntan.Syntel>> Grammar {
             get { return _grammar; }
         }
 
