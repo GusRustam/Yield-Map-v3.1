@@ -30,29 +30,30 @@ module WebServer =
 module ApiServer = 
     open Newtonsoft.Json
 
-    open System
     open System.Net
     open System.Text
     open System.IO
+    open System.Collections.Generic
 
     open YieldMap.Tools.Logging
-    open YieldMap.Tools.Settings
 
     let private logger = LogFactory.create "HttpServer"
  
-    let host = sprintf "http://localhost:%d/" (!globalSettings).api.port
+    let host port = sprintf "http://localhost:%d/" port
 
-    let private running = ref false
+    let private servers = HashSet<int> ()
 
-    let isRunning () = !running
+    let isRunning port = lock servers (fun () -> servers.Contains port)
+    let private setRunning port = lock servers (fun () -> servers.Add port |> ignore)
+    let private clearRunning port = lock servers (fun () -> servers.Remove port |> ignore)
 
-    let private listener (handler:(HttpListenerRequest -> HttpListenerResponse -> Async<unit>)) =
+    let private listener (handler:(HttpListenerRequest -> HttpListenerResponse -> Async<unit>)) port =
         let hl = new HttpListener()
-        hl.Prefixes.Add host
+        hl.Prefixes.Add (host port)
         hl.Start()
         let task = Async.FromBeginEnd(hl.BeginGetContext, hl.EndGetContext)
         async {
-            while !running do
+            while (isRunning port) do
                 let! context = task
                 Async.Start(handler context.Request context.Response)
         } |> Async.Start
@@ -63,11 +64,11 @@ module ApiServer =
 
     let onApiQuote = q.Publish
 
-    let start () = 
-        if not !running then
-            running := true
+    let start port = 
+        if not (isRunning port) then
+            setRunning port
             listener (fun req resp -> async {
-                if not !running then return ()
+                if (isRunning port) then return ()
 
                 logger.TraceF "Got request with path %s" req.Url.AbsolutePath
 
@@ -93,6 +94,6 @@ module ApiServer =
                 resp.ContentType <- "text/html"
                 resp.OutputStream.Write(txt, 0, txt.Length)
                 resp.OutputStream.Close()
-            })
+            }) port
 
-    let stop () = running := false
+    let stop port = clearRunning port

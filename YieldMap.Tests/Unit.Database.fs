@@ -358,7 +358,7 @@ module Database =
 
         using (container.Resolve<ICrud<NProperty>>()) (fun pvRepo ->
             let p = pvRepo.FindById (!thePv).id
-            pvRepo.Create p |> should be (equal 0)
+            pvRepo.Delete p |> should be (equal 0)
             pvRepo.Save () |> should be (equal 1)
             () )
 
@@ -394,6 +394,7 @@ module Database =
 
             let pv = pvRepo.FindAll().First()
             pv.Value <- "14"
+            pvRepo.Update pv |> ignore
             pvRepo.Save () |> should be (equal 2)
             id13 := pvRepo.FindBy(fun pv -> pv.id_Property = propertyId2).First().id
             id14 := pv.id)

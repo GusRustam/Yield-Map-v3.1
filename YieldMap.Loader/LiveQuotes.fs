@@ -573,11 +573,11 @@ module LiveQuotes =
 //        override x.Name = ""
         interface IDisposable with override x.Dispose () = generator.Stop ()
 
-    type ApiSubscription () as this =
+    type ApiSubscription (port : int) as this =
         inherit AccumulatingSubscription ()
  
-        do  ApiServer.start()
-            ApiServer.onApiQuote 
+        do ApiServer.start port
+        do ApiServer.onApiQuote 
             |> Observable.map ApiQuotes.toRfv
             |> Observable.map this.EventFilter
             |> Observable.filter (not << Map.isEmpty)

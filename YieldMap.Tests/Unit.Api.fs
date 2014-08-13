@@ -2,8 +2,6 @@
 
 open System
 
-open YieldMap.Tests.Common
-
 open NUnit.Framework
 open FsUnit
 
@@ -13,27 +11,28 @@ module TestWebServer =
 
     open YieldMap.Tools.Logging
     open YieldMap.Loader.WebServer
-    open YieldMap.Tools.Aux
 
     let logger = LogFactory.create "UnitTests.TestWebServer"
 
     [<Test>]
     let ``Web server starts, responds and stops`` () = 
-        ApiServer.start ()
+        let port = 9021
+
+        ApiServer.start port
         logger.InfoF "Server started"
         Async.Sleep(3000) |> Async.RunSynchronously
 
         use wb = new WebClient()
-        let res = wb.DownloadString(ApiServer.host)
+        let res = wb.DownloadString(ApiServer.host port)
         logger.InfoF "Got answer %A" res
         res.Substring(0,3) |> should equal "ERR"
 
-        ApiServer.stop ()
+        ApiServer.stop port
         logger.InfoF "Server stopping"
         Async.Sleep(3000) |> Async.RunSynchronously
         logger.InfoF "Server must be stopped"
 
-        let req = wb.AsyncDownloadString <| Uri ApiServer.host
+        let req = wb.AsyncDownloadString <| Uri (ApiServer.host port)
         try
             let q = Async.RunSynchronously(req, 5000)
             logger.ErrorF "got illegal answer %A" q
@@ -45,7 +44,8 @@ module TestWebServer =
 
     [<Test>]
     let ``Web server accepts quotes`` () = 
-        ApiServer.start ()
+        let port = 1212
+        ApiServer.start port
         logger.InfoF "Seems 2B started"
         Async.Sleep(5000) |> Async.RunSynchronously
 
@@ -56,21 +56,19 @@ module TestWebServer =
         let z = ApiQuotes.create [|q|]
         let enc = ApiQuotes.pack z
 
-        let resp = wb.UploadData(ApiServer.host + "quote", enc)
+        let resp = wb.UploadData(ApiServer.host port + "quote", enc)
         let response = Encoding.ASCII.GetString(resp)
 
         logger.InfoF "Response is %s" response
         response |> should equal "OK"
 
-        ApiServer.stop ()
+        ApiServer.stop port
 
 module TestApiQuotes =
     open System.Net
     open System.Text
-    open System.Threading
 
     open YieldMap.Loader.LiveQuotes
-    open YieldMap.Tools.Aux
     open YieldMap.Loader.WebServer
 
     open YieldMap.Tools.Logging
@@ -78,7 +76,8 @@ module TestApiQuotes =
 
     [<Test>]
     let ``I recieve quotes I sent`` () = 
-        let apiQuotes = ApiSubscription() :> Subscription
+        let port = 1331
+        let apiQuotes = ApiSubscription port :> Subscription
 
         let slots = [|
             ApiQuotes.create [|ApiQuote.create "YYY" "ASK" "12"|]
@@ -115,7 +114,7 @@ module TestApiQuotes =
         slots |> Array.iter (fun slot -> 
             logger.InfoF "To send quotes %A" slot
             let enc = ApiQuotes.pack slot
-            let resp = wb.UploadData(ApiServer.host + "quote", enc)
+            let resp = wb.UploadData(ApiServer.host port + "quote", enc)
             let response = Encoding.ASCII.GetString(resp)
             response |> should equal "OK"
             Async.Sleep(1000) |> Async.RunSynchronously

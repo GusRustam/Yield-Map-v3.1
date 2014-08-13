@@ -21,14 +21,12 @@ module SdkFactory =
             do eikon.add_OnStatusChanged (fun e -> 
                 logger.TraceF "Status changed -> %A!" e
                 changed.Trigger <| Connection.parse e)
-            member self.StatusChanged = changed.Publish
+            member __.StatusChanged = changed.Publish
 
         let connect (eikon : EikonDesktopDataAPI) = 
             let watcher = Eikon eikon
             let res = eikon.Initialize()
             Async.AwaitEvent watcher.StatusChanged
-
-    type q = member x.foo (?z) = z
 
     /// 
     type EikonFactory = 
@@ -46,16 +44,16 @@ module SdkFactory =
 
         new (_eikon) = OuterFactory(_eikon)
         interface EikonFactory with
-            member x.OnConnectionStatus = connStatus.Publish
-            member x.Connect ?timeout = 
+            member __.OnConnectionStatus = connStatus.Publish
+            member __.Connect ?timeout = 
                 async {
                     let! res = EikonOperations.connect _eikon |> Async.WithTimeout timeout
                     return match res with Some ans -> ans | None -> Ping.Failure Timeout
                 }
-            member x.CreateAdxBondModule () = _eikon.CreateAdxBondModule() :?> AdxBondModule
-            member x.CreateAdxRtChain () = _eikon.CreateAdxRtChain() :?> AdxRtChain
-            member x.CreateAdxRtList () = _eikon.CreateAdxRtList() :?> AdxRtList
-            member x.CreateDex2Mgr () = _eikon.CreateDex2Mgr() :?> Dex2Mgr
+            member __.CreateAdxBondModule () = _eikon.CreateAdxBondModule() :?> AdxBondModule
+            member __.CreateAdxRtChain () = _eikon.CreateAdxRtChain() :?> AdxRtChain
+            member __.CreateAdxRtList () = _eikon.CreateAdxRtList() :?> AdxRtList
+            member __.CreateDex2Mgr () = _eikon.CreateDex2Mgr() :?> Dex2Mgr
 
     let private doConnect (connStatus : Ping Event) timeout = async { 
         match timeout with
@@ -70,22 +68,22 @@ module SdkFactory =
         // todo How to determine if Eikon itself has lost connection or is in local mode or whatever?
         let connStatus = new Event<_>()
         interface EikonFactory with
-            member x.OnConnectionStatus = connStatus.Publish
-            member x.Connect ?timeout = doConnect connStatus timeout
-            member x.CreateAdxBondModule () = AdxBondModuleClass() :> AdxBondModule
-            member x.CreateAdxRtChain () = AdxRtChainClass() :> AdxRtChain
-            member x.CreateAdxRtList () = AdxRtListClass() :> AdxRtList
-            member x.CreateDex2Mgr () =  Dex2MgrClass() :> Dex2Mgr
+            member __.OnConnectionStatus = connStatus.Publish
+            member __.Connect ?timeout = doConnect connStatus timeout
+            member __.CreateAdxBondModule () = AdxBondModuleClass() :> AdxBondModule
+            member __.CreateAdxRtChain () = AdxRtChainClass() :> AdxRtChain
+            member __.CreateAdxRtList () = AdxRtListClass() :> AdxRtList
+            member __.CreateDex2Mgr () =  Dex2MgrClass() :> Dex2Mgr
 
     type MockFactory()  =
         let connStatus = new Event<_>()
         
-        member x.Disconnect () = connStatus.Trigger <| Ping.Failure (Failure.Problem "Disconnected")
+        member __.Disconnect () = connStatus.Trigger <| Ping.Failure (Failure.Problem "Disconnected")
 
         interface EikonFactory with
-            member x.OnConnectionStatus = connStatus.Publish
-            member x.Connect ?timeout = doConnect connStatus timeout
-            member x.CreateAdxBondModule () = null
-            member x.CreateAdxRtChain () = null
-            member x.CreateAdxRtList () = null
-            member x.CreateDex2Mgr () = null
+            member __.OnConnectionStatus = connStatus.Publish
+            member __.Connect ?timeout = doConnect connStatus timeout
+            member __.CreateAdxBondModule () = null
+            member __.CreateAdxRtChain () = null
+            member __.CreateAdxRtList () = null
+            member __.CreateDex2Mgr () = null

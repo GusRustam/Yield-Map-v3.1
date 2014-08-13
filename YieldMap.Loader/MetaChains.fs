@@ -9,9 +9,7 @@ module MetaChains =
     open System.Runtime.InteropServices
     open System.Xml
 
-    open AdfinXAnalyticsFunctions
     open Dex2
-    open EikonDesktopDataAPI
     open ThomsonReuters.Interop.RTX
     
     open YieldMap.Loader.Calendar
@@ -20,7 +18,6 @@ module MetaChains =
     open YieldMap.Requests
     open YieldMap.Requests.Converters
     open YieldMap.Requests.Attributes
-    open YieldMap.Requests.MetaTables
 
     open YieldMap.Tools.Aux
     open YieldMap.Tools.Response
@@ -90,7 +87,7 @@ module MetaChains =
                     | _ -> dataEvent.Trigger <| Tweet.Failure (Failure.Problem (sprintf "Invalid feed %s" chain.Source))
             )
 
-            member x.Data = dataEvent.Publish
+            member __.Data = dataEvent.Publish
 
     module private MetaParser = 
         let private converters = Dictionary()
@@ -299,12 +296,12 @@ module MetaChains =
     /// Adfin calcs : null
     type MockChainMeta(c:Calendar) =
         interface ChainMetaLoader with
-            member x.LoadChain request =
+            member __.LoadChain request =
                 async {
                     try return! MockOperations.chain request (Some c.Today) 
                     with e -> return Failure (Error e)
                 }
-            member x.LoadMetadata (rics, ?timeout) = 
+            member __.LoadMetadata (rics, ?timeout) = 
                 async {
                     try return! MockOperations.meta rics (Some c.Today) timeout
                     with e -> return Failure (Error e)
@@ -315,8 +312,8 @@ module MetaChains =
     /// Adfin calcs : Eikon
     type EikonChainMeta (factory:EikonFactory) =
         interface ChainMetaLoader with
-            member x.LoadChain request = EikonOperations.chain (factory.CreateAdxRtChain ()) request
-            member x.LoadMetadata (rics, ?timeout) = 
+            member __.LoadChain request = EikonOperations.chain (factory.CreateAdxRtChain ()) request
+            member __.LoadMetadata (rics, ?timeout) = 
                 async {
                     try
                         return!
