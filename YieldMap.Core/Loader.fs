@@ -150,7 +150,7 @@ module Loader =
                 classified.[Mission.ToReload] |> killer.FindByRic |> Seq.iter (killer.Delete >> ignore)
                 classified.[Mission.Obsolete] |> killer.FindByRic |> Seq.iter (killer.Delete >> ignore)
 
-                killer.Save<NInstrument> () |> ignore
+                killer.Save () |> ignore
 
                 let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                 match res with 

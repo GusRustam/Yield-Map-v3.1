@@ -4,9 +4,6 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Reflection;
 using Autofac;
-using YieldMap.Transitive.Native.Crud;
-using YieldMap.Transitive.Native.Entities;
-using YieldMap.Transitive.Native.Reader;
 
 namespace YieldMap.Transitive.Native {
     public class NEntityReaderHelper : INEntityReaderHelper {

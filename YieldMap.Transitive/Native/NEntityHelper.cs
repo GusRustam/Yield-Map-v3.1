@@ -154,7 +154,7 @@ namespace YieldMap.Transitive.Native {
             return string.Join(", ", _cache.Properties[type].Select(p => qualified ? p.TableName + "." + p.DbName : p.DbName));
         }
 
-        public IIdentifyable Read<T>(SQLiteDataReader reader) where T : class, IIdentifyable {
+        public T Read<T>(SQLiteDataReader reader) where T : class, IIdentifyable {
             var type = typeof(T);
             _cache.PrepareReaders(type);
             if (reader.Read()) 

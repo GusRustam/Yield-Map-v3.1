@@ -113,8 +113,8 @@ module Database =
             chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC").ToList().First()
             rics.Delete ric |> should be (equal 0)
-            chains.Save<NChain>() |> ignore
-            rics.Save<NRic>() |> ignore
+            chains.Save() |> ignore
+            rics.Save() |> ignore
         ))
 
     [<Test>]
@@ -189,7 +189,7 @@ module Database =
             |> ignore
 
         RhinoMocksExtensions
-            .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Save<NChain>()))
+            .Stub<_,_>(chainRepo, Rhino.Mocks.Function<_,_>(fun x -> x.Save()))
             .Return(1)
             |> ignore
         
@@ -202,7 +202,7 @@ module Database =
 
         let feed = feeds.FindById 1L
         chains.Create(NChain(Name = "0#RUCORP=MM", id_Feed = Nullable(feed.id))) |> should be (equal 1)
-        chains.Save<NChain>() |> should be (equal 1)
+        chains.Save() |> should be (equal 1)
 
     [<Test>]
     let ``Add feed to real database, save and then remove it`` () =
@@ -215,7 +215,7 @@ module Database =
 
         let feed = NFeed(Name = "W", Description = "Test item")
         feeds.Create feed |> should be (equal 0)
-        feeds.Save<NFeed> () |> should be (equal 1)
+        feeds.Save () |> should be (equal 1)
 
         feed.id |> should be (greaterThan 0)
         let newId = feed.id
@@ -226,7 +226,7 @@ module Database =
         feed2.Name |> should be (equal "W")
 
         feeds.Delete feed |> should be (equal 0)
-        feeds.Save<NFeed> () |> should be (equal 1)
+        feeds.Save () |> should be (equal 1)
 
         use feeds3 = container.Resolve<ICrud<NFeed>>()
         let feed3 = feeds3.FindById newId
@@ -242,10 +242,11 @@ module Database =
         
         let container = DatabaseBuilder.Container
 
+        use rics = container.Resolve<ICrud<NRic>>()
+        let initialCount = rics.FindAll().Count()
+
         using (container.Resolve<ICrud<NChain>>()) (fun chains ->
             chains.FindAll().Count() |> should be (equal 0))
-        using (container.Resolve<ICrud<NRic>>()) (fun rics ->
-            rics.FindAll().Count() |> should be (equal 0))
 
         let saver = container.Resolve<ISaver> ()
         saver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
@@ -258,7 +259,7 @@ module Database =
             chainId := all.First().id)
         using (container.Resolve<ICrud<NRic>>()) (fun rics ->
             let all = rics.FindAll()
-            all.Count() |> should be (equal 1)
+            all.Count() |> should be (equal (initialCount+1))
             ricId := all.First().id)
 
         using (container.Resolve<ICrud<NChain>>()) (fun chains ->
@@ -267,13 +268,13 @@ module Database =
             chains.Delete chain |> should be (equal 0)
             let ric = rics.FindById !ricId
             rics.Delete ric |> should be (equal 0)
-            chains.Save<NChain>() |> ignore 
-            rics.Save<NRic>() |> ignore ))
+            chains.Save() |> ignore 
+            rics.Save() |> ignore ))
 
         using (container.Resolve<ICrud<NChain>>()) (fun chains ->
             chains.FindAll().Count() |> should be (equal 0))
         using (container.Resolve<ICrud<NRic>>()) (fun rics ->
-            rics.FindAll().Count() |> should be (equal 0))
+            rics.FindAll().Count() |> should be (equal initialCount))
 
     [<Test>]
     let ``Create a bond, save it to real db, and then remove it`` () = 
@@ -310,8 +311,8 @@ module Database =
             chains.Delete chain |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC").ToList().First()
             rics.Delete ric |> should be (equal 0)
-            chains.Save<NChain>() |> ignore
-            rics.Save<NRic>() |> ignore
+            chains.Save() |> ignore
+            rics.Save() |> ignore
         ))
 
     [<Test>]
@@ -578,8 +579,8 @@ module Database =
             rics.Delete ric |> should be (equal 0)
             let ric = rics.FindBy(fun r -> r.Name = "TESTRIC2").ToList().First()
             rics.Delete ric |> should be (equal 0)
-            chains.Save<NChain>() |> ignore
-            rics.Save<NRic>() |> ignore
+            chains.Save() |> ignore
+            rics.Save() |> ignore
         ))
 
     [<Test>]
@@ -601,9 +602,9 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1846)
-        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 0)
-        properyValueReader.FindAll().Count() |> should be (equal 1846)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1802)
+        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 22)
+        properyValueReader.FindAll().Count() |> should be (equal 1824)
         
         br.Restore "EMPTY.sql"
         globalThreshold := LoggingLevel.Trace
@@ -628,18 +629,16 @@ module Database =
 
         let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-        updater.Recalculate<NBondDescriptionView> () |> should be (equal 96)
-        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 0)
-        properyValueReader.FindAll().Count() |> should be (equal 96)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 86)
+        updater.Recalculate<NFrnDescriptionView> () |> should be (equal 5)
+        properyValueReader.FindAll().Count() |> should be (equal 91)
         
         br.Restore "EMPTY.sql"
         globalThreshold := LoggingLevel.Trace
 
 module NativeDatabase =
     open YieldMap.Transitive.Native.Entities
-    open YieldMap.Tools.Aux
     open System.Collections.Generic
-    open YieldMap.Transitive.Native.Crud
     open YieldMap.Transitive.Native
     open YieldMap.Tools.Location
     open System.Data.SQLite
@@ -832,21 +831,21 @@ module NativeDatabase =
         let newFeed = NFeed(Name = "A", Description = "Description")
         newFeed.id |> should be (equal 0L)
         helper.Create newFeed |> ignore
-        helper.Save<NFeed>() |> ignore
+        helper.Save() |> ignore
         
         helper.FindAll().Count() |> should be (equal 2)
         newFeed.id |> should be (greaterThan 0L)
 
         newFeed.Description <- "Advanced description"
         helper.Update newFeed |> ignore
-        helper.Save<NFeed>() |> ignore
+        helper.Save() |> ignore
         helper.FindAll().Count() |> should be (equal 2)
 
         let helper2 = container.Resolve<ICrud<NFeed>>()
         helper2.FindById(newFeed.id).Description |> should be (equal "Advanced description")
 
         helper.Delete newFeed |> ignore
-        helper.Save<NFeed> () |> ignore
+        helper.Save () |> ignore
 
         helper.FindAll().Count() |> should be (equal 1)
 
@@ -863,7 +862,7 @@ module NativeDatabase =
         newFeed2.id |> should be (equal 0L)
         helper.Create newFeed1 |> ignore
         helper.Create newFeed2 |> ignore
-        helper.Save<NFeed>() |> ignore
+        helper.Save() |> ignore
         
         helper.FindAll().Count() |> should be (equal 3)
         newFeed1.id |> should be (greaterThan 0L)
@@ -871,7 +870,7 @@ module NativeDatabase =
 
         newFeed1.Description <- "Advanced description"
         helper.Update newFeed1 |> ignore
-        helper.Save<NFeed>() |> ignore
+        helper.Save() |> ignore
         helper.FindAll().Count() |> should be (equal 3)
 
         let helper2 = container.Resolve<ICrud<NFeed>>()
@@ -881,11 +880,11 @@ module NativeDatabase =
         helper.Delete newFeed2 |> ignore
         let newFeed3 = NFeed(Name = "C", Description = "Description C")
         helper.Create newFeed3 |> ignore
-        helper.Save<NFeed> () |> ignore
+        helper.Save () |> ignore
         newFeed3.id |> should be (greaterThan 0L)
 
         helper.FindAll().Count() |> should be (equal 2)
         newFeed3.id <- 0L
         helper.Delete newFeed3 |> ignore
-        helper.Save<NFeed> () |> ignore
+        helper.Save () |> ignore
         helper.FindAll().Count() |> should be (equal 1)

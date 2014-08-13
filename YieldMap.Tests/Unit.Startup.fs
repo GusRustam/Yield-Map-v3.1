@@ -146,7 +146,7 @@ module StartupTest =
         chains |> Array.iter (fun name -> 
             if not <| repo.FindBy(fun (x:NChain) -> x.Name = name).Any() then
                 repo.Create <| NChain(Name = name, id_Feed = Nullable(1L), Params = "") |> ignore)
-        repo.Save<NChain> () |> ignore 
+        repo.Save () |> ignore 
 
         s <- {
             Factory = MockFactory ()
@@ -321,7 +321,7 @@ module StartupTest =
         use repo = container.Resolve<ICrud<NChain>>()
 
         repo.Create <| NChain(Name = "0#RUCORP=MM", id_Feed = Nullable(1L), Params = "") |> ignore
-        repo.Save<NChain> () |> ignore
+        repo.Save () |> ignore
 
         command "Connect" x.Connect (Startup.State Connected)
         logger.Info "Reloading"

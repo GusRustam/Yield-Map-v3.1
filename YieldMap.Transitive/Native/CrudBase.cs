@@ -97,21 +97,21 @@ namespace YieldMap.Transitive.Native {
             return _muted;
         }
 
-        public int Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity> {
+        public int Save()  {
             var res = 0;
 
             // Operations.Create (have ids only)
-            res += Execute<TEntity>(Operations.Create, _helper.BulkInsertSql);
+            res += Execute<T>(Operations.Create, _helper.BulkInsertSql);
             RetrieveIds(Operations.Create);
 
             // Operations.Update (have ids only)
-            res += Execute<TEntity>(Operations.Update, _helper.BulkUpdateSql);
+            res += Execute<T>(Operations.Update, _helper.BulkUpdateSql);
             RetrieveIds(Operations.Update);
 
             // Operations.Delete 
             // - by id 
             // - by fields (todo)
-            res += Execute<TEntity>(Operations.Delete, _helper.BulkDeleteSql);
+            res += Execute<T>(Operations.Delete, _helper.BulkDeleteSql);
 
 
             if (!_muted && Notify != null) {
@@ -120,7 +120,7 @@ namespace YieldMap.Transitive.Native {
                         Entities.Where(kvp => kvp.Value == Operations.Create).Select(kvp => kvp.Key.id).ToArray(),
                         Entities.Where(kvp => kvp.Value == Operations.Update).Select(kvp => kvp.Key.id).ToArray(),
                         Entities.Where(kvp => kvp.Value == Operations.Delete).Select(kvp => kvp.Key.id).ToArray(),
-                        NativeSource<TEntity>()));
+                        NativeSource<T>()));
             }
             if (_muted && _unmute) Unmute();
         
@@ -204,7 +204,7 @@ namespace YieldMap.Transitive.Native {
             using (var r = query.ExecuteReader()) {
                 T read;
                 do {
-                    read = _helper.Read<T>(r) as T;
+                    read = _helper.Read<T>(r);
                     if (read != null) res.Add(read);
                 } while (read != null);
             }
@@ -222,7 +222,7 @@ namespace YieldMap.Transitive.Native {
             Logger.Debug(sql);
             query.CommandText = sql;
             using (var r = query.ExecuteReader()) {
-                return _helper.Read<T>(r) as T;
+                return _helper.Read<T>(r);
             }
         }
     }

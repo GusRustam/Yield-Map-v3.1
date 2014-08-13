@@ -38,7 +38,7 @@ module Tools =
         if feed  = null then
             feed <- NFeed(Name = "Q")
             feeds.Create feed |> ignore
-            feeds.Save<NFeed> () |> ignore
+            feeds.Save () |> ignore
 
         use repo = container.Resolve<ICrud<NChain>>()
         let theFeed = feed
@@ -46,7 +46,7 @@ module Tools =
         chains |> Array.iter (fun name -> 
             if not <| repo.FindBy(fun (x:NChain) -> x.Name = name).Any() then
                 repo.Create <| NChain(Name = name, id_Feed = Nullable(theFeed.id), Params = "") |> ignore)
-        repo.Save<NChain> () |> ignore 
+        repo.Save () |> ignore 
 
         s <- {
             Factory = MockFactory ()

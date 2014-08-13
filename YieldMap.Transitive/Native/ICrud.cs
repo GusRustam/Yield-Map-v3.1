@@ -10,7 +10,7 @@ namespace YieldMap.Transitive.Native {
         int Create(T item);
         int Update(T item);
         int Delete(T item);
-        int Save<TEntity>() where TEntity : class, IIdentifyable, IEquatable<TEntity>;
+        int Save();
 
         /// <summary>
         /// Does not wait for Save to be called!  Use with care!

@@ -83,7 +83,7 @@ namespace YieldMap.Transitive.Registry {
                         }
                     });
                 });
-                return crud.Save<NPropertyValue>();
+                return crud.Save();
             }
         }
     }

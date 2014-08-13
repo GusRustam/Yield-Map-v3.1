@@ -354,12 +354,12 @@ namespace YieldMap.Transitive.Procedures {
 
             if (rtis.Any()) {
                 rtis.Values.ToList().ForEach(x => rtisCrud.Create(x));
-                rtisCrud.Save<NRatingToInstrument>();
+                rtisCrud.Save();
             }
 
             if (rtcs.Any()) {
                 rtcs.Values.ToList().ForEach(x => rtcsCrud.Create(x));
-                rtcsCrud.Save<NRatingToLegalEntity>();
+                rtcsCrud.Save();
             }
         }
 
@@ -407,7 +407,7 @@ namespace YieldMap.Transitive.Procedures {
             if (index == null) {
                 index = new NIdx {Name = name};
                 indexTable.Create(index);
-                indexTable.Save<NIdx>();
+                indexTable.Save();
                 _indices.Add(name, index.id);
             }
             _indices[name] = index.id;
