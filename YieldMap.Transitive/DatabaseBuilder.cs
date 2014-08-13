@@ -4,14 +4,12 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Domains.UnitsOfWork;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Variables;
 using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Registry;
-using YieldMap.Transitive.Repositories;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive {
@@ -63,15 +61,6 @@ namespace YieldMap.Transitive {
             Builder.RegisterType<FieldSet>().As<IFieldSet>().SingleInstance();
             Builder.RegisterType<InstrumentTypes>().As<IInstrumentTypes>().SingleInstance();
             Builder.RegisterType<LegTypes>().As<ILegTypes>().SingleInstance();
-
-            // Repos and their units of work.
-            // Logic: first repos, and then - their UOWs (the UOWs they use)
-            Builder.RegisterType<InstrumentRepository>().As<IInstrumentRepository>();
-            Builder.RegisterType<InstrumentUnitOfWork>().As<IInstrumentUnitOfWork>();
-
-            Builder.RegisterType<PropertiesRepository>().As<IPropertiesRepository>();
-            Builder.RegisterType<PropertyValuesRepostiory>().As<IPropertyValuesRepostiory>();
-            Builder.RegisterType<PropertiesUnitOfWork>().As<IPropertiesUnitOfWork>();
 
             // Native components
             // - connection

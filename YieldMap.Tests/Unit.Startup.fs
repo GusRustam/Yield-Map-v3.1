@@ -1,20 +1,13 @@
 ﻿namespace YieldMap.Tests.Unit
 
 open System
-open System.IO
 
 open NUnit.Framework
 open FsUnit
 
 module Ops = 
-    open System.Data.Entity
     open YieldMap.Core.Startup
     open YieldMap.Database
-    open YieldMap.Loader.Calendar
-    open YieldMap.Loader.MetaChains
-    open YieldMap.Loader.SdkFactory
-    open System.Data.Entity
-    open System.Linq
 
     let cnt (table : 'a seq) = 
         query { for x in table do 
@@ -54,19 +47,13 @@ module StartupTest =
     open YieldMap.Loader.SdkFactory
 
     open YieldMap.Core
-    open YieldMap.Core.Loader
     open YieldMap.Core.Startup
     open YieldMap.Core.DbManager
     open YieldMap.Core.Notifier
 
-    open YieldMap.Tools.Location
     open YieldMap.Tools.Logging
-    open YieldMap.Database
-    open YieldMap.Transitive.Repositories
     open YieldMap.Transitive.Procedures
-    open YieldMap.Transitive.Domains.UnitsOfWork
 
-    open System.Data.Entity
     open System.Linq
 
     open Clutch.Diagnostics.EntityFramework
@@ -343,7 +330,7 @@ module StartupTest =
                 proportions.[Mission.ToReload] +
                 proportions.[Mission.Keep]
 
-            use ctx = container.Resolve<IInstrumentRepository>()
+            use ctx = container.Resolve<ICrud<NInstrument>>()
             let totalCount = query { for x in ctx.FindAll() do
                                      count }
 

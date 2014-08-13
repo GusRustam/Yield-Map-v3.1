@@ -1,24 +1,18 @@
 ﻿namespace YieldMap.Tests.Unit
 
 open Autofac
-open Clutch.Diagnostics.EntityFramework
 open FsUnit
 open NUnit.Framework
 open Rhino.Mocks
 
 open System
+open System.Collections.Generic
 open System.Linq
 
-open YieldMap.Database
 open YieldMap.Requests.MetaTables
 open YieldMap.Transitive
 open YieldMap.Transitive.Enums
-open YieldMap.Transitive.Domains
-open YieldMap.Transitive.Domains.UnitsOfWork
-open YieldMap.Transitive.Procedures
-open YieldMap.Transitive.Repositories
 open YieldMap.Transitive.Registry
-open YieldMap.Transitive.Tools
 open YieldMap.Transitive.MediatorTypes
 open YieldMap.Transitive.Events
 open YieldMap.Tools.Aux
@@ -26,9 +20,7 @@ open YieldMap.Tools.Logging
 
 module Database =
     open YieldMap.Transitive.Procedures
-    open YieldMap.Transitive.Native.Crud
     open YieldMap.Transitive.Native.Entities
-    open YieldMap.Transitive.Native.Reader
     open YieldMap.Transitive.Native.Variables
     open YieldMap.Transitive.Native
 
@@ -46,18 +38,18 @@ module Database =
         mock
 
     let inline getCount<'U, ^T when ^T :> IDisposable 
-                                 and ^T : (member FindAll : unit -> IQueryable<'U>)> () =
+                                 and ^T : (member FindAll : unit -> IEnumerable<'U>)> () =
         let container = DatabaseBuilder.Container
         using (container.Resolve< ^T>()) (fun pvRepo ->
-            let q = (^T : (member FindAll : unit -> IQueryable<'U>) pvRepo)
+            let q = (^T : (member FindAll : unit -> IEnumerable<'U>) pvRepo)
             q.Count())
 
     let inline checkExact<'U, ^T when ^T :> IDisposable 
-                                 and ^T : (member FindAll : unit -> IQueryable<'U>)> num =
+                                 and ^T : (member FindAll : unit -> IEnumerable<'U>)> num =
         getCount<'U, ^T> () |> should be (equal num)
 
     let inline checkZero<'U, ^T when ^T :> IDisposable 
-                                 and ^T : (member FindAll : unit -> IQueryable<'U>)> () =
+                                 and ^T : (member FindAll : unit -> IEnumerable<'U>)> () =
         checkExact<'U, ^T> 0
 
 
@@ -75,7 +67,7 @@ module Database =
 
         let ids = ref []
 
-        using (container.Resolve<IInstrumentRepository>()) (fun repo -> 
+        using (container.Resolve<ICrud<NInstrument>>()) (fun repo -> 
             let instruments = repo.FindAll().ToList()
             ids := descrs 
                    |> List.map (fun descr -> instruments.FirstOrDefault(fun i -> i.Name = descr.ShortName))
@@ -83,26 +75,23 @@ module Database =
 
         !ids
 
-
     let createProperty name =
         let container = DatabaseBuilder.Container
         let thePv = ref null
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertiesRepository>(NamedParameter("uow", uow))) (fun pvRepo ->
-            let p = Property(Name = name)
-            pvRepo.Add p |> should be (equal 0)
-            uow.Save () |> should be (equal 1)
-            thePv := pvRepo.FindBy(fun x -> x.Name = name).First()))
+        using (container.Resolve<ICrud<NProperty>>()) (fun pvRepo ->
+            let p = NProperty(Name = name)
+            pvRepo.Create p |> should be (equal 0)
+            pvRepo.Save () |> should be (equal 1)
+            thePv := pvRepo.FindBy(fun x -> x.Name = name).First())
         thePv.contents.id
 
     let deleteProperty propertyId =
         let container = DatabaseBuilder.Container
         // Teardown, removing property
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertiesRepository>(NamedParameter("uow", uow))) (fun pvRepo ->
+        using (container.Resolve<ICrud<NProperty>>()) (fun pvRepo ->
             let p = pvRepo.FindById propertyId
-            pvRepo.Remove p |> should be (equal 0)
-            uow.Save () |> should be (equal 1)))
+            pvRepo.Delete p |> should be (equal 0)
+            pvRepo.Save () |> should be (equal 1))
 
     let deleteChainRicInstrument () =
         let container = DatabaseBuilder.Container
@@ -283,7 +272,7 @@ module Database =
         let saver = container.Resolve<ISaver> ()
         saver.SaveChainRics("TESTCHAIN", [|"TESTRIC"|], "Q", DateTime.Today, "")
 
-        let cnt = getCount<Instrument, IInstrumentRepository>()
+        let cnt = getCount<NInstrument, ICrud<NInstrument>>()
 
         
         let bond = MetaTables.BondDescr(BondStructure = "BondStructure", Description = "Description", Ric = "TESTRIC", Currency = "RUB")
@@ -292,18 +281,17 @@ module Database =
         saver.SaveInstruments [bond]
 
         let id = ref 0L
-        checkExact<Instrument, IInstrumentRepository> (cnt+1)
+        checkExact<NInstrument, ICrud<NInstrument>> (cnt+1)
 
-        using (container.Resolve<IInstrumentRepository>()) (fun instruments ->
+        using (container.Resolve<ICrud<NInstrument>>()) (fun instruments ->
             id := instruments.FindAll().First().id)
 
-        using (container.Resolve<IInstrumentUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IInstrumentRepository>(NamedParameter("uow", uow))) (fun instruments ->
+        using (container.Resolve<ICrud<NInstrument>>()) (fun instruments ->
             let bnd = instruments.FindById !id
-            instruments.Remove bnd |> should be (equal 0)
-            uow.Save () |> should be (equal 1) ))
+            instruments.Delete bnd |> should be (equal 0)
+            instruments.Save () |> should be (equal 1) )
 
-        checkExact<Instrument, IInstrumentRepository> cnt
+        checkExact<NInstrument, ICrud<NInstrument>> cnt
 
         using (container.Resolve<ICrud<NChain>>()) (fun chains ->
         using (container.Resolve<ICrud<NRic>>()) (fun rics -> 
@@ -330,25 +318,23 @@ module Database =
         let propertyId = createProperty "TESTPROP"
             
         // TESTING
-        using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
             pvRepo.FindAll().Count() |> should be (equal 0))
 
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
-            let pv = PropertyValue(Value = "12", id_Property = propertyId, id_Instrument = instrumentId)
-            pvRepo.Add pv |> should be (equal 0)
-            uow.Save () |> should be (equal 1)))
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
+            let pv = NPropertyValue(Value = "12", id_Property = propertyId, id_Instrument = instrumentId)
+            pvRepo.Create pv |> should be (equal 0)
+            pvRepo.Save () |> should be (equal 1))
 
-        using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
-            pvRepo.FindAll().Count() |> should be (equal 1) )
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
+            pvRepo.FindAll().Count() |> should be (equal 1))
 
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
             let pv = pvRepo.FindAll().First()
-            pvRepo.Remove pv |> should be (equal 0)
-            uow.Save () |> should be (equal 1) ))
+            pvRepo.Delete pv |> should be (equal 0)
+            pvRepo.Save () |> should be (equal 1) )
 
-        using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
             pvRepo.FindAll().Count() |> should be (equal 0))
 
         deleteChainRicInstrument ()
@@ -358,27 +344,25 @@ module Database =
     let ``Properties simple addition / deletion`` () = 
         let container = DatabaseBuilder.Container
 
-        let cnt = getCount<Property, IPropertiesRepository> ()
+        let cnt = getCount<NProperty, ICrud<NProperty>> ()
         let thePv = ref null
         
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertiesRepository>(NamedParameter("uow", uow))) (fun pvRepo ->
-            let p = Property(Name = "TESTPROP")
-            pvRepo.Add p |> should be (equal 0)
-            uow.Save () |> should be (equal 1)
+        using (container.Resolve<ICrud<NProperty>>()) (fun pvRepo ->
+            let p = NProperty(Name = "TESTPROP")
+            pvRepo.Create p |> should be (equal 0)
+            pvRepo.Save () |> should be (equal 1)
             
-            thePv := pvRepo.FindBy(fun x -> x.Name = "TESTPROP").First()))
+            thePv := pvRepo.FindBy(fun x -> x.Name = "TESTPROP").First())
 
-        checkExact<Property, IPropertiesRepository> (cnt + 1)
+        checkExact<NProperty, ICrud<NProperty>> (cnt + 1)
 
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertiesRepository>(NamedParameter("uow", uow))) (fun pvRepo ->
+        using (container.Resolve<ICrud<NProperty>>()) (fun pvRepo ->
             let p = pvRepo.FindById (!thePv).id
-            pvRepo.Remove p |> should be (equal 0)
-            uow.Save () |> should be (equal 1)
-            () ))
+            pvRepo.Create p |> should be (equal 0)
+            pvRepo.Save () |> should be (equal 1)
+            () )
 
-        checkExact<Property, IPropertiesRepository> cnt
+        checkExact<NProperty, ICrud<NProperty>> cnt
 
     [<Test>]
     let ``Property values simultaneous addition / deletion`` () = 
@@ -393,45 +377,42 @@ module Database =
         let propertyId = createProperty "P1"
         let propertyId2 = createProperty "P2"
 
-        checkZero<PropertyValue, IPropertyValuesRepostiory> ()
+        checkZero<NPropertyValue, ICrud<NPropertyValue>> ()
 
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
-            let pv = PropertyValue(Value = "12", id_Property = propertyId, id_Instrument = instrumentId)
-            pvRepo.Add pv |> should be (equal 0)
-            uow.Save () |> should be (equal 1)
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
+            let pv = NPropertyValue(Value = "12", id_Property = propertyId, id_Instrument = instrumentId)
+            pvRepo.Create pv |> should be (equal 0)
+            pvRepo.Save () |> should be (equal 1)
             id12 := pv.id
-            () ))
+            () )
 
-        checkExact<PropertyValue, IPropertyValuesRepostiory> 1
+        checkExact<NPropertyValue, ICrud<NPropertyValue>> 1
 
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
-            let pv1 = PropertyValue(Value = "13", id_Property = propertyId2, id_Instrument = instrumentId)
-            pvRepo.Add pv1 |> should be (equal 0)
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
+            let pv1 = NPropertyValue(Value = "13", id_Property = propertyId2, id_Instrument = instrumentId)
+            pvRepo.Create pv1 |> should be (equal 0)
 
             let pv = pvRepo.FindAll().First()
             pv.Value <- "14"
-            uow.Save () |> should be (equal 2)
+            pvRepo.Save () |> should be (equal 2)
             id13 := pvRepo.FindBy(fun pv -> pv.id_Property = propertyId2).First().id
-            id14 := pv.id))
+            id14 := pv.id)
 
-        using (container.Resolve<IPropertyValuesRepostiory>()) (fun pvRepo ->
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
             pvRepo.FindAll().Count() |> should be (equal 2)
             (pvRepo.FindById !id13).Value |> should be (equal "13")
             (pvRepo.FindById !id14).Value |> should be (equal "14"))
 
-        using (container.Resolve<IPropertiesUnitOfWork>()) (fun uow ->
-        using (container.Resolve<IPropertyValuesRepostiory>(NamedParameter("uow", uow))) (fun pvRepo ->
+        using (container.Resolve<ICrud<NPropertyValue>>()) (fun pvRepo ->
             pvRepo.FindAll()
-            |> Seq.iter(fun pv -> pvRepo.Remove pv |> should be (equal 0))
-            uow.Save () |> should be (equal 2)))
+            |> Seq.iter(fun pv -> pvRepo.Delete pv |> should be (equal 0))
+            pvRepo.Save () |> should be (equal 2))
 
         deleteChainRicInstrument ()
         deleteProperty propertyId
         deleteProperty propertyId2
 
-        checkZero<PropertyValue, IPropertyValuesRepostiory> ()
+        checkZero<NPropertyValue, ICrud<NPropertyValue>> ()
 
     [<Test>]
     let ``Recalculating property values on changes in instruments on fake DB`` () =
@@ -523,13 +504,10 @@ module Database =
             .Return(views)
             |> ignore        
 
-        // IPropertiesUnitOfWork
-        let propertiesUowMock = MockRepository.GenerateMock<IPropertiesUnitOfWork>()
 
         builder.RegisterInstance(instrumentTypesMock) |> ignore
         builder.RegisterInstance(propertyValuesRepo) |> ignore
         builder.RegisterInstance(funcRegMock) |> ignore
-        builder.RegisterInstance(propertiesUowMock) |> ignore
         builder.RegisterInstance(instrumentDescriptionsReaderMock) |> ignore
         builder.RegisterType<NewFunctionUpdater>().As<INewFunctionUpdater>() |> ignore // using original code 
         builder.RegisterType<VariableHelper>().As<IVariableHelper>() |> ignore // using original code 
@@ -544,9 +522,9 @@ module Database =
 
     [<Test>]
     let ``Recalculating property values on changes in instruments on real DB`` () =
-        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
-        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
-        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
+//        let finish (c : DbTracingContext) = logger.TraceF "Finished : %s %s" (str c.Duration) (c.Command.ToTraceString())
+//        let failed (c : DbTracingContext) = logger.ErrorF "Failed : %s %s" (str c.Duration) (c.Command.ToTraceString())
+//        DbTracing.Enable(GenericDbTracingListener().OnFinished(Action<_>(finish)).OnFailed(Action<_>(failed)))
 
         let container = DatabaseBuilder.Container
         let [inst1id; instr2id] = 
@@ -556,15 +534,15 @@ module Database =
 
         let registry = container.Resolve<IFunctionRegistry>()
         let updater = container.Resolve<INewFunctionUpdater>()
-        let properyReader = container.Resolve<IPropertiesRepository> ()
-        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
+        let properyReader = container.Resolve<ICrud<NProperty>> ()
+        let properyValueReader = container.Resolve<ICrud<NPropertyValue>> ()
 
         properyValueReader.FindAll().Count() |> should be (equal 0)
         
         properyReader
             .FindAll()
             .ToList()
-            |> Seq.iter(fun p -> registry.Add(p.id, p.id_InstrumentTpe, p.Expression)  |> ignore)
+            |> Seq.iter(fun p -> registry.Add(p.id, p.id_InstrumentType, p.Expression)  |> ignore)
 
         updater.Recalculate<NBondDescriptionView> () |> should be (equal 4)
 
@@ -592,15 +570,15 @@ module Database =
 
         let registry = container.Resolve<IFunctionRegistry>()
         let updater = container.Resolve<INewFunctionUpdater>()
-        let properyReader = container.Resolve<IPropertiesRepository> ()
+        let properyReader = container.Resolve<ICrud<NProperty>> ()
 
         let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
         nativeKiller.DeleteAll()
 
         properyReader.FindAll().ToList()
-        |> Seq.iter (fun x -> registry.Add(x.id, x.id_InstrumentTpe, x.Expression) |> ignore)
+        |> Seq.iter (fun x -> registry.Add(x.id, x.id_InstrumentType, x.Expression) |> ignore)
 
-        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
+        let properyValueReader = container.Resolve<ICrud<NPropertyValue>> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
         updater.Recalculate<NBondDescriptionView> () |> should be (equal 1802)
         updater.Recalculate<NFrnDescriptionView> () |> should be (equal 22)
@@ -623,11 +601,11 @@ module Database =
         let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
         nativeKiller.DeleteAll()
 
-        let properyReader = container.Resolve<IPropertiesRepository> ()
+        let properyReader = container.Resolve<ICrud<NProperty>> ()
         properyReader.FindAll().ToList()
-        |> Seq.iter (fun x -> registry.Add(x.id, x.id_InstrumentTpe, x.Expression) |> ignore)
+        |> Seq.iter (fun x -> registry.Add(x.id, x.id_InstrumentType, x.Expression) |> ignore)
 
-        let properyValueReader = container.Resolve<IPropertyValuesRepostiory> ()
+        let properyValueReader = container.Resolve<ICrud<NPropertyValue>> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
         updater.Recalculate<NBondDescriptionView> () |> should be (equal 86)
         updater.Recalculate<NFrnDescriptionView> () |> should be (equal 5)
