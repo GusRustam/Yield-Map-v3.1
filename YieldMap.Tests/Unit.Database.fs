@@ -509,13 +509,13 @@ module Database =
         builder.RegisterInstance(propertyValuesRepo) |> ignore
         builder.RegisterInstance(funcRegMock) |> ignore
         builder.RegisterInstance(instrumentDescriptionsReaderMock) |> ignore
-        builder.RegisterType<NewFunctionUpdater>().As<INewFunctionUpdater>() |> ignore // using original code 
+        builder.RegisterType<PropertyUpdater>().As<IPropertyUpdater>() |> ignore // using original code 
         builder.RegisterType<VariableHelper>().As<IVariableHelper>() |> ignore // using original code 
         builder.RegisterInstance(Func<_>(fun () -> !cnt)) |> ignore
         cnt := builder.Build()
         let container = !cnt
 
-        let updater = container.Resolve<INewFunctionUpdater>()
+        let updater = container.Resolve<IPropertyUpdater>()
         updater.Recalculate<NBondDescriptionView>() |> ignore
 
         !counter |> should be (equal 0)
@@ -533,7 +533,7 @@ module Database =
             |> createChainRicInstrument container "TESTCHAIN" [|"TESTRIC1"; "TESTRIC2"|] 
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let updater = container.Resolve<INewFunctionUpdater>()
+        let updater = container.Resolve<IPropertyUpdater>()
         let properyReader = container.Resolve<ICrud<NProperty>> ()
         let properyValueReader = container.Resolve<ICrud<NPropertyValue>> ()
 
@@ -569,7 +569,7 @@ module Database =
         br.Restore "RUCORP.sql"
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let updater = container.Resolve<INewFunctionUpdater>()
+        let updater = container.Resolve<IPropertyUpdater>()
         let properyReader = container.Resolve<ICrud<NProperty>> ()
 
         let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
@@ -580,7 +580,7 @@ module Database =
 
         let properyValueReader = container.Resolve<ICrud<NPropertyValue>> ()
         properyValueReader.FindAll().Count() |> should be (equal 0)
-//        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1802)
+        updater.Recalculate<NBondDescriptionView> () |> should be (equal 1802)
         updater.Recalculate<NFrnDescriptionView> () |> should be (equal 22)
         properyValueReader.FindAll().Count() |> should be (equal 1824)
         
@@ -596,7 +596,7 @@ module Database =
         br.Restore "RUELG.sql"
 
         let registry = container.Resolve<IFunctionRegistry>()
-        let updater = container.Resolve<INewFunctionUpdater>()
+        let updater = container.Resolve<IPropertyUpdater>()
 
         let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
         nativeKiller.DeleteAll()

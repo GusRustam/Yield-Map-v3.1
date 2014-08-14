@@ -133,8 +133,8 @@
     <Compile Include="Native\ReaderBase.cs" />
     <Compile Include="Native\SqliteReaderHelper.cs" />
     <Compile Include="NotificationsModule.cs" />
-    <Compile Include="Procedures\INewFunctionUpdater.cs" />
-    <Compile Include="Procedures\NewFunctionUpdater.cs" />
+    <Compile Include="Procedures\IPropertyUpdater.cs" />
+    <Compile Include="Procedures\PropertyUpdater.cs" />
     <Compile Include="Tools\EntityAction.cs" />
     <Compile Include="Tools\DbContextHelper.cs" />
     <Compile Include="Events\ChainRicHandler.cs" />

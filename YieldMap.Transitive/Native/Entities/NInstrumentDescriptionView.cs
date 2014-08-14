@@ -2,7 +2,7 @@
 using YieldMap.Transitive.Native.Variables;
 
 namespace YieldMap.Transitive.Native.Entities {
-    public class NInstrumentDescriptionView : ITypedInstrument {
+    public abstract class NInstrumentDescriptionView : ITypedInstrument {
         [DbField(0)] // ReSharper disable once InconsistentNaming
         public long id_Instrument { get; set; }
 

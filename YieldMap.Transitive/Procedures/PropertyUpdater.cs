@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Autofac;
 using YieldMap.Language;
 using YieldMap.Tools.Logging;
@@ -8,15 +10,24 @@ using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Native.Variables;
 
 namespace YieldMap.Transitive.Procedures {
-    public class NewFunctionUpdater : INewFunctionUpdater {
+    public class PropertyUpdater : IPropertyUpdater {
         private readonly IContainer _container;
         private static readonly Logging.Logger Logger = Logging.LogFactory.create("Transitive.Registry");
 
-        public NewFunctionUpdater(Func<IContainer> container) {
+        private static readonly List<Type> InstrumentTypes = Assembly
+            .GetExecutingAssembly()
+            .GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && t.GetInterfaces().Contains(typeof(ITypedInstrument)))
+            .ToList();
+
+        private readonly MethodInfo _recalculate;
+
+        public PropertyUpdater(Func<IContainer> container) {
             _container = container.Invoke();
+            _recalculate = GetType().GetMethod("Recalculate");
         }
 
-        public int Recalculate<TItem>(Func<TItem, bool> predicate = null) 
+        public int Recalculate<TItem>(IEnumerable<long> ids = null) 
             where TItem : class, ITypedInstrument  {
 
             var reader = _container.Resolve<IReader<TItem>>();
@@ -25,13 +36,11 @@ namespace YieldMap.Transitive.Procedures {
 
             var helper = _container.Resolve<IVariableHelper>();
 
-            if (predicate == null)
-                predicate = i => true;
 
             // all instruments matching predicate
             var list = reader
                 .FindAll()
-                .Where(predicate)
+                .Where(x => ids == null || ids.Contains(x.id_Instrument))
                 .Select(descr => new {
                     InstrumentId = descr.id_Instrument,
                     InstrumentTypeId = descr.id_InstrumentType,
@@ -85,6 +94,13 @@ namespace YieldMap.Transitive.Procedures {
                 });
                 return crud.Save();
             }
+        }
+
+        public int RecalculateAll(IEnumerable<long> ids = null) {
+            return InstrumentTypes
+                .Select(t => _recalculate.MakeGenericMethod(t))
+                .Select(g => (int)g.Invoke(this, new object[] { ids }))
+                .Sum();
         }
     }
 }
