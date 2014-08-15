@@ -45,22 +45,9 @@
     <Compile Include="ConnectionMode.cs" />
     <Compile Include="Enums\ISourceTypes.cs" />
     <Compile Include="Enums\SourceTypes.cs" />
-    <Compile Include="Native\Crud\ChainCrud.cs" />
     <Compile Include="Native\CrudBase.cs" />
     <Compile Include="Native\CrudHelper.cs" />
-    <Compile Include="Native\Crud\FeedCrud.cs" />
-    <Compile Include="Native\Crud\FieldDefinitionCrud.cs" />
-    <Compile Include="Native\Crud\FieldGroupCrud.cs" />
     <Compile Include="Native\Crud\IInstrumentCrud.cs" />
-    <Compile Include="Native\Crud\IndexCrud.cs" />
-    <Compile Include="Native\Crud\InstrumentTypeCrud.cs" />
-    <Compile Include="Native\Crud\LegTypeCrud.cs" />
-    <Compile Include="Native\Crud\PropertyCrud.cs" />
-    <Compile Include="Native\Crud\PropertyValueCrud.cs" />
-    <Compile Include="Native\Crud\RatingToInstrumentCrud.cs" />
-    <Compile Include="Native\Crud\RatingToLegalEntityCrud.cs" />
-    <Compile Include="Native\Crud\RicCrud.cs" />
-    <Compile Include="Native\Crud\SourceTypeCrud.cs" />
     <Compile Include="Native\DbFieldAttribute.cs" />
     <Compile Include="Native\Entities\NCountry.cs" />
     <Compile Include="Native\Entities\NCurrency.cs" />
@@ -196,6 +183,10 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
