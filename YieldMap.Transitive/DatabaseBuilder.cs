@@ -111,7 +111,6 @@ namespace YieldMap.Transitive {
                 ilinit.Emit(OpCodes.Call, typeof(Logging.LogFactory).GetMethod("create", new []{typeof(string)}));
                 ilinit.Emit(OpCodes.Stsfld, theLoggerField);
                 ilinit.Emit(OpCodes.Ret);
-                
 
                 // Creating inherited property
                 var loggerProperty = crudClass.DefineProperty("Logger", PropertyAttributes.HasDefault, CallingConventions.Any, typeof (Logging.Logger), Type.EmptyTypes);
@@ -221,7 +220,8 @@ namespace YieldMap.Transitive {
 
             cruds.ForEach(t => {
                 TheLogger.Info(string.Format("Registering ICrud<{0}>", t.Type.Name));
-                Builder.RegisterType(t.Type).As(t.Interface);
+                Builder.RegisterType(t.Type).As(t.Interface)
+                    .UsingConstructor(typeof(Func<IContainer>));
                 Builder.RegisterType(t.Type)
                     .UsingConstructor(typeof (Func<IContainer>))
                     .Keyed(ConnectionMode.New, t.Interface);
