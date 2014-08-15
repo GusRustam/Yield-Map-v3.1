@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using YieldMap.Database;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Procedures {

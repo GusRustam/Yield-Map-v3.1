@@ -1,22 +1,19 @@
 ﻿using System;
 
 namespace YieldMap.Transitive.Native.Entities {
-    public class NIdx : IIdName, IEquatable<NIdx> {
+    public class NIndustry : IIdName, IEquatable<NIndustry> {
         [DbField(0)]
         public long id { get; set; }
 
         [DbField(1)]
         public string Name { get; set; }
 
-        [DbField(2)] // Resharper disable InconsistentNaming once
-        public long? id_Ric { get; set; }
-
-        public bool Equals(NIdx other) {
+        public bool Equals(NIndustry other) {
             if (other == null)
                 return false;
             if (id != default(long) && other.id != default(long) && id == other.id)
                 return true;
-            return Name == other.Name && id_Ric == other.id_Ric;
+            return Name == other.Name;
         }
     }
 }

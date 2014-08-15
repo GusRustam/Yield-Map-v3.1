@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity.Validation;
 using System.Data.SQLite;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using Autofac;
-using YieldMap.Database;
 using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Domains;
 using YieldMap.Transitive.Enums;
 using YieldMap.Transitive.Events;
 using YieldMap.Transitive.MediatorTypes;
@@ -26,18 +20,6 @@ namespace YieldMap.Transitive.Procedures {
         private readonly ILegTypes _legTypes;
         private readonly IInstrumentTypes _instrumentTypes;
 
-        private readonly Dictionary<string, Ric> _rics = new Dictionary<string, Ric>();
-        private readonly Dictionary<string, Feed> _feeds = new Dictionary<string, Feed>();
-        private readonly Dictionary<string, Chain> _chains = new Dictionary<string, Chain>();
-        private readonly Dictionary<string, Seniority> _seniorities = new Dictionary<string, Seniority>();
-        private readonly Dictionary<string, Currency> _currencies = new Dictionary<string, Currency>();
-        private readonly Dictionary<string, LegalEntity> _legalEntities = new Dictionary<string, LegalEntity>();
-        private readonly Dictionary<string, Country> _countries = new Dictionary<string, Country>();
-        private readonly Dictionary<string, Ticker> _tickers = new Dictionary<string, Ticker>();
-        private readonly Dictionary<string, Industry> _industries = new Dictionary<string, Industry>();
-        private readonly Dictionary<string, SubIndustry> _subIndustries = new Dictionary<string, SubIndustry>();
-        private readonly Dictionary<string, Specimen> _specimens = new Dictionary<string, Specimen>();
-        private readonly Dictionary<string, long> _indices = new Dictionary<string, long>();
         private readonly IContainer _container;
         private bool _notifications = true;
         private SQLiteConnection _connection;
@@ -63,197 +45,332 @@ namespace YieldMap.Transitive.Procedures {
         public void SaveChainRics(string chainRic, string[] rics, string feedName, DateTime expanded, string prms) {
             if (prms == null)
                 prms = string.Empty;
-            using (var context = new SaverContext()) {
-                try {
-                    var feed = EnsureFeed(context, feedName);
-                    var chain = EnsureChain(context, chainRic, feed, expanded, prms);
 
-                    var existingRics = context.RicToChains.Where(rtc => rtc.Chain_id == chain.id).Select(rtc => rtc.Ric.Name).ToArray();
-                    var newRics = new HashSet<string>(rics);
-                    newRics.RemoveWhere(existingRics.Contains);
+            try {
+                var feedId = UpdateFeed(feedName);
+                var chainId = UpdateChain(chainRic, feedId, expanded, prms);
 
-                    AddRics(context, chain, feed, newRics);
-                    var chainsUpd = context.ExtractEntityChanges<Chain>();
-                    var ricsUpd = context.ExtractEntityChanges<Ric>();
+                var ricToChains = _container.Resolve<ICrud<NRicToChain>>();
+                var existingRicIds = new Set<long>(ricToChains.FindBy(t => t.id_Chain == chainId).Select(t => t.id));
 
-                    context.SaveChanges();
+                var ricsTable = _container.Resolve<ICrud<NRic>>();
+                var existingRics = ricsTable.FindBy(r => existingRicIds.Contains(r.id)).Select(r => r.Name).ToArray();
 
-                    if (Notify != null & _notifications) {
-                        Notify(this, new DbEventArgs(chainsUpd.ExtractIds(), EventSource.Chain));
-                        Notify(this, new DbEventArgs(ricsUpd.ExtractIds(), EventSource.Ric));
-                    }
+                var newRics = new HashSet<string>(rics);
+                newRics.RemoveWhere(existingRics.Contains);
 
-                } catch (DbEntityValidationException e) {
-                    Logger.Report("Failed to save", e);
-                    throw;
-                }
+                AddRics(chainId, feedId, newRics);
+
+                // todo CHAINRIC REPORTING:
+                //var chainsUpd = context.ExtractEntityChanges<Chain>();
+                //var ricsUpd = context.ExtractEntityChanges<Ric>();
+
+                //if (Notify != null & _notifications) {
+                //    Notify(this, new DbEventArgs(chainsUpd.ExtractIds(), EventSource.Chain));
+                //    Notify(this, new DbEventArgs(ricsUpd.ExtractIds(), EventSource.Ric));
+                //}
+
+            } catch (Exception e) {
+                Logger.ErrorEx("Failed to save", e);
+                throw;
             }
+        }
+
+        private long UpdateFeed(string feedName) {
+            var feedTable = _container.ResolveCrudWithConnection<NFeed>(_connection);
+            var feeds = feedTable.FindBy(f => f.Name == feedName).ToList();
+            if (!feeds.Any()) {
+                var feed = new NFeed {Name = feedName};
+                feedTable.Create(feed);
+                feedTable.Save();
+                return feed.id;
+            }
+            return feeds.First().id;
         }
 
         public void SaveInstruments(IEnumerable<InstrumentDescription> bonds) {
             bonds = bonds as IList<InstrumentDescription> ?? bonds.ToList();
+            bonds = bonds.Where(bond => !bond.RateStructure.StartsWith("Unable"));
+
+            var seniorities1 = new Dictionary<string, long>();
+            var legalEntities1 = new Dictionary<string, long>();
+            var countries1 = new Dictionary<string, long>();
+            var tickers1 = new Dictionary<string, long>();
+            var industries1 = new Dictionary<string, long>();
+            var indices1 = new Dictionary<string, long>();
+            var subIndustries1 = new Dictionary<string, long>();
+            var specimens1 = new Dictionary<string, long>();
+            var currencies1 = new Dictionary<string, long>();
 
             // Creating ISINs, and linking RICs to them
-            using (var ctx = new SaverContext()) {
-                try {
-                    var isins = new Dictionary<string, Isin>();
-                    foreach (var bond in bonds) {
-                        if (bond.RateStructure.StartsWith("Unable"))
-                            continue;
+            var isinTable = _container.ResolveCrudWithConnection<NIsin>(_connection);
+            var allIsins = isinTable.FindAll().ToDictionary(n => n.Name, n => n);
 
-                        var ric = ctx.Rics.First(r => r.Name == bond.Ric);
-                        if (!isins.ContainsKey(bond.Isin)) {
-                            var isin = EnsureIsin(ctx, ric, bond.Isin);
-                            isins.Add(bond.Isin, isin);
+            var ricTable = _container.ResolveCrudWithConnection<NRic>(_connection);
+            var allRics = ricTable.FindAll().ToDictionary(r => r.Name, r => r);
+
+            foreach (var bond in bonds) {
+                try {
+                    var ric = allRics[bond.Ric]; // todo ric comparison??
+                        
+                    if (!ric.id_Isin.HasValue) {
+                        NIsin isin;
+                        if (allIsins.ContainsKey(bond.Isin)) {
+                            isin = allIsins[bond.Isin];
                         } else {
-                            Logger.Warn(string.Format("Duplicate ISIN {0}", bond.Isin));
-                            if (ric.Isin == null)
-                                ric.Isin = isins[bond.Isin];
+                            isin = new NIsin {Name = bond.Isin, id_Feed = ric.id_Feed};
+                            isinTable.Create(isin);
+                            isinTable.Save();
+                            allIsins.Add(bond.Isin, isin);
                         }
+                        ric.id_Isin = isin.id;
+                        ricTable.Update(ric);
                     }
-                    try {
-                        ctx.SaveChanges();  // maybe I could disable AutoDetectChagnes and then mark rics manually as updated
-                    } catch (DbEntityValidationException e) {
-                        Logger.Report("Saving rics/isins failed", e);
-                        throw;
-                    }
-                } catch (DataException e) {
-                    Logger.ErrorEx("Saving isings failed", e);
+                } catch (Exception e) {
+                    Logger.ErrorEx("Saving isins failed", e);
                 }
             }
+            ricTable.Save();
+
+            // Countries
+            var countryTable = _container.ResolveCrudWithConnection<NCountry>(_connection);
+            var countries = new Dictionary<string, NCountry>();
+            foreach (var bond in bonds) {
+                if (!string.IsNullOrEmpty(bond.IssuerCountry))
+                    SaveIdName(bond.IssuerCountry, countryTable, countries1, countries);
+                if (!string.IsNullOrEmpty(bond.BorrowerCountry))
+                    SaveIdName(bond.BorrowerCountry, countryTable, countries1, countries);
+            }
+            countryTable.Save();
+            foreach (var nCountry in countries) 
+                countries1[nCountry.Key] = nCountry.Value.id;
+
+            // Legal Entites
+            var legalEntitiesTable = _container.ResolveCrudWithConnection<NLegalEntity>(_connection);
+            var legalEntities = new Dictionary<string, NLegalEntity>();
+            foreach (var bond in bonds) {
+                if (!string.IsNullOrEmpty(bond.IssuerName)) {
+                    var idCountry = countries1.ContainsKey(bond.IssuerCountry) ? (long?)countries1[bond.IssuerCountry] : null;
+                    SaveLegalEntity(bond.IssuerName, idCountry, legalEntitiesTable, legalEntities1, legalEntities);
+                }
+                if (!string.IsNullOrEmpty(bond.BorrowerName)) {
+                    var country = countries1.ContainsKey(bond.BorrowerCountry) ? (long?)countries1[bond.BorrowerCountry] : null;
+                    SaveLegalEntity(bond.BorrowerName, country, legalEntitiesTable, legalEntities1, legalEntities);
+                }
+            }
+            legalEntitiesTable.Save();
+            foreach (var legalEntity in legalEntities)
+                legalEntities1[legalEntity.Key] = legalEntity.Value.id;
+
+            // Tickers
+            var tickerTable = _container.ResolveCrudWithConnection<NTicker>(_connection);
+            var tickers = new Dictionary<string, NTicker>();
+            foreach (var bond in bonds) {
+                if (!string.IsNullOrEmpty(bond.Ticker)) 
+                    SaveIdName(bond.Ticker, tickerTable, tickers1, tickers);
+                if (!string.IsNullOrEmpty(bond.ParentTicker)) 
+                    SaveIdName(bond.ParentTicker, tickerTable, tickers1, tickers);
+            }
+            tickerTable.Save();
+            foreach (var ticker in tickers)
+                tickers1[ticker.Key] = ticker.Value.id;
+            
+            // Tickers parent-to-child relationships
+            foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.ParentTicker))) {
+                var ticker = tickers[bond.Ticker];
+                ticker.id_Parent = tickers1[bond.ParentTicker];
+                tickerTable.Update(ticker);
+            }
+            tickerTable.Save();
+
+            // Seniority
+            var seniorityTable = _container.ResolveCrudWithConnection<NSeniority>(_connection);
+            var seniorities = new Dictionary<string, NSeniority>();
+            foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Seniority))) 
+                SaveIdName(bond.Seniority, seniorityTable, seniorities1, seniorities);
+            seniorityTable.Save();
+            foreach (var seniority in seniorities)
+                seniorities1[seniority.Key] = seniority.Value.id;
+
+            // Specimen
+            var specimenTable = _container.ResolveCrudWithConnection<NSpecimen>(_connection);
+            var specimens = new Dictionary<string, NSpecimen>();
+            foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Specimen)))
+                SaveIdName(bond.Specimen, specimenTable, specimens1, specimens);
+            specimenTable.Save();
+            foreach (var specimen in specimens)
+                specimens1[specimen.Key] = specimen.Value.id;
+
+            // Currency
+            var currencyTable = _container.ResolveCrudWithConnection<NCurrency>(_connection);
+            var currencies = new Dictionary<string, NCurrency>();
+            foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Currency)))
+                SaveIdName(bond.Currency, currencyTable, currencies1, currencies);
+            currencyTable.Save();
+            foreach (var currency in currencies)
+                seniorities1[currency.Key] = currency.Value.id;
+
+            // SubIndustries
+            var subIndustryTable = _container.ResolveCrudWithConnection<NSubIndustry>(_connection);
+            var subIndustries = new Dictionary<string, NSubIndustry>();
+            foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.SubIndustry)))
+                SaveIdName(bond.SubIndustry, subIndustryTable, subIndustries1, subIndustries);
+            subIndustryTable.Save();
+            foreach (var subIndustry in subIndustries)
+                subIndustries1[subIndustry.Key] = subIndustry.Value.id;
+
+            // Industries
+            var industryTable = _container.ResolveCrudWithConnection<NIndustry>(_connection);
+            var industries = new Dictionary<string, NIndustry>();
+            foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Industry)))
+                SaveIdName(bond.Industry, industryTable, industries1, industries);
+            industryTable.Save();
+            foreach (var industry in industries)
+                industries1[industry.Key] = industry.Value.id;
+
+            // Indices
+            var indexTable = _container.ResolveCrudWithConnection<NIdx>(_connection);
+            var indices = new Dictionary<string, NIdx>();
+            foreach (var bond in bonds.OfType<Frn>().Where(bond => !string.IsNullOrEmpty(bond.IndexName)))
+                SaveIdName(bond.IndexName, indexTable, indices1, indices);
+            indexTable.Save();
+            foreach (var index in indices)
+                indices1[index.Key] = index.Value.id;
+            
+            // SubIndustry to Industry link
+            // Tickers parent-to-child relationships
+            foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.SubIndustry) && !string.IsNullOrEmpty(bond.Industry))) {
+                var subIndustry = subIndustries[bond.SubIndustry];
+                subIndustry.id_Industry = industries1[bond.Industry];
+                subIndustryTable.Update(subIndustry);
+            }
+            subIndustryTable.Save();
+
 
             // Descriptions
-            using (var ctx = new SaverContext()) {
-                var descriptions = new Dictionary<string, Description>();
-                foreach (var bond in bonds) {
-                    if (bond.RateStructure.StartsWith("Unable"))
-                        continue;
+            var descriptionsTable = _container.ResolveCrudWithConnection<NDescription>(_connection);
+            var descriptionsByRic = descriptionsTable.FindAll().ToDictionary(d => d.id_Ric, d => d);
 
-                    Description description = null;
-                    var failed = false;
-                    try {
+            foreach (var bond in bonds) {
+                var idRic = allRics[bond.Ric].id;
+                var idIsin = allIsins[bond.Isin].id;
 
-                        description = new Description {
-                            RateStructure = bond.RateStructure,
-                            IssueSize = bond.IssueSize,
-                            Series = bond.Series,
-                            Issue = bond.Issue,
-                            Maturity = bond.Maturity,
-                            NextCoupon = bond.NextCoupon
-                        };
+                var description = new NDescription {
+                    RateStructure = bond.RateStructure,
+                    IssueSize = bond.IssueSize,
+                    Series = bond.Series,
+                    Issue = bond.Issue,
+                    Maturity = bond.Maturity,
+                    NextCoupon = bond.NextCoupon,
+                    id_Issuer = legalEntities1[bond.IssuerName],
+                    id_Borrower = legalEntities1[bond.BorrowerName],
+                    id_Ticker = tickers1[bond.Ticker],
+                    id_Seniority = seniorities1[bond.Seniority],
+                    id_SubIndustry = subIndustries1[bond.SubIndustry],
+                    id_Specimen = specimens1[bond.Specimen],
+                    id_Ric = idRic,
+                    id_Isin = idIsin
+                };
+                
+                if (descriptionsByRic.ContainsKey(idRic)) 
+                    descriptionsTable.Update(description);
+                else 
+                    descriptionsTable.Create(description);
 
-                        // Handling issuer, borrower and their countries
-                        var issuerCountry = EnsureCountry(ctx, bond.IssuerCountry);
-                        var borrowerCountry = EnsureCountry(ctx, bond.BorrowerCountry);
-
-                        description.Issuer = EnsureLegalEntity(ctx, bond.IssuerName, issuerCountry);
-                        description.Borrower = EnsureLegalEntity(ctx, bond.BorrowerName, borrowerCountry);
-                        description.Ticker = EnsureTicker(ctx, bond.Ticker, bond.ParentTicker);
-                        description.Seniority = EnsureSeniority(ctx, bond.Seniority);
-                        description.SubIndustry = EnsureSubIndustry(ctx, bond.Industry, bond.SubIndustry);
-                        description.Specimen = EnsureSpecimen(ctx, bond.Specimen);
-
-                        // CONSTRAINT: there already must be some ric with some feed!!!
-                        description.Ric = ctx.Rics.First(r => r.Name == bond.Ric);
-                        description.Isin = description.Ric.Isin;
-
-                    } catch (Exception e) {
-                        failed = true;
-                        Logger.ErrorEx("Instrument", e);
-                    }
-                    if (failed)
-                        continue;
-                    descriptions.Add(bond.Ric, description);
-
-                }
-                try {
-                    ctx.SaveChanges();   // Saving all new records in tables Country, LegalEntity etc
-                } catch (DbEntityValidationException e) {
-                    Logger.Report("Saving descriptions failed", e);
-                    throw;
-                }
-                if (descriptions.Any()) {
-                    var peggedContext = ctx;
-                    descriptions.Values.ChunkedForEach(x => {
-                        var sql = BulkInsertBondDescription(x);
-                        Logger.Info(String.Format("Sql is {0}", sql));
-                        peggedContext.Database.ExecuteSqlCommand(sql);
-                    }, 500);
-                }
             }
-
-            // Creating instruments
-            Set<long> addedInstruments;
-            var descrIds = new Dictionary<string, long>(); // ric -> id
-            using (var ctx = new SaverContext()) {
-                var existingInstruments = ctx.Instruments.Select(x => x.id).ToSet();
-                var instruments = new Dictionary<string, Instrument>();
-                foreach (var bond in bonds) {
-                    if (bond.RateStructure.StartsWith("Unable"))
-                        continue;
-
-                    Instrument instrument = null;
-                    var failed = false;
-                    try {
-                        descrIds[bond.Ric] = ctx.Descriptions.First(d => d.Ric.Name == bond.Ric).id;
-
-                        instrument = new Instrument {
-                            Name = bond.ShortName,
-                            id_InstrumentType = bond is Bond ? _instrumentTypes.Bond.id : _instrumentTypes.Frn.id,
-                            id_Description = descrIds[bond.Ric]
-                        };
-                    } catch (Exception e) {
-                        failed = true;
-                        Logger.ErrorEx("Instrument", e);
-                    }
-                    if (failed)
-                        continue;
-                    instruments.Add(bond.Ric, instrument);
-                }
-
-                if (instruments.Any()) {
-                    var peggedContext = ctx;
-                    instruments.Values.ChunkedForEach(x => {
-                        var sql = BulkInsertInstruments(x);
-                        Logger.Info(String.Format("Sql is {0}", sql));
-                        peggedContext.Database.ExecuteSqlCommand(sql);
-                    }, 500);
-                }
-                using (var reader = _container.Resolve<ICrud<NInstrument>>()) {
-                    addedInstruments = reader.FindAll().Select(x => x.id).ToSet() - existingInstruments;
-                }
+            descriptionsTable.Save();
+            descriptionsByRic = descriptionsTable.FindAll().ToDictionary(d => d.id_Ric, d => d); // refreshing
+            
+            // Instruments
+            var instrumentsTable = _container.ResolveCrudWithConnection<NInstrument>(_connection);
+            var instrumentsByDescr = instrumentsTable.FindAll().ToDictionary(i => i.id_Description, i => i);
+            foreach (var bond in bonds) {
+                var idRic = allRics[bond.Ric].id;
+                var idDescr = descriptionsByRic[idRic].id;
+                var instrument = new NInstrument {
+                    Name = bond.ShortName,
+                    id_InstrumentType = bond is Bond ? _instrumentTypes.Bond.id : _instrumentTypes.Frn.id,
+                    id_Description = idDescr
+                };
+                if (instrumentsByDescr.ContainsKey(idDescr))
+                    instrumentsTable.Update(instrument);
+                else instrumentsTable.Create(instrument);
             }
+            instrumentsTable.Save();
 
             // Legs
-            using (var ctx = new SaverContext()) {
-                var legs = new Dictionary<string, Leg>();
-                foreach (var bond in bonds.Where(bond => !bond.RateStructure.StartsWith("Unable"))) {
-                    try {
-                        legs.Add(bond.Ric, CreateLeg(ctx, descrIds[bond.Ric], bond));
-                    } catch (Exception e) {
-                        Logger.ErrorEx("Instrument", e);
-                    }
+            var legsTable = _container.ResolveCrudWithConnection<NLeg>(_connection);
+            var legsByInstrument = legsTable.FindAll().ToDictionary(i => i.id_Instrument, i => i);
+            foreach (var instrument in bonds) {
+                var idRic = allRics[instrument.Ric].id;
+                var idDescr = descriptionsByRic[idRic].id;
+                var idInstrument = instrumentsByDescr[idDescr].id;
+                NLeg leg = null;
+                if (instrument is Bond) {
+                    var bond = instrument as Bond;
+                    leg = new NLeg {
+                        Structure = bond.BondStructure,
+                        FixedRate = bond.Coupon,
+                        id_Currency = currencies1[bond.Ric],
+                        id_LegType = _legTypes.Received.id,
+                        id_Instrument = idInstrument
+                    };
+                } else if (instrument is Frn) {
+                    var note = instrument as Frn;
+                    leg = new NLeg {
+                        Structure = note.FrnStructure,
+                        id_Index = indices1[note.IndexName],
+                        Cap = note.Cap,
+                        Floor = note.Floor,
+                        Margin = note.Margin,
+                        id_Currency = currencies1[note.Ric],
+                        id_LegType = _legTypes.Received.id,
+                        id_Instrument = idInstrument
+                    };
                 }
 
-                if (legs.Any()) {
-                    try {
-                        ctx.SaveChanges();
-                    } catch (DbEntityValidationException e) {
-                        Logger.Report("Saving legs failed", e);
-                        throw;
-                    }
-
-                    var peggedContext = ctx;
-                    legs.Values.ChunkedForEach(x => {
-                        var sql = BulkInsertLegs(x);
-                        Logger.Info(String.Format("Sql is {0}", sql));
-                        peggedContext.Database.ExecuteSqlCommand(sql);
-                    }, 500);
+                if (leg != null) {
+                    if (legsByInstrument.ContainsKey(idInstrument))
+                        legsTable.Update(leg);
+                    else legsTable.Create(leg);
                 }
             }
+            legsTable.Save();
 
-            if (_notifications) 
-                Notify(this, new DbEventArgs(addedInstruments, new long[] {}, new long[] {}, EventSource.Instrument));
+            //if (_notifications) 
+            //    Notify(this, new DbEventArgs(addedInstruments, new long[] {}, new long[] {}, EventSource.Instrument));
+        }
+
+        private static void SaveLegalEntity(string name, long? idCountry, ICrud<NLegalEntity> crud, IDictionary<string, long> register, IDictionary<string, NLegalEntity> storage) {
+            NLegalEntity entity;
+            if (!register.ContainsKey(name)) {
+                entity = new NLegalEntity {Name = name, id_Country = idCountry};
+                crud.Create(entity);
+            } else {
+                entity = crud.FindById(register[name]);
+                if (entity.Name != name || entity.id_Country != idCountry) {
+                    entity.Name = name;
+                    entity.id_Country = idCountry;
+                    crud.Update(entity);
+                }
+            }
+            storage[name] = entity;
+        }
+
+        private static void SaveIdName<T>(string name, ICrud<T> crud, IDictionary<string, long> register, IDictionary<string, T> storage) 
+            where T : class, IIdName, IEquatable<T>, new() {
+            T entity;
+            if (!register.ContainsKey(name)) {
+                entity = new T {Name = name};
+                crud.Create(entity);
+            } else {
+                entity = crud.FindById(register[name]);
+                if (entity.Name != name) {
+                    entity.Name = name;
+                    crud.Update(entity);
+                }
+            }
+            storage[name] = entity;
         }
 
         public void SaveRatings(IEnumerable<Rating> ratings) {
@@ -363,328 +480,52 @@ namespace YieldMap.Transitive.Procedures {
             }
         }
 
-        private Leg CreateLeg(SaverContext ctx, long descrId, InstrumentDescription description) {
-            Leg leg = null;
-            if (description is Bond) {
-                var bond = description as Bond;
-                leg = new Leg {
-                    Structure = bond.BondStructure,
-                    FixedRate = bond.Coupon,
-                    Currency = EnsureCurrency(ctx, bond.Currency),
-                    id_LegType = _legTypes.Received.id,
-                    id_Instrument = ctx.Instruments.First(i => i.id_Description == descrId).id
-                };
-            } else if (description is Frn) {
-                var note = description as Frn;
-                leg = new Leg {
-                    Structure = note.FrnStructure,
-                    id_Idx = EnsureIndex(note.IndexName),
-                    Cap = note.Cap,
-                    Floor = note.Floor,
-                    Margin = note.Margin,
-                    Currency = EnsureCurrency(ctx, note.Currency),
-                    id_LegType = _legTypes.Received.id,
-                    id_Instrument = ctx.Instruments.First(i => i.id_Description == descrId).id
-                };
-            }
-            if (leg != null)
-                return leg;
-            throw new InvalidDataException();
-        }
+        private long UpdateChain(string name, long feedId, DateTime expanded, string prms) {
+            var table = _container.ResolveCrudWithConnection<NChain>(_connection);
+            var item = table.FindBy(t => t.Name == name).FirstOrDefault(); // todo expressions parsing
 
-        private long? EnsureIndex(string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_indices.ContainsKey(name))
-                return _indices[name];
-
-
-            var indexTable = _container.ResolveCrudWithConnection<NIdx>(_connection);
-
-            var index = indexTable.FindBy(t => t.Name == name).FirstOrDefault(); // todo expressions parsing
-
-            if (index == null) {
-                index = new NIdx {Name = name};
-                indexTable.Create(index);
-                indexTable.Save();
-                _indices.Add(name, index.id);
-            }
-            _indices[name] = index.id;
-            return index.id;
-        }
-
-        private Feed EnsureFeed(SaverContext ctx, string name) {
-            if (_feeds.ContainsKey(name))
-                return _feeds[name];
-
-            var feed = ctx.Feeds.FirstOrDefault(t => t.Name == name) ??
-                       ctx.Feeds.Add(new Feed { Name = name });
-
-            _feeds[name] = feed;
-            return feed;
-        }
-
-        private Chain EnsureChain(SaverContext ctx, string name, Feed feed, DateTime expanded, string prms) {
-            var chain = _chains.ContainsKey(name) ? _chains[name] : ctx.Chains.FirstOrDefault(t => t.Name == name);
-
-            if (chain != null) {
-                chain.Params = prms;
-                chain.Expanded = expanded;
-                chain.Feed = feed;
+            if (item != null) {
+                item.Params = prms;
+                item.Expanded = expanded;
+                item.id_Feed = feedId;
+                table.Update(item);
             } else {
-                chain = ctx.Chains.Add(new Chain { Name = name, Feed = feed, Expanded = expanded, Params = prms });
+                item = new NChain { Name = name, id_Feed = feedId, Expanded = expanded, Params = prms };
+                table.Create(item);
             }
+            table.Save();
 
-            _chains[name] = chain;
-            return chain;
+            return item.id;
         }
 
-        private static Isin EnsureIsin(SaverContext ctx, Ric ric, string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            var isin = ctx.Isins.FirstOrDefault(i => i.Name == name);
-            if (isin != null) {
-                if (isin.Feed == null)
-                    isin.Feed = ric.Feed;
-            } else {
-                isin = ctx.Isins.Add(new Isin { Name = name, Feed = ric.Feed });
-            }
-            ric.Isin = isin;
-            return isin;
-        }
-
-        private SubIndustry EnsureSubIndustry(SaverContext ctx, string ind, string sub) {
-            if (String.IsNullOrWhiteSpace(ind))
-                return null;
-
-            var industry = EnsureIndustry(ctx, ind);
-
-            var subIndustry = _subIndustries.ContainsKey(sub) ? _subIndustries[sub] :
-                ctx.SubIndustries.FirstOrDefault(t => t.Name == sub) ??
-                ctx.SubIndustries.Add(new SubIndustry { Name = sub });
-
-            subIndustry.Industry = industry;
-
-            _subIndustries[sub] = subIndustry;
-            return subIndustry;
-        }
-
-        private Specimen EnsureSpecimen(SaverContext ctx, string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_specimens.ContainsKey(name))
-                return _specimens[name];
-
-            var pt = ctx.Specimens.FirstOrDefault(t => t.name == name) ??
-                     ctx.Specimens.Add(new Specimen { name = name });
-
-            _specimens[name] = pt;
-            return pt;
-        }
-
-        private Industry EnsureIndustry(SaverContext ctx, string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_industries.ContainsKey(name))
-                return _industries[name];
-
-            var industry = ctx.Industries.FirstOrDefault(t => t.Name == name) ??
-                           ctx.Industries.Add(new Industry { Name = name });
-
-            _industries[name] = industry;
-            return industry;
-        }
-
-        private Seniority EnsureSeniority(SaverContext ctx, string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_seniorities.ContainsKey(name))
-                return _seniorities[name];
-
-            var pt = ctx.Seniorities.FirstOrDefault(t => t.Name == name) ??
-                     ctx.Seniorities.Add(new Seniority { Name = name });
-
-            _seniorities[name] = pt;
-            return pt;
-        }
-
-        private Ticker EnsureTicker(SaverContext ctx, string child, string parent) {
-            if (String.IsNullOrWhiteSpace(child))
-                return null;
-
-            // There was situation when child and parent names were same. 
-            // In this case parent is ignored
-            var parentName = parent == child ? String.Empty : parent;
-            var pt = EnsureParentTicker(ctx, parentName); // find or create the parent
-
-            // Checking if there's already a ticker with such name
-            Ticker ch;
-            if (_tickers.ContainsKey(child)) {
-                ch = _tickers[child];
-                ch.Parent = pt;
-            } else {
-                ch = (pt == null
-                    ? ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent == null)
-                    : ctx.Tickers.FirstOrDefault(t => t.Name == child && t.Parent != null && t.Parent.Name == pt.Name))
-                     ?? ctx.Tickers.Add(new Ticker { Name = child, Parent = pt });
-
-                _tickers[child] = ch; // store
-            }
-
-            return ch;
-        }
-
-        private Ticker EnsureParentTicker(SaverContext ctx, string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_tickers.ContainsKey(name))
-                return _tickers[name];
-
-            var pt = ctx.Tickers.FirstOrDefault(t => t.Name == name) ??
-                     ctx.Tickers.Add(new Ticker { Name = name });
-
-            _tickers[name] = pt;
-            return pt;
-        }
-
-        private Currency EnsureCurrency(SaverContext ctx, string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_currencies.ContainsKey(name))
-                return _currencies[name];
-            var currency = ctx.Currencies.FirstOrDefault(b => b.Name == name);
-            if (currency != null) {
-                _currencies[name] = currency;
-                return currency;
-            }
-
-            currency = ctx.Currencies.Add(new Currency { Name = name });
-            _currencies[name] = currency;
-            return currency;
-        }
-
-        private LegalEntity EnsureLegalEntity(SaverContext ctx, string name, Country country) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_legalEntities.ContainsKey(name))
-                return _legalEntities[name];
-
-            var legalEntity = ctx.LegalEntities.FirstOrDefault(b => b.Name == name);
-            if (legalEntity != null) {
-                _legalEntities[name] = legalEntity;
-                return legalEntity;
-            }
-
-            legalEntity = ctx.LegalEntities.Add(new LegalEntity { Name = name, Country = country });
-            _legalEntities[name] = legalEntity;
-            return legalEntity;
-        }
-
-        private Country EnsureCountry(SaverContext ctx, string name) {
-            if (String.IsNullOrWhiteSpace(name))
-                return null;
-
-            if (_countries.ContainsKey(name))
-                return _countries[name];
-
-            var country = ctx.Countries.FirstOrDefault(c => c.Name == name);
-            if (country != null) {
-                _countries[name] = country;
-                return country;
-            }
-
-            country = ctx.Countries.Add(new Country { Name = name });
-            _countries[name] = country;
-            return country;
-        }
-
-        private static string BulkInsertLegs(IEnumerable<Leg> legs) {
-            var res = legs.Aggregate(
-                "INSERT INTO Leg(id_Instrument, id_LegType, id_Currency, id_Idx, Structure, FixedRate, Cap, Floor, Margin) VALUES",
-                (current, i) => {
-                    var coupon = i.FixedRate.HasValue ? String.Format("'{0}'", i.FixedRate.Value) : "NULL";
-                    var idIndex = i.id_Idx.HasValue ? i.id_Idx.ToString() : "NULL";
-                    var cap = i.Cap.HasValue ? i.Cap.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var floor = i.Floor.HasValue ? i.Floor.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var margin = i.Margin.HasValue ? i.Margin.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    return current + String.Format(
-                        "({0}, {1}, {2}, {3}, '{4}', {5}, {6}, {7}, {8}), ",
-                        i.id_Instrument, i.id_LegType, i.Currency.id, idIndex, i.Structure, coupon, cap, floor, margin);
-                });
-            return res.Substring(0, res.Length - 2);
-        }
-
-        private static string BulkInsertInstruments(IEnumerable<Instrument> instruments) {
-            var res = instruments.Aggregate(
-                "INSERT INTO Instrument(id_InstrumentType, id_Description, Name) SELECT ",
-                (current, i) => {
-                    var name = i.Name.Replace("'", "");
-                    return current + String.Format("{0}, {1}, '{2}' UNION SELECT ", i.id_InstrumentType, i.id_Description, name);
-                });
-            return res.Substring(0, res.Length - "UNION SELECT ".Length);
-        }
-
-        private static string BulkInsertBondDescription(IEnumerable<Description> descriptions) {
-            var res = descriptions.Aggregate(
-                "INSERT INTO Description(" +
-                "id_Issuer, id_Borrower, id_Isin, id_Ric, id_Ticker, id_SubIndustry, id_Specimen, id_Seniority, " +
-                "RateStructure, IssueSize, Series, Issue, Maturity, NextCoupon" +
-                ") SELECT ",
-                (current, i) => {
-                    var issueSize = i.IssueSize.HasValue ? i.IssueSize.Value.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var series = i.Series.Replace("''", "\"").Replace("'", "\"");
-
-                    var issue = i.Issue.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Issue.Value.ToLocalTime()) : "NULL";
-                    var maturity = i.Maturity.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.Maturity.Value.ToLocalTime()) : "NULL";
-                    var nextCoupon = i.NextCoupon.HasValue ? String.Format("\"{0:yyyy-MM-dd 00:00:00}\"", i.NextCoupon.Value.ToLocalTime()) : "NULL";
-
-                    var idIssuer = i.Issuer != null ? i.Issuer.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idBorrower = i.Borrower != null ? i.Borrower.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idIsin = i.Isin != null ? i.Isin.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idTicker = i.Ticker != null ? i.Ticker.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idSubIndustry = i.SubIndustry != null ? i.SubIndustry.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idSpecimen = i.Specimen != null ? i.Specimen.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idSeniority = i.Seniority != null ? i.Seniority.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-                    var idRic = i.Ric != null ? i.Ric.id.ToString(CultureInfo.InvariantCulture) : "NULL";
-
-                    return current + String.Format("{0}, {1}, {2}, {13}, {3}, {4}, {5}, {6}, '{7}', {8}, '{9}', {10}, {11}, {12} UNION SELECT ",
-                        idIssuer, idBorrower, idIsin, idTicker, idSubIndustry, idSpecimen, idSeniority,
-                        i.RateStructure, issueSize, series, issue, maturity, nextCoupon, idRic);
-                });
-            return res.Substring(0, res.Length - "UNION SELECT ".Length);
-        }
-
-        private void AddRics(SaverContext ctx, Chain chain, Feed feed, IEnumerable<string> rics) {
+        private void AddRics(long chainId, long feedId, IEnumerable<string> rics) {
+            var ricTable = _container.Resolve<ICrud<NRic>>();
+            var allRics = ricTable.FindAll().ToDictionary(r => r.Name, r => r);
+            var ricToChainTable = _container.Resolve<ICrud<NRicToChain>>();
+            var allRicRoChains = ricToChainTable.FindAll().ToList();
             foreach (var name in rics) {
-                try {
-                    ctx.Configuration.AutoDetectChangesEnabled = false;
-                    var ric = _rics.ContainsKey(name)
-                        ? _rics[name]
-                        : ctx.Rics.FirstOrDefault(r => r.Name == name) ??
-                          ctx.Rics.Add(new Ric { Name = name, id_FieldGroup = _resolver.Resolve(name).id });
-
-                    ric.Feed = feed;
-                    _rics[name] = ric;
-
-                    if (ric.RicToChains.All(rtc => rtc.Chain != chain))
-                        ctx.RicToChains.Add(new RicToChain { Ric = ric, Chain = chain });
-
-                } catch (DbEntityValidationException e) {
-                    Logger.ErrorEx("Invalid op", e);
-                } catch (DbUpdateException e) {
-                    Logger.ErrorEx("Failed to update", e);
-                } finally {
-                    ctx.Configuration.AutoDetectChangesEnabled = true;
+                NRic ric;
+                if (allRics.ContainsKey(name)) {
+                    ric = allRics[name];
+                    if (ric.id_Feed != feedId) {
+                        ric.id_Feed = feedId;
+                        ricTable.Update(ric);
+                        allRics[name] = ric;
+                    }
+                } else {
+                    var localName = name;
+                    ric = ricTable.FindBy(r => r.Name == localName).FirstOrDefault();
+                    if (ric == null) {
+                        ric = new NRic {Name = name, id_FieldGroup = _resolver.Resolve(name).id, id_Feed = feedId};
+                        ricTable.Create(ric);
+                    }
                 }
+                ricTable.Save();
+
+                if (allRicRoChains.Any(rtc => rtc.id_Ric == ric.id && rtc.id_Chain != chainId)) 
+                    ricToChainTable.Create(new NRicToChain { id_Chain = chainId, id_Ric = ric.id });
             }
+            ricToChainTable.Save();
         }
 
         public void SaveListRics(string listName, string[] rics, string feedName) {

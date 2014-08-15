@@ -33,28 +33,16 @@
     <Reference Include="Autofac">
       <HintPath>..\packages\Autofac.3.5.0\lib\net40\Autofac.dll</HintPath>
     </Reference>
-    <Reference Include="EntityFramework, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.Entity" />
     <Reference Include="System.Data.SQLite, Version=1.0.92.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
     <Reference Include="YieldMap.Requests">
       <HintPath>..\YieldMap.Tests\bin\Debug\YieldMap.Requests.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionMode.cs" />
-    <Compile Include="Domains\SaverContext.cs" />
     <Compile Include="Enums\ISourceTypes.cs" />
     <Compile Include="Enums\SourceTypes.cs" />
     <Compile Include="Native\Crud\ChainCrud.cs" />
@@ -74,10 +62,23 @@
     <Compile Include="Native\Crud\RicCrud.cs" />
     <Compile Include="Native\Crud\SourceTypeCrud.cs" />
     <Compile Include="Native\DbFieldAttribute.cs" />
+    <Compile Include="Native\Entities\NCountry.cs" />
+    <Compile Include="Native\Entities\NCurrency.cs" />
+    <Compile Include="Native\Entities\NDescription.cs" />
     <Compile Include="Native\Entities\NFrnDescriptionView.cs" />
+    <Compile Include="Native\Entities\NIndustry.cs" />
+    <Compile Include="Native\Entities\NIsin.cs" />
+    <Compile Include="Native\Entities\NLeg.cs" />
+    <Compile Include="Native\Entities\NLegalEntity.cs" />
+    <Compile Include="Native\Entities\NRicToChain.cs" />
+    <Compile Include="Native\Entities\NSeniority.cs" />
+    <Compile Include="Native\Entities\NSpecimen.cs" />
+    <Compile Include="Native\Entities\NSubIndustry.cs" />
+    <Compile Include="Native\Entities\NTicker.cs" />
     <Compile Include="Native\ICrud.cs" />
     <Compile Include="Native\IIdentifyable.cs" />
     <Compile Include="Native\Crud\InstrumentCrud.cs" />
+    <Compile Include="Native\IIdName.cs" />
     <Compile Include="Native\INEntityHelper.cs" />
     <Compile Include="Native\INotIdentifyable.cs" />
     <Compile Include="Native\ITypedInstrument.cs" />
@@ -136,7 +137,6 @@
     <Compile Include="Procedures\IPropertyUpdater.cs" />
     <Compile Include="Procedures\PropertyUpdater.cs" />
     <Compile Include="Tools\EntityAction.cs" />
-    <Compile Include="Tools\DbContextHelper.cs" />
     <Compile Include="Events\ChainRicHandler.cs" />
     <Compile Include="DatabaseBuilder.cs" />
     <Compile Include="Events\InstrumentDescriptionHandler.cs" />
@@ -150,7 +150,6 @@
     <Compile Include="Procedures\Evaluatable.cs" />
     <Compile Include="Procedures\FunctionRegistry.cs" />
     <Compile Include="MediatorTypes\Bond.cs" />
-    <Compile Include="Domains\BaseContext.cs" />
     <Compile Include="Procedures\IDbUpdates.cs" />
     <Compile Include="Procedures\Mission.cs" />
     <Compile Include="Procedures\DbUpdates.cs" />
@@ -186,10 +185,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\YieldMap.Database\YieldMap.Database.csproj">
-      <Project>{21174B80-86BF-491F-9BF5-057D46A39D4C}</Project>
-      <Name>YieldMap.Database</Name>
-    </ProjectReference>
     <ProjectReference Include="..\YieldMap.Language\YieldMap.Language.fsproj">
       <Project>{8ed0f41e-4146-4875-9ab1-0d5ecf2ca491}</Project>
       <Name>YieldMap.Language</Name>

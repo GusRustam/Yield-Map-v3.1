@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity.Validation;
 using System.Linq;
-using YieldMap.Tools.Logging;
 
 namespace YieldMap.Transitive.Tools {
     internal static class Extensions {
@@ -16,19 +14,6 @@ namespace YieldMap.Transitive.Tools {
             var res = set != null ? new HashSet<T>(set) : new HashSet<T>();
             items.ToList().ForEach(item => res.Remove(item));
             return res;
-        }
-
-        public static void Report(this Logging.Logger logger, string msg, DbEntityValidationException e) {
-            logger.Error(msg);
-            foreach (var eve in e.EntityValidationErrors) {
-                logger.Error(
-                    String.Format(
-                        "Entity of type [{0}] in state [{1}] has the following validation errors:",
-                        eve.Entry.Entity.GetType().Name, eve.Entry.State));
-
-                foreach (var ve in eve.ValidationErrors)
-                    logger.Error(String.Format("- Property: [{0}], Error: [{1}]", ve.PropertyName, ve.ErrorMessage));
-            }
         }
 
         public static void ChunkedForEach<T>(this IEnumerable<T> items, Action<IEnumerable<T>> action, int chunkSize) {

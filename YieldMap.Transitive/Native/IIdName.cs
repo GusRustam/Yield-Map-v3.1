@@ -1,6 +1,6 @@
 ﻿namespace YieldMap.Transitive.Native {
-    public interface IIdentifyable {
+    public interface IIdName : IIdentifyable {
         // ReSharper disable once InconsistentNaming
-        long id { get; set; }
+        string Name { get; set; }
     }
 }

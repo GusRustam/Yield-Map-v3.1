@@ -36,18 +36,6 @@
       <HintPath>..\packages\Autofac.3.5.0\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Clutch">
-      <HintPath>..\packages\Clutch.1.0.4607.26442\lib\net40\Clutch.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Clutch.Diagnostics.EntityFramework">
-      <HintPath>..\packages\Clutch.Diagnostics.EntityFramework.1.0.5186.27187\lib\net40\Clutch.Diagnostics.EntityFramework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="EntityFramework">
-      <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="FsUnit.NUnit">
       <HintPath>..\packages\FsUnit.1.2.1.0\Lib\Net40\FsUnit.NUnit.dll</HintPath>
       <Private>True</Private>
@@ -77,7 +65,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Entity" />
@@ -114,11 +101,6 @@
     <ProjectReference Include="..\YieldMap.Core\YieldMap.Core.fsproj">
       <Name>YieldMap.Core</Name>
       <Project>{f19b076c-c552-46fa-88b0-3f33a96dfadc}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\YieldMap.Database\YieldMap.Database.csproj">
-      <Name>YieldMap.Database</Name>
-      <Project>{21174b80-86bf-491f-9bf5-057d46a39d4c}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\YieldMap.Language\YieldMap.Language.fsproj">
@@ -173,7 +155,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetDir)../../../YieldMap.Database/main.db" "$(ProjectDir)"/E /I /F /Y
+    <PostBuildEvent>xcopy "$(TargetDir)../../../YieldMap.Transitive/main.db" "$(ProjectDir)"/E /I /F /Y
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

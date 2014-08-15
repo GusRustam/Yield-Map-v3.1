@@ -1,5 +1,4 @@
-﻿using YieldMap.Database;
-using YieldMap.Transitive.Native.Entities;
+﻿using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Enums {
     public interface IFieldDefinitions {

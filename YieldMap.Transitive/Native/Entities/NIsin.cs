@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace YieldMap.Transitive.Native.Entities {
-    public class NIdx : IIdName, IEquatable<NIdx> {
+    public class NIsin : IIdentifyable, IEquatable<NIsin> {
         [DbField(0)]
         public long id { get; set; }
 
@@ -9,14 +9,14 @@ namespace YieldMap.Transitive.Native.Entities {
         public string Name { get; set; }
 
         [DbField(2)] // Resharper disable InconsistentNaming once
-        public long? id_Ric { get; set; }
+        public long? id_Feed { get; set; }
 
-        public bool Equals(NIdx other) {
+        public bool Equals(NIsin other) {
             if (other == null)
                 return false;
             if (id != default(long) && other.id != default(long) && id == other.id)
                 return true;
-            return Name == other.Name && id_Ric == other.id_Ric;
+            return Name == other.Name && id_Feed == other.id_Feed;
         }
     }
 }

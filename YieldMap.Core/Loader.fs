@@ -5,8 +5,6 @@ module Loader =
 
     open DbManager
 
-    open YieldMap.Database
-
     open YieldMap.Core
     open YieldMap.Core.Notifier
 
@@ -16,18 +14,12 @@ module Loader =
     open YieldMap.Requests.MetaTables
 
     open YieldMap.Tools.Aux
-    open YieldMap.Tools.Aux.Workflows.Attempt
     open YieldMap.Tools.Response
-    open YieldMap.Tools.Location
     open YieldMap.Tools.Logging
 
     open YieldMap.Transitive.MediatorTypes
     open YieldMap.Transitive.Procedures
-    open YieldMap.Transitive.Events
 
-    open System
-    open System.Collections.Generic
-    open System.IO
     open YieldMap.Transitive.Native
     open YieldMap.Transitive.Native.Entities
     open YieldMap.Transitive.Native.Crud

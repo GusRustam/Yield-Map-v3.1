@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace YieldMap.Transitive.Native.Entities {
-    public class NFeed : IIdentifyable, IEquatable<NFeed> {
+    public class NFeed : IIdName, IEquatable<NFeed> {
         [DbField(0)]
         public long id { get; set; }
 
