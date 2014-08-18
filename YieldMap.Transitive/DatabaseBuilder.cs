@@ -162,26 +162,26 @@ namespace YieldMap.Transitive {
         }
 
         static DatabaseBuilder() {
-            var crudTypes = GenerateAssembly<IIdentifyable>(
+            var allTypes = new Set<Type>(Assembly.GetExecutingAssembly().GetTypes());
+            
+            var crudTypes = new Set<Type>(GenerateAssembly<IIdentifyable>(
                     typeof(ICrud<>), 
                     typeof(CrudBase<>), 
                     typeof(INEntityHelper), 
                     new AssemblyName("YieldMap.Cruds"),
                     "Crud")
-                .GetTypes();
-            var readerTypes = GenerateAssembly<INotIdentifyable>(
+                .GetTypes()) + allTypes;
+
+            var readerTypes = new Set<Type>(GenerateAssembly<INotIdentifyable>(
                     typeof(IReader<>), 
                     typeof(ReaderBase<>), 
                     typeof(INEntityReaderHelper), 
                     new AssemblyName("YieldMap.Readers"),
                     "Reader")
-                .GetTypes(); 
+                .GetTypes()) + allTypes; 
 
             Builder = new ContainerBuilder();
             
-            // todo from here we will have to select those cruds and readers who are explicitly implemented
-            var allTypes = Assembly.GetExecutingAssembly().GetTypes(); 
-
             // Services
             Builder.Register(x => Triggers.Main).As<ITriggerManager>();
             Builder.RegisterModule<NotificationsModule>();
@@ -262,7 +262,8 @@ namespace YieldMap.Transitive {
                  .ToList();
 
             readers.ForEach(t => {
-                Builder.RegisterType(t.Type).As(t.Interface);
+                Builder.RegisterType(t.Type).As(t.Interface)
+                    .UsingConstructor(typeof(Func<IContainer>));
                 Builder.RegisterType(t.Type)
                     .UsingConstructor(typeof(Func<IContainer>))
                     .Keyed(ConnectionMode.New, t.Interface);

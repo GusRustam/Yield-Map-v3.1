@@ -13,7 +13,11 @@ namespace YieldMap.Transitive.Native.Entities {
         
         [DbField(3)] 
         public string Value { get; set; }
-        
+
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NPropertyValue other) {
             if (other == null)
                 return false;

@@ -47,6 +47,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(14)] // ReSharper disable once InconsistentNaming
         public DateTime? NextCoupon { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NDescription other) {
             if (other == null)
                 return false;

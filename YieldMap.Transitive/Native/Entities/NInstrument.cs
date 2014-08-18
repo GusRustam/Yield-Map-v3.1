@@ -15,6 +15,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(3)] // ReSharper disable once InconsistentNaming
         public long? id_Description { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NInstrument other) {
             if (other == null) return false;
             if (id != default(long) && other.id != default(long) && id == other.id) return true;

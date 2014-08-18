@@ -32,6 +32,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(9)]
         public double? Margin { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NLeg other) {
             if (other == null)
                 return false;

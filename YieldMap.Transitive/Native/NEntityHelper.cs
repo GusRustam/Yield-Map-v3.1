@@ -107,11 +107,10 @@ namespace YieldMap.Transitive.Native {
 
             var valuesList = _cache.Properties[type].Where(p => p.DbName != "id").Aggregate("", (condition, p) => {
                 var formattedField = _cache.Rules[type][p.Info.Name](p.Info.GetValue(instrument));
-                return condition + p.DbName + " = " + formattedField + " AND ";
+                return condition + p.DbName + (formattedField != "NULL" ? " = " : " IS ") + formattedField + " AND ";
             });
 
             return string.Format("SELECT id FROM {0} WHERE {1}", name, valuesList.Substring(0, valuesList.Length - " AND ".Length));
-            
         }
 
         public NEntityHelper(Func<IContainer> containerFunc) {

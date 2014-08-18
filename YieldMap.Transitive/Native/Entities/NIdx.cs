@@ -11,6 +11,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(2)] // Resharper disable InconsistentNaming once
         public long? id_Ric { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NIdx other) {
             if (other == null)
                 return false;

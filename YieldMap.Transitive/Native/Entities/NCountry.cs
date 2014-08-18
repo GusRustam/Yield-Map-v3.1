@@ -8,6 +8,9 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(1)]
         public string Name { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
         public bool Equals(NCountry other) {
             if (other == null)
                 return false;

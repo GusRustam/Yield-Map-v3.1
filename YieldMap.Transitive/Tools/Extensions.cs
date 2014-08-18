@@ -4,6 +4,11 @@ using System.Linq;
 
 namespace YieldMap.Transitive.Tools {
     internal static class Extensions {
+        public static TValue? GetNullable<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key) where TValue : struct {
+            if (!dictionary.ContainsKey(key)) return null;
+            return dictionary[key];
+        }
+
         public static HashSet<T> Add<T>(this HashSet<T> set, IEnumerable<T> items) {
             var res = set != null ? new HashSet<T>(set) : new HashSet<T>();
             items.ToList().ForEach(item => res.Add(item));

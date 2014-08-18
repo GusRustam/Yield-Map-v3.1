@@ -11,6 +11,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(2)] // ReSharper disable once InconsistentNaming
         public string Expression { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NFilter other) {
             if (other == null)
                 return false;

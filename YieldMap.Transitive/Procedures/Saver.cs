@@ -109,22 +109,23 @@ namespace YieldMap.Transitive.Procedures {
             var ricTable = _container.ResolveCrudWithConnection<NRic>(_connection);
             var allRics = ricTable.FindAll().ToDictionary(r => r.Name, r => r);
 
-            foreach (var bond in bonds) {
+            foreach (var bond in bonds.Where(b => !string.IsNullOrEmpty(b.Isin))) {
+                var ric = allRics[bond.Ric]; // todo ric comparison??
+                if (!allIsins.ContainsKey(bond.Isin)) {
+                    var isin = new NIsin { Name = bond.Isin, id_Feed = ric.id_Feed };
+                    isinTable.Create(isin);
+                    allIsins.Add(bond.Isin, isin);
+                }
+            }
+            isinTable.Save();
+
+            foreach (var bond in bonds.Where(b => !string.IsNullOrEmpty(b.Isin))) {
                 try {
                     var ric = allRics[bond.Ric]; // todo ric comparison??
-                        
                     if (!ric.id_Isin.HasValue) {
-                        NIsin isin;
-                        if (allIsins.ContainsKey(bond.Isin)) {
-                            isin = allIsins[bond.Isin];
-                        } else {
-                            isin = new NIsin {Name = bond.Isin, id_Feed = ric.id_Feed};
-                            isinTable.Create(isin);
-                            isinTable.Save();
-                            allIsins.Add(bond.Isin, isin);
-                        }
-                        ric.id_Isin = isin.id;
+                        ric.id_Isin = allIsins[bond.Isin].id;
                         ricTable.Update(ric);
+                        allRics[ric.Name] = ric;
                     }
                 } catch (Exception e) {
                     Logger.ErrorEx("Saving isins failed", e);
@@ -137,9 +138,9 @@ namespace YieldMap.Transitive.Procedures {
             var countries = new Dictionary<string, NCountry>();
             foreach (var bond in bonds) {
                 if (!string.IsNullOrEmpty(bond.IssuerCountry))
-                    SaveIdName(bond.IssuerCountry, countryTable, countries1, countries);
+                    SaveIdName(bond.IssuerCountry, countryTable, countries);
                 if (!string.IsNullOrEmpty(bond.BorrowerCountry))
-                    SaveIdName(bond.BorrowerCountry, countryTable, countries1, countries);
+                    SaveIdName(bond.BorrowerCountry, countryTable, countries);
             }
             countryTable.Save();
             foreach (var nCountry in countries) 
@@ -167,9 +168,9 @@ namespace YieldMap.Transitive.Procedures {
             var tickers = new Dictionary<string, NTicker>();
             foreach (var bond in bonds) {
                 if (!string.IsNullOrEmpty(bond.Ticker)) 
-                    SaveIdName(bond.Ticker, tickerTable, tickers1, tickers);
+                    SaveIdName(bond.Ticker, tickerTable, tickers);
                 if (!string.IsNullOrEmpty(bond.ParentTicker)) 
-                    SaveIdName(bond.ParentTicker, tickerTable, tickers1, tickers);
+                    SaveIdName(bond.ParentTicker, tickerTable, tickers);
             }
             tickerTable.Save();
             foreach (var ticker in tickers)
@@ -179,7 +180,7 @@ namespace YieldMap.Transitive.Procedures {
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.ParentTicker))) {
                 var ticker = tickers[bond.Ticker];
                 ticker.id_Parent = tickers1[bond.ParentTicker];
-                tickerTable.Update(ticker);
+                tickerTable.Update(ticker); // INSERTS INSTEAD OF UPDATE!!!
             }
             tickerTable.Save();
 
@@ -187,7 +188,7 @@ namespace YieldMap.Transitive.Procedures {
             var seniorityTable = _container.ResolveCrudWithConnection<NSeniority>(_connection);
             var seniorities = new Dictionary<string, NSeniority>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Seniority))) 
-                SaveIdName(bond.Seniority, seniorityTable, seniorities1, seniorities);
+                SaveIdName(bond.Seniority, seniorityTable, seniorities);
             seniorityTable.Save();
             foreach (var seniority in seniorities)
                 seniorities1[seniority.Key] = seniority.Value.id;
@@ -196,7 +197,7 @@ namespace YieldMap.Transitive.Procedures {
             var specimenTable = _container.ResolveCrudWithConnection<NSpecimen>(_connection);
             var specimens = new Dictionary<string, NSpecimen>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Specimen)))
-                SaveIdName(bond.Specimen, specimenTable, specimens1, specimens);
+                SaveIdName(bond.Specimen, specimenTable, specimens);
             specimenTable.Save();
             foreach (var specimen in specimens)
                 specimens1[specimen.Key] = specimen.Value.id;
@@ -205,7 +206,7 @@ namespace YieldMap.Transitive.Procedures {
             var currencyTable = _container.ResolveCrudWithConnection<NCurrency>(_connection);
             var currencies = new Dictionary<string, NCurrency>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Currency)))
-                SaveIdName(bond.Currency, currencyTable, currencies1, currencies);
+                SaveIdName(bond.Currency, currencyTable, currencies);
             currencyTable.Save();
             foreach (var currency in currencies)
                 seniorities1[currency.Key] = currency.Value.id;
@@ -214,7 +215,7 @@ namespace YieldMap.Transitive.Procedures {
             var subIndustryTable = _container.ResolveCrudWithConnection<NSubIndustry>(_connection);
             var subIndustries = new Dictionary<string, NSubIndustry>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.SubIndustry)))
-                SaveIdName(bond.SubIndustry, subIndustryTable, subIndustries1, subIndustries);
+                SaveIdName(bond.SubIndustry, subIndustryTable, subIndustries);
             subIndustryTable.Save();
             foreach (var subIndustry in subIndustries)
                 subIndustries1[subIndustry.Key] = subIndustry.Value.id;
@@ -223,7 +224,7 @@ namespace YieldMap.Transitive.Procedures {
             var industryTable = _container.ResolveCrudWithConnection<NIndustry>(_connection);
             var industries = new Dictionary<string, NIndustry>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Industry)))
-                SaveIdName(bond.Industry, industryTable, industries1, industries);
+                SaveIdName(bond.Industry, industryTable, industries);
             industryTable.Save();
             foreach (var industry in industries)
                 industries1[industry.Key] = industry.Value.id;
@@ -232,7 +233,7 @@ namespace YieldMap.Transitive.Procedures {
             var indexTable = _container.ResolveCrudWithConnection<NIdx>(_connection);
             var indices = new Dictionary<string, NIdx>();
             foreach (var bond in bonds.OfType<Frn>().Where(bond => !string.IsNullOrEmpty(bond.IndexName)))
-                SaveIdName(bond.IndexName, indexTable, indices1, indices);
+                SaveIdName(bond.IndexName, indexTable, indices); // tries to add indices
             indexTable.Save();
             foreach (var index in indices)
                 indices1[index.Key] = index.Value.id;
@@ -244,7 +245,7 @@ namespace YieldMap.Transitive.Procedures {
                 subIndustry.id_Industry = industries1[bond.Industry];
                 subIndustryTable.Update(subIndustry);
             }
-            subIndustryTable.Save();
+            subIndustryTable.Save(); // tries to update "where id = 0"
 
 
             // Descriptions
@@ -262,12 +263,12 @@ namespace YieldMap.Transitive.Procedures {
                     Issue = bond.Issue,
                     Maturity = bond.Maturity,
                     NextCoupon = bond.NextCoupon,
-                    id_Issuer = legalEntities1[bond.IssuerName],
-                    id_Borrower = legalEntities1[bond.BorrowerName],
-                    id_Ticker = tickers1[bond.Ticker],
-                    id_Seniority = seniorities1[bond.Seniority],
-                    id_SubIndustry = subIndustries1[bond.SubIndustry],
-                    id_Specimen = specimens1[bond.Specimen],
+                    id_Issuer = legalEntities1.GetNullable(bond.IssuerName),
+                    id_Borrower = legalEntities1.GetNullable(bond.BorrowerName),
+                    id_Ticker = tickers1.GetNullable(bond.Ticker),
+                    id_Seniority = seniorities1.GetNullable(bond.Seniority),
+                    id_SubIndustry = subIndustries1.GetNullable(bond.SubIndustry),
+                    id_Specimen = specimens1.GetNullable(bond.Specimen),
                     id_Ric = idRic,
                     id_Isin = idIsin
                 };
@@ -295,6 +296,7 @@ namespace YieldMap.Transitive.Procedures {
                 if (instrumentsByDescr.ContainsKey(idDescr))
                     instrumentsTable.Update(instrument);
                 else instrumentsTable.Create(instrument);
+                instrumentsByDescr[idDescr] = instrument;
             }
             instrumentsTable.Save();
 
@@ -311,7 +313,7 @@ namespace YieldMap.Transitive.Procedures {
                     leg = new NLeg {
                         Structure = bond.BondStructure,
                         FixedRate = bond.Coupon,
-                        id_Currency = currencies1[bond.Ric],
+                        id_Currency = currencies1.GetNullable(bond.Ric),
                         id_LegType = _legTypes.Received.id,
                         id_Instrument = idInstrument
                     };
@@ -323,7 +325,7 @@ namespace YieldMap.Transitive.Procedures {
                         Cap = note.Cap,
                         Floor = note.Floor,
                         Margin = note.Margin,
-                        id_Currency = currencies1[note.Ric],
+                        id_Currency = currencies1.GetNullable(note.Ric),
                         id_LegType = _legTypes.Received.id,
                         id_Instrument = idInstrument
                     };
@@ -333,6 +335,7 @@ namespace YieldMap.Transitive.Procedures {
                     if (legsByInstrument.ContainsKey(idInstrument))
                         legsTable.Update(leg);
                     else legsTable.Create(leg);
+                    legsByInstrument.Add(idInstrument, leg);
                 }
             }
             legsTable.Save();
@@ -357,14 +360,14 @@ namespace YieldMap.Transitive.Procedures {
             storage[name] = entity;
         }
 
-        private static void SaveIdName<T>(string name, ICrud<T> crud, IDictionary<string, long> register, IDictionary<string, T> storage) 
+        private static void SaveIdName<T>(string name, ICrud<T> crud, IDictionary<string, T> storage) 
             where T : class, IIdName, IEquatable<T>, new() {
             T entity;
-            if (!register.ContainsKey(name)) {
+            if (!storage.ContainsKey(name)) {
                 entity = new T {Name = name};
                 crud.Create(entity);
             } else {
-                entity = crud.FindById(register[name]);
+                entity = storage[name];
                 if (entity.Name != name) {
                     entity.Name = name;
                     crud.Update(entity);
@@ -501,30 +504,31 @@ namespace YieldMap.Transitive.Procedures {
         private void AddRics(long chainId, long feedId, IEnumerable<string> rics) {
             var ricTable = _container.Resolve<ICrud<NRic>>();
             var allRics = ricTable.FindAll().ToDictionary(r => r.Name, r => r);
+
             var ricToChainTable = _container.Resolve<ICrud<NRicToChain>>();
             var allRicRoChains = ricToChainTable.FindAll().ToList();
-            foreach (var name in rics) {
+            
+            var theRics = rics as IList<string> ?? rics.ToList();
+            foreach (var name in theRics) {
                 NRic ric;
                 if (allRics.ContainsKey(name)) {
                     ric = allRics[name];
                     if (ric.id_Feed != feedId) {
                         ric.id_Feed = feedId;
                         ricTable.Update(ric);
-                        allRics[name] = ric;
                     }
                 } else {
-                    var localName = name;
-                    ric = ricTable.FindBy(r => r.Name == localName).FirstOrDefault();
-                    if (ric == null) {
-                        ric = new NRic {Name = name, id_FieldGroup = _resolver.Resolve(name).id, id_Feed = feedId};
-                        ricTable.Create(ric);
-                    }
+                    ric = new NRic { Name = name, id_FieldGroup = _resolver.Resolve(name).id, id_Feed = feedId };
+                    ricTable.Create(ric);
                 }
-                ricTable.Save();
-
-                if (allRicRoChains.Any(rtc => rtc.id_Ric == ric.id && rtc.id_Chain != chainId)) 
-                    ricToChainTable.Create(new NRicToChain { id_Chain = chainId, id_Ric = ric.id });
+                allRics[name] = ric;
             }
+            ricTable.Save();
+
+            var nRics = theRics.Select(name => allRics[name]).Where(ric => allRicRoChains.Any(rtc => rtc.id_Ric == ric.id && rtc.id_Chain != chainId));
+            foreach (var ric in nRics) 
+                ricToChainTable.Create(new NRicToChain { id_Chain = chainId, id_Ric = ric.id });
+            
             ricToChainTable.Save();
         }
 

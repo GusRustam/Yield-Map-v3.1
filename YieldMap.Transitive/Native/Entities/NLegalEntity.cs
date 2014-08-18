@@ -11,6 +11,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(2)] // ReSharper disable once InconsistentNaming
         public long? id_Country { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NLegalEntity other) {
             if (other == null)
                 return false;

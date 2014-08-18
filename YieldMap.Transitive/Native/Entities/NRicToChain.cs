@@ -11,6 +11,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(2, "Chain_id")] // ReSharper disable once InconsistentNaming
         public long id_Chain { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NRicToChain other) {
             if (other == null)
                 return false;

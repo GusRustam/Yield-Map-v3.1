@@ -17,6 +17,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(4)]
         public long? id_FieldGroup { get; set; }
 
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         public bool Equals(NRic other) {
             if (other == null)
                 return false;

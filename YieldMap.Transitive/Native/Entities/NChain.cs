@@ -17,6 +17,10 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(4)]
         public string Params { get; set; }
 
+        public override int GetHashCode() {
+            return (int) id;
+        }
+
         public bool Equals(NChain other) {
             if (other == null)
                 return false;

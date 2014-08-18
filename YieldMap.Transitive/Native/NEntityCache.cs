@@ -89,13 +89,13 @@ namespace YieldMap.Transitive.Native {
                 type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Select(p => {
                         if (p.PropertyType == typeof(float?))
-                            return new { p.Name, Function = new Func<object, string>(ParseNullableDouble) };
-                        if (p.PropertyType == typeof(float))
-                            return new { p.Name, Function = new Func<object, string>(ParseDouble) };
-                        if (p.PropertyType == typeof(double?))
                             return new { p.Name, Function = new Func<object, string>(ParseNullableFloat) };
-                        if (p.PropertyType == typeof(double))
+                        if (p.PropertyType == typeof(float))
                             return new { p.Name, Function = new Func<object, string>(ParseFloat) };
+                        if (p.PropertyType == typeof(double?))
+                            return new { p.Name, Function = new Func<object, string>(ParseNullableDouble) };
+                        if (p.PropertyType == typeof(double))
+                            return new { p.Name, Function = new Func<object, string>(ParseDouble) };
                         if (p.PropertyType == typeof(long?))
                             return new { p.Name, Function = new Func<object, string>(ParseNullableLong) };
                         if (p.PropertyType == typeof(long))

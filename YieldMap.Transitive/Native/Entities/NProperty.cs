@@ -16,6 +16,11 @@ namespace YieldMap.Transitive.Native.Entities {
 
         [DbField(4, "id_InstrumentTpe")] // ReSharper disable once InconsistentNaming
         public long id_InstrumentType { get; set; }
+
+        public override int GetHashCode() {
+            return (int)id;
+        }
+
         
         public bool Equals(NProperty other) {
             if (other == null)

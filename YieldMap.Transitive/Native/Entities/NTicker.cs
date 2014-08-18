@@ -8,8 +8,12 @@ namespace YieldMap.Transitive.Native.Entities {
         [DbField(1)]
         public string Name { get; set; }
 
-        [DbField(2)] // ReSharper disable once InconsistentNaming
+        [DbField(2, "id_ParentTicker")] // ReSharper disable once InconsistentNaming
         public long? id_Parent { get; set; }
+
+        public override int GetHashCode() {
+            return (int)id;
+        }
 
         public bool Equals(NTicker other) {
             if (other == null)
