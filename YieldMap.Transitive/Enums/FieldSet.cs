@@ -4,7 +4,6 @@ using System.Linq;
 using Autofac;
 using YieldMap.Transitive.Native;
 using YieldMap.Transitive.Native.Entities;
-using YieldMap.Transitive.Native.Reader;
 
 namespace YieldMap.Transitive.Enums {
     public class FieldSet : IFieldSet {

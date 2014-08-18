@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Linq;
@@ -36,64 +37,31 @@ namespace YieldMap.Transitive {
             }
         }
 
-        static Assembly GenerateCruds() {
+        static Assembly GenerateAssembly<T>(Type baseInterface, Type abstractBase, Type helperType, AssemblyName assemblyName, string suffix) {
             // Define the assembly and the module.
-
             var appDomain = AppDomain.CurrentDomain;
-            var assemblyName = new AssemblyName("CrudsReaders");
+            //var assemblyName = new AssemblyName("Cruds");
             var assembly = appDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndSave);
 
             var module = assembly.DefineDynamicModule(assemblyName.Name, assemblyName.Name + ".dll");
 
-
             /////////////////////////////////////////////////////////////////////
-            // Declare the types (classes).
+            // Find entities which need cruds 
             // 
 
             var allTypes = Assembly.GetExecutingAssembly().GetTypes();
-            var identifyables = allTypes
-                .Select(t => {
-                    var genericInterfaces = t.GetInterfaces();
-
-                    if (t.IsClass && !t.IsAbstract && t.GetInterfaces().Any(x => x == typeof(IIdentifyable))) {
-                        TheLogger.Trace(string.Format("Hope to keep {0}", t.Name));
-
-                        var itsGenericBase = typeof(ICrud<>).MakeGenericType(new[] { t });
-                        var implementers = allTypes
-                            .Select(type => new {
-                                Type = type,
-                                Interface = type.GetInterfaces().FirstOrDefault(x => x == itsGenericBase)
-                            })
-                            .Where(x => x.Interface != null)
-                            .ToList();
-
-                        if (!implementers.Any()) {
-                            TheLogger.Info(string.Format("Keeping {0}: not implemented elsewhere", t.Name));
-                            return new {
-                                Type = t,
-                                Interface = genericInterfaces.First(x => x == typeof (IIdentifyable))
-                            };
-                        }
-                        var names = string.Join(",", implementers.Select(i => i.Type.Name));
-                       
-                        TheLogger.Warn(string.Format("Skipping {0} it is already implemented in {1}", t.Name, names));
-                    }
-                    TheLogger.Trace(string.Format("Skipping {0}", t.Name));
-                    return null;
-                })
-                .Where(x => x != null)
-                .ToList();
+            var identifyables = FindNotImplemented<T>(baseInterface, allTypes);
 
             foreach (var identifyable in identifyables) {
                 // Declare the class "ClassA"
-                var genericCrudBase = typeof(CrudBase<>).MakeGenericType(new[] { identifyable.Type });
+                var genericCrudBase = abstractBase.MakeGenericType(new[] { identifyable });
 
                 var baseConstructor1 = genericCrudBase.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, CallingConventions.Any, new[] { typeof(Func<IContainer>) }, null);
                 Debug.Assert(baseConstructor1 != null, "baseConstructor1 != null");
-                var baseConstructor2 = genericCrudBase.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, CallingConventions.Any, new[] { typeof(SQLiteConnection), typeof(INEntityHelper) }, null);
+                var baseConstructor2 = genericCrudBase.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, CallingConventions.Any, new[] { typeof(SQLiteConnection), helperType }, null);
                 Debug.Assert(baseConstructor2 != null, "baseConstructor2 != null");
-                
-                var crudName = identifyable.Type.Name + "Crud";
+
+                var crudName = identifyable.Name + suffix;
                 TheLogger.Info(string.Format("Creating {0}", crudName));
 
                 // Creating class
@@ -143,7 +111,7 @@ namespace YieldMap.Transitive {
                 ilc1g.Emit(OpCodes.Ret);
 
                 var constructor2 = crudClass.DefineConstructor(MethodAttributes.Public,
-                    CallingConventions.Standard, new[] { typeof(SQLiteConnection), typeof(INEntityHelper) });
+                    CallingConventions.Standard, new[] { typeof(SQLiteConnection), helperType });
 
                 // ReSharper disable once InconsistentNaming
                 var ilc2g = constructor2.GetILGenerator();
@@ -156,16 +124,63 @@ namespace YieldMap.Transitive {
                 crudClass.CreateType();
             }
 
-            assembly.Save(assemblyName.Name + ".dll");
+            assembly.Save(assemblyName.Name + ".dll"); // todo do I need to save it?
             return assembly;
         }
 
+        private static IEnumerable<Type> FindNotImplemented<T>(Type baseGeneric, Type[] allTypes) {
+            return allTypes
+                .Select(t => {
+                    var interfaces = t.GetInterfaces();
+
+                    if (t.IsClass && !t.IsAbstract && interfaces.Any(x => x == typeof(T))) {
+                        TheLogger.Trace(string.Format("Hope to keep {0}", t.Name));
+
+                        var itsGenericBase = baseGeneric.MakeGenericType(new[] { t });
+
+                        // Checking if this generic interface is already implemented
+                        var implementers = allTypes
+                            .Select(type => new {
+                                Type = type,
+                                Interface = type.GetInterfaces().FirstOrDefault(x => x == itsGenericBase)
+                            })
+                            .Where(x => x.Interface != null)
+                            .ToList();
+
+                        if (!implementers.Any()) {
+                            TheLogger.Info(string.Format("Keeping {0}: not implemented elsewhere", t.Name));
+                            return t;
+                        }
+                        var names = string.Join(",", implementers.Select(i => i.Type.Name));
+                        TheLogger.Warn(string.Format("Skipping {0} it is already implemented in {1}", t.Name, names));
+                    }
+                    TheLogger.Trace(string.Format("Skipping {0}", t.Name));
+                    return null;
+                })
+                .Where(x => x != null)
+                .ToList();
+        }
+
         static DatabaseBuilder() {
-            var crudTypes = GenerateCruds().GetTypes(); 
+            var crudTypes = GenerateAssembly<IIdentifyable>(
+                    typeof(ICrud<>), 
+                    typeof(CrudBase<>), 
+                    typeof(INEntityHelper), 
+                    new AssemblyName("YieldMap.Cruds"),
+                    "Crud")
+                .GetTypes();
+            var readerTypes = GenerateAssembly<INotIdentifyable>(
+                    typeof(IReader<>), 
+                    typeof(ReaderBase<>), 
+                    typeof(INEntityReaderHelper), 
+                    new AssemblyName("YieldMap.Readers"),
+                    "Reader")
+                .GetTypes(); 
 
             Builder = new ContainerBuilder();
-
-            var allTypes = Assembly.GetExecutingAssembly().GetTypes();
+            
+            // todo from here we will have to select those cruds and readers who are explicitly implemented
+            var allTypes = Assembly.GetExecutingAssembly().GetTypes(); 
 
             // Services
             Builder.Register(x => Triggers.Main).As<ITriggerManager>();
@@ -231,7 +246,7 @@ namespace YieldMap.Transitive {
             });
 
             // - readers
-            var readers = allTypes
+            var readers = readerTypes
                  .Select(t => {
                      var genericInterfaces = t.GetInterfaces().Where(x => x.IsGenericType).ToList();
 

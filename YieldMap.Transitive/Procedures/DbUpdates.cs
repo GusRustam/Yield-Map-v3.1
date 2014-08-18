@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using YieldMap.Transitive.Native;
-using YieldMap.Transitive.Native.Crud;
 using YieldMap.Transitive.Native.Entities;
-using YieldMap.Transitive.Native.Reader;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Procedures {

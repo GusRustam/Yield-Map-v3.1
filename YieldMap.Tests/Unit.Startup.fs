@@ -282,7 +282,6 @@ module StartupTest =
         | _ -> ()
 
     open YieldMap.Tools.Aux
-    open YieldMap.Transitive.Native.Reader
     open YieldMap.Transitive.Native
 
     (* ========================= ============================= *)
