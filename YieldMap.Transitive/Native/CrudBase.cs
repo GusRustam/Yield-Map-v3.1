@@ -8,7 +8,7 @@ using YieldMap.Transitive.Events;
 using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Native {
-    public abstract class CrudBase<T> : ICrud<T> where T : class, IIdentifyable, IEquatable<T> {
+    public abstract class CrudBase<T> : ICrud<T> where T : class, IIdentifyable, IEquatable<T>, new() {
         public event EventHandler<IDbEventArgs> Notify;
         protected Dictionary<T, Operations> Entities = new Dictionary<T, Operations>();
         abstract protected Logging.Logger Logger { get; }
@@ -70,7 +70,12 @@ namespace YieldMap.Transitive.Native {
             return 0;
         }
 
-        public void DeleteAll() {
+        public int DeleteById(long id) {
+            var item = new T {id = id};
+            return Delete(item);
+        }
+
+        public void Wipe() {
             ExecuteSql(_helper.DeleteAllSql<T>());
             Entities.Clear();
         }

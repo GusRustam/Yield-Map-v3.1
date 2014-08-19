@@ -115,7 +115,9 @@ module Loader =
         let saver = container.Resolve<ISaver>()
         let updater = container.Resolve<IDbUpdates>()
 
-        let killer = container.Resolve<ICrud<NInstrument>>() :?> IInstrumentCrud
+
+        let instrumentCrud = container.Resolve<ICrud<NInstrument>>() :?> IInstrumentCrud
+        let descriptionCrud = container.Resolve<ICrud<NDescription>>() 
 
         async {
             try
@@ -139,10 +141,19 @@ module Loader =
                     (classified.[Mission.Obsolete].Length) 
                     (classified.[Mission.Keep].Length)
 
-                classified.[Mission.ToReload] |> killer.FindByRic |> Seq.iter (killer.Delete >> ignore)
-                classified.[Mission.Obsolete] |> killer.FindByRic |> Seq.iter (killer.Delete >> ignore)
+                let sentenced = 
+                    [classified.[Mission.Obsolete]; classified.[Mission.ToReload]] 
+                    |> Seq.collect instrumentCrud.FindByRic
+                
+                sentenced 
+                    |> Seq.iter (instrumentCrud.Delete >> ignore)
 
-                killer.Save () |> ignore
+                sentenced 
+                    |> Seq.choose (fun s -> if s.id_Description.HasValue then Some s.id_Description.Value else None) 
+                    |> Seq.iter (descriptionCrud.DeleteById >> ignore)
+
+                instrumentCrud.Save () |> ignore
+                descriptionCrud.Save () |> ignore
 
                 let! res = loadAndSaveMetadata s classified.[Mission.ToReload]
                 match res with 

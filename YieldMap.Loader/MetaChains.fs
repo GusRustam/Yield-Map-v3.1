@@ -119,10 +119,9 @@ module MetaChains =
                     let converter = getConverter conv
                     try converter.Convert <| value.ToString() with e -> Invalid (e.Message)
 
-                let rec import acc n = 
-                    if n > maxRow then
-                        acc
-                    else
+                let import2 () =
+                    let ans = Stack<'T> ()
+                    for n = minRow to maxRow do
                         try
                             let row = data.[n..n, *] |> Seq.cast<obj> |> Seq.toArray
                         
@@ -157,16 +156,20 @@ module MetaChains =
                             match importRow fieldsInfo with
                             | Some failure ->
                                 logger.WarnF "Import failed: %s" failure
-                                import acc (n+1)
+                                
                             | None -> 
                                 logger.Trace "Imported"
-                                import ([res] @ acc) (n+1)
+                                ans.Push res
 
                         with e -> 
                             logger.WarnF "Failed to import row %A num %d because of %s" data.[n..n, *] n (e.ToString())
-                            import acc (n+1)
-            
-                Tweet.Answer <| import [] minRow
+                    
+                    ans.ToArray()
+
+                import2 () 
+                |> List.ofArray 
+                |> Tweet.Answer 
+
             with e -> Tweet.Failure (Failure.Error e)
 
     module private MockOperations = 

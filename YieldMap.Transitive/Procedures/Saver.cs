@@ -209,7 +209,7 @@ namespace YieldMap.Transitive.Procedures {
                 SaveIdName(bond.Currency, currencyTable, currencies);
             currencyTable.Save();
             foreach (var currency in currencies)
-                seniorities1[currency.Key] = currency.Value.id;
+                currencies1[currency.Key] = currency.Value.id;
 
             // SubIndustries
             var subIndustryTable = _container.ResolveCrudWithConnection<NSubIndustry>(_connection);
@@ -247,14 +247,13 @@ namespace YieldMap.Transitive.Procedures {
             }
             subIndustryTable.Save(); // tries to update "where id = 0"
 
-
             // Descriptions
             var descriptionsTable = _container.ResolveCrudWithConnection<NDescription>(_connection);
             var descriptionsByRic = descriptionsTable.FindAll().ToDictionary(d => d.id_Ric, d => d);
 
             foreach (var bond in bonds) {
                 var idRic = allRics[bond.Ric].id;
-                var idIsin = allIsins[bond.Isin].id;
+                var idIsin = allIsins.ContainsKey(bond.Isin) ? new long?(allIsins[bond.Isin].id) : null;
 
                 var description = new NDescription {
                     RateStructure = bond.RateStructure,
@@ -313,7 +312,7 @@ namespace YieldMap.Transitive.Procedures {
                     leg = new NLeg {
                         Structure = bond.BondStructure,
                         FixedRate = bond.Coupon,
-                        id_Currency = currencies1.GetNullable(bond.Ric),
+                        id_Currency = currencies1.GetNullable(bond.Currency),
                         id_LegType = _legTypes.Received.id,
                         id_Instrument = idInstrument
                     };
@@ -325,7 +324,7 @@ namespace YieldMap.Transitive.Procedures {
                         Cap = note.Cap,
                         Floor = note.Floor,
                         Margin = note.Margin,
-                        id_Currency = currencies1.GetNullable(note.Ric),
+                        id_Currency = currencies1.GetNullable(note.Currency),
                         id_LegType = _legTypes.Received.id,
                         id_Instrument = idInstrument
                     };

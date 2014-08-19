@@ -573,7 +573,7 @@ module Database =
         let properyReader = container.Resolve<ICrud<NProperty>> ()
 
         let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
-        nativeKiller.DeleteAll()
+        nativeKiller.Wipe()
 
         properyReader.FindAll().ToList()
         |> Seq.iter (fun x -> registry.Add(x.id, x.id_InstrumentType, x.Expression) |> ignore)
@@ -599,7 +599,7 @@ module Database =
         let updater = container.Resolve<IPropertyUpdater>()
 
         let nativeKiller = container.Resolve<ICrud<NPropertyValue>> ()
-        nativeKiller.DeleteAll()
+        nativeKiller.Wipe()
 
         let properyReader = container.Resolve<ICrud<NProperty>> ()
         properyReader.FindAll().ToList()
@@ -784,15 +784,6 @@ module NativeDatabase =
                 "DELETE FROM Instrument  WHERE id IN (15, 16)"
                 "BEGIN TRANSACTION;\n UPDATE Instrument SET Name = 'Hello', id_InstrumentType = 1, id_Description = 2 WHERE id = 15;\nUPDATE Instrument SET Name = 'Bye', id_InstrumentType = 2, id_Description = NULL WHERE id = 16;\nEND TRANSACTION;"
             ])
-
-    [<Test>]
-    let ``Mutable keys`` () =
-        let x = Dictionary<NProperty, int> ()
-        let mutable key = NProperty(id = 1L)
-        x.Add(key, 1)
-        key.id <- 2L
-        x.[key] |> should be (equal 1L)
-
 
     [<Test>]
     let ``Simple read`` () =
