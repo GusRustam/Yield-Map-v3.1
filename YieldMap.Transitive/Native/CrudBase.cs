@@ -124,9 +124,9 @@ namespace YieldMap.Transitive.Native {
             }
             if (_muted && _unmute) Unmute();
         
-            foreach (var entity in Entities.Where(entity => entity.Value == Operations.Delete).ToList()) {
-                Entities.Remove(entity.Key);
-            }
+            //foreach (var entity in Entities.Where(entity => entity.Value != Operations.Read).ToList()) 
+            //    Entities.Remove(entity.Key);
+            Entities.Clear();
 
             return res;
         }

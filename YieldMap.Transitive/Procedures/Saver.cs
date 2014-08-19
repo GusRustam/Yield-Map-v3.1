@@ -135,7 +135,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Countries
             var countryTable = _container.ResolveCrudWithConnection<NCountry>(_connection);
-            var countries = new Dictionary<string, NCountry>();
+            var countries = countryTable.FindAll().ToDictionary(i => i.Name, i => i); //new Dictionary<string, NCountry>();
             foreach (var bond in bonds) {
                 if (!string.IsNullOrEmpty(bond.IssuerCountry))
                     SaveIdName(bond.IssuerCountry, countryTable, countries);
@@ -148,7 +148,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Legal Entites
             var legalEntitiesTable = _container.ResolveCrudWithConnection<NLegalEntity>(_connection);
-            var legalEntities = new Dictionary<string, NLegalEntity>();
+            var legalEntities = legalEntitiesTable.FindAll().ToDictionary(i => i.Name, i => i); //new Dictionary<string, NLegalEntity>();
             foreach (var bond in bonds) {
                 if (!string.IsNullOrEmpty(bond.IssuerName)) {
                     var idCountry = countries1.ContainsKey(bond.IssuerCountry) ? (long?)countries1[bond.IssuerCountry] : null;
@@ -165,7 +165,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Tickers
             var tickerTable = _container.ResolveCrudWithConnection<NTicker>(_connection);
-            var tickers = new Dictionary<string, NTicker>();
+            var tickers = tickerTable.FindAll().ToDictionary(i => i.Name, i => i); //new Dictionary<string, NTicker>();
             foreach (var bond in bonds) {
                 if (!string.IsNullOrEmpty(bond.Ticker)) 
                     SaveIdName(bond.Ticker, tickerTable, tickers);
@@ -180,13 +180,13 @@ namespace YieldMap.Transitive.Procedures {
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.ParentTicker))) {
                 var ticker = tickers[bond.Ticker];
                 ticker.id_Parent = tickers1[bond.ParentTicker];
-                tickerTable.Update(ticker); // INSERTS INSTEAD OF UPDATE!!!
+                tickerTable.Update(ticker); 
             }
             tickerTable.Save();
 
             // Seniority
             var seniorityTable = _container.ResolveCrudWithConnection<NSeniority>(_connection);
-            var seniorities = new Dictionary<string, NSeniority>();
+            var seniorities = seniorityTable.FindAll().ToDictionary(i => i.Name, i => i); //new Dictionary<string, NSeniority>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Seniority))) 
                 SaveIdName(bond.Seniority, seniorityTable, seniorities);
             seniorityTable.Save();
@@ -195,7 +195,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Specimen
             var specimenTable = _container.ResolveCrudWithConnection<NSpecimen>(_connection);
-            var specimens = new Dictionary<string, NSpecimen>();
+            var specimens = specimenTable.FindAll().ToDictionary(i => i.Name, i => i); // new Dictionary<string, NSpecimen>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Specimen)))
                 SaveIdName(bond.Specimen, specimenTable, specimens);
             specimenTable.Save();
@@ -204,7 +204,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Currency
             var currencyTable = _container.ResolveCrudWithConnection<NCurrency>(_connection);
-            var currencies = new Dictionary<string, NCurrency>();
+            var currencies = currencyTable.FindAll().ToDictionary(i => i.Name, i => i); //new Dictionary<string, NCurrency>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Currency)))
                 SaveIdName(bond.Currency, currencyTable, currencies);
             currencyTable.Save();
@@ -213,7 +213,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // SubIndustries
             var subIndustryTable = _container.ResolveCrudWithConnection<NSubIndustry>(_connection);
-            var subIndustries = new Dictionary<string, NSubIndustry>();
+            var subIndustries = subIndustryTable.FindAll().ToDictionary(i => i.Name, i => i); // new Dictionary<string, NSubIndustry>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.SubIndustry)))
                 SaveIdName(bond.SubIndustry, subIndustryTable, subIndustries);
             subIndustryTable.Save();
@@ -222,7 +222,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Industries
             var industryTable = _container.ResolveCrudWithConnection<NIndustry>(_connection);
-            var industries = new Dictionary<string, NIndustry>();
+            var industries = industryTable.FindAll().ToDictionary(i => i.Name, i => i); //new Dictionary<string, NIndustry>();
             foreach (var bond in bonds.Where(bond => !string.IsNullOrEmpty(bond.Industry)))
                 SaveIdName(bond.Industry, industryTable, industries);
             industryTable.Save();
@@ -231,7 +231,7 @@ namespace YieldMap.Transitive.Procedures {
 
             // Indices
             var indexTable = _container.ResolveCrudWithConnection<NIdx>(_connection);
-            var indices = new Dictionary<string, NIdx>();
+            var indices = indexTable.FindAll().ToDictionary(i => i.Name, i => i);
             foreach (var bond in bonds.OfType<Frn>().Where(bond => !string.IsNullOrEmpty(bond.IndexName)))
                 SaveIdName(bond.IndexName, indexTable, indices); // tries to add indices
             indexTable.Save();
