@@ -40,7 +40,6 @@ namespace YieldMap.Transitive {
         static Assembly GenerateAssembly<T>(Type baseInterface, Type abstractBase, Type helperType, AssemblyName assemblyName, string suffix) {
             // Define the assembly and the module.
             var appDomain = AppDomain.CurrentDomain;
-            //var assemblyName = new AssemblyName("Cruds");
             var assembly = appDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndSave);
 
             var module = assembly.DefineDynamicModule(assemblyName.Name, assemblyName.Name + ".dll");

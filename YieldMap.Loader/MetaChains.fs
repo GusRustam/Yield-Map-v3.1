@@ -106,7 +106,6 @@ module MetaChains =
                 let minRow = data.GetLowerBound(0)
                 let maxRow = data.GetUpperBound(0)
                 let minCol = data.GetLowerBound(1)
-                let maxCol = data.GetUpperBound(1)
 
                 let getConverter (conv : Type) = 
                     if converters.ContainsKey(conv) then converters.[conv] 

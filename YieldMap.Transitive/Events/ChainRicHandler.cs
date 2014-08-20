@@ -1,5 +1,5 @@
 ﻿using YieldMap.Tools.Logging;
-using YieldMap.Transitive.Procedures;
+using YieldMap.Transitive.Native.Entities;
 
 namespace YieldMap.Transitive.Events {
     public class ChainRicHandler : TriggerManagerBase {
@@ -11,17 +11,13 @@ namespace YieldMap.Transitive.Events {
 
         public override void Handle(object source, IDbEventArgs args) {
             Logger.Trace("Handle()");
-            switch (args.Source) {
-                case EventSource.Chain:
-                    Logger.Info(args.ToString());
-                    break;
-                case EventSource.Ric:
-                    Logger.Info(args.ToString());
-                    break;
-                default:
-                    if (Next != null)
-                        Next.Handle(source, args);
-                    break;
+            if (args.Source == typeof (NChain)) {
+                Logger.Info(args.ToString());
+            } else if (args.Source == typeof (NRic)) {
+                Logger.Info(args.ToString());
+            } else {
+                if (Next != null)
+                    Next.Handle(source, args);
             }
         } 
     }

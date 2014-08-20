@@ -61,13 +61,9 @@ namespace YieldMap.Transitive.Procedures {
 
                 AddRics(chainId, feedId, newRics);
 
-                // todo CHAINRIC REPORTING:
-                //var chainsUpd = context.ExtractEntityChanges<Chain>();
-                //var ricsUpd = context.ExtractEntityChanges<Ric>();
-
                 //if (Notify != null & _notifications) {
-                //    Notify(this, new DbEventArgs(chainsUpd.ExtractIds(), EventSource.Chain));
-                //    Notify(this, new DbEventArgs(ricsUpd.ExtractIds(), EventSource.Ric));
+                //    Notify(this, _container.Resolve<ICrud<NChain>>().GetUpdates()); // todo locking whole database or its parts!!!
+                //    Notify(this, ricsTable.GetUpdates());
                 //}
 
             } catch (Exception e) {
@@ -152,11 +148,11 @@ namespace YieldMap.Transitive.Procedures {
             foreach (var bond in bonds) {
                 if (!string.IsNullOrEmpty(bond.IssuerName)) {
                     var idCountry = countries1.ContainsKey(bond.IssuerCountry) ? (long?)countries1[bond.IssuerCountry] : null;
-                    SaveLegalEntity(bond.IssuerName, idCountry, legalEntitiesTable, legalEntities1, legalEntities);
+                    SaveLegalEntity(bond.IssuerName, idCountry, legalEntitiesTable, legalEntities);
                 }
                 if (!string.IsNullOrEmpty(bond.BorrowerName)) {
                     var country = countries1.ContainsKey(bond.BorrowerCountry) ? (long?)countries1[bond.BorrowerCountry] : null;
-                    SaveLegalEntity(bond.BorrowerName, country, legalEntitiesTable, legalEntities1, legalEntities);
+                    SaveLegalEntity(bond.BorrowerName, country, legalEntitiesTable, legalEntities);
                 }
             }
             legalEntitiesTable.Save();
@@ -339,17 +335,16 @@ namespace YieldMap.Transitive.Procedures {
             }
             legsTable.Save();
 
-            //if (_notifications) 
-            //    Notify(this, new DbEventArgs(addedInstruments, new long[] {}, new long[] {}, EventSource.Instrument));
+            //if (_notifications) Notify(this, instrumentsTable.GetUpdates());
         }
 
-        private static void SaveLegalEntity(string name, long? idCountry, ICrud<NLegalEntity> crud, IDictionary<string, long> register, IDictionary<string, NLegalEntity> storage) {
+        private static void SaveLegalEntity(string name, long? idCountry, ICrud<NLegalEntity> crud, IDictionary<string, NLegalEntity> storage) {
             NLegalEntity entity;
-            if (!register.ContainsKey(name)) {
+            if (!storage.ContainsKey(name)) {
                 entity = new NLegalEntity {Name = name, id_Country = idCountry};
                 crud.Create(entity);
             } else {
-                entity = crud.FindById(register[name]);
+                entity = storage[name];
                 if (entity.Name != name || entity.id_Country != idCountry) {
                     entity.Name = name;
                     entity.id_Country = idCountry;

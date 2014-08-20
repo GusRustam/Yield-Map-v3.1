@@ -12,6 +12,7 @@ namespace YieldMap.Transitive.Native {
         int Delete(T item);
         int DeleteById(long id);
         int Save();
+        DbEventArgs GetUpdates();
 
         /// <summary>
         /// Does not wait for Save to be called!  Use with care!

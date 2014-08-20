@@ -1,6 +1,7 @@
 ﻿using System;
 using Autofac;
 using YieldMap.Tools.Logging;
+using YieldMap.Transitive.Native.Entities;
 using YieldMap.Transitive.Procedures;
 using YieldMap.Transitive.Tools;
 
@@ -13,7 +14,7 @@ namespace YieldMap.Transitive.Events {
 
         public override void Handle(object source, IDbEventArgs args) {
             Logger.Trace("Handle()");
-            if (args != null && args.Source == EventSource.Instrument) {
+            if (args != null && args.Source == typeof(NInstrument)) {
                 Logger.Debug("Recalculating properties for instruments");
                 Logger.Debug(args.ToString());
                 try {

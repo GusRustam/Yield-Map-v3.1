@@ -113,6 +113,12 @@ namespace YieldMap.Transitive.Native {
             return string.Format("SELECT id FROM {0} WHERE {1}", name, valuesList.Substring(0, valuesList.Length - " AND ".Length));
         }
 
+        public string FindIdSql<T>(IEnumerable<T> instruments) where T : IIdentifyable {
+            var i = instruments as List<T> ?? instruments.ToList();
+            if (i.Any()) return string.Join(" UNION ALL ", i.Select(FindIdSql));
+            throw new ArgumentException("No instruments");
+        }
+
         public NEntityHelper(Func<IContainer> containerFunc) {
             var container = containerFunc();
 

@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using YieldMap.Transitive.Procedures;
+﻿using System;
+using System.Collections.Generic;
 using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Events {
@@ -7,16 +7,16 @@ namespace YieldMap.Transitive.Events {
         private readonly IEnumerable<long> _added;
         private readonly IEnumerable<long> _changed;
         private readonly IEnumerable<long> _removed;
-        public EventSource Source { get; private set; }
+        public Type Source { get; private set; }
 
-        public DbEventArgs(IEnumerable<long> added, IEnumerable<long> changed, IEnumerable<long> removed, EventSource source) {
+        public DbEventArgs(IEnumerable<long> added, IEnumerable<long> changed, IEnumerable<long> removed, Type source) {
             _added = added;
             _changed = changed;
             _removed = removed;
             Source = source;
         }
 
-        public DbEventArgs(IReadOnlyDictionary<EntityAction, IEnumerable<long>> data, EventSource source) {
+        public DbEventArgs(IReadOnlyDictionary<EntityAction, IEnumerable<long>> data, Type source) {
             _added = data[EntityAction.Added];
             _changed = data[EntityAction.Updated];
             _removed = data[EntityAction.Removed];

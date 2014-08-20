@@ -5,17 +5,28 @@ using System.Linq;
 using Autofac;
 using YieldMap.Tools.Logging;
 using YieldMap.Transitive.Events;
-using YieldMap.Transitive.Native.Entities;
+using YieldMap.Transitive.Tools;
 
 namespace YieldMap.Transitive.Native {
     public abstract class CrudBase<T> : ICrud<T> where T : class, IIdentifyable, IEquatable<T>, new() {
         public event EventHandler<IDbEventArgs> Notify;
+        
         protected Dictionary<T, Operations> Entities = new Dictionary<T, Operations>();
-        abstract protected Logging.Logger Logger { get; }
         protected readonly SQLiteConnection Connection;
+        protected readonly IContainer Container;
+        
         private readonly bool _ownsConnection;
         private readonly INEntityHelper _helper;
-        protected readonly IContainer Container;
+        
+        // ReSharper disable StaticFieldInGenericType
+        private static bool _muted = true;
+        private static bool _unmute;
+        private static long[] _added;
+        private static long[] _changed;
+        private static long[] _removed;
+        // ReSharper restore StaticFieldInGenericType
+
+        abstract protected Logging.Logger Logger { get; }
 
         protected CrudBase(SQLiteConnection connection, INEntityHelper helper) {
             Connection = connection;
@@ -80,8 +91,6 @@ namespace YieldMap.Transitive.Native {
             Entities.Clear();
         }
 
-        private bool _muted;
-        private bool _unmute;
 
         public void MuteOnce() {
             _muted = true;
@@ -107,65 +116,62 @@ namespace YieldMap.Transitive.Native {
 
             // Operations.Create (have ids only)
             res += Execute<T>(Operations.Create, _helper.BulkInsertSql);
-            RetrieveIds(Operations.Create);
 
             // Operations.Update (have ids only)
             res += Execute<T>(Operations.Update, _helper.BulkUpdateSql);
-            RetrieveIds(Operations.Update);
 
             // Operations.Delete 
             // - by id 
             // - by fields (todo)
             res += Execute<T>(Operations.Delete, _helper.BulkDeleteSql);
 
+            _added = Entities.Where(kvp => kvp.Value == Operations.Create).Select(kvp => kvp.Key.id).ToArray();
+            _changed = Entities.Where(kvp => kvp.Value == Operations.Update).Select(kvp => kvp.Key.id).ToArray();
+            _removed = Entities.Where(kvp => kvp.Value == Operations.Delete).Select(kvp => kvp.Key.id).ToArray();
 
             if (!_muted && Notify != null) {
-                Notify(this,
-                    new DbEventArgs(
-                        Entities.Where(kvp => kvp.Value == Operations.Create).Select(kvp => kvp.Key.id).ToArray(),
-                        Entities.Where(kvp => kvp.Value == Operations.Update).Select(kvp => kvp.Key.id).ToArray(),
-                        Entities.Where(kvp => kvp.Value == Operations.Delete).Select(kvp => kvp.Key.id).ToArray(),
-                        NativeSource<T>()));
+                Notify(this, new DbEventArgs(_added,_changed,_removed, typeof(T)));
             }
             if (_muted && _unmute) Unmute();
         
-            //foreach (var entity in Entities.Where(entity => entity.Value != Operations.Read).ToList()) 
-            //    Entities.Remove(entity.Key);
             Entities.Clear();
 
             return res;
         }
 
-        private static EventSource NativeSource<TType>() {
-            var type = typeof (TType);
-            if (type == typeof(NInstrument))
-                return EventSource.Instrument;
-            if (type == typeof(NProperty))
-                return EventSource.Property;
-            if (type == typeof(NPropertyValue))
-                return EventSource.PropertyValue;
-
-            throw new ArgumentException();
+        public DbEventArgs GetUpdates() {
+            return new DbEventArgs(_added, _changed, _removed, typeof(T));
         }
 
-        private void RetrieveIds(Operations operation) {
-            foreach (var kvp in Entities) {
-                var item = kvp.Key;
-                var state = kvp.Value;
+        private void RetrieveIds2(Operations operation) {
+            var items = Entities.Where(kvp => kvp.Value == operation).Select(kvp => kvp.Key).ToArray();
+            if (!items.Any()) return;
+            
+            items.ChunkedForEach(entities => {
+                var arr = entities.ToArray();
+                var allSql = _helper.FindIdSql<T>(arr);
+                Logger.Debug(allSql);
+                try {
+                    var cmd = Connection.CreateCommand();
+                    cmd.CommandText = allSql;
+                    using (var reader = cmd.ExecuteReader()) {
+                        long nextId;
+                        var i = 0;
+                        while ((nextId = _helper.ReadId(reader)) != default(long))
+                            arr[i++].id = nextId;
 
-                if (state == operation) {
-                    var sql = _helper.FindIdSql(item);
-                    var id = ExecuteSqlAndReadId(sql);
-                    item.id = id;
+                        if (i != arr.Length)
+                            Logger.Error(string.Format(" i = {0} while len = {1}", i, arr.Length));
+                    }
+
+                } catch (Exception e) {
+                    Logger.ErrorEx("", e);
+                    throw;
                 }
-            }
-
-            var entities = Entities.Where(kvp => kvp.Value == operation).Select(kvp => kvp.Key).ToList();
-            foreach (var entity in entities) 
-                Entities[entity] = Operations.Read;
+            }, 500);
         }
 
-        private int Execute<TEntity>(Operations operations, Func<IEnumerable<TEntity>, IEnumerable<string>> generator)  {
+        private int Execute<TEntity>(Operations operations, Func<IEnumerable<TEntity>, IEnumerable<string>> generator) {
             var entitries = ((IEnumerable<TEntity>) Entities
                 .Where(x => x.Value == operations)
                 .Select(x => x.Key)).ToArray();
@@ -173,6 +179,9 @@ namespace YieldMap.Transitive.Native {
             generator(entitries)
                 .ToList()
                 .ForEach(ExecuteSql);
+
+            if ((operations == Operations.Create || operations == Operations.Update))
+                RetrieveIds2(operations);
 
             return entitries.Count();
         }
@@ -185,18 +194,6 @@ namespace YieldMap.Transitive.Native {
                 cmd.ExecuteNonQuery();
             } catch (Exception e) {
                 Logger.ErrorEx("", e);
-            }
-        }
-
-        private long ExecuteSqlAndReadId(string sql) {
-            Logger.Debug(sql);
-            try {
-                var cmd = Connection.CreateCommand();
-                cmd.CommandText = sql;
-                using (var reader = cmd.ExecuteReader()) return _helper.ReadId(reader);
-            } catch (Exception e) {
-                Logger.ErrorEx("", e);
-                return default(long);
             }
         }
 

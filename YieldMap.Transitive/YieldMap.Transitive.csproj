@@ -121,7 +121,6 @@
     <Compile Include="Events\InstrumentDescriptionHandler.cs" />
     <Compile Include="Events\ITriggerManager.cs" />
     <Compile Include="Events\DbEventArgs.cs" />
-    <Compile Include="Events\EventSource.cs" />
     <Compile Include="Events\IDbEventArgs.cs" />
     <Compile Include="Procedures\ISaver.cs" />
     <Compile Include="Procedures\Saver.cs" />

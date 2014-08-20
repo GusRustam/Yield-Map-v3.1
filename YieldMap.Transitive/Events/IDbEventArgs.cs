@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using YieldMap.Transitive.Procedures;
+﻿using System;
+using System.Collections.Generic;
 
 namespace YieldMap.Transitive.Events {
     public interface IDbEventArgs {
-        EventSource Source { get; }
+        Type Source { get; }
         IEnumerable<long> Added { get; }
         IEnumerable<long> Changed { get; }
         IEnumerable<long> Removed { get; }
